@@ -84,7 +84,8 @@ public class SecurityConfig {
                                                                 "/api/v1/marketplace/cart/**",
                                                                 "/api/v1/marketplace/orders/**",
                                                                 "/api/v1/marketplace/addresses/**",
-                                                                "/api/v1/marketplace/reviews/**")
+                                                                "/api/v1/marketplace/reviews/**",
+                                                                "/api/v1/buyer/orders/**")
                                                 .hasRole("BUYER")
                                                 .requestMatchers("/api/v1/notifications/**")
                                                 .hasAnyRole("ADMIN", "BUYER", "FARMER", "EMPLOYEE")

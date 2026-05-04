@@ -75,6 +75,7 @@ import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceFarmSu
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderAuditLogResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderItemResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderPaymentResponse;
+import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderPreviewResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductDetailResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductSummaryResponse;
@@ -455,7 +456,8 @@ public class MarketplaceService {
             if (lockedProduct == null) {
                 throw new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND);
             }
-            if (lockedProduct.getStatus() != MarketplaceProductStatus.PUBLISHED) {
+            if (lockedProduct.getStatus() != MarketplaceProductStatus.PUBLISHED
+                    && lockedProduct.getStatus() != MarketplaceProductStatus.ACTIVE) {
                 throw new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_PUBLISHED);
             }
             validateTraceabilityChain(lockedProduct);
@@ -541,7 +543,7 @@ public class MarketplaceService {
                     .orderCode(generateOrderCode())
                     .buyerUser(buyer)
                     .farmerUser(farmer)
-                    .status(MarketplaceOrderStatus.PENDING)
+                    .status(MarketplaceOrderStatus.PENDING_PAYMENT)
                     .paymentMethod(request.paymentMethod())
                     .paymentVerificationStatus(resolveInitialPaymentVerificationStatus(request.paymentMethod()))
                     .shippingRecipientName(shippingSnapshot.recipientName())
@@ -567,6 +569,15 @@ public class MarketplaceService {
         productWarehouseLotRepository.saveAll(lockedLots);
         marketplaceCartItemRepository.deleteAllByCartId(cart.getId());
 
+        // COD auto-advance: immediately move through PAYMENT_SUBMITTED → PAYMENT_VERIFIED
+        if (request.paymentMethod() == MarketplacePaymentMethod.COD) {
+            for (MarketplaceOrder codOrder : createdOrders) {
+                codOrder.setStatus(MarketplaceOrderStatus.PAYMENT_SUBMITTED);
+                codOrder.setStatus(MarketplaceOrderStatus.PAYMENT_VERIFIED);
+                marketplaceOrderRepository.save(codOrder);
+            }
+        }
+
         for (MarketplaceOrder createdOrder : createdOrders) {
             notifyUser(
                     buyerUserId,
@@ -591,6 +602,89 @@ public class MarketplaceService {
                 orderGroup.getGroupCode(),
                 orderResponses.size(),
                 orderResponses);
+    }
+
+    /**
+     * Preview checkout — reads cart, groups by seller, calculates totals,
+     * resolves shipping address, but does NOT create any DB records or modify stock.
+     */
+    @Transactional(readOnly = true)
+    public MarketplaceOrderPreviewResponse previewOrder(MarketplaceCreateOrderRequest request) {
+        User buyer = currentUserService.getCurrentUser();
+        Long buyerUserId = buyer.getId();
+
+        MarketplaceCart cart = marketplaceCartRepository.findByUserIdForUpdate(buyerUserId)
+                .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_CART_EMPTY));
+        List<MarketplaceCartItem> cartItems = marketplaceCartItemRepository.findByCartIdWithProduct(cart.getId());
+        if (cartItems.isEmpty()) {
+            throw new AppException(ErrorCode.MARKETPLACE_CART_EMPTY);
+        }
+
+        ShippingSnapshot shippingSnapshot = resolveShippingSnapshot(buyerUserId, request);
+
+        // Group by farmer
+        Map<Long, List<MarketplaceCartItem>> groupedByFarmer = cartItems.stream()
+                .sorted(Comparator.comparing(ci -> ci.getProduct().getId()))
+                .collect(Collectors.groupingBy(
+                        ci -> ci.getProduct().getFarmerUser().getId(),
+                        LinkedHashMap::new,
+                        Collectors.toList()));
+
+        BigDecimal grandSubtotal = BigDecimal.ZERO;
+        BigDecimal grandShippingFee = BigDecimal.ZERO;
+        List<MarketplaceOrderPreviewResponse.SellerGroup> sellerGroups = new ArrayList<>();
+
+        for (Map.Entry<Long, List<MarketplaceCartItem>> entry : groupedByFarmer.entrySet()) {
+            List<MarketplaceCartItem> sellerItems = entry.getValue();
+            MarketplaceProduct firstProduct = sellerItems.getFirst().getProduct();
+            User farmer = firstProduct.getFarmerUser();
+            Farm farm = firstProduct.getFarm();
+
+            BigDecimal sellerSubtotal = BigDecimal.ZERO;
+            List<MarketplaceOrderPreviewResponse.PreviewItem> previewItems = new ArrayList<>();
+
+            for (MarketplaceCartItem item : sellerItems) {
+                MarketplaceProduct product = item.getProduct();
+                BigDecimal unitPrice = product.getPrice();
+                BigDecimal lineTotal = unitPrice.multiply(item.getQuantity());
+                sellerSubtotal = sellerSubtotal.add(lineTotal);
+
+                previewItems.add(new MarketplaceOrderPreviewResponse.PreviewItem(
+                        product.getId(),
+                        product.getSlug(),
+                        product.getName(),
+                        product.getImageUrl(),
+                        unitPrice,
+                        item.getQuantity(),
+                        lineTotal,
+                        Boolean.TRUE.equals(product.getTraceable())));
+            }
+
+            BigDecimal groupShipping = DEFAULT_SHIPPING_FEE;
+            grandSubtotal = grandSubtotal.add(sellerSubtotal);
+            grandShippingFee = grandShippingFee.add(groupShipping);
+
+            sellerGroups.add(new MarketplaceOrderPreviewResponse.SellerGroup(
+                    farmer.getId(),
+                    defaultDisplayName(farmer),
+                    farm == null ? null : farm.getId(),
+                    farm == null ? null : farm.getName(),
+                    previewItems,
+                    sellerSubtotal,
+                    groupShipping,
+                    sellerSubtotal.add(groupShipping)));
+        }
+
+        return new MarketplaceOrderPreviewResponse(
+                sellerGroups,
+                grandSubtotal,
+                grandShippingFee,
+                grandSubtotal.add(grandShippingFee),
+                shippingSnapshot.recipientName(),
+                shippingSnapshot.phone(),
+                shippingSnapshot.addressLine(),
+                sellerGroups.size(),
+                CURRENCY_VND);
     }
 
     @Transactional(readOnly = true)
@@ -622,7 +716,8 @@ public class MarketplaceService {
                 .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_ORDER_NOT_FOUND));
 
         if (order.getPaymentMethod() != MarketplacePaymentMethod.BANK_TRANSFER
-                || order.getStatus() == MarketplaceOrderStatus.CANCELLED) {
+                || order.getStatus() == MarketplaceOrderStatus.CANCELLED
+                || order.getStatus() == MarketplaceOrderStatus.REJECTED) {
             throw new AppException(ErrorCode.MARKETPLACE_PAYMENT_PROOF_NOT_ALLOWED);
         }
         if (file == null || file.isEmpty() || normalizeNullable(file.getOriginalFilename()) == null) {
@@ -631,6 +726,10 @@ public class MarketplaceService {
 
         storePaymentProof(order, file);
         order.setPaymentVerificationStatus(MarketplacePaymentVerificationStatus.SUBMITTED);
+        // Advance order status from PENDING_PAYMENT → PAYMENT_SUBMITTED when proof is uploaded
+        if (order.getStatus() == MarketplaceOrderStatus.PENDING_PAYMENT) {
+            order.setStatus(MarketplaceOrderStatus.PAYMENT_SUBMITTED);
+        }
         order.setPaymentProofUploadedAt(LocalDateTime.now());
         order.setPaymentVerifiedAt(null);
         order.setPaymentVerifiedByUserId(null);
@@ -656,7 +755,9 @@ public class MarketplaceService {
         MarketplaceOrder order = marketplaceOrderRepository.findByIdAndBuyerUserIdWithItems(orderId, buyerUserId)
                 .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_ORDER_NOT_FOUND));
 
-        if (order.getStatus() != MarketplaceOrderStatus.PENDING && order.getStatus() != MarketplaceOrderStatus.CONFIRMED) {
+        if (order.getStatus() != MarketplaceOrderStatus.PENDING_PAYMENT
+                && order.getStatus() != MarketplaceOrderStatus.PAYMENT_SUBMITTED
+                && order.getStatus() != MarketplaceOrderStatus.CONFIRMED) {
             throw new AppException(ErrorCode.MARKETPLACE_ORDER_CANCEL_NOT_ALLOWED);
         }
 
@@ -813,7 +914,7 @@ public class MarketplaceService {
 
         long pendingOrders = marketplaceOrderRepository.countByFarmerUser_IdAndStatus(
                 farmerUserId,
-                MarketplaceOrderStatus.PENDING);
+                MarketplaceOrderStatus.PENDING_PAYMENT);
         BigDecimal totalRevenue = Optional.ofNullable(
                 marketplaceOrderRepository.sumTotalAmountByFarmerUserIdAndStatus(
                         farmerUserId,
@@ -1035,6 +1136,9 @@ public class MarketplaceService {
         if (targetStatus == MarketplaceOrderStatus.CANCELLED) {
             restoreOrderStock(order, currentUserService.getCurrentUser(), "Farmer cancelled order");
         }
+        if (targetStatus == MarketplaceOrderStatus.REJECTED) {
+            restoreOrderStock(order, currentUserService.getCurrentUser(), "Farmer rejected order");
+        }
 
         order.setStatus(targetStatus);
         MarketplaceOrder saved = marketplaceOrderRepository.save(order);
@@ -1200,7 +1304,8 @@ public class MarketplaceService {
         if (request.status() != MarketplaceOrderStatus.CANCELLED) {
             throw new AppException(ErrorCode.BAD_REQUEST);
         }
-        if (order.getStatus() == MarketplaceOrderStatus.CANCELLED) {
+        if (order.getStatus() == MarketplaceOrderStatus.CANCELLED
+                || order.getStatus() == MarketplaceOrderStatus.REJECTED) {
             return toOrderResponse(order);
         }
         if (order.getStatus() == MarketplaceOrderStatus.COMPLETED) {
@@ -1246,10 +1351,10 @@ public class MarketplaceService {
         long hiddenProducts = marketplaceProductRepository.countByStatus(MarketplaceProductStatus.HIDDEN);
 
         long totalOrders = marketplaceOrderRepository.count();
-        long pendingOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.PENDING);
+        long pendingOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.PENDING_PAYMENT);
         long confirmedOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.CONFIRMED);
         long preparingOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.PREPARING);
-        long deliveringOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.DELIVERING);
+        long deliveringOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.SHIPPED);
         long completedOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.COMPLETED);
         long cancelledOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.CANCELLED);
         long activeOrders = pendingOrders + confirmedOrders + preparingOrders + deliveringOrders;
@@ -1846,7 +1951,7 @@ public class MarketplaceService {
         final Map<Long, Long> reviewMap = reviewIdByProductId;
 
         List<MarketplaceOrderItemResponse> itemResponses = order.getItems().stream()
-                .sorted(Comparator.comparing(MarketplaceOrderItem::getId))
+                .sorted(Comparator.comparing(MarketplaceOrderItem::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(item -> new MarketplaceOrderItemResponse(
                         item.getId(),
                         item.getProduct() == null ? null : item.getProduct().getId(),
@@ -1859,7 +1964,7 @@ public class MarketplaceService {
                         Boolean.TRUE.equals(item.getTraceableSnapshot()),
                         viewerUserId != null
                                 && Objects.equals(viewerUserId, buyerUserId)
-                                && order.getStatus() == MarketplaceOrderStatus.COMPLETED
+                                && (order.getStatus() == MarketplaceOrderStatus.COMPLETED)
                                 && !reviewMap.containsKey(item.getProduct() == null ? null : item.getProduct().getId()),
                         reviewMap.get(item.getProduct() == null ? null : item.getProduct().getId())))
                 .toList();
@@ -1881,7 +1986,9 @@ public class MarketplaceService {
                 order.getTotalAmount(),
                 viewerUserId != null
                         && Objects.equals(viewerUserId, buyerUserId)
-                        && (order.getStatus() == MarketplaceOrderStatus.PENDING || order.getStatus() == MarketplaceOrderStatus.CONFIRMED),
+                        && (order.getStatus() == MarketplaceOrderStatus.PENDING_PAYMENT
+                                || order.getStatus() == MarketplaceOrderStatus.PAYMENT_SUBMITTED
+                                || order.getStatus() == MarketplaceOrderStatus.CONFIRMED),
                 order.getCreatedAt(),
                 order.getUpdatedAt(),
                 itemResponses);
@@ -2276,11 +2383,18 @@ public class MarketplaceService {
             return;
         }
         boolean valid = switch (current) {
-            case PENDING -> target == MarketplaceOrderStatus.CONFIRMED || target == MarketplaceOrderStatus.CANCELLED;
-            case CONFIRMED -> target == MarketplaceOrderStatus.PREPARING || target == MarketplaceOrderStatus.CANCELLED;
-            case PREPARING -> target == MarketplaceOrderStatus.DELIVERING;
-            case DELIVERING -> target == MarketplaceOrderStatus.COMPLETED;
-            case COMPLETED, CANCELLED -> false;
+            case PENDING_PAYMENT -> target == MarketplaceOrderStatus.REJECTED
+                    || target == MarketplaceOrderStatus.CANCELLED;
+            case PAYMENT_SUBMITTED -> target == MarketplaceOrderStatus.REJECTED
+                    || target == MarketplaceOrderStatus.CANCELLED;
+            case PAYMENT_VERIFIED -> target == MarketplaceOrderStatus.CONFIRMED
+                    || target == MarketplaceOrderStatus.REJECTED;
+            case CONFIRMED -> target == MarketplaceOrderStatus.PREPARING
+                    || target == MarketplaceOrderStatus.CANCELLED;
+            case PREPARING -> target == MarketplaceOrderStatus.SHIPPED;
+            case SHIPPED -> target == MarketplaceOrderStatus.DELIVERED;
+            case DELIVERED -> target == MarketplaceOrderStatus.COMPLETED;
+            case COMPLETED, CANCELLED, REJECTED -> false;
         };
         if (!valid) {
             throw new AppException(ErrorCode.BAD_REQUEST);

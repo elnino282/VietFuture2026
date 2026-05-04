@@ -369,7 +369,7 @@ class MarketplaceServiceTest {
                     .id(300L)
                     .orderGroup(group)
                     .orderCode("MO-1")
-                    .status(MarketplaceOrderStatus.PENDING)
+                    .status(MarketplaceOrderStatus.PENDING_PAYMENT)
                     .buyerUser(buyer)
                     .farmerUser(User.builder().id(20L).build())
                     .paymentMethod(MarketplacePaymentMethod.COD)

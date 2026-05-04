@@ -19,6 +19,7 @@ import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceCartRe
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceCreateOrderResultResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceFarmDetailResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceFarmSummaryResponse;
+import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderPreviewResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductDetailResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductSummaryResponse;
@@ -130,6 +131,12 @@ public class MarketplaceController {
     @DeleteMapping("/cart")
     public ApiResponse<MarketplaceCartResponse> clearCart() {
         return ApiResponse.success(marketplaceService.clearCart());
+    }
+
+    @PostMapping("/orders/preview")
+    public ApiResponse<MarketplaceOrderPreviewResponse> previewOrder(
+            @Valid @RequestBody MarketplaceCreateOrderRequest request) {
+        return ApiResponse.success(marketplaceService.previewOrder(request));
     }
 
     @PostMapping("/orders")
