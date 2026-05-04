@@ -139,4 +139,58 @@ public class MarketplaceSecurityTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
     }
+
+    // ─── Cross-role order endpoint security ────────────────────────────────
+
+    @Test
+    @WithMockUser(username = "farmer", roles = "FARMER")
+    @DisplayName("FARMER cannot access buyer order list - GET /api/v1/marketplace/orders returns 403")
+    void farmerCannotAccessBuyerOrders() throws Exception {
+        mockMvc.perform(get("/api/v1/marketplace/orders"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "buyer", roles = "BUYER")
+    @DisplayName("BUYER cannot access farmer order list - GET /api/v1/marketplace/farmer/orders returns 403")
+    void buyerCannotAccessFarmerOrders() throws Exception {
+        mockMvc.perform(get("/api/v1/marketplace/farmer/orders"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "farmer", roles = "FARMER")
+    @DisplayName("FARMER cannot access buyer alias orders - GET /api/v1/buyer/orders returns 403")
+    void farmerCannotAccessBuyerAliasOrders() throws Exception {
+        mockMvc.perform(get("/api/v1/buyer/orders"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "buyer", roles = "BUYER")
+    @DisplayName("BUYER cannot access farmer alias orders - GET /api/v1/farmer/orders returns 403")
+    void buyerCannotAccessFarmerAliasOrders() throws Exception {
+        mockMvc.perform(get("/api/v1/farmer/orders"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "buyer", roles = "BUYER")
+    @DisplayName("BUYER cannot update farmer order status - PATCH /api/v1/marketplace/farmer/orders/1/status returns 403")
+    void buyerCannotUpdateFarmerOrderStatus() throws Exception {
+        mockMvc.perform(patch("/api/v1/marketplace/farmer/orders/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"CONFIRMED\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "farmer", roles = "FARMER")
+    @DisplayName("FARMER cannot preview buyer orders - POST /api/v1/marketplace/orders/preview returns 403")
+    void farmerCannotPreviewBuyerOrders() throws Exception {
+        mockMvc.perform(post("/api/v1/marketplace/orders/preview")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"paymentMethod\":\"COD\"}"))
+                .andExpect(status().isForbidden());
+    }
 }
