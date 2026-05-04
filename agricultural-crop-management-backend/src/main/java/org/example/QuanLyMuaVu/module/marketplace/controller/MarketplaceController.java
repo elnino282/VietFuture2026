@@ -97,8 +97,18 @@ public class MarketplaceController {
         return ApiResponse.success(marketplaceService.listFarmReviews(farmId, page, size));
     }
 
+    @GetMapping("/products/{productId}/traceability")
+    public ApiResponse<MarketplaceTraceabilityResponse> getProductTraceability(@PathVariable Long productId) {
+        return ApiResponse.success(marketplaceService.getTraceability(productId));
+    }
+
+    /**
+     * @deprecated Use GET /api/v1/marketplace/products/{productId}/traceability instead.
+     * Kept temporarily for backward compatibility.
+     */
+    @Deprecated
     @GetMapping("/traceability/{productId}")
-    public ApiResponse<MarketplaceTraceabilityResponse> getTraceability(@PathVariable Long productId) {
+    public ApiResponse<MarketplaceTraceabilityResponse> getTraceabilityLegacy(@PathVariable Long productId) {
         return ApiResponse.success(marketplaceService.getTraceability(productId));
     }
 

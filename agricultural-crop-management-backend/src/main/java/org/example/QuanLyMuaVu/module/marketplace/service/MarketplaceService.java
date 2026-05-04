@@ -425,32 +425,220 @@ public class MarketplaceService {
         MarketplaceProduct product = marketplaceProductRepository.findSellableByIdAndStatus(productId, MarketplaceProductStatus.PUBLISHED)
                 .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND));
 
-        validateTraceabilityChain(product);
-
-        Farm farm = product.getFarm();
-        var season = product.getSeason();
-        var lot = product.getLot();
-
-        return new MarketplaceTraceabilityResponse(
+        return buildTraceabilityResponse(
                 product.getId(),
                 Boolean.TRUE.equals(product.getTraceable()),
-                new MarketplaceTraceabilityResponse.FarmTraceability(
-                        farm.getId(),
-                        farm.getName(),
-                        resolveFarmRegion(farm),
-                        resolveFarmAddress(farm)),
-                new MarketplaceTraceabilityResponse.SeasonTraceability(
-                        season.getId(),
-                        season.getSeasonName(),
-                        season.getStartDate(),
-                        season.getPlannedHarvestDate()),
-                new MarketplaceTraceabilityResponse.LotTraceability(
-                        lot.getId(),
-                        lot.getLotCode(),
-                        lot.getHarvestedAt(),
-                        lot.getUnit(),
-                        lot.getInitialQuantity()),
+                product.getFarm(),
+                product.getSeason(),
+                product.getLot(),
+                product.getPublishedAt());
+    }
+
+    @Transactional(readOnly = true)
+    public MarketplaceTraceabilityResponse getOrderItemTraceability(Long orderId, Long itemId) {
+        Long buyerUserId = currentUserService.getCurrentUserId();
+
+        MarketplaceOrder order = marketplaceOrderRepository.findByIdAndBuyerUserIdWithItems(orderId, buyerUserId)
+                .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_ORDER_NOT_FOUND));
+
+        MarketplaceOrderItem orderItem = order.getItems().stream()
+                .filter(item -> Objects.equals(item.getId(), itemId))
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_REVIEW_ITEM_NOT_IN_ORDER));
+
+        Long productId = orderItem.getProduct() != null ? orderItem.getProduct().getId() : null;
+        boolean traceable = Boolean.TRUE.equals(orderItem.getTraceableSnapshot());
+
+        // Use snapshotted references from order item (they are captured at order creation time)
+        LocalDateTime publishedAt = orderItem.getProduct() != null
+                ? orderItem.getProduct().getPublishedAt() : null;
+
+        return buildTraceabilityResponse(
+                productId,
+                traceable,
+                orderItem.getFarm(),
+                orderItem.getSeason(),
+                orderItem.getLot(),
+                publishedAt);
+    }
+
+    private MarketplaceTraceabilityResponse buildTraceabilityResponse(
+            Long productId,
+            boolean traceable,
+            Farm farm,
+            Season season,
+            ProductWarehouseLot lot,
+            LocalDateTime publishedAt) {
+
+        // Farm — graceful null fallback
+        MarketplaceTraceabilityResponse.FarmTraceability farmTrace = null;
+        if (farm != null) {
+            farmTrace = new MarketplaceTraceabilityResponse.FarmTraceability(
+                    farm.getId(),
+                    farm.getName(),
+                    resolveFarmRegion(farm),
+                    resolveFarmAddress(farm),
+                    null); // TODO: certificationInfo — pending feature scoping
+        }
+
+        // Plot — navigated via lot.plot (primary source) or season.plot (fallback)
+        MarketplaceTraceabilityResponse.PlotTraceability plotTrace = null;
+        org.example.QuanLyMuaVu.module.farm.entity.Plot plot = null;
+        if (lot != null && lot.getPlot() != null) {
+            plot = lot.getPlot();
+        } else if (season != null && season.getPlot() != null) {
+            plot = season.getPlot();
+        }
+        if (plot != null) {
+            plotTrace = new MarketplaceTraceabilityResponse.PlotTraceability(
+                    plot.getId(),
+                    plot.getPlotName(),
+                    plot.getArea());
+        }
+
+        // Season — includes crop name via season.crop
+        MarketplaceTraceabilityResponse.SeasonTraceability seasonTrace = null;
+        if (season != null) {
+            String cropName = season.getCrop() != null ? season.getCrop().getCropName() : null;
+            String varietyName = season.getVariety() != null ? season.getVariety().getName() : null;
+            seasonTrace = new MarketplaceTraceabilityResponse.SeasonTraceability(
+                    season.getId(),
+                    season.getSeasonName(),
+                    cropName,
+                    varietyName,
+                    season.getStartDate(),
+                    season.getPlannedHarvestDate());
+        }
+
+        // Harvest — from lot.harvest
+        MarketplaceTraceabilityResponse.HarvestTraceability harvestTrace = null;
+        if (lot != null && lot.getHarvest() != null) {
+            var harvest = lot.getHarvest();
+            harvestTrace = new MarketplaceTraceabilityResponse.HarvestTraceability(
+                    harvest.getId(),
+                    harvest.getHarvestDate(),
+                    harvest.getQuantity(),
+                    harvest.getGrade()); // grade as quality notes — never expose internal 'note'
+        }
+
+        // Product lot — lot details + warehouse/storage info
+        MarketplaceTraceabilityResponse.ProductLotTraceability lotTrace = null;
+        if (lot != null) {
+            String warehouseName = lot.getWarehouse() != null ? lot.getWarehouse().getName() : null;
+            String storageLocation = buildStorageLocation(lot.getLocation());
+            lotTrace = new MarketplaceTraceabilityResponse.ProductLotTraceability(
+                    lot.getId(),
+                    lot.getLotCode(),
+                    lot.getHarvestedAt(),
+                    lot.getReceivedAt(),
+                    lot.getUnit(),
+                    lot.getInitialQuantity(),
+                    lot.getGrade(),
+                    warehouseName,
+                    storageLocation);
+        }
+
+        // Timeline milestones — derived from entity state
+        List<MarketplaceTraceabilityResponse.TimelineMilestone> timeline =
+                buildTimelineMilestones(season, lot, publishedAt);
+
+        return new MarketplaceTraceabilityResponse(
+                productId,
+                traceable,
+                farmTrace,
+                plotTrace,
+                seasonTrace,
+                harvestTrace,
+                lotTrace,
+                timeline,
                 LocalDateTime.now());
+    }
+
+    private List<MarketplaceTraceabilityResponse.TimelineMilestone> buildTimelineMilestones(
+            Season season,
+            ProductWarehouseLot lot,
+            LocalDateTime publishedAt) {
+        List<MarketplaceTraceabilityResponse.TimelineMilestone> milestones = new ArrayList<>();
+
+        // PLANTED — season start date
+        if (season != null && season.getStartDate() != null) {
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "PLANTED",
+                    season.getStartDate().atStartOfDay(),
+                    "Crop planted — " + (season.getCrop() != null ? season.getCrop().getCropName() : season.getSeasonName())));
+        }
+
+        // TENDED — season is ACTIVE, COMPLETED, or ARCHIVED
+        if (season != null && season.getStatus() != null
+                && season.getStatus() != org.example.QuanLyMuaVu.Enums.SeasonStatus.PLANNED
+                && season.getStatus() != org.example.QuanLyMuaVu.Enums.SeasonStatus.CANCELLED) {
+            LocalDateTime tendedAt = season.getStartDate() != null
+                    ? season.getStartDate().plusDays(1).atStartOfDay() : null;
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "TENDED",
+                    tendedAt,
+                    "Crop tended during growing season"));
+        }
+
+        // HARVESTED — from lot.harvest or lot.harvestedAt
+        if (lot != null && lot.getHarvest() != null && lot.getHarvest().getHarvestDate() != null) {
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "HARVESTED",
+                    lot.getHarvest().getHarvestDate().atStartOfDay(),
+                    "Crop harvested — grade: " + (lot.getHarvest().getGrade() != null ? lot.getHarvest().getGrade() : "N/A")));
+        } else if (lot != null && lot.getHarvestedAt() != null) {
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "HARVESTED",
+                    lot.getHarvestedAt().atStartOfDay(),
+                    "Crop harvested"));
+        }
+
+        // STORED — lot received at warehouse
+        if (lot != null && lot.getReceivedAt() != null) {
+            String warehouseName = lot.getWarehouse() != null ? lot.getWarehouse().getName() : "warehouse";
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "STORED",
+                    lot.getReceivedAt(),
+                    "Stored in " + warehouseName));
+        }
+
+        // LISTED — product published on marketplace
+        if (publishedAt != null) {
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "LISTED",
+                    publishedAt,
+                    "Listed on marketplace"));
+        }
+
+        // Sort chronologically (nulls last)
+        milestones.sort(Comparator.comparing(
+                MarketplaceTraceabilityResponse.TimelineMilestone::date,
+                Comparator.nullsLast(Comparator.naturalOrder())));
+
+        return milestones;
+    }
+
+    private String buildStorageLocation(org.example.QuanLyMuaVu.module.inventory.entity.StockLocation location) {
+        if (location == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        if (location.getZone() != null) {
+            sb.append("Zone ").append(location.getZone());
+        }
+        if (location.getAisle() != null) {
+            if (!sb.isEmpty()) sb.append(", ");
+            sb.append("Aisle ").append(location.getAisle());
+        }
+        if (location.getShelf() != null) {
+            if (!sb.isEmpty()) sb.append(", ");
+            sb.append("Shelf ").append(location.getShelf());
+        }
+        if (location.getBin() != null) {
+            if (!sb.isEmpty()) sb.append(", ");
+            sb.append("Bin ").append(location.getBin());
+        }
+        return sb.isEmpty() ? null : sb.toString();
     }
 
     @Transactional(readOnly = true)

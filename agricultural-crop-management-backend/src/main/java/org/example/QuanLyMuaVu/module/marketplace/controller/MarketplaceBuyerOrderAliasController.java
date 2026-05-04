@@ -11,6 +11,7 @@ import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceCreate
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderPreviewResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplacePaymentProofResponse;
+import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceTraceabilityResponse;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceOrderStatus;
 import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -83,6 +84,13 @@ public class MarketplaceBuyerOrderAliasController {
     @GetMapping("/{orderId}/payment-proof")
     public ApiResponse<MarketplacePaymentProofResponse> getPaymentProof(@PathVariable Long orderId) {
         return ApiResponse.success(marketplaceService.getPaymentProof(orderId));
+    }
+
+    @GetMapping("/{orderId}/items/{itemId}/traceability")
+    public ApiResponse<MarketplaceTraceabilityResponse> getOrderItemTraceability(
+            @PathVariable Long orderId,
+            @PathVariable Long itemId) {
+        return ApiResponse.success(marketplaceService.getOrderItemTraceability(orderId, itemId));
     }
 }
 
