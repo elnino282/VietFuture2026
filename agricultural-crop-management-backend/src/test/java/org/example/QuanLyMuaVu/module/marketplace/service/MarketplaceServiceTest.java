@@ -47,6 +47,7 @@ import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceAddressR
 import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceCartItemRepository;
 import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceCartRepository;
 import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceOrderGroupRepository;
+import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceOrderItemRepository;
 import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceOrderRepository;
 import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceProductRepository;
 import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceProductReviewRepository;
@@ -76,6 +77,9 @@ class MarketplaceServiceTest {
 
     @Mock
     private MarketplaceOrderGroupRepository marketplaceOrderGroupRepository;
+
+    @Mock
+    private MarketplaceOrderItemRepository marketplaceOrderItemRepository;
 
     @Mock
     private MarketplaceOrderRepository marketplaceOrderRepository;

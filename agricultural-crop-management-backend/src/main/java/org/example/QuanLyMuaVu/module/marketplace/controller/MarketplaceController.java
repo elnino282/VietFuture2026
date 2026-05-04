@@ -89,6 +89,14 @@ public class MarketplaceController {
         return ApiResponse.success(marketplaceService.getFarmDetail(farmId));
     }
 
+    @GetMapping("/farms/{farmId}/reviews")
+    public ApiResponse<PageResponse<MarketplaceReviewResponse>> listFarmReviews(
+            @PathVariable Integer farmId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+        return ApiResponse.success(marketplaceService.listFarmReviews(farmId, page, size));
+    }
+
     @GetMapping("/traceability/{productId}")
     public ApiResponse<MarketplaceTraceabilityResponse> getTraceability(@PathVariable Long productId) {
         return ApiResponse.success(marketplaceService.getTraceability(productId));
@@ -205,9 +213,14 @@ public class MarketplaceController {
         return ApiResponse.success(null);
     }
 
+    /**
+     * @deprecated Use POST /api/v1/buyer/orders/{orderId}/reviews instead.
+     * Kept temporarily for backward compatibility.
+     */
+    @Deprecated
     @PostMapping("/reviews")
     public ApiResponse<MarketplaceReviewResponse> createReview(
             @Valid @RequestBody MarketplaceCreateReviewRequest request) {
-        return ApiResponse.success(marketplaceService.createReview(request));
+        return ApiResponse.success(marketplaceService.createReviewLegacy(request));
     }
 }

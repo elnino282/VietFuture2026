@@ -8,7 +8,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,7 +27,9 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "marketplace_product_reviews")
+@Table(name = "marketplace_product_reviews", uniqueConstraints = {
+        @UniqueConstraint(name = "uq_review_order_item_buyer", columnNames = {"order_item_id", "buyer_user_id"})
+})
 public class MarketplaceProductReview {
 
     @Id
@@ -42,6 +46,10 @@ public class MarketplaceProductReview {
     MarketplaceOrder order;
 
     @ManyToOne
+    @JoinColumn(name = "order_item_id")
+    MarketplaceOrderItem orderItem;
+
+    @ManyToOne
     @JoinColumn(name = "buyer_user_id", nullable = false)
     org.example.QuanLyMuaVu.module.identity.entity.User buyerUser;
 
@@ -51,13 +59,25 @@ public class MarketplaceProductReview {
     @Column(name = "comment", columnDefinition = "TEXT")
     String comment;
 
+    @Column(name = "hidden", nullable = false)
+    @Builder.Default
+    Boolean hidden = Boolean.FALSE;
+
     @Column(name = "created_at", nullable = false)
     LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    LocalDateTime updatedAt;
 
     @PrePersist
     void onCreate() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

@@ -15,9 +15,11 @@ import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceAdminS
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductDetailResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductSummaryResponse;
+import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceReviewResponse;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceOrderStatus;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceProductStatus;
 import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -85,5 +87,16 @@ public class MarketplaceAdminController {
     @GetMapping("/stats")
     public ApiResponse<MarketplaceAdminStatsResponse> getStats() {
         return ApiResponse.success(marketplaceService.getAdminStats());
+    }
+
+    @PatchMapping("/reviews/{reviewId}/hide")
+    public ApiResponse<MarketplaceReviewResponse> hideReview(@PathVariable Long reviewId) {
+        return ApiResponse.success(marketplaceService.adminHideReview(reviewId));
+    }
+
+    @DeleteMapping("/reviews/{reviewId}")
+    public ApiResponse<Void> deleteReview(@PathVariable Long reviewId) {
+        marketplaceService.adminDeleteReview(reviewId);
+        return ApiResponse.success(null);
     }
 }

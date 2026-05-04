@@ -93,6 +93,14 @@ public class MarketplaceProduct {
     @Builder.Default
     Boolean traceable = Boolean.TRUE;
 
+    @Column(name = "average_rating", nullable = false)
+    @Builder.Default
+    Double averageRating = 0.0;
+
+    @Column(name = "rating_count", nullable = false)
+    @Builder.Default
+    Integer ratingCount = 0;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     @Builder.Default

@@ -51,6 +51,14 @@ public class Farm {
     @Column(name = "area")
     BigDecimal area;
 
+    @Column(name = "average_rating", nullable = false)
+    @Builder.Default
+    Double averageRating = 0.0;
+
+    @Column(name = "rating_count", nullable = false)
+    @Builder.Default
+    Integer ratingCount = 0;
+
     /**
      * Soft-delete flag. Active farms have active = true.
      */

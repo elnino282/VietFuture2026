@@ -6,9 +6,12 @@ public record MarketplaceReviewResponse(
         Long id,
         Long productId,
         Long orderId,
+        Long orderItemId,
         Long buyerUserId,
         String buyerDisplayName,
         Integer rating,
         String comment,
-        LocalDateTime createdAt) {
+        Boolean hidden,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt) {
 }

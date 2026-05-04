@@ -209,6 +209,12 @@ public enum ErrorCode {
                         "Marketplace review already exists", HttpStatus.CONFLICT),
         MARKETPLACE_INVALID_RATING("ERR_MARKETPLACE_INVALID_RATING",
                         "Marketplace review rating must be in range 1..5", HttpStatus.BAD_REQUEST),
+        MARKETPLACE_REVIEW_NOT_FOUND("ERR_MARKETPLACE_REVIEW_NOT_FOUND",
+                        "Marketplace review not found", HttpStatus.NOT_FOUND),
+        MARKETPLACE_REVIEW_ORDER_NOT_COMPLETED("ERR_MARKETPLACE_REVIEW_ORDER_NOT_COMPLETED",
+                        "Review is only allowed for completed orders", HttpStatus.CONFLICT),
+        MARKETPLACE_REVIEW_ITEM_NOT_IN_ORDER("ERR_MARKETPLACE_REVIEW_ITEM_NOT_IN_ORDER",
+                        "Order item does not belong to the specified order", HttpStatus.BAD_REQUEST),
         MARKETPLACE_TRACEABILITY_CHAIN_INVALID("ERR_MARKETPLACE_TRACEABILITY_CHAIN_INVALID",
                         "Marketplace traceability chain is invalid", HttpStatus.CONFLICT),
 
