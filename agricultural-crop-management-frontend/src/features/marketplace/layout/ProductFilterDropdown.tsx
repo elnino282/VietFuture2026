@@ -1,9 +1,14 @@
-import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { CheckSquare, Square } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  CheckCircle2,
+  ChevronDown,
+  Filter,
+  MapPin,
+  RotateCcw,
+} from "lucide-react";
 import { cn } from "@/shared/lib";
-import { Button } from "@/shared/ui";
-import { useMarketplaceCategories } from "../hooks";
+import { useMarketplaceCategories, useMarketplaceProducts } from "../hooks";
 import { getCategoryLabel } from "../lib/categoryLabels";
 
 interface ProductFilterDropdownProps {
@@ -18,181 +23,277 @@ const SORT_OPTIONS = [
   { value: "price_desc", label: "Giá cao → thấp" },
 ] as const;
 
-export function ProductFilterDropdown({ onMouseEnter, onMouseLeave, onClose }: ProductFilterDropdownProps) {
+const REGION_QUERY = { page: 0, size: 100 };
+
+type SortValue = (typeof SORT_OPTIONS)[number]["value"];
+
+export function ProductFilterDropdown({
+  onMouseEnter,
+  onMouseLeave,
+  onClose,
+}: ProductFilterDropdownProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [pendingCategory, setPendingCategory] = useState(searchParams.get("category") ?? "");
-  const [pendingRegion, setPendingRegion] = useState(searchParams.get("region") ?? "");
-  const [pendingTraceable, setPendingTraceable] = useState(searchParams.get("traceable") === "true");
-  const [pendingSort, setPendingSort] = useState(
-    (searchParams.get("sort") as "newest" | "price_asc" | "price_desc" | null) ?? "newest",
+  const [pendingCategory, setPendingCategory] = useState(
+    searchParams.get("category") ?? "",
+  );
+  const [pendingRegion, setPendingRegion] = useState(
+    searchParams.get("region") ?? "",
+  );
+  const [pendingSort, setPendingSort] = useState<SortValue>(
+    (searchParams.get("sort") as SortValue | null) ?? "newest",
   );
 
   const categoriesQuery = useMarketplaceCategories(true);
-  const categories = categoriesQuery.data ?? [];
+  const productsQuery = useMarketplaceProducts(REGION_QUERY);
 
-  const hasChanges = pendingCategory || pendingRegion.trim() || pendingTraceable || pendingSort !== "newest";
+  const categories = categoriesQuery.data ?? [];
+  const regionSuggestions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (productsQuery.data?.items ?? [])
+            .map((product) => product.region?.trim())
+            .filter((region): region is string => Boolean(region)),
+        ),
+      ).sort((left, right) => left.localeCompare(right)),
+    [productsQuery.data?.items],
+  );
+
+  const selectedCategoryLabel = pendingCategory
+    ? getCategoryLabel(pendingCategory)
+    : "Tất cả";
+  const selectedSortLabel =
+    SORT_OPTIONS.find((option) => option.value === pendingSort)?.label ??
+    "Mới nhất";
+  const selectedSummary = [
+    selectedCategoryLabel,
+    pendingRegion.trim() ? pendingRegion.trim() : null,
+    selectedSortLabel,
+  ].filter(Boolean);
 
   function handleReset() {
     setPendingCategory("");
     setPendingRegion("");
-    setPendingTraceable(false);
     setPendingSort("newest");
   }
 
   function handleApply() {
     const params = new URLSearchParams();
+
     if (pendingCategory) params.set("category", pendingCategory);
     if (pendingRegion.trim()) params.set("region", pendingRegion.trim());
-    if (pendingTraceable) params.set("traceable", "true");
     if (pendingSort !== "newest") params.set("sort", pendingSort);
+
     params.set("page", "1");
+
     navigate(`/marketplace/products?${params.toString()}`);
     onClose();
   }
 
   return (
     <div
-      className="w-[720px] max-w-[calc(100vw-32px)] rounded-2xl border border-gray-200 bg-white p-6 shadow-xl"
+      className="marketplace-filter-panel"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      {/* Header */}
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-base font-semibold text-gray-900">Bộ lọc sản phẩm</h3>
-          <p className="mt-0.5 text-sm text-gray-500">
-            Tìm nông sản theo danh mục, khu vực và truy xuất nguồn gốc
-          </p>
+      <div className="marketplace-filter-header">
+        <div className="marketplace-filter-icon">
+          <Filter size={22} aria-hidden="true" />
         </div>
-        {hasChanges && (
-          <button
-            type="button"
-            onClick={handleReset}
-            className="shrink-0 text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline"
-          >
-            Xóa lọc
-          </button>
-        )}
+        <div className="marketplace-filter-heading">
+          <h3>Bộ lọc sản phẩm</h3>
+          <p>Tìm sản phẩm theo danh mục, khu vực và cách sắp xếp.</p>
+        </div>
       </div>
 
-      <div className="space-y-5">
-        {/* Category chips */}
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Danh mục</p>
+      <div className="marketplace-filter-body">
+        <section className="marketplace-filter-section">
+          <SectionLabel>DANH MỤC</SectionLabel>
+
           {categoriesQuery.isLoading ? (
-            <div className="flex flex-wrap gap-2">
-              {Array.from({ length: 5 }, (_, i) => (
-                <div key={i} className="h-7 w-20 animate-pulse rounded-full bg-gray-200" />
+            <div className="marketplace-filter-chip-list" aria-label="Đang tải danh mục">
+              {Array.from({ length: 5 }, (_, index) => (
+                <div key={index} className="marketplace-filter-chip-skeleton" />
               ))}
             </div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
+          ) : categoriesQuery.isError ? (
+            <div className="marketplace-filter-stack">
+              <CategoryButton
+                active={!pendingCategory}
                 onClick={() => setPendingCategory("")}
-                className={cn(
-                  "rounded-full px-3 py-1 text-sm font-medium transition-colors",
-                  !pendingCategory
-                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200",
-                )}
               >
                 Tất cả
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setPendingCategory(pendingCategory === cat ? "" : cat)}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-sm font-medium transition-colors",
-                    pendingCategory === cat
-                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200",
-                  )}
+              </CategoryButton>
+              <p className="marketplace-filter-error">
+                Không thể tải danh mục từ sản phẩm công khai.
+              </p>
+            </div>
+          ) : (
+            <div className="marketplace-filter-stack">
+              <div className="marketplace-filter-chip-list">
+                <CategoryButton
+                  active={!pendingCategory}
+                  onClick={() => setPendingCategory("")}
                 >
-                  {getCategoryLabel(cat)}
-                </button>
-              ))}
+                  Tất cả
+                </CategoryButton>
+
+                {categories.map((category) => (
+                  <CategoryButton
+                    key={category}
+                    active={pendingCategory === category}
+                    onClick={() =>
+                      setPendingCategory(
+                        pendingCategory === category ? "" : category,
+                      )
+                    }
+                  >
+                    {getCategoryLabel(category)}
+                  </CategoryButton>
+                ))}
+              </div>
+
+              {categories.length === 0 ? (
+                <p className="marketplace-filter-muted">
+                  Chưa có danh mục từ sản phẩm công khai.
+                </p>
+              ) : null}
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="grid grid-cols-2 gap-4">
-          {/* Region input */}
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Khu vực</p>
+        <section className="marketplace-filter-section">
+          <SectionLabel>KHU VỰC</SectionLabel>
+
+          <label className="marketplace-filter-field">
+            <span className="sr-only">Khu vực</span>
+            <MapPin className="marketplace-filter-field-icon" size={20} aria-hidden="true" />
             <input
               type="text"
               value={pendingRegion}
-              onChange={(e) => setPendingRegion(e.target.value)}
-              placeholder="Ví dụ: Lâm Đồng, An Giang, Đồng Tháp..."
-              className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              onChange={(event) => setPendingRegion(event.target.value)}
+              placeholder="Nhập hoặc chọn khu vực"
             />
-          </div>
+          </label>
 
-          {/* Sort */}
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Sắp xếp</p>
+          {regionSuggestions.length > 0 ? (
+            <div className="marketplace-filter-suggestion-list">
+              {regionSuggestions.map((region) => (
+                <SuggestionButton
+                  key={region}
+                  active={pendingRegion.trim() === region}
+                  onClick={() => setPendingRegion(region)}
+                >
+                  <MapPin size={14} aria-hidden="true" />
+                  <span>{region}</span>
+                </SuggestionButton>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="marketplace-filter-section">
+          <SectionLabel>SẮP XẾP</SectionLabel>
+
+          <label className="marketplace-filter-field">
+            <span className="sr-only">Sắp xếp</span>
+            <CheckCircle2
+              className="marketplace-filter-field-icon marketplace-filter-field-icon--green"
+              size={20}
+              aria-hidden="true"
+            />
             <select
               value={pendingSort}
-              onChange={(e) => setPendingSort(e.target.value as typeof pendingSort)}
-              className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none transition hover:border-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              onChange={(event) => setPendingSort(event.target.value as SortValue)}
             >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
               ))}
             </select>
-          </div>
-        </div>
-
-        {/* Traceability */}
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Truy xuất nguồn gốc</p>
-          <label
-            className={cn(
-              "flex cursor-pointer items-center gap-3 rounded-xl border-2 px-4 py-3 text-sm transition-colors",
-              pendingTraceable
-                ? "border-emerald-500 bg-emerald-50"
-                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50",
-            )}
-          >
-            <input
-              type="checkbox"
-              className="sr-only"
-              checked={pendingTraceable}
-              onChange={(e) => setPendingTraceable(e.target.checked)}
-            />
-            {pendingTraceable ? (
-              <CheckSquare size={18} className="shrink-0 text-emerald-600" />
-            ) : (
-              <Square size={18} className="shrink-0 text-gray-400" />
-            )}
-            <div>
-              <p className={cn("font-medium", pendingTraceable ? "text-emerald-700" : "text-gray-700")}>
-                Chỉ sản phẩm có truy xuất
-              </p>
-              <p className="text-xs text-gray-500">Ưu tiên sản phẩm có mùa vụ và lô thu hoạch rõ ràng.</p>
-            </div>
+            <ChevronDown className="marketplace-filter-select-icon" size={20} aria-hidden="true" />
           </label>
+        </section>
+
+        <div className="marketplace-filter-summary" aria-live="polite">
+          <CheckCircle2 size={18} aria-hidden="true" />
+          <span>Đã chọn:</span>
+          <strong>{selectedSummary.join(" · ")}</strong>
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
-        <Link
-          to="/marketplace/products"
-          onClick={onClose}
-          className="text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline"
+      <div className="marketplace-filter-footer">
+        <button
+          type="button"
+          onClick={handleReset}
+          className="marketplace-filter-reset"
         >
-          Xem tất cả sản phẩm
-        </Link>
-        <Button onClick={handleApply} className="px-6">
-          Áp dụng bộ lọc
-        </Button>
+          <RotateCcw size={17} aria-hidden="true" />
+          <span>Đặt lại</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleApply}
+          className="marketplace-filter-apply"
+        >
+          <CheckCircle2 size={18} aria-hidden="true" />
+          <span>Áp dụng bộ lọc</span>
+        </button>
       </div>
     </div>
+  );
+}
+
+function SectionLabel({ children }: { children: ReactNode }) {
+  return <p className="marketplace-filter-label">{children}</p>;
+}
+
+interface CategoryButtonProps {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}
+
+function CategoryButton({ active, onClick, children }: CategoryButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "marketplace-filter-chip",
+        active && "marketplace-filter-chip--active",
+      )}
+    >
+      <span>{children}</span>
+    </button>
+  );
+}
+
+interface SuggestionButtonProps {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}
+
+function SuggestionButton({
+  active,
+  onClick,
+  children,
+}: SuggestionButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "marketplace-filter-suggestion",
+        active && "marketplace-filter-suggestion--active",
+      )}
+    >
+      {children}
+    </button>
   );
 }

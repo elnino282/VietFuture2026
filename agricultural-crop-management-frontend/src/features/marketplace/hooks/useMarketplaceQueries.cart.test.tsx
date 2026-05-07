@@ -2,10 +2,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { MarketplaceCart } from '@/shared/api';
+import type { MarketplaceCart, MarketplaceProductPage } from '@/shared/api';
 import { marketplaceApi } from '@/shared/api';
 import {
   marketplaceQueryKeys,
+  useMarketplaceCategories,
   useMarketplaceRemoveCartItemMutation,
   useMarketplaceUpdateCartItemMutation,
 } from './useMarketplaceQueries';
@@ -15,6 +16,7 @@ vi.mock('@/shared/api', async (importOriginal) => {
   return {
     ...actual,
     marketplaceApi: {
+      listProducts: vi.fn(),
       updateCartItem: vi.fn(),
       removeCartItem: vi.fn(),
     },
@@ -65,6 +67,41 @@ function createCart(): MarketplaceCart {
   };
 }
 
+function createProductPage(categories: string[]): MarketplaceProductPage {
+  return {
+    items: categories.map((category, index) => ({
+      id: index + 1,
+      slug: `product-${index + 1}`,
+      name: `Product ${index + 1}`,
+      category,
+      shortDescription: 'Fresh product',
+      price: 10_000,
+      unit: 'kg',
+      stockQuantity: 20,
+      availableQuantity: 20,
+      imageUrl: `/product-${index + 1}.png`,
+      farmerUserId: 100 + index,
+      farmerDisplayName: `Farmer ${index + 1}`,
+      farmId: null,
+      farmName: null,
+      seasonId: null,
+      seasonName: null,
+      lotId: null,
+      region: index % 2 === 0 ? 'Lâm Đồng' : null,
+      traceable: index % 2 === 0,
+      ratingAverage: 0,
+      ratingCount: 0,
+      status: 'PUBLISHED',
+      createdAt: '2026-05-07T00:00:00Z',
+      updatedAt: '2026-05-07T00:00:00Z',
+    })),
+    page: 0,
+    size: categories.length,
+    totalElements: categories.length,
+    totalPages: 1,
+  };
+}
+
 function wrapperFor(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
@@ -79,6 +116,7 @@ describe('marketplace cart mutations', () => {
     queryClient.setQueryData(marketplaceQueryKeys.cart(), createCart());
     vi.mocked(marketplaceApi.updateCartItem).mockReset();
     vi.mocked(marketplaceApi.removeCartItem).mockReset();
+    vi.mocked(marketplaceApi.listProducts).mockReset();
   });
 
   it('optimistically updates quantity and subtotal before API resolution', async () => {
@@ -128,5 +166,37 @@ describe('marketplace cart mutations', () => {
 
     deferred.resolve({} as Awaited<ReturnType<typeof marketplaceApi.removeCartItem>>);
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  });
+});
+
+describe('useMarketplaceCategories', () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    vi.mocked(marketplaceApi.listProducts).mockReset();
+  });
+
+  it('derives sorted unique categories from product-list API results', async () => {
+    vi.mocked(marketplaceApi.listProducts).mockResolvedValue({
+      result: createProductPage(['rice', 'corn', 'rice', '', 'soybean']),
+    } as Awaited<ReturnType<typeof marketplaceApi.listProducts>>);
+
+    const { result } = renderHook(() => useMarketplaceCategories(true), {
+      wrapper: wrapperFor(queryClient),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(marketplaceApi.listProducts).toHaveBeenCalledWith({ page: 0, size: 100 });
+    expect(result.current.data).toEqual(['corn', 'rice', 'soybean']);
+  });
+
+  it('does not fetch category options when disabled', () => {
+    renderHook(() => useMarketplaceCategories(false), {
+      wrapper: wrapperFor(queryClient),
+    });
+
+    expect(marketplaceApi.listProducts).not.toHaveBeenCalled();
   });
 });

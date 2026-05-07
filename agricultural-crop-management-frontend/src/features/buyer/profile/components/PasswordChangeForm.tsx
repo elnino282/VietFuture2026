@@ -1,21 +1,34 @@
-import { useState } from 'react';
-import { Button, Input, Label, Alert, AlertTitle, AlertDescription } from '@/shared/ui';
-import { Loader2, Info } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
+import { Button, Input, Label } from '@/shared/ui';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import type { ChangePasswordPayload } from '@/api/auth';
 
 interface PasswordChangeFormProps {
-  onSave: (data: { currentPassword: string; newPassword: string }) => Promise<void>;
-  apiAvailable: boolean;
+  onSave: (data: ChangePasswordPayload) => Promise<void>;
 }
 
-export function PasswordChangeForm({ onSave, apiAvailable }: PasswordChangeFormProps) {
+type PasswordErrors = Partial<Record<keyof ChangePasswordPayload | 'confirmPassword', string>>;
+
+export function PasswordChangeForm({ onSave }: PasswordChangeFormProps) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<PasswordErrors>({});
+
+  const clearError = (field: keyof PasswordErrors) => {
+    if (!errors[field]) return;
+    setErrors((currentErrors) => {
+      const { [field]: _removed, ...rest } = currentErrors;
+      return rest;
+    });
+  };
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: PasswordErrors = {};
 
     if (!currentPassword) {
       newErrors.currentPassword = 'Mật khẩu hiện tại là bắt buộc';
@@ -37,7 +50,7 @@ export function PasswordChangeForm({ onSave, apiAvailable }: PasswordChangeFormP
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -50,46 +63,45 @@ export function PasswordChangeForm({ onSave, apiAvailable }: PasswordChangeFormP
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setErrors({}); // Clear any errors on success
-    } catch (error: any) {
-      // Display API error to user
+      setErrors({});
+    } catch (error: unknown) {
       setErrors({
-        currentPassword: error?.message || 'Có lỗi xảy ra khi đổi mật khẩu',
+        currentPassword: error instanceof Error ? error.message : 'Có lỗi xảy ra khi đổi mật khẩu',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!apiAvailable) {
-    return (
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertTitle>Tính năng đang phát triển</AlertTitle>
-        <AlertDescription>
-          Chức năng đổi mật khẩu sẽ sớm được cập nhật. Vui lòng liên hệ hỗ trợ nếu cần thay đổi mật khẩu.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-4">
       <div>
         <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
-        <Input
-          id="currentPassword"
-          type="password"
-          value={currentPassword}
-          onChange={(e) => {
-            setCurrentPassword(e.target.value);
-            if (errors.currentPassword) {
-              const { currentPassword, ...rest } = errors;
-              setErrors(rest);
-            }
-          }}
-          disabled={isSubmitting}
-        />
+        <div className="relative mt-1">
+          <Input
+            id="currentPassword"
+            type={showCurrentPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={(e) => {
+              setCurrentPassword(e.target.value);
+              clearError('currentPassword');
+            }}
+            disabled={isSubmitting}
+            className="pr-10 bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1/2 size-7 -translate-y-1/2 text-slate-700 hover:text-slate-900"
+            onClick={() => setShowCurrentPassword((value) => !value)}
+            disabled={isSubmitting}
+            aria-label={showCurrentPassword ? 'Ẩn mật khẩu hiện tại' : 'Hiện mật khẩu hiện tại'}
+          >
+            {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
         {errors.currentPassword && (
           <p className="mt-1 text-sm text-red-500">{errors.currentPassword}</p>
         )}
@@ -97,19 +109,31 @@ export function PasswordChangeForm({ onSave, apiAvailable }: PasswordChangeFormP
 
       <div>
         <Label htmlFor="newPassword">Mật khẩu mới</Label>
-        <Input
-          id="newPassword"
-          type="password"
-          value={newPassword}
-          onChange={(e) => {
-            setNewPassword(e.target.value);
-            if (errors.newPassword) {
-              const { newPassword, ...rest } = errors;
-              setErrors(rest);
-            }
-          }}
-          disabled={isSubmitting}
-        />
+        <div className="relative mt-1">
+          <Input
+            id="newPassword"
+            type={showNewPassword ? 'text' : 'password'}
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(e) => {
+              setNewPassword(e.target.value);
+              clearError('newPassword');
+            }}
+            disabled={isSubmitting}
+            className="pr-10 bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1/2 size-7 -translate-y-1/2 text-slate-700 hover:text-slate-900"
+            onClick={() => setShowNewPassword((value) => !value)}
+            disabled={isSubmitting}
+            aria-label={showNewPassword ? 'Ẩn mật khẩu mới' : 'Hiện mật khẩu mới'}
+          >
+            {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
         {errors.newPassword && (
           <p className="mt-1 text-sm text-red-500">{errors.newPassword}</p>
         )}
@@ -117,19 +141,31 @@ export function PasswordChangeForm({ onSave, apiAvailable }: PasswordChangeFormP
 
       <div>
         <Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Label>
-        <Input
-          id="confirmPassword"
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => {
-            setConfirmPassword(e.target.value);
-            if (errors.confirmPassword) {
-              const { confirmPassword, ...rest } = errors;
-              setErrors(rest);
-            }
-          }}
-          disabled={isSubmitting}
-        />
+        <div className="relative mt-1">
+          <Input
+            id="confirmPassword"
+            type={showConfirmPassword ? 'text' : 'password'}
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              clearError('confirmPassword');
+            }}
+            disabled={isSubmitting}
+            className="pr-10 bg-white text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1/2 size-7 -translate-y-1/2 text-slate-700 hover:text-slate-900"
+            onClick={() => setShowConfirmPassword((value) => !value)}
+            disabled={isSubmitting}
+            aria-label={showConfirmPassword ? 'Ẩn xác nhận mật khẩu' : 'Hiện xác nhận mật khẩu'}
+          >
+            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
         {errors.confirmPassword && (
           <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
         )}

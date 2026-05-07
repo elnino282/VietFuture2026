@@ -1,19 +1,16 @@
+import { changePassword, type ChangePasswordPayload } from '@/api/auth';
 import { Card, CardContent, CardHeader } from '@/shared/ui';
-import { PasswordChangeForm } from '../components/PasswordChangeForm';
 import { toast } from 'sonner';
+import { PasswordChangeForm } from '../components/PasswordChangeForm';
 
 export function SecurityPage() {
-  // Check if password change API is available
-  const apiAvailable = false; // TODO: Check for auth API endpoint
-
-  const handlePasswordChange = async (data: { currentPassword: string; newPassword: string }) => {
+  const handlePasswordChange = async (data: ChangePasswordPayload) => {
     try {
-      // TODO: Implement password change API call
-      // await changePassword(data);
-      console.log('Changing password:', data);
+      await changePassword(data);
       toast.success('Đổi mật khẩu thành công');
-    } catch (error) {
-      toast.error('Có lỗi xảy ra khi đổi mật khẩu');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Có lỗi xảy ra khi đổi mật khẩu';
+      toast.error(message);
       throw error;
     }
   };
@@ -26,7 +23,7 @@ export function SecurityPage() {
         </CardHeader>
 
         <CardContent>
-          <PasswordChangeForm onSave={handlePasswordChange} apiAvailable={apiAvailable} />
+          <PasswordChangeForm onSave={handlePasswordChange} />
         </CardContent>
       </Card>
     </div>
