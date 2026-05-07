@@ -93,3 +93,40 @@
     display: block;
   }
 }
+
+/* Marketplace header robustness: prevent desktop controls from forcing horizontal overflow. */
+.marketplace-header,
+.marketplace-header__inner,
+.marketplace-header__left,
+.marketplace-header__nav {
+  overflow: visible;
+}
+
+.marketplace-header__nav {
+  gap: clamp(0.75rem, 1.4vw, 1.5rem);
+}
+
+.marketplace-header__desktop-search {
+  min-width: 12rem;
+  max-width: 28rem;
+  flex: 1 1 20rem;
+}
+
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .marketplace-header__desktop-search {
+    width: min(20rem, 100%);
+    flex-basis: 20rem;
+  }
+}
+
+
+/* Keep the product filter above all hero/card stacking contexts. */
+.marketplace-product-filter-portal {
+  position: fixed;
+  isolation: isolate;
+  z-index: 2147483647;
+}
+
+.marketplace-product-filter-portal * {
+  box-sizing: border-box;
+}
