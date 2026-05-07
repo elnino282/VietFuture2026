@@ -6,6 +6,11 @@ export type ResetPasswordPayload = {
     confirmPassword: string;
 };
 
+export type ChangePasswordPayload = {
+    currentPassword: string;
+    newPassword: string;
+};
+
 export const forgotPassword = async (email: string): Promise<void> => {
     await httpClient.post('/api/v1/auth/forgot-password', { email });
 };
@@ -17,5 +22,11 @@ export const resetPassword = async (payload: ResetPasswordPayload): Promise<void
 export const validateResetToken = async (token: string): Promise<void> => {
     await httpClient.get('/api/v1/auth/reset-password/validate', {
         params: { token },
+    });
+};
+
+export const changePassword = async (payload: ChangePasswordPayload): Promise<void> => {
+    await httpClient.put('/api/v1/user/change-password', {
+        password: payload.newPassword,
     });
 };
