@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Season } from "@/entities/season";
 import { useI18n } from "@/hooks/useI18n";
 import {
@@ -56,6 +55,7 @@ export function SeasonPickerModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         className="max-w-md"
+        style={{ maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
@@ -71,7 +71,7 @@ export function SeasonPickerModal({
         </DialogHeader>
 
         {hasSeasons ? (
-          <ScrollArea className="max-h-[300px] pr-4">
+          <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
             <div className="space-y-4">
               {/* Active Seasons */}
               {activeSeasons.length > 0 && (
@@ -105,7 +105,7 @@ export function SeasonPickerModal({
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         ) : (
           /* Empty State */
           <div className="py-8 text-center">

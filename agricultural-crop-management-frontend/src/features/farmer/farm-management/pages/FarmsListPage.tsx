@@ -83,20 +83,18 @@ export function FarmsListPage() {
     // Error state
     if (isError) {
         return (
-            <div className="min-h-screen acm-main-content pb-20">
-                <div className="container mx-auto py-6 px-4 max-w-7xl">
-                    <div className="flex flex-col items-center justify-center py-12">
-                        <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-                        <h2 className="text-2xl font-bold text-foreground mb-2">
-                            Failed to Load Farms
-                        </h2>
-                        <p className="text-muted-foreground mb-6">
-                            {error?.message || 'An error occurred while loading your farms.'}
-                        </p>
-                        <Button onClick={refetch}>
-                            Try Again
-                        </Button>
-                    </div>
+            <div className="min-h-screen acm-main-content pb-20 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4 max-w-md text-center">
+                    <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+                    <h2 className="text-2xl font-bold text-foreground mb-2">
+                        Failed to Load Farms
+                    </h2>
+                    <p className="text-muted-foreground mb-6">
+                        {error?.message || 'An error occurred while loading your farms.'}
+                    </p>
+                    <Button onClick={refetch}>
+                        Try Again
+                    </Button>
                 </div>
             </div>
         );
@@ -105,10 +103,8 @@ export function FarmsListPage() {
     // Loading state
     if (isLoading) {
         return (
-            <div className="min-h-screen acm-main-content pb-20">
-                <div className="container mx-auto py-6 px-4 max-w-7xl">
-                    <LoadingState />
-                </div>
+            <div className="min-h-screen acm-main-content pb-20 flex items-center justify-center">
+                <LoadingState />
             </div>
         );
     }
@@ -117,28 +113,28 @@ export function FarmsListPage() {
     if (farms.length === 0 && !hasActiveFilters) {
         return (
             <div className="min-h-screen acm-main-content pb-20">
-                <div className="container mx-auto py-6 px-4 max-w-7xl">
-                    <FarmToolbar
-                        searchQuery={searchQuery}
-                        setSearchQuery={setSearchQuery}
-                        activeFilter={activeFilter}
-                        setActiveFilter={setActiveFilter}
-                        onCreateFarm={() => setShowCreateDialog(true)}
-                        filteredCount={0}
-                        totalCount={0}
-                        selectedCount={0}
-                        onClearFilters={handleClearFilters}
-                    />
+                <FarmToolbar
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    activeFilter={activeFilter}
+                    setActiveFilter={setActiveFilter}
+                    onCreateFarm={() => setShowCreateDialog(true)}
+                    filteredCount={0}
+                    totalCount={0}
+                    selectedCount={0}
+                    onClearFilters={handleClearFilters}
+                />
+                <div className="max-w-[1800px] mx-auto px-6">
                     <EmptyState onCreateFarm={() => setShowCreateDialog(true)} />
-                    
-                    {/* Create Dialog */}
-                    <FarmFormDialog
-                        open={showCreateDialog}
-                        onOpenChange={setShowCreateDialog}
-                        mode="create"
-                        onCreated={handleCreatedFarm}
-                    />
                 </div>
+                
+                {/* Create Dialog */}
+                <FarmFormDialog
+                    open={showCreateDialog}
+                    onOpenChange={setShowCreateDialog}
+                    mode="create"
+                    onCreated={handleCreatedFarm}
+                />
             </div>
         );
     }
@@ -150,7 +146,6 @@ export function FarmsListPage() {
     
     return (
         <div className="min-h-screen acm-main-content pb-20">
-            <div className="container mx-auto py-6 px-4 max-w-7xl">
             {/* Page Header with Create Button */}
             <FarmToolbar
                 searchQuery={searchQuery}
@@ -164,10 +159,8 @@ export function FarmsListPage() {
                 onClearFilters={handleClearFilters}
             />
             
-            {/* Spacer */}
-            <div className="mb-6"></div>
-            
-            {/* Farms Table or Empty Filtered State */}
+            {/* Content */}
+            <div className="max-w-[1800px] mx-auto px-6 space-y-6">
             {filteredFarms.length === 0 && hasActiveFilters ? (
                 <div className="bg-card rounded-xl border border-border shadow-sm p-12">
                     <div className="flex flex-col items-center text-center">
@@ -200,6 +193,7 @@ export function FarmsListPage() {
                     onClearSelection={handleClearSelection}
                 />
             )}
+            </div>
             
             {/* Create Dialog */}
             <FarmFormDialog
@@ -230,7 +224,6 @@ export function FarmsListPage() {
                     onDeleteSuccess={handleDeleteConfirm}
                 />
             )}
-            </div>
         </div>
     );
 }

@@ -11,7 +11,7 @@ import {
   AdminMarketplaceDashboardPage,
   AdminMarketplaceOrdersPage,
   AdminMarketplaceProductsPage,
-} from "@/features/marketplace";
+} from "@/pages/marketplace";
 
 // Admin Pages
 import { AdminAlertsPage } from "@/pages/admin/AdminAlertsPage";

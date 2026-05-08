@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BarChart3,
   Beaker,
+  Bug,
   ClipboardList,
   DollarSign,
   Droplets,
@@ -32,6 +33,12 @@ const MODULE_CARDS = [
     description: "Capture field activities by date for quick daily review.",
     icon: FileText,
     path: "field-logs",
+  },
+  {
+    title: "Disease Tracking",
+    description: "Track disease history, severity, and treatment timeline by season.",
+    icon: Bug,
+    path: "disease",
   },
   {
     title: "Harvest",
@@ -65,7 +72,7 @@ const MODULE_CARDS = [
   },
   {
     title: "Reports",
-    description: "Season reports are unlocked when harvest progress reaches 100%.",
+    description: "View interim/final reports and AI-assisted cost optimization insights.",
     icon: BarChart3,
     path: "reports",
   },

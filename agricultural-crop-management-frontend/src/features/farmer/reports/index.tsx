@@ -36,6 +36,10 @@ export function Reports({
         setExportFormat, setIncludeCharts, setIncludeNotes, setFilters,
         handleExport, handleApplyFilters, handleClearFilters,
         getYieldChartData, getPesticideStatusBadge, isLoading, hasError, kpiData,
+        costOptimizationSummary, costOptimizationSummaryLoading,
+        costOptimizationSummaryError, refetchCostOptimizationSummary,
+        costOptimizationAiSuggestion, costOptimizationAiLoading,
+        costOptimizationAiError, handleAnalyzeCostOptimizationWithAi,
     } = useReports({
         seasonId: workspaceSeasonId,
         initialSeasonValue: workspaceSeasonId ? String(workspaceSeasonId) : undefined,
@@ -119,7 +123,16 @@ export function Reports({
                                         )}
                                     </TabsContent>
                                     <TabsContent value="cost" className="mt-0">
-                                        <CostTab />
+                                        <CostTab
+                                            summary={costOptimizationSummary}
+                                            summaryLoading={costOptimizationSummaryLoading}
+                                            summaryError={costOptimizationSummaryError}
+                                            onRetrySummary={refetchCostOptimizationSummary}
+                                            aiSuggestion={costOptimizationAiSuggestion}
+                                            aiLoading={costOptimizationAiLoading}
+                                            aiError={costOptimizationAiError}
+                                            onAnalyzeWithAi={handleAnalyzeCostOptimizationWithAi}
+                                        />
                                     </TabsContent>
                                     <TabsContent value="performance" className="mt-0">
                                         <PerformanceTab />

@@ -1,6 +1,7 @@
 package org.example.QuanLyMuaVu.module.season.repository;
 
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.example.QuanLyMuaVu.module.season.entity.PayrollRecord;
@@ -39,4 +40,7 @@ public interface PayrollRecordRepository extends JpaRepository<PayrollRecord, In
     Page<PayrollRecord> findByEmployeeAndSeason(@Param("employeeId") Long employeeId,
             @Param("seasonId") Integer seasonId,
             Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(p.totalAmount), 0) FROM PayrollRecord p WHERE p.season.id = :seasonId")
+    BigDecimal sumTotalAmountBySeasonId(@Param("seasonId") Integer seasonId);
 }

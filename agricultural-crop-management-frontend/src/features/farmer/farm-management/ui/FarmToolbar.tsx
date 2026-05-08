@@ -51,7 +51,8 @@ export function FarmToolbar({
     const hasActiveFilters = searchQuery || activeFilter !== null;
 
     return (
-        <div className="space-y-4">
+        <>
+        <div className="max-w-[1800px] mx-auto px-6 pt-6 mb-4">
             <Card className="border border-border rounded-xl shadow-sm">
                 <CardContent className="px-6 py-4">
                     {/* Header Row: Title + Actions */}
@@ -70,8 +71,8 @@ export function FarmToolbar({
                         {/* Primary Action */}
                         <div className="flex items-center gap-3 flex-shrink-0">
                             <Button
+                                className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm acm-button-shadow"
                                 onClick={onCreateFarm}
-                                size="sm"
                             >
                                 <Plus className="w-4 h-4 mr-2" />
                                 {t('farmManagement.createFarm')}
@@ -80,7 +81,9 @@ export function FarmToolbar({
                     </div>
                 </CardContent>
             </Card>
+        </div>
 
+        <div className="max-w-[1800px] mx-auto px-6 mb-4">
             <Card className="border border-border rounded-xl shadow-sm">
                 <CardContent className="px-6 py-4">
                     <div className="flex flex-wrap items-center justify-start gap-4">
@@ -131,5 +134,6 @@ export function FarmToolbar({
                 </CardContent>
             </Card>
         </div>
+        </>
     );
 }

@@ -13,6 +13,8 @@ public interface FieldLogRepository extends JpaRepository<FieldLog, Integer> {
 
     List<FieldLog> findAllBySeason_IdAndLogDateBetween(Integer seasonId, LocalDate from, LocalDate to);
 
+    List<FieldLog> findTop10BySeason_IdOrderByLogDateDescIdDesc(Integer seasonId);
+
     boolean existsBySeason_Id(Integer seasonId);
 
     long countBySeason_IdAndLogTypeIgnoreCase(Integer seasonId, String logType);

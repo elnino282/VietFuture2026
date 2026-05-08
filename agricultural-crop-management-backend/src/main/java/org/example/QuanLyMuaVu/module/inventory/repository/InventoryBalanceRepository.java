@@ -120,4 +120,17 @@ public interface InventoryBalanceRepository extends JpaRepository<InventoryBalan
             WHERE ib.supplyLot.id = :lotId
             """)
     List<InventoryBalance> findDetailedBySupplyLotId(@Param("lotId") Integer lotId);
+
+    @Query("""
+            SELECT ib FROM InventoryBalance ib
+            JOIN FETCH ib.supplyLot sl
+            JOIN FETCH sl.supplyItem si
+            LEFT JOIN FETCH sl.supplier sup
+            JOIN FETCH ib.warehouse w
+            JOIN FETCH w.farm f
+            WHERE f.id IN :farmIds
+              AND ib.quantity > 0
+            ORDER BY ib.quantity DESC, ib.id DESC
+            """)
+    List<InventoryBalance> findPositiveByFarmIdsWithDetails(@Param("farmIds") List<Integer> farmIds);
 }

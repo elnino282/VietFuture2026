@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { toast } from "sonner";
 import type {
   ExportFormat,
   FilterState,
   PesticideStatus,
   ReportSection,
+  CostOptimizationAiSuggestion,
   YieldByCrop,
   YieldByPlot,
   YieldBySeason,
   YieldViewMode,
 } from "../types";
 import { DEFAULT_FILTERS } from "../constants";
+// eslint-disable-next-line no-restricted-imports -- keep legacy reports client until dedicated FSD entity API is introduced
 import { farmerReportsApi } from "@/services/api.farmer";
 import { useSeason } from "@/shared/contexts";
 import { taskApi } from "@/entities/task";
@@ -20,6 +23,32 @@ interface UseReportsOptions {
   seasonId?: number;
   initialSeasonValue?: string;
 }
+
+const toReadableApiError = (error: unknown, fallback: string) => {
+  if (isAxiosError(error)) {
+    const payload = error.response?.data as { code?: string; message?: string } | undefined;
+    const status = error.response?.status;
+    const code = payload?.code;
+
+    if (status === 401 || code === "ERR_UNAUTHENTICATED" || code === "ERR_UNAUTHORIZED") {
+      return "Session expired. Please sign in again.";
+    }
+    if (status === 403 || code === "ERR_FORBIDDEN" || code === "NOT_OWNER") {
+      return "You do not have permission to access this season report.";
+    }
+    if (status === 400 || code === "ERR_KEY_INVALID") {
+      return payload?.message || "Invalid request data. Please review and try again.";
+    }
+    if (typeof payload?.message === "string" && payload.message.length > 0) {
+      return payload.message;
+    }
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+};
 
 export function useReports(options: UseReportsOptions = {}) {
   const { seasonId: explicitSeasonId, initialSeasonValue } = options;
@@ -38,6 +67,11 @@ export function useReports(options: UseReportsOptions = {}) {
   const [includeCharts, setIncludeCharts] = useState(true);
   const [includeNotes, setIncludeNotes] = useState(false);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [costOptimizationAiSuggestion, setCostOptimizationAiSuggestion] =
+    useState<CostOptimizationAiSuggestion | null>(null);
+  const [costOptimizationAiError, setCostOptimizationAiError] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     if (!initialSeasonValue) return;
@@ -46,6 +80,11 @@ export function useReports(options: UseReportsOptions = {}) {
   }, [initialSeasonValue, selectedSeason]);
 
   const queryEnabled = resolvedSeasonId !== null;
+
+  useEffect(() => {
+    setCostOptimizationAiSuggestion(null);
+    setCostOptimizationAiError(null);
+  }, [resolvedSeasonId]);
 
   const {
     data: yieldReport,
@@ -106,6 +145,39 @@ export function useReports(options: UseReportsOptions = {}) {
       }),
     enabled: queryEnabled,
     staleTime: 1000 * 60 * 5,
+  });
+
+  const {
+    data: costOptimizationSummary,
+    isLoading: costOptimizationSummaryLoading,
+    error: costOptimizationSummaryError,
+    refetch: refetchCostOptimizationSummary,
+  } = useQuery({
+    queryKey: ["farmerReports", "costOptimization", "summary", resolvedSeasonId],
+    queryFn: () =>
+      farmerReportsApi.getCostOptimizationSummary(resolvedSeasonId as number),
+    enabled: queryEnabled,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const costOptimizationAiMutation = useMutation({
+    mutationFn: async () => {
+      if (!resolvedSeasonId) {
+        throw new Error("Season is required for AI analysis.");
+      }
+      return farmerReportsApi.getCostOptimizationAiSuggestion(resolvedSeasonId, {
+        includeInventory: true,
+      });
+    },
+    onSuccess: (data) => {
+      setCostOptimizationAiSuggestion(data);
+      setCostOptimizationAiError(null);
+    },
+    onError: (error) => {
+      setCostOptimizationAiError(
+        toReadableApiError(error, "Failed to analyze costs right now.")
+      );
+    },
   });
 
   const yieldBySeason: YieldBySeason[] = useMemo(() => {
@@ -256,6 +328,15 @@ export function useReports(options: UseReportsOptions = {}) {
     return statusConfig[status];
   };
 
+  const handleAnalyzeCostOptimizationWithAi = () => {
+    if (!resolvedSeasonId) {
+      setCostOptimizationAiError("Select a season before AI analysis.");
+      return;
+    }
+    setCostOptimizationAiError(null);
+    costOptimizationAiMutation.mutate();
+  };
+
   return {
     activeSection,
     selectedSeason,
@@ -274,6 +355,18 @@ export function useReports(options: UseReportsOptions = {}) {
     kpiData,
     isLoading,
     hasError,
+    costOptimizationSummary: costOptimizationSummary ?? null,
+    costOptimizationSummaryLoading,
+    costOptimizationSummaryError: costOptimizationSummaryError
+      ? toReadableApiError(
+        costOptimizationSummaryError,
+        "Failed to load cost optimization summary."
+      )
+      : null,
+    refetchCostOptimizationSummary,
+    costOptimizationAiSuggestion,
+    costOptimizationAiLoading: costOptimizationAiMutation.isPending,
+    costOptimizationAiError,
     setActiveSection,
     setSelectedSeason,
     setYieldViewMode,
@@ -288,5 +381,6 @@ export function useReports(options: UseReportsOptions = {}) {
     handleClearFilters,
     getYieldChartData,
     getPesticideStatusBadge,
+    handleAnalyzeCostOptimizationWithAi,
   };
 }

@@ -84,4 +84,13 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, In
          * Find all movements for a warehouse (simpler version)
          */
         Page<StockMovement> findByWarehouseOrderByMovementDateDesc(Warehouse warehouse, Pageable pageable);
+
+        @Query("""
+                        select m from StockMovement m
+                        left join fetch m.supplyLot lot
+                        left join fetch lot.supplyItem item
+                        where m.season.id = :seasonId
+                        order by m.movementDate desc, m.id desc
+                        """)
+        List<StockMovement> findAllBySeasonIdWithLotAndItem(@Param("seasonId") Integer seasonId);
 }

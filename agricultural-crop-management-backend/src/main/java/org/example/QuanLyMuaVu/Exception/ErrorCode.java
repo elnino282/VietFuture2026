@@ -238,6 +238,27 @@ public enum ErrorCode {
         OPTIMISTIC_LOCK_ERROR("ERR_OPTIMISTIC_LOCK_ERROR",
                         "Concurrent modification detected. Please refresh and try again.", HttpStatus.CONFLICT),
 
+        // Disease tracking errors
+        DISEASE_RECORD_NOT_FOUND("ERR_DISEASE_RECORD_NOT_FOUND", "Disease record not found", HttpStatus.NOT_FOUND),
+        DISEASE_TREATMENT_NOT_FOUND("ERR_DISEASE_TREATMENT_NOT_FOUND", "Disease treatment not found",
+                        HttpStatus.NOT_FOUND),
+        INVALID_DISEASE_SEVERITY("ERR_INVALID_DISEASE_SEVERITY", "Invalid disease severity", HttpStatus.BAD_REQUEST),
+        INVALID_DISEASE_STATUS("ERR_INVALID_DISEASE_STATUS", "Invalid disease status", HttpStatus.BAD_REQUEST),
+        INVALID_TREATMENT_EFFECTIVENESS("ERR_INVALID_TREATMENT_EFFECTIVENESS",
+                        "Invalid treatment effectiveness", HttpStatus.BAD_REQUEST),
+        INVALID_DISEASE_DETECTED_AT("ERR_INVALID_DISEASE_DETECTED_AT",
+                        "Detected date must be within season date range", HttpStatus.BAD_REQUEST),
+        INVALID_DISEASE_TREATED_AT("ERR_INVALID_DISEASE_TREATED_AT",
+                        "Treatment time cannot be earlier than disease detected time", HttpStatus.BAD_REQUEST),
+        SEASON_CLOSED_CANNOT_ADD_DISEASE_RECORD("ERR_SEASON_CLOSED_CANNOT_ADD_DISEASE_RECORD",
+                        "Cannot add disease record to closed season", HttpStatus.BAD_REQUEST),
+        SEASON_CLOSED_CANNOT_MODIFY_DISEASE_RECORD("ERR_SEASON_CLOSED_CANNOT_MODIFY_DISEASE_RECORD",
+                        "Cannot modify disease record in closed season", HttpStatus.BAD_REQUEST),
+        DISEASE_REFERENCE_SEASON_MISMATCH("ERR_DISEASE_REFERENCE_SEASON_MISMATCH",
+                        "Referenced incident/expense does not belong to the same season", HttpStatus.BAD_REQUEST),
+        DISEASE_SUPPLY_ITEM_LOT_MISMATCH("ERR_DISEASE_SUPPLY_ITEM_LOT_MISMATCH",
+                        "Supply item does not match selected supply lot", HttpStatus.BAD_REQUEST),
+
         // Season Admin Business Rules
         SEASON_COMPLETION_REQUIRES_YIELD_AND_DATE("ERR_SEASON_COMPLETION_REQUIRES_YIELD_AND_DATE",
                         "End date and actual yield are required when completing a season", HttpStatus.BAD_REQUEST),

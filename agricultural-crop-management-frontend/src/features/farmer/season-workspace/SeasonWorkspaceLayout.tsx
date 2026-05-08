@@ -43,6 +43,7 @@ import {
   AlertCircle,
   BarChart3,
   Beaker,
+  Bug,
   Calendar,
   ClipboardList,
   DollarSign,
@@ -115,6 +116,7 @@ const getHarvestWorkflowClassName = (progressPercent: number) => {
 const WORKSPACE_MODULE_TABS = [
   { key: "tasks", path: "tasks", labelKey: "nav.tasks", fallbackLabel: "Cong viec", icon: ClipboardList },
   { key: "field-logs", path: "field-logs", labelKey: "nav.fieldLogs", fallbackLabel: "Nhat ky dong ruong", icon: FileText },
+  { key: "disease", path: "disease", labelKey: "nav.disease", fallbackLabel: "Dich benh", icon: Bug },
   { key: "expenses", path: "expenses", labelKey: "nav.expenses", fallbackLabel: "Chi phi", icon: DollarSign },
   { key: "harvest", path: "harvest", labelKey: "nav.harvest", fallbackLabel: "Thu hoach", icon: Wheat },
   { key: "labor-management", path: "labor-management", labelKey: "nav.laborManagement", fallbackLabel: "Nhan cong", icon: Users },

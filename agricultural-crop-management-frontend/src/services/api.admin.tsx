@@ -259,6 +259,17 @@ export const adminKeys = {
     [...adminKeys.auditLogs, "list", params] as const,
   // Summary
   summary: ["admin", "summary"] as const,
+  // Farms
+  farms: ["admin", "farms"] as const,
+  farmList: (params?: { keyword?: string; active?: boolean; page?: number; size?: number }) =>
+    [...adminKeys.farms, "list", params] as const,
+  farmDetail: (id: number) => [...adminKeys.farms, "detail", id] as const,
+  // Plots
+  plots: ["admin", "plots"] as const,
+  plotList: (params?: { farmId?: number; keyword?: string; page?: number; size?: number }) =>
+    [...adminKeys.plots, "list", params] as const,
+  plotDetail: (id: number) => [...adminKeys.plots, "detail", id] as const,
+  plotSeasons: (id: number) => [...adminKeys.plots, "seasons", id] as const,
 };
 
 // ═══════════════════════════════════════════════════════════════

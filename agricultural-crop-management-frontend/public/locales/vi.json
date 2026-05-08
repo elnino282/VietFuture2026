@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "appName": "ACM Platform",
     "loading": "Đang tải...",
@@ -1782,6 +1782,37 @@
       "reviewPlaceholder": "Chia sẻ trải nghiệm của bạn",
       "submitReview": "Gửi đánh giá",
       "reviewed": "Đã đánh giá"
+    }
+  },
+  "marketplaceSeller": {
+    "products": {
+      "title": "Quản lý sản phẩm",
+      "subtitle": "Đăng bán, kiểm duyệt và quản lý tồn kho sản phẩm trên sàn.",
+      "addProduct": "Thêm sản phẩm",
+      "searchPlaceholder": "Tìm kiếm sản phẩm...",
+      "loading": "Đang tải sản phẩm...",
+      "emptyFiltered": "Không tìm thấy sản phẩm phù hợp với bộ lọc.",
+      "loadError": "Không thể tải danh sách sản phẩm."
+    },
+    "filters": {
+      "allStatuses": "Tất cả trạng thái"
+    },
+    "status": {
+      "draft": "Nháp",
+      "pendingReview": "Chờ duyệt",
+      "published": "Đã duyệt",
+      "hidden": "Bị từ chối / Ẩn"
+    },
+    "table": {
+      "product": "Sản phẩm",
+      "category": "Danh mục",
+      "price": "Giá",
+      "stock": "Tồn kho",
+      "status": "Trạng thái",
+      "updated": "Cập nhật",
+      "actions": "Thao tác",
+      "adminReason": "Lý do từ quản trị",
+      "available": "Khả dụng"
     }
   }
 }

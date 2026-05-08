@@ -1,58 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Building2, MapPin, Search, RefreshCw, AlertCircle, ChevronRight, Filter } from 'lucide-react';
-import { adminFarmApi, adminPlotApi } from '@/services/api.admin';
+import { Building2, MapPin, Search, RefreshCw, ChevronRight } from 'lucide-react';
+import { AsyncState, PageContainer } from '@/shared/ui';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  useAdminFarms,
+  useAdminFarmDetail,
+  useAdminPlots,
+  useAdminPlotDetail,
+  useAdminFarmPlots,
+  useAdminPlotSeasons,
+  useAdminFarmsForFilter,
+  adminFarmsPlotsKeys,
+  type Farm,
+  type Plot,
+} from './hooks/useFarmsPlots';
 
-interface Farm {
-  id: number;
-  name: string;
-  area: number | null;
-  active: boolean;
-  ownerUsername: string | null;
-  provinceName: string | null;
-  wardName: string | null;
-}
-
-interface Plot {
-  id: number;
-  plotName: string;
-  area: number | null;
-  soilType: string | null;
-  farmId: number;
-  farmName: string;
-}
-
-interface Season {
-  id: number;
-  seasonName: string;
-  cropName: string;
-  status: string;
-  startDate: string;
-  endDate: string | null;
-}
+// Types re-exported from hooks/useFarmsPlots.ts
 
 export function FarmsPlotsPage() {
-  const [activeTab, setActiveTab] = useState<'farms' | 'plots'>('farms');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [farms, setFarms] = useState<Farm[]>([]);
-  const [plots, setPlots] = useState<Plot[]>([]);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const queryClient = useQueryClient();
 
-  // Detail states
+  // UI state (tabs, drawers, search, pagination, filters)
+  const [activeTab, setActiveTab] = useState<'farms' | 'plots'>('farms');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
-  const [farmPlots, setFarmPlots] = useState<Plot[]>([]);
   const [selectedPlot, setSelectedPlot] = useState<Plot | null>(null);
-  const [plotSeasons, setPlotSeasons] = useState<Season[]>([]);
   const [showFarmDetail, setShowFarmDetail] = useState(false);
   const [showPlotDetail, setShowPlotDetail] = useState(false);
-  const [detailLoading, setDetailLoading] = useState(false);
-
-  // Filter state
   const [farmFilter, setFarmFilter] = useState<number | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // URL params
   const tabParam = searchParams.get("tab");
   const qParam = searchParams.get("q") ?? "";
   const farmIdParam = Number(searchParams.get("farmId"));
@@ -61,6 +41,43 @@ export function FarmsPlotsPage() {
   const parsedFarmId = Number.isFinite(farmIdParam) ? farmIdParam : null;
   const parsedPlotId = Number.isFinite(plotIdParam) ? plotIdParam : null;
   const parsedSeasonId = Number.isFinite(seasonIdParam) ? seasonIdParam : null;
+
+  // ── React Query: Farms list ──
+  const farmsQuery = useAdminFarms({ page, size: 20, keyword: searchTerm || undefined });
+  const farms = farmsQuery.data?.items ?? [];
+  const farmsTotalPages = farmsQuery.data?.totalPages ?? 0;
+
+  // ── React Query: Plots list ──
+  const plotsQuery = useAdminPlots({ page, size: 20, keyword: searchTerm || undefined, farmId: farmFilter });
+  const plots = plotsQuery.data?.items ?? [];
+  const plotsTotalPages = plotsQuery.data?.totalPages ?? 0;
+
+  // ── React Query: Farm filter dropdown options ──
+  const { data: filterFarms } = useAdminFarmsForFilter();
+
+  // ── React Query: Farm detail drawer – plots for selected farm ──
+  const farmPlotsQuery = useAdminFarmPlots(selectedFarm?.id ?? null, showFarmDetail);
+  const farmPlots = farmPlotsQuery.data ?? [];
+
+  // ── React Query: Plot detail drawer – seasons for selected plot ──
+  const plotSeasonsQuery = useAdminPlotSeasons(selectedPlot?.id ?? null, showPlotDetail);
+  const plotSeasons = plotSeasonsQuery.data ?? [];
+
+  // ── React Query: Deep-link farm/plot detail (when not in list) ──
+  const farmDetailQuery = useAdminFarmDetail(
+    parsedFarmId && activeTab === 'farms' && !showFarmDetail ? parsedFarmId : null
+  );
+  const plotDetailQuery = useAdminPlotDetail(
+    parsedPlotId && activeTab === 'plots' && !showPlotDetail ? parsedPlotId : null
+  );
+
+  // Derived loading/error for active tab
+  const loading = activeTab === 'farms' ? farmsQuery.isLoading : plotsQuery.isLoading;
+  const error = activeTab === 'farms'
+    ? (farmsQuery.isError ? 'Failed to load farms' : null)
+    : (plotsQuery.isError ? 'Failed to load plots' : null);
+  const totalPages = activeTab === 'farms' ? farmsTotalPages : plotsTotalPages;
+  const detailLoading = showFarmDetail ? farmPlotsQuery.isLoading : plotSeasonsQuery.isLoading;
 
   const clearQueryParams = (keys: string[]) => {
     const next = new URLSearchParams(searchParams);
@@ -88,48 +105,31 @@ export function FarmsPlotsPage() {
     setShowPlotDetail(false);
   };
 
-  const fetchFarms = async (keywordOverride?: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const keyword = keywordOverride ?? searchTerm;
-      const response = await adminFarmApi.list({ page, size: 20, keyword: keyword || undefined });
-      if (response?.result?.items) {
-        setFarms(response.result.items);
-        setTotalPages(response.result.totalPages || 0);
-      }
-    } catch (err) {
-      setError('Failed to load farms');
-      console.error(err);
-    } finally {
-      setLoading(false);
+  // ── Handlers: lightweight, just set UI state ──
+  const handleViewFarm = useCallback((farm: Farm) => {
+    setSelectedFarm(farm);
+    setShowFarmDetail(true);
+  }, []);
+
+  const handleViewPlot = useCallback((plot: Plot) => {
+    setSelectedPlot(plot);
+    setShowPlotDetail(true);
+  }, []);
+
+  const handleSearch = () => {
+    setPage(0);
+    // React Query auto-refetches because searchTerm is in the queryKey
+  };
+
+  const handleRefresh = () => {
+    if (activeTab === 'farms') {
+      void queryClient.invalidateQueries({ queryKey: adminFarmsPlotsKeys.farms });
+    } else {
+      void queryClient.invalidateQueries({ queryKey: adminFarmsPlotsKeys.plots });
     }
   };
 
-  const fetchPlots = async (keywordOverride?: string, farmOverride?: number | null) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const keyword = keywordOverride ?? searchTerm;
-      const farmId = farmOverride ?? farmFilter;
-      const response = await adminPlotApi.list({
-        page,
-        size: 20,
-        keyword: keyword || undefined,
-        farmId: farmId || undefined
-      });
-      if (response?.result?.items) {
-        setPlots(response.result.items);
-        setTotalPages(response.result.totalPages || 0);
-      }
-    } catch (err) {
-      setError('Failed to load plots');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // ── Sync tab from URL ──
   useEffect(() => {
     if (tabParam === "farms" || tabParam === "plots") {
       setActiveTab(tabParam);
@@ -144,6 +144,7 @@ export function FarmsPlotsPage() {
     }
   }, [tabParam, parsedFarmId, parsedPlotId, parsedSeasonId]);
 
+  // ── Sync farmFilter from URL ──
   useEffect(() => {
     if (parsedFarmId && farmFilter !== parsedFarmId) {
       setFarmFilter(parsedFarmId);
@@ -151,68 +152,14 @@ export function FarmsPlotsPage() {
     }
   }, [parsedFarmId, farmFilter]);
 
-  useEffect(() => {
-    if (activeTab === 'farms') {
-      fetchFarms();
-    } else {
-      fetchPlots();
-    }
-  }, [activeTab, page, farmFilter]);
-
+  // ── Sync search term from URL ──
   useEffect(() => {
     if (qParam === searchTerm) return;
     setSearchTerm(qParam);
     setPage(0);
-    if (activeTab === "farms") {
-      fetchFarms(qParam);
-    } else {
-      fetchPlots(qParam, farmFilter);
-    }
   }, [qParam, activeTab, farmFilter, searchTerm]);
 
-  const handleSearch = () => {
-    setPage(0);
-    if (activeTab === 'farms') {
-      fetchFarms();
-    } else {
-      fetchPlots();
-    }
-  };
-
-  const handleViewFarm = async (farm: Farm) => {
-    setSelectedFarm(farm);
-    setShowFarmDetail(true);
-    setDetailLoading(true);
-    try {
-      // Get farm plots
-      const plotsResponse = await adminPlotApi.list({ farmId: farm.id });
-      if (plotsResponse?.result?.items) {
-        setFarmPlots(plotsResponse.result.items);
-      }
-    } catch (err) {
-      console.error('Failed to load farm plots:', err);
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
-  const handleViewPlot = async (plot: Plot) => {
-    setSelectedPlot(plot);
-    setShowPlotDetail(true);
-    setDetailLoading(true);
-    try {
-      const seasonsResponse = await adminPlotApi.getSeasons(plot.id);
-      if (seasonsResponse?.result) {
-        setPlotSeasons(Array.isArray(seasonsResponse.result) ? seasonsResponse.result : []);
-      }
-    } catch (err) {
-      console.error('Failed to load plot seasons:', err);
-      setPlotSeasons([]);
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
+  // ── Deep-link: open farm detail from ?farmId= ──
   useEffect(() => {
     if (!parsedFarmId || activeTab !== "farms") return;
     if (selectedFarm?.id === parsedFarmId && showFarmDetail) return;
@@ -222,24 +169,13 @@ export function FarmsPlotsPage() {
       handleViewFarm(match);
       return;
     }
+    // If not in list, use the detail query result
+    if (farmDetailQuery.data) {
+      handleViewFarm(farmDetailQuery.data);
+    }
+  }, [parsedFarmId, activeTab, farms, selectedFarm?.id, showFarmDetail, handleViewFarm, farmDetailQuery.data]);
 
-    adminFarmApi
-      .getById(parsedFarmId)
-      .then((detail) => {
-        if (!detail) return;
-        handleViewFarm({
-          id: detail.id,
-          name: detail.name,
-          area: detail.area ?? null,
-          active: detail.active,
-          ownerUsername: detail.ownerUsername ?? null,
-          provinceName: detail.provinceName ?? null,
-          wardName: detail.wardName ?? null,
-        });
-      })
-      .catch(() => {});
-  }, [parsedFarmId, activeTab, farms, selectedFarm?.id, showFarmDetail, handleViewFarm]);
-
+  // ── Deep-link: open plot detail from ?plotId= ──
   useEffect(() => {
     if (!parsedPlotId || activeTab !== "plots") return;
     if (selectedPlot?.id === parsedPlotId && showPlotDetail) return;
@@ -249,23 +185,11 @@ export function FarmsPlotsPage() {
       handleViewPlot(match);
       return;
     }
-
-    adminPlotApi
-      .getById(parsedPlotId)
-      .then((response) => {
-        const payload = response?.result ?? response;
-        if (!payload) return;
-        handleViewPlot({
-          id: payload.id,
-          plotName: payload.plotName,
-          area: payload.area ?? null,
-          soilType: payload.soilType ?? null,
-          farmId: payload.farmId ?? 0,
-          farmName: payload.farmName ?? "",
-        });
-      })
-      .catch(() => {});
-  }, [parsedPlotId, activeTab, plots, selectedPlot?.id, showPlotDetail, handleViewPlot]);
+    // If not in list, use the detail query result
+    if (plotDetailQuery.data) {
+      handleViewPlot(plotDetailQuery.data);
+    }
+  }, [parsedPlotId, activeTab, plots, selectedPlot?.id, showPlotDetail, handleViewPlot, plotDetailQuery.data]);
 
   const STATUS_COLORS: Record<string, string> = {
     PLANNED: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
@@ -298,7 +222,7 @@ export function FarmsPlotsPage() {
           </button>
         </div>
         <button
-          onClick={() => { void fetchFarms(); }}
+          onClick={handleRefresh}
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -306,47 +230,30 @@ export function FarmsPlotsPage() {
         </button>
       </div>
 
-      <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
-        <table className="w-full min-w-[860px]">
-          <thead className="bg-muted/50 border-b border-border">
-            <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Owner</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Area (ha)</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Location</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+      <AsyncState
+        isLoading={loading}
+        isEmpty={!loading && !error && farms.length === 0}
+        error={error ? new Error(error) : null}
+        onRetry={handleRefresh}
+        loadingText="Loading farms..."
+        emptyIcon={<Building2 className="h-6 w-6 text-muted-foreground" />}
+        emptyTitle="No farms found"
+        emptyDescription="There are no farms matching your current search criteria."
+      >
+        <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
+          <table className="w-full min-w-[860px]">
+            <thead className="bg-muted/50 border-b border-border">
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                  <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                  Loading...
-                </td>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Owner</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Area (ha)</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Location</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Actions</th>
               </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center">
-                  <div className="flex flex-col items-center gap-2 text-destructive">
-                    <AlertCircle className="h-6 w-6" />
-                    {error}
-                    <button onClick={() => { void fetchFarms(); }} className="text-sm text-primary hover:underline">
-                      Try again
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ) : farms.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                  <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  No farms found
-                </td>
-              </tr>
-            ) : (
-              farms.map((farm) => (
+            </thead>
+            <tbody>
+              {farms.map((farm) => (
                 <tr key={farm.id} className="border-b border-border hover:bg-muted/30">
                   <td className="px-4 py-3 text-sm font-medium">{farm.name}</td>
                   <td className="px-4 py-3 text-sm">{farm.ownerUsername || '-'}</td>
@@ -371,11 +278,11 @@ export function FarmsPlotsPage() {
                     </button>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </AsyncState>
 
       {totalPages > 1 && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -422,13 +329,13 @@ export function FarmsPlotsPage() {
             className="w-full sm:w-auto px-3 py-2 border border-border rounded-lg bg-background text-sm"
           >
             <option value="">All Farms</option>
-            {farms.map(f => (
+            {(filterFarms ?? []).map(f => (
               <option key={f.id} value={f.id}>{f.name}</option>
             ))}
           </select>
         </div>
         <button
-          onClick={() => { void fetchPlots(); }}
+          onClick={handleRefresh}
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -436,46 +343,29 @@ export function FarmsPlotsPage() {
         </button>
       </div>
 
-      <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
-        <table className="w-full min-w-[760px]">
-          <thead className="bg-muted/50 border-b border-border">
-            <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Farm</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Area (ha)</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Soil Type</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+      <AsyncState
+        isLoading={loading}
+        isEmpty={!loading && !error && plots.length === 0}
+        error={error ? new Error(error) : null}
+        onRetry={handleRefresh}
+        loadingText="Loading plots..."
+        emptyIcon={<MapPin className="h-6 w-6 text-muted-foreground" />}
+        emptyTitle="No plots found"
+        emptyDescription="There are no plots matching your current search criteria."
+      >
+        <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
+          <table className="w-full min-w-[760px]">
+            <thead className="bg-muted/50 border-b border-border">
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                  <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                  Loading...
-                </td>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Farm</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Area (ha)</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Soil Type</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Actions</th>
               </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center">
-                  <div className="flex flex-col items-center gap-2 text-destructive">
-                    <AlertCircle className="h-6 w-6" />
-                    {error}
-                    <button onClick={() => { void fetchPlots(); }} className="text-sm text-primary hover:underline">
-                      Try again
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ) : plots.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                  <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  No plots found
-                </td>
-              </tr>
-            ) : (
-              plots.map((plot) => (
+            </thead>
+            <tbody>
+              {plots.map((plot) => (
                 <tr key={plot.id} className="border-b border-border hover:bg-muted/30">
                   <td className="px-4 py-3 text-sm font-medium">{plot.plotName || '-'}</td>
                   <td className="px-4 py-3 text-sm">{plot.farmName || '-'}</td>
@@ -490,11 +380,11 @@ export function FarmsPlotsPage() {
                     </button>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </AsyncState>
 
       {totalPages > 1 && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -521,7 +411,7 @@ export function FarmsPlotsPage() {
   );
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto">
+    <PageContainer>
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-1">Farms & Plots</h1>
         <p className="text-muted-foreground">System-wide overview of all farms and plots</p>
@@ -540,7 +430,7 @@ export function FarmsPlotsPage() {
           Farms
         </button>
         <button
-          onClick={() => { setActiveTab('plots'); setPage(0); setSearchTerm(''); fetchFarms(); }}
+          onClick={() => { setActiveTab('plots'); setPage(0); setSearchTerm(''); }}
           className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 -mb-px ${activeTab === 'plots'
             ? 'border-primary text-primary'
             : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -720,6 +610,6 @@ export function FarmsPlotsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

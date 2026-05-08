@@ -18,6 +18,8 @@ public interface IncidentRepository extends JpaRepository<Incident, Integer>, Jp
 
     List<Incident> findAllBySeason_Id(Integer seasonId);
 
+    List<Incident> findTop5BySeason_IdOrderByCreatedAtDescIdDesc(Integer seasonId);
+
     long countBySeasonIdAndStatusIn(Integer seasonId, List<IncidentStatus> statuses);
 
     long countBySeason_IdAndStatusIn(Integer seasonId, List<IncidentStatus> statuses);

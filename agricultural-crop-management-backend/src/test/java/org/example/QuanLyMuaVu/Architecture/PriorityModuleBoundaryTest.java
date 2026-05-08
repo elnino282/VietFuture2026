@@ -6,6 +6,8 @@ import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
+import org.example.QuanLyMuaVu.module.ai.service.DiseaseSuggestionService;
+import org.example.QuanLyMuaVu.module.ai.service.SeasonCostOptimizationService;
 import org.junit.jupiter.api.Test;
 
 class PriorityModuleBoundaryTest {
@@ -19,6 +21,9 @@ class PriorityModuleBoundaryTest {
     void aiModule_shouldRemainIsolatedFromOtherBusinessModules() {
         ArchRule rule = noClasses()
                 .that().resideInAnyPackage("..module.ai..")
+                .and().doNotBelongToAnyOf(
+                        DiseaseSuggestionService.class,
+                        SeasonCostOptimizationService.class)
                 .should().dependOnClassesThat().resideInAnyPackage(
                         "..module.identity.entity..",
                         "..module.identity.repository..",

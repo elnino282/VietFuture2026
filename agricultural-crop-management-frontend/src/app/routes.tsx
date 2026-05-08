@@ -59,34 +59,34 @@ const MarketplacePublicLayout = lazy(() =>
   }))
 );
 const MarketHomePage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({ default: m.MarketHomePage }))
+  import('@/pages/marketplace').then((m) => ({ default: m.MarketHomePage }))
 );
 const MarketplaceProductListPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({ default: m.ProductListPage }))
+  import('@/pages/marketplace').then((m) => ({ default: m.ProductListPage }))
 );
 const MarketplaceProductDetailPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({ default: m.ProductDetailPage }))
+  import('@/pages/marketplace').then((m) => ({ default: m.ProductDetailPage }))
 );
 const MarketplaceFarmListPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({ default: m.FarmListPage }))
+  import('@/pages/marketplace').then((m) => ({ default: m.FarmListPage }))
 );
 const MarketplaceFarmDetailPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({ default: m.FarmDetailPage }))
+  import('@/pages/marketplace').then((m) => ({ default: m.FarmDetailPage }))
 );
 const TraceabilityPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({ default: m.TraceabilityPage }))
+  import('@/pages/marketplace').then((m) => ({ default: m.TraceabilityPage }))
 );
 const CartPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({ default: m.CartPage }))
+  import('@/pages/marketplace').then((m) => ({ default: m.CartPage }))
 );
 const CheckoutPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({ default: m.CheckoutPage }))
+  import('@/pages/marketplace').then((m) => ({ default: m.CheckoutPage }))
 );
 const MarketplaceMyOrdersPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({ default: m.MyOrdersPage }))
+  import('@/pages/marketplace').then((m) => ({ default: m.MyOrdersPage }))
 );
 const MarketplaceOrderDetailPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({ default: m.OrderDetailPage }))
+  import('@/pages/marketplace').then((m) => ({ default: m.OrderDetailPage }))
 );
 
 // Buyer profile components
@@ -144,6 +144,9 @@ const FarmDetailPage = lazy(() =>
 );
 const FieldLogsPage = lazy(() =>
   import('@/pages/farmer/FieldLogsPage').then((m) => ({ default: m.FieldLogsPage }))
+);
+const DiseaseTrackingPage = lazy(() =>
+  import('@/pages/farmer/DiseaseTrackingPage').then((m) => ({ default: m.DiseaseTrackingPage }))
 );
 const InventoryPage = lazy(() =>
   import('@/pages/farmer/InventoryPage').then((m) => ({ default: m.InventoryPage }))
@@ -204,32 +207,32 @@ const SeasonReportsWorkspace = lazy(() =>
 
 // Farmer marketplace seller pages
 const MarketplaceSellerDashboardPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({
+  import('@/pages/marketplace').then((m) => ({
     default: m.SellerDashboardPage,
   }))
 );
 const MarketplaceSellerProductsPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({
+  import('@/pages/marketplace').then((m) => ({
     default: m.SellerProductsPage,
   }))
 );
 const MarketplaceSellerProductDetailPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({
+  import('@/pages/marketplace').then((m) => ({
     default: m.SellerProductDetailPage,
   }))
 );
 const MarketplaceSellerProductFormPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({
+  import('@/pages/marketplace').then((m) => ({
     default: m.SellerProductFormPage,
   }))
 );
 const MarketplaceSellerOrdersPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({
+  import('@/pages/marketplace').then((m) => ({
     default: m.SellerOrdersPage,
   }))
 );
 const MarketplaceSellerOrderDetailPage = lazy(() =>
-  import('@/features/marketplace/pages').then((m) => ({
+  import('@/pages/marketplace').then((m) => ({
     default: m.SellerOrderDetailPage,
   }))
 );
@@ -480,6 +483,7 @@ export function AppRoutes() {
               <Route path="tasks" element={<TaskWorkspace />} />
               <Route path="expenses" element={<ExpenseManagement />} />
               <Route path="field-logs" element={<FieldLogsPage />} />
+              <Route path="disease" element={<DiseaseTrackingPage />} />
               <Route path="harvest" element={<HarvestManagement />} />
               <Route path="labor-management" element={<LaborManagementPage />} />
               <Route path="nutrient-inputs" element={<SeasonNutrientInputsWorkspace />} />

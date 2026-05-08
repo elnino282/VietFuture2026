@@ -5,7 +5,7 @@ import { FarmList } from '@/features/farmer/farms/components/FarmList';
 import { PlotList } from '@/features/farmer/farms/components/PlotList';
 import { CreateFarmRequest, CreatePlotRequest, Farm, Plot } from '@/features/farmer/farms/types';
 import { useI18n } from '@/hooks/useI18n';
-import { Button, Card, CardContent, PageHeader } from '@/shared/ui';
+import { Button, Card, CardContent, PageContainer, PageHeader } from '@/shared/ui';
 import { Map, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -105,72 +105,70 @@ export default function FarmsPlotsPage() {
             : t('farms.tooltip.inactiveFarm');
 
     return (
-        <div className="min-h-screen acm-main-content pb-20">
-            <div className="max-w-[1920px] mx-auto p-6 flex min-h-screen flex-col gap-6">
-                <Card className="mb-6 border border-border rounded-xl shadow-sm">
-                    <CardContent className="px-6 py-4">
-                        <PageHeader
-                            className="mb-0"
-                            icon={<Map className="w-8 h-8" />}
-                            title={t('farms.title')}
-                            subtitle={t('farms.subtitle')}
-                            actions={
-                                <>
-                                    <Button onClick={() => setIsCreateFarmOpen(true)}>
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        {t('farms.newFarmButton')}
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setIsCreatePlotOpen(true)}
-                                        disabled={!canCreatePlot}
-                                        title={createPlotTitle}
-                                    >
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        {t('farms.newPlotButton')}
-                                    </Button>
-                                </>
-                            }
-                        />
-                    </CardContent>
-                </Card>
+        <PageContainer>
+            <Card className="mb-6 border border-border rounded-xl shadow-sm">
+                <CardContent className="px-6 py-4">
+                    <PageHeader
+                        className="mb-0"
+                        icon={<Map className="w-8 h-8" />}
+                        title={t('farms.title')}
+                        subtitle={t('farms.subtitle')}
+                        actions={
+                            <>
+                                <Button onClick={() => setIsCreateFarmOpen(true)}>
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    {t('farms.newFarmButton')}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsCreatePlotOpen(true)}
+                                    disabled={!canCreatePlot}
+                                    title={createPlotTitle}
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    {t('farms.newPlotButton')}
+                                </Button>
+                            </>
+                        }
+                    />
+                </CardContent>
+            </Card>
 
-                <div className="flex flex-1 gap-0 min-h-[600px]">
-                    {/* Left Pane: Farms List */}
-                    <div className="w-1/3 min-w-[350px] max-w-[450px]">
-                        <FarmList 
-                            farms={farms} 
-                            selectedFarmId={selectedFarm?.id}
-                            onSelectFarm={setSelectedFarm}
-                            isLoading={isLoadingFarms}
-                        />
-                    </div>
-
-                    {/* Right Pane: Plots List */}
-                    <div className="flex-1">
-                        <PlotList 
-                            farm={selectedFarm} 
-                            plots={plots}
-                            onCreatePlot={() => setIsCreatePlotOpen(true)}
-                            isLoading={isLoadingPlots}
-                        />
-                    </div>
+            <div className="flex flex-1 gap-0 min-h-[600px]">
+                {/* Left Pane: Farms List */}
+                <div className="w-1/3 min-w-[350px] max-w-[450px]">
+                    <FarmList 
+                        farms={farms} 
+                        selectedFarmId={selectedFarm?.id}
+                        onSelectFarm={setSelectedFarm}
+                        isLoading={isLoadingFarms}
+                    />
                 </div>
 
-                {/* Modals */}
-                <CreateFarmModal 
-                    open={isCreateFarmOpen} 
-                    onOpenChange={setIsCreateFarmOpen}
-                    onSubmit={handleCreateFarm}
-                />
-
-                <CreatePlotModal 
-                    open={isCreatePlotOpen} 
-                    onOpenChange={setIsCreatePlotOpen}
-                    onSubmit={handleCreatePlot}
-                />
+                {/* Right Pane: Plots List */}
+                <div className="flex-1">
+                    <PlotList 
+                        farm={selectedFarm} 
+                        plots={plots}
+                        onCreatePlot={() => setIsCreatePlotOpen(true)}
+                        isLoading={isLoadingPlots}
+                    />
+                </div>
             </div>
-        </div>
+
+            {/* Modals */}
+            <CreateFarmModal 
+                open={isCreateFarmOpen} 
+                onOpenChange={setIsCreateFarmOpen}
+                onSubmit={handleCreateFarm}
+            />
+
+            <CreatePlotModal 
+                open={isCreatePlotOpen} 
+                onOpenChange={setIsCreatePlotOpen}
+                onSubmit={handleCreatePlot}
+            />
+        </PageContainer>
     );
 }
 

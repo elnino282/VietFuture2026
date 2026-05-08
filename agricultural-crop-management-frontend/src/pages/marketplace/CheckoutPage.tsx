@@ -1,0 +1,765 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Banknote, Building2, MapPin, Pencil, Phone, Plus, Trash2, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { cn } from "@/shared/lib";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input } from "@/shared/ui";
+import type {
+  MarketplaceAddress,
+  MarketplaceAddressUpsertRequest,
+  MarketplacePaymentMethod,
+} from "@/shared/api";
+import {
+  useCheckoutValidation,
+  useMarketplaceAddresses,
+  useMarketplaceCart,
+  useMarketplaceCreateAddressMutation,
+  useMarketplaceCreateOrderMutation,
+  useMarketplaceDeleteAddressMutation,
+  useMarketplaceUpdateAddressMutation,
+} from "@/features/marketplace/hooks";
+import { formatVnd } from "@/features/marketplace/lib/format";
+
+function createCheckoutIdempotencyKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `mk-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function buildCartFingerprint(
+  cart: { items: Array<{ productId: number; quantity: number }> } | undefined,
+): string {
+  if (!cart || cart.items.length === 0) {
+    return "empty";
+  }
+  return cart.items
+    .slice()
+    .sort((left, right) => left.productId - right.productId)
+    .map((item) => `${item.productId}:${item.quantity}`)
+    .join("|");
+}
+
+type AddressFormState = MarketplaceAddressUpsertRequest;
+
+function emptyAddressForm(): AddressFormState {
+  return {
+    fullName: "",
+    phone: "",
+    province: "",
+    district: "",
+    ward: "",
+    street: "",
+    detail: "",
+    label: "home",
+    isDefault: false,
+  };
+}
+
+function toAddressForm(address: MarketplaceAddress): AddressFormState {
+  return {
+    fullName: address.fullName,
+    phone: address.phone,
+    province: address.province,
+    district: address.district,
+    ward: address.ward,
+    street: address.street,
+    detail: address.detail ?? "",
+    label: address.label,
+    isDefault: address.isDefault,
+  };
+}
+
+function formatAddressLabel(address: MarketplaceAddress): string {
+  const detail = address.detail?.trim();
+  const detailPart = detail ? `, ${detail}` : "";
+  return `${address.fullName} - ${address.phone} - ${address.street}${detailPart}, ${address.ward}, ${address.district}, ${address.province}`;
+}
+
+function resolveShippingAddressLine(address: MarketplaceAddress | null, manualAddressLine: string): string | undefined {
+  const trimmedManual = manualAddressLine.trim();
+  if (trimmedManual) {
+    return trimmedManual;
+  }
+  if (!address) {
+    return undefined;
+  }
+  const detail = address.detail?.trim();
+  return `${address.street}${detail ? `, ${detail}` : ""}, ${address.ward}, ${address.district}, ${address.province}`;
+}
+
+function resolveDraftShippingAddressLine(form: AddressFormState): string | undefined {
+  if (!isAddressFormValid(form)) {
+    return undefined;
+  }
+  const detail = form.detail?.trim();
+  return `${form.street}${detail ? `, ${detail}` : ""}, ${form.ward}, ${form.district}, ${form.province}`;
+}
+
+function isAddressFormValid(form: AddressFormState): boolean {
+  return [
+    form.fullName,
+    form.phone,
+    form.province,
+    form.district,
+    form.ward,
+    form.street,
+  ].every((value) => value.trim().length > 0);
+}
+
+export function CheckoutPage() {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const cartQuery = useMarketplaceCart();
+  const addressesQuery = useMarketplaceAddresses();
+  const createAddressMutation = useMarketplaceCreateAddressMutation();
+  const updateAddressMutation = useMarketplaceUpdateAddressMutation();
+  const deleteAddressMutation = useMarketplaceDeleteAddressMutation();
+  const createOrderMutation = useMarketplaceCreateOrderMutation();
+  const { validateCheckout } = useCheckoutValidation();
+
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [recipientName, setRecipientName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [addressLine, setAddressLine] = useState("");
+  const [note, setNote] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<MarketplacePaymentMethod>("COD");
+  const [checkoutIdempotencyKey, setCheckoutIdempotencyKey] = useState<string>(
+    () => createCheckoutIdempotencyKey(),
+  );
+  const [addressMode, setAddressMode] = useState<"saved" | "new">("saved");
+  const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
+  const [addressForm, setAddressForm] = useState<AddressFormState>(() => emptyAddressForm());
+  const [addressFormMessage, setAddressFormMessage] = useState<string | null>(null);
+
+  const cart = cartQuery.data;
+  const cartFingerprint = useMemo(() => buildCartFingerprint(cart), [cart]);
+  const lastCartFingerprintRef = useRef<string>("");
+
+  const splitOrderGroups = useMemo(() => {
+    if (!cart) return [];
+    const groups = new Map<number, typeof cart.items>();
+    cart.items.forEach((item) => {
+      groups.set(item.farmerUserId, [...(groups.get(item.farmerUserId) ?? []), item]);
+    });
+    return Array.from(groups.entries()).map(([farmerUserId, items]) => ({ farmerUserId, items }));
+  }, [cart?.items]);
+
+  useEffect(() => {
+    if (cartFingerprint !== lastCartFingerprintRef.current) {
+      setCheckoutIdempotencyKey(createCheckoutIdempotencyKey());
+      lastCartFingerprintRef.current = cartFingerprint;
+    }
+  }, [cartFingerprint]);
+
+  const defaultAddress = useMemo(() => {
+    const items = addressesQuery.data ?? [];
+    return items.find((item) => item.isDefault) ?? items[0] ?? null;
+  }, [addressesQuery.data]);
+
+  useEffect(() => {
+    if (selectedAddressId == null && defaultAddress) {
+      setSelectedAddressId(defaultAddress.id);
+    }
+  }, [defaultAddress, selectedAddressId]);
+
+  const selectedAddress = useMemo<MarketplaceAddress | null>(() => {
+    if (!addressesQuery.data) {
+      return null;
+    }
+
+    if (selectedAddressId == null) {
+      return defaultAddress;
+    }
+
+    return (
+      addressesQuery.data.find((item) => item.id === selectedAddressId) ??
+      defaultAddress
+    );
+  }, [addressesQuery.data, defaultAddress, selectedAddressId]);
+
+  const currentAddressMutation =
+    editingAddressId == null ? createAddressMutation : updateAddressMutation;
+
+  const addressMutationError =
+    currentAddressMutation.error instanceof Error ? currentAddressMutation.error.message : null;
+  const deleteAddressError =
+    deleteAddressMutation.error instanceof Error ? deleteAddressMutation.error.message : null;
+  const draftAddressLine = resolveDraftShippingAddressLine(addressForm);
+  const effectiveRecipientName =
+    recipientName.trim() ||
+    (addressMode === "new" ? addressForm.fullName.trim() : selectedAddress?.fullName) ||
+    undefined;
+  const effectivePhone =
+    phone.trim() ||
+    (addressMode === "new" ? addressForm.phone.trim() : selectedAddress?.phone) ||
+    undefined;
+  const effectiveShippingAddressLine =
+    addressMode === "new"
+      ? addressLine.trim() || draftAddressLine
+      : resolveShippingAddressLine(selectedAddress, addressLine);
+
+  if (cartQuery.isLoading) {
+    return (
+      <div className="max-w-[1800px] mx-auto px-6 pt-6">
+        <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+          {t("marketplaceBuyer.checkout.loadingCart")}
+        </div>
+      </div>
+    );
+  }
+
+  if (cartQuery.isError) {
+    return (
+      <div className="max-w-[1800px] mx-auto px-6 pt-6">
+        <div className="rounded-xl border border-dashed border-destructive/30 bg-card p-8 text-center text-sm text-destructive">
+          {t("marketplaceBuyer.checkout.errorCart")}
+        </div>
+      </div>
+    );
+  }
+
+  if (!cart || cart.items.length === 0) {
+    return (
+      <div className="max-w-[1800px] mx-auto px-6 pt-6">
+        <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+          <h1 className="text-xl font-semibold text-foreground">{t("marketplaceBuyer.checkout.emptyCartTitle")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t("marketplaceBuyer.checkout.emptyCartDesc")}
+          </p>
+          <Button className="mt-4" onClick={() => navigate("/marketplace/cart")}>
+            {t("marketplaceBuyer.checkout.backToCart")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const shippingFee = 20000;
+  const total = cart.subtotal + shippingFee;
+  const submitErrorMessage =
+    createOrderMutation.error instanceof Error
+      ? createOrderMutation.error.message
+      : null;
+
+  async function saveAddress() {
+    setAddressFormMessage(null);
+    if (!isAddressFormValid(addressForm)) {
+      setAddressFormMessage(t("marketplaceBuyer.checkout.addressForm.validationError"));
+      return;
+    }
+
+    const payload: MarketplaceAddressUpsertRequest = {
+      ...addressForm,
+      detail: addressForm.detail?.trim() || undefined,
+    };
+
+    try {
+      const saved =
+        editingAddressId == null
+          ? await createAddressMutation.mutateAsync(payload)
+          : await updateAddressMutation.mutateAsync({
+              addressId: editingAddressId,
+              request: payload,
+            });
+
+      toast.success('─É├ú l╞░u ─æß╗ïa chß╗ë giao h├áng.');
+      setSelectedAddressId(saved.id);
+      setAddressMode("saved");
+      setEditingAddressId(null);
+      setAddressForm(emptyAddressForm());
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Kh├┤ng thß╗â ho├án tß║Ñt thao t├íc.');
+    }
+  }
+
+  return (
+    <div className="max-w-[1800px] mx-auto px-6 pt-6">
+      <h1 className="mb-10 text-3xl font-bold text-foreground">Thanh to├ín</h1>
+
+      <div className="flex flex-col gap-10 lg:flex-row">
+        <div className="flex-1 space-y-8">
+          <Card>
+            <CardHeader className="border-b border-border/50">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="text-lg font-semibold text-foreground">Th├┤ng tin giao h├áng</CardTitle>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{t("marketplaceBuyer.checkout.shippingAddressDesc")}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant={addressMode === "saved" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setAddressMode("saved");
+                      setEditingAddressId(null);
+                      setAddressForm(emptyAddressForm());
+                      setAddressFormMessage(null);
+                    }}
+                  >
+                    ─Éß╗ïa chß╗ë ─æ├ú l╞░u
+                  </Button>
+                  <Button
+                    variant={addressMode === "new" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setAddressMode("new");
+                      setEditingAddressId(null);
+                      setAddressForm(emptyAddressForm());
+                      setAddressFormMessage(null);
+                    }}
+                  >
+                    <Plus size={16} />
+                    ─Éß╗ïa chß╗ë mß╗¢i
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {addressMode === "saved" ? (
+                <div className="space-y-4">
+                  {addressesQuery.data && addressesQuery.data.length > 0 ? (
+                    <>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-foreground">Chß╗ìn ─æß╗ïa chß╗ë giao h├áng</label>
+                        <select
+                          className="h-11 w-full rounded-lg border border-border bg-card px-4 text-sm shadow-sm transition-colors hover:border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          value={selectedAddress?.id ?? ""}
+                          onChange={(event) => {
+                            const next = Number(event.target.value);
+                            setSelectedAddressId(Number.isFinite(next) ? next : null);
+                          }}
+                        >
+                          {addressesQuery.data.map((address) => (
+                            <option key={address.id} value={address.id}>
+                              {formatAddressLabel(address)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {selectedAddress ? (
+                        <div className="rounded-lg border-2 border-emerald-100 bg-emerald-50/30 p-5">
+                          <div className="flex flex-wrap items-start justify-between gap-4">
+                            <div className="flex-1 space-y-2.5">
+                              <div className="flex items-center gap-2 text-foreground">
+                                <User size={16} className="text-primary" />
+                                <span className="font-semibold">{selectedAddress.fullName}</span>
+                                {selectedAddress.isDefault ? (
+                                  <span className="ml-1 inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-primary">
+                                    {t("marketplaceBuyer.checkout.defaultBadge")}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Phone size={16} className="text-primary" />
+                                <span>{selectedAddress.phone}</span>
+                              </div>
+                              <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                                <MapPin size={16} className="mt-0.5 shrink-0 text-primary" />
+                                <span className="leading-relaxed">
+                                  {selectedAddress.street}
+                                  {selectedAddress.detail ? `, ${selectedAddress.detail}` : ""}, {selectedAddress.ward}, {selectedAddress.district}, {selectedAddress.province}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setAddressMode("new");
+                                  setEditingAddressId(selectedAddress.id);
+                                  setAddressForm(toAddressForm(selectedAddress));
+                                  setAddressFormMessage(null);
+                                }}
+                              >
+                                <Pencil size={16} />
+                                Sß╗¡a
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                disabled={deleteAddressMutation.isPending}
+                                onClick={async () => {
+                                  await deleteAddressMutation.mutateAsync(selectedAddress.id);
+                                  setSelectedAddressId(null);
+                                }}
+                              >
+                                <Trash2 size={16} />
+                                X├│a
+                              </Button>
+                            </div>
+                          </div>
+                          {deleteAddressError ? (
+                            <p className="mt-3 text-sm text-destructive">{deleteAddressError}</p>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </>
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-border bg-muted/50 p-6 text-center text-sm text-muted-foreground">
+                      {t("marketplaceBuyer.checkout.noSavedAddress")}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-5 rounded-lg border border-border bg-muted/50 p-5">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">Hß╗ì t├¬n</label>
+                      <Input
+                        className="border-border"
+                        value={addressForm.fullName}
+                        onChange={(event) =>
+                          setAddressForm((current) => ({ ...current, fullName: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">Sß╗æ ─æiß╗çn thoß║íi</label>
+                      <Input
+                        className="border-border"
+                        value={addressForm.phone}
+                        onChange={(event) =>
+                          setAddressForm((current) => ({ ...current, phone: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">Tß╗ënh / Th├ánh</label>
+                      <Input
+                        className="border-border"
+                        value={addressForm.province}
+                        onChange={(event) =>
+                          setAddressForm((current) => ({ ...current, province: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">Quß║¡n / Huyß╗çn</label>
+                      <Input
+                        className="border-border"
+                        value={addressForm.district}
+                        onChange={(event) =>
+                          setAddressForm((current) => ({ ...current, district: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">Ph╞░ß╗¥ng / X├ú</label>
+                      <Input
+                        className="border-border"
+                        value={addressForm.ward}
+                        onChange={(event) =>
+                          setAddressForm((current) => ({ ...current, ward: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">─É╞░ß╗¥ng</label>
+                      <Input
+                        className="border-border"
+                        value={addressForm.street}
+                        onChange={(event) =>
+                          setAddressForm((current) => ({ ...current, street: event.target.value }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-foreground">Chi tiß║┐t th├¬m</label>
+                    <Input
+                      className="border-border"
+                      placeholder="Sß╗æ nh├á, t├¬n t├▓a nh├á, v.v."
+                      value={addressForm.detail ?? ""}
+                      onChange={(event) =>
+                        setAddressForm((current) => ({ ...current, detail: event.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-[180px_1fr] sm:items-center">
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">Loß║íi ─æß╗ïa chß╗ë</label>
+                      <select
+                        value={addressForm.label ?? "home"}
+                        onChange={(event) =>
+                          setAddressForm((current) => ({
+                            ...current,
+                            label: event.target.value as MarketplaceAddress["label"],
+                          }))
+                        }
+                        className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm shadow-sm transition-colors hover:border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        <option value="home">Nh├á ri├¬ng</option>
+                        <option value="office">V─ân ph├▓ng</option>
+                        <option value="other">Kh├íc</option>
+                      </select>
+                    </div>
+                    <label className="flex items-center gap-2.5 text-sm text-foreground">
+                      <input
+                        type="checkbox"
+                        checked={addressForm.isDefault ?? false}
+                        onChange={(event) =>
+                          setAddressForm((current) => ({
+                            ...current,
+                            isDefault: event.target.checked,
+                          }))
+                        }
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary/20"
+                      />
+                      ─Éß║╖t l├ám ─æß╗ïa chß╗ë mß║╖c ─æß╗ïnh
+                    </label>
+                  </div>
+
+                  {addressFormMessage ? <p className="text-sm text-destructive">{addressFormMessage}</p> : null}
+                  {addressMutationError ? <p className="text-sm text-destructive">{addressMutationError}</p> : null}
+
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <Button disabled={currentAddressMutation.isPending} onClick={saveAddress}>
+                      {currentAddressMutation.isPending
+                        ? t("marketplaceBuyer.checkout.addressForm.saving")
+                        : editingAddressId == null
+                          ? "L╞░u ─æß╗ïa chß╗ë"
+                          : "Cß║¡p nhß║¡t ─æß╗ïa chß╗ë"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setAddressMode("saved");
+                        setEditingAddressId(null);
+                        setAddressForm(emptyAddressForm());
+                        setAddressFormMessage(null);
+                      }}
+                    >
+                      Hß╗ºy
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-lg border border-dashed border-border bg-muted/50/50 p-5">
+                <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground/60">{t("marketplaceBuyer.checkout.overrideSection")}</p>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <Input
+                    placeholder={t("marketplaceBuyer.checkout.recipientOverride")}
+                    value={recipientName}
+                    onChange={(event) => setRecipientName(event.target.value)}
+                    className="border-border bg-card"
+                  />
+                  <Input
+                    placeholder={t("marketplaceBuyer.checkout.phoneOverride")}
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    className="border-border bg-card"
+                  />
+                </div>
+                <Input
+                  className="mt-3 border-border bg-card"
+                  placeholder={t("marketplaceBuyer.checkout.addressOverride")}
+                  value={addressLine}
+                  onChange={(event) => setAddressLine(event.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-foreground">Ghi ch├║</label>
+                <Input
+                  className="border-border"
+                  placeholder={t("marketplaceBuyer.checkout.orderNote")}
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="border-b border-border/50">
+              <CardTitle className="text-lg font-semibold text-foreground">Ph╞░╞íng thß╗⌐c thanh to├ín</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <label
+                className={cn(
+                  "flex cursor-pointer items-start gap-4 rounded-lg border-2 p-5 transition-all duration-200",
+                  paymentMethod === "COD"
+                    ? "border-emerald-600 bg-emerald-100 shadow-md"
+                    : "border-border bg-card hover:border-border hover:bg-muted/50",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="marketplace-payment"
+                  className="mt-1 h-4 w-4 shrink-0 border-border text-primary focus:ring-2 focus:ring-primary/20"
+                  checked={paymentMethod === "COD"}
+                  onChange={() => setPaymentMethod("COD")}
+                />
+                <div className="flex flex-1 items-start gap-3">
+                  <div className="rounded-lg bg-emerald-100 p-2.5">
+                    <Banknote size={20} className="text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="block text-base font-semibold text-foreground">{t("marketplaceBuyer.checkout.codLabel")}</span>
+                    <span className="mt-1 block text-sm text-muted-foreground">{t("marketplaceBuyer.checkout.codDesc")}</span>
+                  </div>
+                </div>
+              </label>
+
+              <label
+                className={cn(
+                  "flex cursor-pointer items-start gap-4 rounded-lg border-2 p-5 transition-all duration-200",
+                  paymentMethod === "BANK_TRANSFER"
+                    ? "border-emerald-600 bg-emerald-100 shadow-md"
+                    : "border-border bg-card hover:border-border hover:bg-muted/50",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="marketplace-payment"
+                  className="mt-1 h-4 w-4 shrink-0 border-border text-primary focus:ring-2 focus:ring-primary/20"
+                  checked={paymentMethod === "BANK_TRANSFER"}
+                  onChange={() => setPaymentMethod("BANK_TRANSFER")}
+                />
+                <div className="flex flex-1 items-start gap-3">
+                  <div className="rounded-lg bg-blue-100 p-2.5">
+                    <Building2 size={20} className="text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="block text-base font-semibold text-foreground">{t("marketplaceBuyer.checkout.bankTransferLabel")}</span>
+                    <span className="mt-1 block text-sm text-muted-foreground">{t("marketplaceBuyer.checkout.bankTransferDesc")}</span>
+                  </div>
+                </div>
+              </label>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="w-full shrink-0 lg:w-96">
+          <Card className="sticky top-24 border-2 border-border shadow-lg">
+            <CardHeader className="border-b border-border/50">
+              <CardTitle className="text-lg font-semibold text-foreground">─É╞ín h├áng cß╗ºa bß║ín</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6 space-y-4">
+                {cart.items.map((item) => (
+                  <div key={item.productId} className="flex items-start justify-between gap-3 text-sm">
+                    <div className="flex-1 min-w-0">
+                      <span className="block font-medium text-foreground line-clamp-2">{item.name}</span>
+                      <span className="mt-1 text-muted-foreground">
+                        {item.quantity} x {formatVnd(item.unitPrice)}
+                      </span>
+                    </div>
+                    <span className="font-semibold text-foreground shrink-0">{formatVnd(item.unitPrice * item.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mb-6 space-y-3 border-t border-border pt-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{t("marketplaceBuyer.checkout.subtotal")}</span>
+                  <span className="font-medium text-foreground">{formatVnd(cart.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{t("marketplaceBuyer.checkout.shipping")}</span>
+                  <span className="font-medium text-foreground">{formatVnd(shippingFee)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-border pt-4">
+                  <span className="text-base font-bold text-foreground">{t("marketplaceBuyer.checkout.total")}</span>
+                  <span className="text-2xl font-bold text-primary">{formatVnd(total)}</span>
+                </div>
+              </div>
+
+              {effectiveRecipientName && effectivePhone && effectiveShippingAddressLine ? (
+                <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <MapPin size={16} className="text-primary" />
+                    <p className="text-sm font-semibold text-foreground">{t("marketplaceBuyer.checkout.deliverTo")}</p>
+                  </div>
+                  <div className="space-y-1 text-sm text-foreground">
+                    <p className="font-medium">{effectiveRecipientName}</p>
+                    <p>{effectivePhone}</p>
+                    <p className="text-muted-foreground">{effectiveShippingAddressLine}</p>
+                  </div>
+                </div>
+              ) : null}
+
+              {splitOrderGroups.length > 1 ? (
+                <div className="mb-5 rounded-xl border border-emerald-100 bg-emerald-50/40 p-4">
+                  <p className="text-sm font-semibold text-emerald-900">─É╞ín h├áng sß║╜ ─æ╞░ß╗úc t├ích theo ng╞░ß╗¥i b├ín</p>
+                  <div className="mt-3 space-y-2">
+                    {splitOrderGroups.map((group, index) => (
+                      <div key={group.farmerUserId} className="rounded-lg bg-card p-3 text-sm text-foreground">
+                        <div className="font-medium text-foreground">─É╞ín {index + 1}</div>
+                        <div>{group.items.length} sß║ún phß║⌐m ┬╖ {formatVnd(group.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0))}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {submitErrorMessage ? (
+                <p className="mb-4 text-sm text-destructive">{submitErrorMessage}</p>
+              ) : null}
+
+              <Button
+                type="button"
+                className="w-full"
+                size="lg"
+                disabled={
+                  createOrderMutation.isPending ||
+                  !effectiveRecipientName ||
+                  !effectivePhone ||
+                  !effectiveShippingAddressLine
+                }
+                onClick={async () => {
+                  const validation = validateCheckout({
+                    addressMode,
+                    selectedAddress,
+                    recipientName: effectiveRecipientName,
+                    phone: effectivePhone,
+                    shippingAddressLine: effectiveShippingAddressLine ?? '',
+                    paymentMethod,
+                  });
+                  if (!validation.valid) {
+                    toast.error(validation.message);
+                    return;
+                  }
+
+                  try {
+                    const result = await createOrderMutation.mutateAsync({
+                      paymentMethod,
+                      addressId: addressMode === "saved" ? selectedAddress?.id : undefined,
+                      shippingRecipientName: effectiveRecipientName,
+                      shippingPhone: effectivePhone,
+                      shippingAddressLine: effectiveShippingAddressLine ?? '',
+                      note: note.trim() || undefined,
+                      idempotencyKey: checkoutIdempotencyKey,
+                    });
+
+                    toast.success('─Éß║╖t h├áng th├ánh c├┤ng.');
+                    const firstOrderId = result.orders[0]?.id;
+                    if (firstOrderId) {
+                      navigate(`/marketplace/orders/${firstOrderId}`);
+                      return;
+                    }
+                    navigate("/marketplace/orders");
+                  } catch (error) {
+                    toast.error(error instanceof Error ? error.message : 'Kh├┤ng thß╗â ho├án tß║Ñt thao t├íc.');
+                  }
+                }}
+              >
+                {createOrderMutation.isPending
+                  ? t("marketplaceBuyer.checkout.placingOrder")
+                  : t("marketplaceBuyer.checkout.placeOrder")}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

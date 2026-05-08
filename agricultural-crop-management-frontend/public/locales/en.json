@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "appName": "ACM Platform",
     "loading": "Loading...",
@@ -1783,6 +1783,37 @@
       "reviewPlaceholder": "Share your experience",
       "submitReview": "Submit",
       "reviewed": "Reviewed"
+    }
+  },
+  "marketplaceSeller": {
+    "products": {
+      "title": "Manage products",
+      "subtitle": "List, moderate, and manage stock for your marketplace products.",
+      "addProduct": "Add product",
+      "searchPlaceholder": "Search your listings...",
+      "loading": "Loading products...",
+      "emptyFiltered": "No products matched your current filters.",
+      "loadError": "Failed to load seller products."
+    },
+    "filters": {
+      "allStatuses": "All statuses"
+    },
+    "status": {
+      "draft": "Draft",
+      "pendingReview": "Pending approval",
+      "published": "Approved",
+      "hidden": "Rejected / Hidden"
+    },
+    "table": {
+      "product": "Product",
+      "category": "Category",
+      "price": "Price",
+      "stock": "Stock",
+      "status": "Status",
+      "updated": "Updated",
+      "actions": "Actions",
+      "adminReason": "Admin reason",
+      "available": "Available"
     }
   }
 }
