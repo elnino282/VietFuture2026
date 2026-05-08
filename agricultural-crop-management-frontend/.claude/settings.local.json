@@ -6,13 +6,7 @@
       "Bash(npx tsc *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git commit -m 'feat\\(buyer-profile\\): add AddressCard component *)",
-      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__take_screenshot",
-      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__click",
-      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__take_snapshot",
-      "Bash(git *)",
-      "Bash(npm test *)",
-      "Bash(timeout 30 tail -f \"C:\\\\Users\\\\QUYNHH~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-Quynh-Ho-Documents-GitHub-SE122-Code-MicroserviceReady-Test-agricultural-crop-management-frontend\\\\53e077b0-bd48-4d97-9edb-7673b47d3862\\\\tasks\\\\bj3st3xri.output\")"
+      "Bash(git *)"
     ]
   }
 }
