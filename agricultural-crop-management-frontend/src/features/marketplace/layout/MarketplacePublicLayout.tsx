@@ -75,7 +75,10 @@ const NAV_LINKS = [
   { to: "/marketplace/traceability", label: "Truy xuất" },
 ];
 
-const PRODUCTS_NAV_ACTIVE_STYLE = { color: "#3BA55D", background: "#f0faf4" };
+const PRODUCTS_NAV_ACTIVE_STYLE = {
+  color: "#ffffff",
+  background: "rgba(255, 255, 255, 0.12)",
+};
 
 function ProductsNavItem() {
   const [isOpen, setIsOpen] = useState(false);
@@ -160,8 +163,8 @@ function ProductsNavItem() {
             cn(
               "fb-nav-link flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium transition-colors",
               isActive || isOpen
-                ? "fb-active font-semibold ring-1 ring-[#3BA55D]"
-                : "text-gray-600 hover:bg-gray-100 hover:text-emerald-600",
+                ? "fb-active font-semibold ring-1 ring-white/25"
+                : "text-white hover:bg-white/10 hover:text-emerald-100",
             )
           }
           style={({ isActive }) =>
@@ -171,7 +174,7 @@ function ProductsNavItem() {
           {({ isActive }) => (
             <>
               <span
-                style={isActive || isOpen ? { color: "#3BA55D" } : undefined}
+                style={isActive || isOpen ? { color: "#ffffff" } : undefined}
               >
                 Sản phẩm
               </span>
@@ -180,7 +183,7 @@ function ProductsNavItem() {
                   "h-3 w-3 transition-transform",
                   isOpen && "rotate-180",
                 )}
-                style={isActive || isOpen ? { color: "#3BA55D" } : undefined}
+                style={isActive || isOpen ? { color: "#ffffff" } : undefined}
               />
             </>
           )}
@@ -226,8 +229,8 @@ function MarketplaceNavLink({
         cn(
           "fb-nav-link rounded-full px-3 py-1 text-sm transition-colors",
           isActive
-            ? "fb-active bg-emerald-50 font-semibold text-emerald-700 ring-1 ring-emerald-200"
-            : "font-medium text-gray-600 hover:bg-gray-100 hover:text-emerald-600",
+            ? "fb-active bg-white/10 font-semibold text-white ring-1 ring-white/25"
+            : "font-medium text-white hover:bg-white/10 hover:text-emerald-100",
         )
       }
     >
@@ -252,13 +255,21 @@ function MarketplaceSearchBar({ className = "" }: { className?: string }) {
 
   return (
     <form onSubmit={handleSubmit} className={`relative ${className}`}>
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+      <Search
+        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+        style={{ color: "rgba(6, 95, 70, 0.62)" }}
+      />
       <input
         type="search"
         placeholder="Tìm kiếm nông sản, nông trại..."
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        className="fb-search-input w-full rounded-full border border-transparent bg-gray-100 py-2.5 pl-10 pr-4 text-sm text-gray-700 outline-none transition focus:bg-white"
+        className="fb-search-input w-full rounded-full border py-2.5 pl-10 pr-4 text-sm outline-none transition focus:ring-2 focus:ring-white/30"
+        style={{
+          backgroundColor: "#F8FAF5",
+          borderColor: "#DDE7D8",
+          color: "#334155",
+        }}
       />
     </form>
   );
@@ -395,7 +406,8 @@ function MobileMenu({
   return (
     <div
       id="marketplace-mobile-menu"
-      className="marketplace-header__mobile-menu border-t border-gray-200 bg-white"
+      className="marketplace-header__mobile-menu border-t border-white/15"
+      style={{ backgroundColor: "#065F46" }}
     >
       <div className="space-y-4 px-4 py-4">
         <MarketplaceSearchBar className="w-full" />
@@ -404,14 +416,14 @@ function MobileMenu({
           <Link
             to="/marketplace"
             onClick={onClose}
-            className="text-sm font-medium text-gray-700 hover:text-emerald-600"
+            className="rounded-md px-2 py-1 text-sm font-medium text-white hover:bg-white/10 hover:text-emerald-100"
           >
             Trang chủ
           </Link>
           <Link
             to="/marketplace/products"
             onClick={onClose}
-            className="text-sm font-medium text-gray-700 hover:text-emerald-600"
+            className="rounded-md px-2 py-1 text-sm font-medium text-white hover:bg-white/10 hover:text-emerald-100"
           >
             Sản phẩm
           </Link>
@@ -425,14 +437,14 @@ function MobileMenu({
           ))}
         </nav>
 
-        <div className="border-t border-gray-100 pt-3">
+        <div className="border-t border-white/15 pt-3">
           {isAuthenticated ? (
             <div className="space-y-2">
-              <div className="rounded-lg bg-gray-50 px-3 py-2">
-                <p className="text-sm font-medium text-gray-900">
+              <div className="rounded-lg bg-white/10 px-3 py-2">
+                <p className="text-sm font-medium text-white">
                   {userName ?? "Tài khoản của bạn"}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-emerald-100">
                   {formatRoleLabel(userRole)}
                 </p>
               </div>
@@ -440,7 +452,7 @@ function MobileMenu({
               <Link
                 to="/marketplace/cart"
                 onClick={onClose}
-                className="flex items-center gap-2 text-sm text-gray-700 hover:text-emerald-600"
+                className="flex items-center gap-2 rounded-md px-2 py-1 text-sm text-white hover:bg-white/10 hover:text-emerald-100"
               >
                 <ShoppingCart size={16} /> Giỏ hàng ({cartCount})
               </Link>
@@ -449,7 +461,7 @@ function MobileMenu({
                 <Link
                   to="/marketplace/profile"
                   onClick={onClose}
-                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-emerald-600"
+                  className="flex items-center gap-2 rounded-md px-2 py-1 text-sm text-white hover:bg-white/10 hover:text-emerald-100"
                 >
                   <User size={16} /> Hồ sơ của tôi
                 </Link>
@@ -458,7 +470,7 @@ function MobileMenu({
               <Link
                 to="/marketplace/orders"
                 onClick={onClose}
-                className="flex items-center gap-2 text-sm text-gray-700 hover:text-emerald-600"
+                className="flex items-center gap-2 rounded-md px-2 py-1 text-sm text-white hover:bg-white/10 hover:text-emerald-100"
               >
                 <Package size={16} /> Đơn hàng của tôi
               </Link>
@@ -467,7 +479,7 @@ function MobileMenu({
                 <Link
                   to={resolvePortalRoute(userRole)}
                   onClick={onClose}
-                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-emerald-600"
+                  className="flex items-center gap-2 rounded-md px-2 py-1 text-sm text-white hover:bg-white/10 hover:text-emerald-100"
                 >
                   <Store size={16} /> {resolvePortalButtonLabel(userRole)}
                 </Link>
@@ -476,7 +488,7 @@ function MobileMenu({
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full justify-start px-0 text-sm text-gray-700 hover:text-emerald-600"
+                className="w-full justify-start px-2 text-sm text-white hover:bg-white/10 hover:text-emerald-100"
                 onClick={() => {
                   onClose();
                   onLogout();
@@ -488,12 +500,12 @@ function MobileMenu({
           ) : (
             <div className="flex flex-col gap-2">
               <Link to="/sign-in" onClick={onClose}>
-                <Button variant="ghost" className="w-full justify-start">
+                <Button variant="ghost" className="w-full justify-start text-white hover:bg-white/10 hover:text-emerald-100">
                   Đăng nhập
                 </Button>
               </Link>
               <Link to="/sign-up" onClick={onClose}>
-                <Button className="w-full justify-start">Đăng ký</Button>
+                <Button className="w-full justify-start bg-white text-emerald-800 hover:bg-emerald-50">Đăng ký</Button>
               </Link>
             </div>
           )}
@@ -510,23 +522,28 @@ export function MarketplacePublicLayout() {
 
   useMarketplaceCartMergeBridge();
   const cartCount = useMarketplaceCartCount();
+  const cartBadgeLabel = cartCount > 99 ? "99+" : String(cartCount);
   const scrolled = useScrolled(80);
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <header
-        className={cn(
-          "marketplace-header fb-marketplace sticky top-0 z-50 w-full border-b border-gray-200 bg-white shadow-sm",
-          scrolled && "fb-nav-scrolled",
-        )}
+        className="marketplace-header fb-marketplace sticky top-0 z-50 w-full border-b shadow-sm"
+        style={{
+          background: "linear-gradient(90deg, #065F46 0%, #047857 100%)",
+          borderBottomColor: "rgba(255, 255, 255, 0.12)",
+          boxShadow: scrolled
+            ? "0 8px 22px rgba(4, 120, 87, 0.18)"
+            : "0 1px 3px rgba(15, 23, 42, 0.08)",
+        }}
       >
         <div className="marketplace-header__inner container mx-auto px-4 relative">
           <div className="marketplace-header__left">
             <Link to="/marketplace" className="flex items-center gap-2">
-              <div className="rounded-md bg-emerald-600 p-1.5 text-white">
+              <div className="rounded-md bg-white/10 p-1.5 text-white ring-1 ring-white/20">
                 <Package size={24} />
               </div>
-              <span className="marketplace-header__brand-text text-xl font-bold text-emerald-800">
+              <span className="marketplace-header__brand-text text-xl font-bold text-white">
                 FarmTrace
               </span>
             </Link>
@@ -551,12 +568,23 @@ export function MarketplacePublicLayout() {
             <Link
               to="/marketplace/cart"
               aria-label="Giỏ hàng"
-              className="relative rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-emerald-600"
+              className="relative rounded-md p-2 text-white transition-colors hover:bg-white/10 hover:text-emerald-100"
             >
-              <ShoppingCart size={24} />
+              <span className="marketplace-cart-icon">
+                <ShoppingCart size={24} />
+                {cartCount > 0 && (
+                  <span
+                    key={cartCount}
+                    className="marketplace-cart-badge"
+                    aria-label={`${cartBadgeLabel} sản phẩm trong giỏ hàng`}
+                  >
+                    {cartBadgeLabel}
+                  </span>
+                )}
+              </span>
               {cartCount > 0 && (
-                <span className="fb-cart-badge absolute right-0 top-0 inline-flex translate-x-1/4 -translate-y-1/4 items-center justify-center rounded-full bg-red-600 px-2 py-1 text-xs font-bold leading-none text-white">
-                  {cartCount}
+                <span className="sr-only">
+                  {cartBadgeLabel} sản phẩm trong giỏ hàng
                 </span>
               )}
             </Link>
@@ -567,19 +595,19 @@ export function MarketplacePublicLayout() {
                   {showPortalAction ? (
                     <>
                       <div className="marketplace-header__user">
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-white">
                           {user?.name ?? "Người dùng"}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-emerald-100">
                           {formatRoleLabel(user?.role)}
                         </span>
                       </div>
 
-                      <Button asChild variant="outline" size="sm">
+                      <Button asChild variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/15 hover:text-white">
                         <Link to="/marketplace/orders">Đơn hàng</Link>
                       </Button>
 
-                      <Button asChild variant="outline" size="sm">
+                      <Button asChild variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/15 hover:text-white">
                         <Link to={resolvePortalRoute(user?.role)}>
                           <Store size={14} />{" "}
                           {resolvePortalButtonLabel(user?.role)}
@@ -590,6 +618,7 @@ export function MarketplacePublicLayout() {
                         variant="ghost"
                         size="icon"
                         onClick={logout}
+                        className="text-white hover:bg-white/10 hover:text-emerald-100"
                         title="Đăng xuất"
                       >
                         <LogOut size={18} />
@@ -601,7 +630,7 @@ export function MarketplacePublicLayout() {
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 text-white hover:bg-white/10 hover:text-emerald-100"
                           >
                             <User size={16} />
                             <span className="text-sm font-medium">
@@ -653,12 +682,12 @@ export function MarketplacePublicLayout() {
                 </>
               ) : (
                 <>
-                  <Button asChild variant="ghost" size="sm">
+                  <Button asChild variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-emerald-100">
                     <Link to="/sign-in">
                       <User size={14} /> Đăng nhập
                     </Link>
                   </Button>
-                  <Button asChild size="sm">
+                  <Button asChild size="sm" className="bg-white text-emerald-800 hover:bg-emerald-50">
                     <Link to="/sign-up">Đăng ký</Link>
                   </Button>
                 </>
@@ -667,7 +696,7 @@ export function MarketplacePublicLayout() {
 
             <button
               type="button"
-              className="marketplace-header__mobile-toggle rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100"
+              className="marketplace-header__mobile-toggle rounded-md p-2 text-white transition-colors hover:bg-white/10 hover:text-emerald-100"
               onClick={() => setMobileMenuOpen((current) => !current)}
               aria-controls="marketplace-mobile-menu"
               aria-expanded={mobileMenuOpen}
