@@ -56,19 +56,16 @@ export function MarketHomePage() {
 
   return (
     <div>
-      <section className="fb-marketplace fb-hero">
-        <svg
-          className="fb-blob"
-          viewBox="0 0 480 480"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path
-            fill="#E1F5EE"
-            d="M398,98c45,57,57,154,18,224s-138,114-219,99S52,357,42,277S82,108,162,68s191-27,236,30Z"
-          />
-        </svg>
-
+      <section
+        className="fb-marketplace fb-hero"
+        style={{
+          backgroundImage:
+            'linear-gradient(90deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.78) 42%, rgba(255, 255, 255, 0.3) 100%), url("/background.png")',
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+        }}
+      >
         <div className="max-w-[1800px] mx-auto px-6">
           <div className="fb-hero-grid">
             <div className={cn("fb-hero-left fb-stagger", mounted && "fb-mounted")}>

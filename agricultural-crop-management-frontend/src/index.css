@@ -6697,23 +6697,6 @@ html {
   animation: fb-pulse-dot 1.6s ease-out infinite;
 }
 
-/* Decorative blob */
-.fb-blob {
-  position: absolute;
-  top: -120px;
-  right: -120px;
-  width: 480px;
-  height: 480px;
-  z-index: 0;
-  pointer-events: none;
-}
-
-@media (max-width: 767px) {
-  .fb-blob {
-    display: none;
-  }
-}
-
 .fb-hero>.container,
 .fb-hero>div {
   position: relative;
