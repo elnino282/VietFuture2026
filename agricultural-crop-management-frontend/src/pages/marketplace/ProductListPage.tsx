@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { PackageOpen, Search, SlidersHorizontal, X } from "lucide-react";
+import { ImageOff, PackageOpen, Search, SlidersHorizontal, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/features/auth";
 import { cn } from "@/shared/lib";
@@ -173,7 +173,7 @@ function activeFilterChips(filters: FilterState) {
 
 function ProductCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+    <div className="marketplace-product-card">
       <div className="aspect-square animate-pulse bg-muted" />
       <div className="space-y-3 p-4">
         <div className="h-3 w-16 animate-pulse rounded bg-muted" />
@@ -190,12 +190,12 @@ function ProductCardSkeleton() {
 
 function FilterBadge({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-700/20 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-950">
-      {label}
+    <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-emerald-700/20 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-950">
+      <span className="truncate">{label}</span>
       <button
         type="button"
         onClick={onRemove}
-        className="rounded-full p-0.5 text-emerald-900 transition hover:bg-emerald-100"
+        className="shrink-0 rounded-full p-0.5 text-emerald-900 transition hover:bg-emerald-100"
         aria-label={`Xóa lọc: ${label}`}
       >
         <X size={12} />
@@ -233,17 +233,17 @@ function ProductFilterPanel({
   regionsLoading,
   compact = false,
 }: ProductFilterPanelProps) {
+  const panelId = compact ? "mobile" : "desktop";
+
   return (
     <div
       className={cn(
-        "bg-white",
-        compact
-          ? "space-y-5"
-          : "sticky top-24 overflow-hidden rounded-2xl border border-gray-200 shadow-sm",
+        "marketplace-filter-panel",
+        compact ? "space-y-5" : "marketplace-filter-panel--desktop",
       )}
     >
       {!compact ? (
-        <div className="border-b border-border px-5 py-4">
+        <div className="shrink-0 border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
             <SlidersHorizontal size={17} className="text-muted-foreground" aria-hidden="true" />
             <h2 className="text-lg font-semibold text-foreground">Bộ lọc sản phẩm</h2>
@@ -252,18 +252,20 @@ function ProductFilterPanel({
         </div>
       ) : null}
 
-      <div className={cn("space-y-5", compact ? "" : "px-5 py-5")}>
+      <div className={cn("space-y-5", compact ? "" : "marketplace-filter-panel__body px-5 py-5")}>
         <FilterSection title="Danh mục">
           {categoriesLoading ? (
             <FilterSkeletonRows />
           ) : categoriesError ? (
-            <p className="text-xs text-destructive">Không thể tải danh mục từ sản phẩm công khai.</p>
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs leading-5 text-destructive">
+              Không thể tải danh mục từ sản phẩm công khai.
+            </p>
           ) : (
-            <div className="max-h-44 space-y-1 overflow-y-auto pr-1">
+            <div className="marketplace-filter-options space-y-1">
               <RadioFilterOption
                 checked={!draft.category}
                 label="Tất cả"
-                name="category"
+                name={`${panelId}-category`}
                 onChange={() => onDraftChange({ category: "" })}
               />
               {categories.map((category) => (
@@ -272,12 +274,14 @@ function ProductFilterPanel({
                   checked={draft.category === category}
                   count={categoryCounts.get(category)}
                   label={getCategoryLabel(category)}
-                  name="category"
+                  name={`${panelId}-category`}
                   onChange={() => onDraftChange({ category })}
                 />
               ))}
               {categories.length === 0 ? (
-                <p className="px-2 py-1 text-xs text-muted-foreground">Chưa có danh mục.</p>
+                <p className="px-2 py-1 text-xs leading-5 text-muted-foreground">
+                  Chưa có danh mục từ sản phẩm công khai.
+                </p>
               ) : null}
             </div>
           )}
@@ -287,11 +291,11 @@ function ProductFilterPanel({
           {regionsLoading ? (
             <FilterSkeletonRows />
           ) : (
-            <div className="max-h-44 space-y-1 overflow-y-auto pr-1">
+            <div className="marketplace-filter-options space-y-1">
               <RadioFilterOption
                 checked={!draft.region}
                 label="Tất cả khu vực"
-                name="region"
+                name={`${panelId}-region`}
                 onChange={() => onDraftChange({ region: "" })}
               />
               {regions.map((region) => (
@@ -300,12 +304,14 @@ function ProductFilterPanel({
                   checked={draft.region === region}
                   count={regionCounts.get(region)}
                   label={region}
-                  name="region"
+                  name={`${panelId}-region`}
                   onChange={() => onDraftChange({ region })}
                 />
               ))}
               {regions.length === 0 ? (
-                <p className="px-2 py-1 text-xs text-muted-foreground">Chưa có khu vực từ dữ liệu sản phẩm.</p>
+                <p className="px-2 py-1 text-xs leading-5 text-muted-foreground">
+                  Chưa có khu vực từ dữ liệu sản phẩm.
+                </p>
               ) : null}
             </div>
           )}
@@ -316,7 +322,7 @@ function ProductFilterPanel({
             <RadioFilterOption
               checked={!draft.priceRange}
               label="Tất cả mức giá"
-              name="priceRange"
+              name={`${panelId}-priceRange`}
               onChange={() => onDraftChange({ priceRange: "" })}
             />
             {PRICE_RANGES.map((range) => (
@@ -324,7 +330,7 @@ function ProductFilterPanel({
                 key={range.value}
                 checked={draft.priceRange === range.value}
                 label={range.label}
-                name="priceRange"
+                name={`${panelId}-priceRange`}
                 onChange={() => onDraftChange({ priceRange: range.value })}
               />
             ))}
@@ -334,7 +340,7 @@ function ProductFilterPanel({
         <FilterSection title="Tiêu chuẩn / truy xuất">
           <label
             className={cn(
-              "flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-3 text-sm transition",
+              "flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-3 text-sm transition",
               draft.traceable
                 ? "border-emerald-500 bg-emerald-50"
                 : "border-border hover:border-emerald-200 hover:bg-emerald-50/40",
@@ -342,11 +348,11 @@ function ProductFilterPanel({
           >
             <input
               type="checkbox"
-              className="mt-0.5 h-4 w-4 rounded border-border accent-emerald-600"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-emerald-600"
               checked={draft.traceable}
               onChange={(event) => onDraftChange({ traceable: event.target.checked })}
             />
-            <span>
+            <span className="min-w-0">
               <span className="block font-medium text-foreground">Có truy xuất nguồn gốc</span>
               <span className="mt-1 block text-xs leading-5 text-muted-foreground">
                 Ưu tiên sản phẩm có mùa vụ và lô thu hoạch rõ ràng.
@@ -356,7 +362,12 @@ function ProductFilterPanel({
         </FilterSection>
       </div>
 
-      <div className={cn("grid grid-cols-2 gap-3", compact ? "pt-1" : "border-t border-border p-5")}>
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-3",
+          compact ? "pt-1" : "marketplace-filter-panel__footer border-t border-border bg-card p-5",
+        )}
+      >
         <Button type="button" variant="outline" onClick={onClear}>
           Xóa lọc
         </Button>
@@ -387,7 +398,7 @@ function FilterSkeletonRows() {
   return (
     <div className="space-y-2">
       {Array.from({ length: 4 }, (_, index) => (
-        <div key={index} className="h-5 animate-pulse rounded bg-muted" />
+        <div key={index} className="h-6 animate-pulse rounded-lg bg-muted" />
       ))}
     </div>
   );
@@ -409,7 +420,7 @@ function RadioFilterOption({
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm transition",
+        "flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-2 text-sm transition",
         checked ? "bg-emerald-50 text-emerald-950" : "text-slate-700 hover:bg-muted",
       )}
     >
@@ -427,6 +438,119 @@ function RadioFilterOption({
         <span className="shrink-0 text-xs font-medium text-muted-foreground">{count}</span>
       ) : null}
     </label>
+  );
+}
+
+function ProductImage({ src, alt }: { src?: string | null; alt: string }) {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [src]);
+
+  if (!src || hasError) {
+    return (
+      <div className="marketplace-product-card__image-fallback">
+        <div>
+          <ImageOff className="mx-auto mb-2 h-7 w-7 opacity-70" aria-hidden="true" />
+          <span>Ảnh sản phẩm đang cập nhật</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="marketplace-product-card__image"
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setHasError(true)}
+    />
+  );
+}
+
+type MarketplaceProductId = Parameters<
+  ReturnType<typeof useMarketplaceAddToCart>["addToCart"]
+>[0];
+
+type ProductCardProps = {
+  product: {
+    id: MarketplaceProductId;
+    slug: string;
+    name: string;
+    imageUrl?: string | null;
+    traceable?: boolean;
+    category: string;
+    farmName?: string | null;
+    region?: string | null;
+    price: number;
+    unit: string;
+    availableQuantity: number;
+  };
+  isAuthenticated: boolean;
+  isAdding: boolean;
+  onAddToCart: (productId: MarketplaceProductId) => Promise<void>;
+};
+
+function ProductCard({ product, isAuthenticated, isAdding, onAddToCart }: ProductCardProps) {
+  return (
+    <article className="marketplace-product-card group">
+      <div className="marketplace-product-card__media">
+        <ProductImage src={product.imageUrl} alt={product.name} />
+        {product.traceable ? (
+          <Badge className="absolute left-2 top-2 bg-emerald-500 text-white">Có truy xuất</Badge>
+        ) : null}
+      </div>
+
+      <div className="marketplace-product-card__body">
+        <div className="mb-1 text-xs font-medium text-muted-foreground">
+          {getCategoryLabel(product.category)}
+        </div>
+        <Link
+          to={`/marketplace/products/${product.slug}`}
+          className="marketplace-product-card__name mb-2 line-clamp-2 block font-semibold leading-5 text-foreground transition-colors hover:text-primary"
+        >
+          {product.name}
+        </Link>
+        <p className="marketplace-product-card__farm mb-4 line-clamp-2 text-sm leading-5 text-muted-foreground">
+          {product.farmName ?? "Nông trại đang cập nhật"}
+          {product.region ? ` · ${product.region}` : ""}
+        </p>
+
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <span className="text-lg font-bold text-primary">
+            {formatVnd(product.price)}
+            <span className="ml-1 text-sm font-normal text-muted-foreground">/{product.unit}</span>
+          </span>
+          <span className="text-sm text-muted-foreground">Tồn: {product.availableQuantity}</span>
+        </div>
+
+        <div className="marketplace-product-card__actions flex gap-2">
+          <Link
+            to={`/marketplace/products/${product.slug}`}
+            className="inline-flex min-w-0 flex-1 items-center justify-center rounded-xl border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            Xem chi tiết
+          </Link>
+          {isAuthenticated ? (
+            <Button
+              size="sm"
+              className="min-w-0 flex-1 bg-emerald-600 hover:bg-emerald-700"
+              disabled={isAdding || product.availableQuantity <= 0}
+              onClick={() => onAddToCart(product.id)}
+            >
+              Thêm giỏ
+            </Button>
+          ) : (
+            <Button asChild size="sm" variant="outline" className="min-w-0 flex-1">
+              <Link to="/sign-up">Tạo tài khoản</Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -536,6 +660,10 @@ export function ProductListPage() {
     setMobileFilterOpen(true);
   }
 
+  async function handleAddToCart(productId: MarketplaceProductId) {
+    await addToCart(productId, 1);
+  }
+
   const filterPanelProps = {
     draft: draftFilters,
     onDraftChange: updateDraft,
@@ -553,60 +681,60 @@ export function ProductListPage() {
   return (
     <div className="marketplace-products-page">
       <div className="marketplace-products-layout">
-        <aside className="marketplace-products-sidebar">
+        <aside className="marketplace-products-sidebar" aria-label="Bộ lọc sản phẩm">
           <ProductFilterPanel {...filterPanelProps} />
         </aside>
 
         <main className="marketplace-products-content">
           <div className="marketplace-products-heading">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Sản phẩm nông sản</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Danh sách sản phẩm đang được công khai trên marketplace
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="marketplace-products-mobile-filter-button"
-          onClick={openMobileFilter}
-        >
-          <SlidersHorizontal size={14} />
-          Bộ lọc
-          {hasActiveFilters ? (
-            <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[10px] font-bold text-white">
-              {activeChips.length}
-            </span>
-          ) : null}
-        </Button>
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold text-foreground">Sản phẩm nông sản</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Danh sách sản phẩm đang được công khai trên marketplace
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="marketplace-products-mobile-filter-button"
+              onClick={openMobileFilter}
+            >
+              <SlidersHorizontal size={14} />
+              Bộ lọc
+              {hasActiveFilters ? (
+                <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[10px] font-bold text-white">
+                  {activeChips.length}
+                </span>
+              ) : null}
+            </Button>
           </div>
 
-          <div className="marketplace-products-controls rounded-xl border border-border bg-card p-4 shadow-sm">
-            <div className="marketplace-products-control-row flex flex-col gap-3">
-              <form
-                onSubmit={handleSearchSubmit}
-                className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row"
-              >
-                <div className="relative min-w-0 flex-1">
+          <section className="marketplace-products-controls rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div className="marketplace-products-control-row">
+              <form onSubmit={handleSearchSubmit} className="marketplace-products-search-form">
+                <div className="relative min-w-0">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     value={draftFilters.q}
                     onChange={(event) => updateDraft({ q: event.target.value })}
-                    placeholder="Tìm kiếm sản phẩm..."
-                    className="h-10 rounded-lg border-border pl-10 focus:border-primary"
+                    placeholder="Tìm kiếm sản phẩm, nông trại..."
+                    className="h-11 rounded-xl border-border pl-10 focus:border-primary"
                   />
                 </div>
-                <Button type="submit" className="h-10 bg-emerald-600 px-5 hover:bg-emerald-700">
-                  Tìm
+                <Button
+                  type="submit"
+                  className="marketplace-products-search-submit h-11 bg-emerald-600 px-5 hover:bg-emerald-700"
+                >
+                  Tìm kiếm
                 </Button>
               </form>
 
-              <label className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
-                <span>Sắp xếp:</span>
+              <label className="marketplace-products-sort text-sm text-muted-foreground">
+                <span className="shrink-0">Sắp xếp:</span>
                 <select
                   value={draftFilters.sort}
                   onChange={(event) => updateDraft({ sort: event.target.value as SortValue })}
-                  className="h-10 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                  className="h-11 rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 >
                   {SORT_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -635,11 +763,13 @@ export function ProductListPage() {
                 </button>
               </div>
             ) : null}
-          </div>
+          </section>
 
           {productsQuery.isLoading ? (
             <div className="marketplace-products-grid">
-              {Array.from({ length: 8 }, (_, index) => <ProductCardSkeleton key={index} />)}
+              {Array.from({ length: 8 }, (_, index) => (
+                <ProductCardSkeleton key={index} />
+              ))}
             </div>
           ) : productsQuery.isError ? (
             <div className="rounded-xl border border-dashed border-destructive/30 bg-card p-8 text-center text-sm text-destructive">
@@ -649,78 +779,17 @@ export function ProductListPage() {
             <>
               <div className="marketplace-products-grid">
                 {products.map((product) => (
-                  <div
+                  <ProductCard
                     key={product.id}
-                    className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
-                  >
-                    <div className="relative aspect-square overflow-hidden bg-muted">
-                      <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        referrerPolicy="no-referrer"
-                      />
-                      {product.traceable ? (
-                        <Badge className="absolute left-2 top-2 bg-emerald-500 text-white">
-                          Có truy xuất
-                        </Badge>
-                      ) : null}
-                    </div>
-                    <div className="p-4">
-                      <div className="mb-1 text-xs text-muted-foreground">
-                        {getCategoryLabel(product.category)}
-                      </div>
-                      <Link
-                        to={`/marketplace/products/${product.slug}`}
-                        className="mb-2 line-clamp-2 block h-10 font-semibold text-foreground transition-colors hover:text-primary"
-                      >
-                        {product.name}
-                      </Link>
-                      <p className="mb-4 line-clamp-2 min-h-10 text-sm text-muted-foreground">
-                        {product.farmName ?? "Nông trại đang cập nhật"}
-                        {product.region ? ` · ${product.region}` : ""}
-                      </p>
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-lg font-bold text-primary">
-                          {formatVnd(product.price)}
-                          <span className="ml-1 text-sm font-normal text-muted-foreground">
-                            /{product.unit}
-                          </span>
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          Tồn: {product.availableQuantity}
-                        </span>
-                      </div>
-                      <div className="mt-4 flex gap-2">
-                        <Link
-                          to={`/marketplace/products/${product.slug}`}
-                          className="inline-flex min-w-0 flex-1 items-center justify-center rounded-xl border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                        >
-                          Xem chi tiết
-                        </Link>
-                        {isAuthenticated ? (
-                          <Button
-                            size="sm"
-                            className="min-w-0 flex-1"
-                            disabled={isAdding || product.availableQuantity <= 0}
-                            onClick={async () => {
-                              await addToCart(product.id, 1);
-                            }}
-                          >
-                            Thêm giỏ
-                          </Button>
-                        ) : (
-                          <Button asChild size="sm" variant="outline" className="min-w-0 flex-1">
-                            <Link to="/sign-up">Tạo tài khoản</Link>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                    product={product}
+                    isAuthenticated={isAuthenticated}
+                    isAdding={isAdding}
+                    onAddToCart={handleAddToCart}
+                  />
                 ))}
               </div>
 
-              <div className="mt-6 flex flex-col gap-3 rounded-xl border border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="marketplace-products-pagination flex flex-col gap-3 rounded-xl border border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-muted-foreground">
                   Trang {page} / {totalPages}
                 </p>
