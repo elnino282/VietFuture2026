@@ -34,7 +34,39 @@ public interface MarketplaceOrderRepository extends JpaRepository<MarketplaceOrd
     long countByFarmerUser_Id(Long farmerUserId);
 
     @Query("""
+            SELECT o.id FROM MarketplaceOrder o
+            WHERE o.buyerUser.id = :buyerUserId
+            """)
+    Page<Long> findBuyerOrderIds(
+            @Param("buyerUserId") Long buyerUserId,
+            Pageable pageable);
+
+    @Query("""
+            SELECT o.id FROM MarketplaceOrder o
+            WHERE o.buyerUser.id = :buyerUserId
+              AND o.status = :status
+            """)
+    Page<Long> findBuyerOrderIdsByStatus(
+            @Param("buyerUserId") Long buyerUserId,
+            @Param("status") MarketplaceOrderStatus status,
+            Pageable pageable);
+
+    @Query("""
             SELECT DISTINCT o FROM MarketplaceOrder o
+            LEFT JOIN FETCH o.orderGroup
+            LEFT JOIN FETCH o.buyerUser
+            LEFT JOIN FETCH o.farmerUser
+            LEFT JOIN FETCH o.items oi
+            LEFT JOIN FETCH oi.product
+            WHERE o.id IN :orderIds
+            """)
+    List<MarketplaceOrder> findByIdsWithResponseGraph(@Param("orderIds") List<Long> orderIds);
+
+    @Query("""
+            SELECT DISTINCT o FROM MarketplaceOrder o
+            LEFT JOIN FETCH o.orderGroup
+            LEFT JOIN FETCH o.buyerUser
+            LEFT JOIN FETCH o.farmerUser
             LEFT JOIN FETCH o.items oi
             LEFT JOIN FETCH oi.product
             WHERE o.id = :orderId AND o.buyerUser.id = :buyerUserId

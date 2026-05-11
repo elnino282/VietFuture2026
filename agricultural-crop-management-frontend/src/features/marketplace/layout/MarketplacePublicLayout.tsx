@@ -70,11 +70,6 @@ function formatRoleLabel(role: string | undefined) {
   }
 }
 
-const NAV_LINKS = [
-  { to: "/marketplace/farms", label: "Nông trại" },
-  { to: "/marketplace/traceability", label: "Truy xuất" },
-];
-
 const PRODUCTS_NAV_ACTIVE_STYLE = {
   color: "#ffffff",
   background: "rgba(255, 255, 255, 0.12)",
@@ -327,22 +322,6 @@ function MarketplaceFooter() {
                   Tất cả sản phẩm
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/marketplace/farms"
-                  className="hover:text-emerald-400"
-                >
-                  Nông trại tiêu biểu
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/marketplace/traceability"
-                  className="hover:text-emerald-400"
-                >
-                  Truy xuất nguồn gốc
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -427,14 +406,6 @@ function MobileMenu({
           >
             Sản phẩm
           </Link>
-          {NAV_LINKS.map((link) => (
-            <MarketplaceNavLink
-              key={link.to}
-              to={link.to}
-              label={link.label}
-              onClick={onClose}
-            />
-          ))}
         </nav>
 
         <div className="border-t border-white/15 pt-3">
@@ -550,13 +521,6 @@ export function MarketplacePublicLayout() {
 
             <nav className="marketplace-header__nav">
               <ProductsNavItem />
-              {NAV_LINKS.map((link) => (
-                <MarketplaceNavLink
-                  key={link.to}
-                  to={link.to}
-                  label={link.label}
-                />
-              ))}
             </nav>
           </div>
 

@@ -3,9 +3,11 @@ package org.example.QuanLyMuaVu.module.marketplace.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,8 +42,10 @@ import org.example.QuanLyMuaVu.module.marketplace.entity.MarketplaceOrder;
 import org.example.QuanLyMuaVu.module.marketplace.entity.MarketplaceOrderGroup;
 import org.example.QuanLyMuaVu.module.marketplace.entity.MarketplaceOrderItem;
 import org.example.QuanLyMuaVu.module.marketplace.entity.MarketplaceProduct;
+import org.example.QuanLyMuaVu.module.marketplace.entity.MarketplaceProductReview;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceOrderStatus;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplacePaymentMethod;
+import org.example.QuanLyMuaVu.module.marketplace.model.MarketplacePaymentVerificationStatus;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceProductStatus;
 import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceAddressRepository;
 import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceCartItemRepository;
@@ -59,9 +63,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class MarketplaceServiceTest {
@@ -149,6 +156,31 @@ class MarketplaceServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
         lenient().when(productWarehouseLotRepository.saveAll(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+    }
+
+    @Nested
+    @DisplayName("listFarms()")
+    class ListFarmsTests {
+
+        @Test
+        void listFarms_DoesNotPassProductNameSortToDistinctFarmQuery() {
+            when(marketplaceProductRepository.searchDistinctFarmsWithPublishedProducts(any(), any(), any(), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            marketplaceService.listFarms(" farm ", " Can Tho ", 0, 20);
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            verify(marketplaceProductRepository).searchDistinctFarmsWithPublishedProducts(
+                    any(),
+                    any(),
+                    any(),
+                    pageableCaptor.capture());
+
+            Pageable pageable = pageableCaptor.getValue();
+            assertEquals(0, pageable.getPageNumber());
+            assertEquals(20, pageable.getPageSize());
+            assertTrue(pageable.getSort().isUnsorted());
+        }
     }
 
     @Nested
@@ -415,6 +447,121 @@ class MarketplaceServiceTest {
     }
 
     @Nested
+    @DisplayName("buyer order listing")
+    class BuyerOrderListingTests {
+
+        @Test
+        void listOrders_HydratesCurrentBuyerPageAndPreservesOrder() {
+            User farmer = User.builder().id(20L).username("farmer-20").build();
+            MarketplaceProduct productA = buildProduct(201L, "rice-a", "Rice A", new BigDecimal("100000"), buildLot(11, "8"), 20L);
+            MarketplaceProduct productB = buildProduct(202L, "rice-b", "Rice B", new BigDecimal("120000"), buildLot(12, "9"), 20L);
+            MarketplaceOrder orderA = buildOrder(1L, "MO-1", "MOG-1", buyer, farmer, productA, MarketplaceOrderStatus.COMPLETED, 101L);
+            MarketplaceOrder orderB = buildOrder(2L, "MO-2", "MOG-2", buyer, farmer, productB, MarketplaceOrderStatus.PENDING_PAYMENT, 102L);
+            MarketplaceProductReview review = MarketplaceProductReview.builder()
+                    .id(900L)
+                    .order(orderA)
+                    .orderItem(orderA.getItems().getFirst())
+                    .product(productA)
+                    .buyerUser(buyer)
+                    .rating(5)
+                    .build();
+
+            when(currentUserService.getCurrentUserId()).thenReturn(10L);
+            when(marketplaceOrderRepository.findBuyerOrderIdsByStatus(
+                    anyLong(),
+                    any(MarketplaceOrderStatus.class),
+                    any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of(2L, 1L), Pageable.ofSize(2).withPage(1), 5));
+            when(marketplaceOrderRepository.findByIdsWithResponseGraph(List.of(2L, 1L)))
+                    .thenReturn(List.of(orderA, orderB));
+            when(marketplaceProductReviewRepository.findByOrder_IdInAndBuyerUser_Id(List.of(2L, 1L), 10L))
+                    .thenReturn(List.of(review));
+
+            var response = marketplaceService.listOrders("PENDING", 1, 2);
+
+            assertEquals(1, response.getPage());
+            assertEquals(2, response.getSize());
+            assertEquals(5, response.getTotalElements());
+            assertEquals(3, response.getTotalPages());
+            assertEquals(List.of(2L, 1L), response.getItems().stream().map(MarketplaceOrderResponse::id).toList());
+
+            MarketplaceOrderResponse first = response.getItems().getFirst();
+            assertEquals("MOG-2", first.orderGroupCode());
+            assertEquals(MarketplacePaymentMethod.COD, first.payment().method());
+            assertEquals(MarketplacePaymentVerificationStatus.NOT_REQUIRED, first.payment().verificationStatus());
+            assertEquals(true, first.canCancel());
+            assertEquals(1, first.items().size());
+            assertEquals(202L, first.items().getFirst().productId());
+            assertEquals("Rice B", first.items().getFirst().productName());
+
+            MarketplaceOrderResponse second = response.getItems().get(1);
+            assertEquals(false, second.canCancel());
+            assertEquals(false, second.items().getFirst().canReview());
+            assertEquals(900L, second.items().getFirst().reviewId());
+
+            verify(currentUserService).getCurrentUserId();
+            verify(marketplaceOrderRepository).findBuyerOrderIdsByStatus(
+                    anyLong(),
+                    any(MarketplaceOrderStatus.class),
+                    any(Pageable.class));
+            verify(marketplaceOrderRepository, never()).findAll(any(Pageable.class));
+            verify(marketplaceProductReviewRepository).findByOrder_IdInAndBuyerUser_Id(List.of(2L, 1L), 10L);
+        }
+
+        @Test
+        void listOrders_NoStatus_UsesBuyerScopedIdPage() {
+            when(currentUserService.getCurrentUserId()).thenReturn(10L);
+            when(marketplaceOrderRepository.findBuyerOrderIds(anyLong(), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            var response = marketplaceService.listOrders(null, 0, 20);
+
+            assertEquals(0, response.getItems().size());
+            verify(marketplaceOrderRepository).findBuyerOrderIds(anyLong(), any(Pageable.class));
+            verify(marketplaceOrderRepository, never()).findAll(any(Pageable.class));
+        }
+
+        @Test
+        void listOrders_DeliveringStatus_NormalizesToShipped() {
+            when(currentUserService.getCurrentUserId()).thenReturn(10L);
+            when(marketplaceOrderRepository.findBuyerOrderIdsByStatus(
+                    anyLong(),
+                    any(MarketplaceOrderStatus.class),
+                    any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            marketplaceService.listOrders("DELIVERING", 0, 20);
+
+            verify(marketplaceOrderRepository).findBuyerOrderIdsByStatus(
+                    anyLong(),
+                    org.mockito.ArgumentMatchers.eq(MarketplaceOrderStatus.SHIPPED),
+                    any(Pageable.class));
+        }
+
+        @Test
+        void listOrders_InvalidStatus_ThrowsBadRequest() {
+            AppException ex = assertThrows(AppException.class, () -> marketplaceService.listOrders("NOT_REAL", 0, 20));
+
+            assertEquals(ErrorCode.BAD_REQUEST, ex.getErrorCode());
+            verify(marketplaceOrderRepository, never()).findBuyerOrderIds(anyLong(), any(Pageable.class));
+            verify(marketplaceOrderRepository, never()).findBuyerOrderIdsByStatus(
+                    anyLong(),
+                    any(MarketplaceOrderStatus.class),
+                    any(Pageable.class));
+        }
+
+        @Test
+        void getOrderDetail_OtherBuyerOrder_ThrowsNotFound() {
+            when(currentUserService.getCurrentUserId()).thenReturn(10L);
+            when(marketplaceOrderRepository.findByIdAndBuyerUserIdWithItems(99L, 10L)).thenReturn(Optional.empty());
+
+            AppException ex = assertThrows(AppException.class, () -> marketplaceService.getOrderDetail(99L));
+
+            assertEquals(ErrorCode.MARKETPLACE_ORDER_NOT_FOUND, ex.getErrorCode());
+        }
+    }
+
+    @Nested
     @DisplayName("farmer products")
     class FarmerProductTests {
 
@@ -623,5 +770,46 @@ class MarketplaceServiceTest {
                 .season(lot.getSeason())
                 .farmerUser(User.builder().id(farmerId).username("farmer-" + farmerId).build())
                 .build();
+    }
+
+    private MarketplaceOrder buildOrder(
+            Long id,
+            String orderCode,
+            String groupCode,
+            User buyer,
+            User farmer,
+            MarketplaceProduct product,
+            MarketplaceOrderStatus status,
+            Long itemId) {
+        MarketplaceOrder order = MarketplaceOrder.builder()
+                .id(id)
+                .orderGroup(MarketplaceOrderGroup.builder().id(id + 1000).groupCode(groupCode).buyerUser(buyer).build())
+                .orderCode(orderCode)
+                .buyerUser(buyer)
+                .farmerUser(farmer)
+                .status(status)
+                .paymentMethod(MarketplacePaymentMethod.COD)
+                .paymentVerificationStatus(MarketplacePaymentVerificationStatus.NOT_REQUIRED)
+                .shippingRecipientName("Buyer")
+                .shippingPhone("0909000000")
+                .shippingAddressLine("123 Road")
+                .subtotal(new BigDecimal("200000"))
+                .shippingFee(new BigDecimal("20000"))
+                .totalAmount(new BigDecimal("220000"))
+                .build();
+        MarketplaceOrderItem item = MarketplaceOrderItem.builder()
+                .id(itemId)
+                .order(order)
+                .product(product)
+                .productNameSnapshot(product.getName())
+                .productSlugSnapshot(product.getSlug())
+                .imageUrlSnapshot("https://example.com/" + product.getSlug() + ".jpg")
+                .unitPriceSnapshot(product.getPrice())
+                .quantity(new BigDecimal("2"))
+                .lineTotal(new BigDecimal("200000"))
+                .traceableSnapshot(false)
+                .build();
+        order.setItems(List.of(item));
+        return order;
     }
 }

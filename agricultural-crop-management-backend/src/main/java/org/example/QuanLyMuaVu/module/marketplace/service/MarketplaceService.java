@@ -380,7 +380,7 @@ public class MarketplaceService {
 
     @Transactional(readOnly = true)
     public PageResponse<MarketplaceFarmSummaryResponse> listFarms(String q, String region, int page, int size) {
-        Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), Sort.by(Sort.Direction.ASC, "name"));
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
         Page<Farm> farmPage = marketplaceProductRepository.searchDistinctFarmsWithPublishedProducts(
                 MarketplaceProductStatus.PUBLISHED,
                 normalizeNullable(q),
@@ -1054,17 +1054,32 @@ public class MarketplaceService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<MarketplaceOrderResponse> listOrders(MarketplaceOrderStatus status, int page, int size) {
+    public PageResponse<MarketplaceOrderResponse> listOrders(String status, int page, int size) {
         Long userId = currentUserService.getCurrentUserId();
+        MarketplaceOrderStatus normalizedStatus = normalizeBuyerOrderStatus(status);
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<MarketplaceOrder> orderPage = status == null
-                ? marketplaceOrderRepository.findByBuyerUser_Id(userId, pageable)
-                : marketplaceOrderRepository.findByBuyerUser_IdAndStatus(userId, status, pageable);
+        Page<Long> orderIdPage = normalizedStatus == null
+                ? marketplaceOrderRepository.findBuyerOrderIds(userId, pageable)
+                : marketplaceOrderRepository.findBuyerOrderIdsByStatus(userId, normalizedStatus, pageable);
 
-        List<MarketplaceOrderResponse> items = orderPage.getContent().stream()
-                .map(this::toOrderResponse)
+        List<Long> orderIds = orderIdPage.getContent();
+        if (orderIds.isEmpty()) {
+            return PageResponse.of(orderIdPage, List.of());
+        }
+
+        Map<Long, MarketplaceOrder> hydratedById = marketplaceOrderRepository.findByIdsWithResponseGraph(orderIds).stream()
+                .collect(Collectors.toMap(MarketplaceOrder::getId, order -> order, (left, right) -> left));
+        Map<Long, Map<Long, Long>> reviewIdsByOrderAndProduct = loadReviewIdsByOrderAndProduct(orderIds, userId);
+
+        List<MarketplaceOrderResponse> items = orderIds.stream()
+                .map(orderId -> Optional.ofNullable(hydratedById.get(orderId))
+                        .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_ORDER_NOT_FOUND)))
+                .map(order -> toOrderResponse(
+                        order,
+                        userId,
+                        reviewIdsByOrderAndProduct.getOrDefault(order.getId(), Collections.emptyMap())))
                 .toList();
-        return PageResponse.of(orderPage, items);
+        return PageResponse.of(orderIdPage, items);
     }
 
     @Transactional(readOnly = true)
@@ -2388,6 +2403,51 @@ public class MarketplaceService {
         }
     }
 
+    private MarketplaceOrderStatus normalizeBuyerOrderStatus(String status) {
+        String normalized = normalizeNullable(status);
+        if (normalized == null) {
+            return null;
+        }
+        String upper = normalized.toUpperCase(Locale.ROOT);
+        if ("PENDING".equals(upper)) {
+            return MarketplaceOrderStatus.PENDING_PAYMENT;
+        }
+        if ("DELIVERING".equals(upper)) {
+            return MarketplaceOrderStatus.SHIPPED;
+        }
+        try {
+            return MarketplaceOrderStatus.valueOf(upper);
+        } catch (IllegalArgumentException ex) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+    }
+
+    private Map<Long, Long> loadReviewIdsByProductForOrder(Long orderId, Long buyerUserId) {
+        return marketplaceProductReviewRepository.findByOrder_IdAndBuyerUser_Id(orderId, buyerUserId).stream()
+                .filter(review -> review.getProduct() != null && review.getProduct().getId() != null)
+                .collect(Collectors.toMap(
+                        review -> review.getProduct().getId(),
+                        MarketplaceProductReview::getId,
+                        (left, right) -> left));
+    }
+
+    private Map<Long, Map<Long, Long>> loadReviewIdsByOrderAndProduct(List<Long> orderIds, Long buyerUserId) {
+        if (orderIds == null || orderIds.isEmpty() || buyerUserId == null) {
+            return Collections.emptyMap();
+        }
+        return marketplaceProductReviewRepository.findByOrder_IdInAndBuyerUser_Id(orderIds, buyerUserId).stream()
+                .filter(review -> review.getOrder() != null
+                        && review.getOrder().getId() != null
+                        && review.getProduct() != null
+                        && review.getProduct().getId() != null)
+                .collect(Collectors.groupingBy(
+                        review -> review.getOrder().getId(),
+                        Collectors.toMap(
+                                review -> review.getProduct().getId(),
+                                MarketplaceProductReview::getId,
+                                (left, right) -> left)));
+    }
+
     private MarketplaceOrderResponse toOrderResponse(MarketplaceOrder order) {
         Long currentUserId = null;
         try {
@@ -2395,16 +2455,18 @@ public class MarketplaceService {
         } catch (Exception ex) {
             currentUserId = null;
         }
-        final Long viewerUserId = currentUserId;
         Long buyerUserId = order.getBuyerUser() == null ? null : order.getBuyerUser().getId();
-        Map<Long, Long> reviewIdByProductId = Collections.emptyMap();
-        if (viewerUserId != null && Objects.equals(viewerUserId, buyerUserId)) {
-            reviewIdByProductId = marketplaceProductReviewRepository.findByOrder_IdAndBuyerUser_Id(order.getId(), viewerUserId).stream()
-                    .filter(review -> review.getProduct() != null && review.getProduct().getId() != null)
-                    .collect(Collectors.toMap(review -> review.getProduct().getId(), MarketplaceProductReview::getId, (left, right) -> left));
-        }
-        final Map<Long, Long> reviewMap = reviewIdByProductId;
+        Map<Long, Long> reviewMap = currentUserId != null && Objects.equals(currentUserId, buyerUserId)
+                ? loadReviewIdsByProductForOrder(order.getId(), currentUserId)
+                : Collections.emptyMap();
+        return toOrderResponse(order, currentUserId, reviewMap);
+    }
 
+    private MarketplaceOrderResponse toOrderResponse(
+            MarketplaceOrder order,
+            Long viewerUserId,
+            Map<Long, Long> reviewMap) {
+        Long buyerUserId = order.getBuyerUser() == null ? null : order.getBuyerUser().getId();
         List<MarketplaceOrderItemResponse> itemResponses = order.getItems().stream()
                 .sorted(Comparator.comparing(MarketplaceOrderItem::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(item -> new MarketplaceOrderItemResponse(

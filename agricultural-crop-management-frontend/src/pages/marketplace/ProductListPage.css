@@ -1,0 +1,271 @@
+.marketplace-products-page {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2.5rem;
+}
+
+.marketplace-products-page *,
+.marketplace-products-page *::before,
+.marketplace-products-page *::after {
+  box-sizing: border-box;
+}
+
+.marketplace-products-layout {
+  width: 100%;
+  min-width: 0;
+}
+
+.marketplace-products-sidebar {
+  display: none;
+}
+
+.marketplace-products-content {
+  width: 100%;
+  min-width: 0;
+}
+
+.marketplace-products-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.marketplace-products-mobile-filter-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.marketplace-filter-panel {
+  background: hsl(var(--card));
+}
+
+.marketplace-filter-panel--desktop {
+  position: sticky;
+  top: 5.5rem;
+  display: flex;
+  max-height: calc(100dvh - 7rem);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: 1rem;
+  box-shadow: 0 14px 36px rgb(15 23 42 / 0.07);
+}
+
+.marketplace-filter-panel__body {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.marketplace-filter-panel__footer {
+  flex-shrink: 0;
+}
+
+.marketplace-filter-options {
+  max-height: 11rem;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.marketplace-products-controls {
+  margin-bottom: 1rem;
+}
+
+.marketplace-products-control-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.marketplace-products-search-form {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.625rem;
+}
+
+.marketplace-products-search-submit {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.marketplace-products-sort {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(9.5rem, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.marketplace-products-sort select {
+  width: 100%;
+}
+
+.marketplace-products-grid {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.marketplace-product-card {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: 1rem;
+  background: hsl(var(--card));
+  box-shadow: 0 10px 24px rgb(15 23 42 / 0.06);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.marketplace-product-card:hover {
+  transform: translateY(-2px);
+  border-color: rgb(16 185 129 / 0.35);
+  box-shadow: 0 18px 36px rgb(15 23 42 / 0.1);
+}
+
+.marketplace-product-card__media {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 22% 18%, rgb(187 247 208 / 0.8), transparent 34%),
+    linear-gradient(135deg, rgb(236 253 245), rgb(226 232 240));
+}
+
+.marketplace-product-card__image {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  transition: transform 300ms ease;
+}
+
+.marketplace-product-card:hover .marketplace-product-card__image {
+  transform: scale(1.05);
+}
+
+.marketplace-product-card__image-fallback {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgb(6 78 59 / 0.8);
+}
+
+.marketplace-product-card__body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.marketplace-product-card__name {
+  min-height: 2.75rem;
+}
+
+.marketplace-product-card__farm {
+  min-height: 2.5rem;
+}
+
+.marketplace-product-card__actions {
+  margin-top: auto;
+}
+
+.marketplace-products-pagination {
+  margin-top: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .marketplace-products-page {
+    padding-right: 1.5rem;
+    padding-left: 1.5rem;
+  }
+
+  .marketplace-products-heading {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .marketplace-products-mobile-filter-button {
+    width: auto;
+  }
+
+  .marketplace-products-search-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .marketplace-products-search-submit {
+    width: auto;
+    min-width: 5.75rem;
+  }
+
+  .marketplace-products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .marketplace-products-layout {
+    display: grid;
+    grid-template-columns: 288px minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .marketplace-products-sidebar {
+    display: block;
+    min-width: 0;
+  }
+
+  .marketplace-products-mobile-filter-button {
+    display: none;
+  }
+
+  .marketplace-products-heading {
+    min-height: 3rem;
+  }
+}
+
+@media (min-width: 1180px) {
+  .marketplace-products-control-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .marketplace-products-sort {
+    width: 17rem;
+    grid-template-columns: auto minmax(10rem, 1fr);
+  }
+
+  .marketplace-products-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1440px) {
+  .marketplace-products-layout {
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  .marketplace-products-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

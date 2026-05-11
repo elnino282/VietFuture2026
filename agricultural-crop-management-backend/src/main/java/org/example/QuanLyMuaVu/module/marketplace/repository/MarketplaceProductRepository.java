@@ -140,6 +140,7 @@ public interface MarketplaceProductRepository extends JpaRepository<MarketplaceP
               AND lot.onHandQuantity > 0
               AND (:q IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', :q, '%')))
               AND (:region IS NULL OR LOWER(COALESCE(province.name, '')) LIKE LOWER(CONCAT('%', :region, '%')))
+            ORDER BY f.name ASC, f.id ASC
             """, countQuery = """
             SELECT COUNT(DISTINCT f.id) FROM MarketplaceProduct p
             JOIN p.lot lot

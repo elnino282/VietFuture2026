@@ -24,6 +24,8 @@ public interface MarketplaceProductReviewRepository extends JpaRepository<Market
 
     List<MarketplaceProductReview> findByOrder_IdAndBuyerUser_Id(Long orderId, Long buyerUserId);
 
+    List<MarketplaceProductReview> findByOrder_IdInAndBuyerUser_Id(Collection<Long> orderIds, Long buyerUserId);
+
     Optional<MarketplaceProductReview> findByProduct_IdAndOrder_IdAndBuyerUser_Id(Long productId, Long orderId, Long buyerUserId);
 
     @Query("""

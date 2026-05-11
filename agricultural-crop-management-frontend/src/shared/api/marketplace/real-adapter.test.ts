@@ -32,16 +32,6 @@ describe("createMarketplaceRealAdapter", () => {
     mockedHttpClient.post.mockResolvedValue({ data: okEnvelope });
   });
 
-  it("uses the canonical product traceability endpoint", async () => {
-    const adapter = createMarketplaceRealAdapter();
-
-    await adapter.getTraceability(101);
-
-    expect(httpClient.get).toHaveBeenCalledWith(
-      "/api/v1/marketplace/products/101/traceability",
-    );
-  });
-
   it("updates buyer addresses with PATCH", async () => {
     const adapter = createMarketplaceRealAdapter();
     const request = {

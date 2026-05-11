@@ -43,6 +43,15 @@ public class MarketplaceSecurityTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @DisplayName("Public can list marketplace farms - GET /api/v1/marketplace/farms returns 200")
+    void publicCanListMarketplaceFarms() throws Exception {
+        mockMvc.perform(get("/api/v1/marketplace/farms")
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @WithMockUser(username = "buyer", roles = "BUYER")
     @DisplayName("BUYER cannot create listing - POST /api/v1/marketplace/farmer/products returns 403")
     void buyerCannotCreateListing() throws Exception {
@@ -141,6 +150,20 @@ public class MarketplaceSecurityTest {
     }
 
     // ─── Cross-role order endpoint security ────────────────────────────────
+
+    @Test
+    @DisplayName("Unauthenticated users cannot access buyer order list - GET /api/v1/marketplace/orders returns 401")
+    void unauthenticatedCannotAccessMarketplaceBuyerOrders() throws Exception {
+        mockMvc.perform(get("/api/v1/marketplace/orders"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Unauthenticated users cannot access buyer alias order list - GET /api/v1/buyer/orders returns 401")
+    void unauthenticatedCannotAccessBuyerAliasOrders() throws Exception {
+        mockMvc.perform(get("/api/v1/buyer/orders"))
+                .andExpect(status().isUnauthorized());
+    }
 
     @Test
     @WithMockUser(username = "farmer", roles = "FARMER")

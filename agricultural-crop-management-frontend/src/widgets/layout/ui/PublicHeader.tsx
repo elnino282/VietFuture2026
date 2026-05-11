@@ -105,8 +105,6 @@ export function PublicHeader() {
         <nav className="hidden items-center gap-5 text-sm md:flex">
           <PublicNavLink to="/marketplace" label="Home" />
           <PublicNavLink to="/marketplace/products" label="Products" />
-          <PublicNavLink to="/marketplace/farms" label="Farms" />
-          <PublicNavLink to="/marketplace/traceability" label="Traceability" />
         </nav>
 
         <PublicSearchBar />

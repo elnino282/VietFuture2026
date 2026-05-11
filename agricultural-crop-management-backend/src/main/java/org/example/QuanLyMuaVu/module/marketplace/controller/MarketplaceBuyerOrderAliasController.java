@@ -12,7 +12,6 @@ import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderP
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplacePaymentProofResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceTraceabilityResponse;
-import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceOrderStatus;
 import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,7 +52,7 @@ public class MarketplaceBuyerOrderAliasController {
 
     @GetMapping
     public ApiResponse<PageResponse<MarketplaceOrderResponse>> listOrders(
-            @RequestParam(value = "status", required = false) MarketplaceOrderStatus status,
+            @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
         return ApiResponse.success(marketplaceService.listOrders(status, page, size));
