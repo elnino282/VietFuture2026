@@ -26,9 +26,12 @@ interface ImportCSVWizardProps {
     step: number;
     onStepChange: (step: number) => void;
     csvPreview: any[];
+    validationErrors?: { row: number; error: string }[];
     onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onConfirm: () => void;
     getRoleBadge: (role: BuyerRole) => string;
+    canImport?: boolean;
+    importUnsupportedMessage?: string;
 }
 
 export function ImportCSVWizard({
@@ -37,9 +40,12 @@ export function ImportCSVWizard({
     step,
     onStepChange,
     csvPreview,
+    validationErrors = [],
     onFileUpload,
     onConfirm,
     getRoleBadge,
+    canImport = false,
+    importUnsupportedMessage = 'Backend import API is not available yet.',
 }: ImportCSVWizardProps) {
     const handleBack = () => {
         if (step > 1) {
@@ -88,12 +94,12 @@ export function ImportCSVWizard({
                                 </Button>
                             </label>
                         </div>
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                             <div className="flex gap-3">
-                                <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                                <AlertCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                                 <div className="text-sm">
-                                    <p className="font-medium text-blue-900 mb-1">CSV Format Requirements:</p>
-                                    <ul className="text-blue-800 space-y-1 list-disc list-inside">
+                                    <p className="font-medium text-emerald-900 mb-1">CSV Format Requirements:</p>
+                                    <ul className="text-emerald-800 space-y-1 list-disc list-inside">
                                         <li>Columns: companyName, taxId, contactName, email, phone, role</li>
                                         <li>Role must be: buyer, enterprise, or distributor</li>
                                     </ul>
@@ -105,6 +111,11 @@ export function ImportCSVWizard({
 
                 {step === 2 && (
                     <div className="space-y-4">
+                        {validationErrors.length > 0 && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+                                {validationErrors.length} invalid row(s) were skipped during preview parsing.
+                            </div>
+                        )}
                         <div className="border rounded-lg overflow-hidden">
                             <Table>
                                 <TableHeader>
@@ -143,6 +154,9 @@ export function ImportCSVWizard({
                         <p className="text-sm text-muted-foreground">
                             {csvPreview.length} valid entries will be imported.
                         </p>
+                        {!canImport && (
+                            <p className="text-sm text-destructive">{importUnsupportedMessage}</p>
+                        )}
                     </div>
                 )}
 
@@ -151,7 +165,10 @@ export function ImportCSVWizard({
                         {step === 1 ? 'Cancel' : 'Back'}
                     </Button>
                     {step === 2 && (
-                        <Button className="bg-[#2563EB] hover:bg-[#1E40AF]" onClick={onConfirm}>
+                        <Button
+                            onClick={onConfirm}
+                            disabled={!canImport || csvPreview.length === 0}
+                        >
                             Import {csvPreview.length} Buyer{csvPreview.length > 1 ? 's' : ''}
                         </Button>
                     )}

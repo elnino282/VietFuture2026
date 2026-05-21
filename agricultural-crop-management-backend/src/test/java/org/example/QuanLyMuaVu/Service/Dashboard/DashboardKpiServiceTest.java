@@ -22,6 +22,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -62,12 +63,12 @@ class DashboardKpiServiceTest {
     }
 
     @Test
-    @DisplayName("buildExpenses returns zero for null season")
-    void buildExpenses_WithNullSeason_ReturnsZero() {
+    @DisplayName("buildExpenses returns null for null season (unavailable seasonal metric)")
+    void buildExpenses_WithNullSeason_ReturnsNull() {
         DashboardOverviewResponse.Expenses expenses = dashboardKpiService.buildExpenses(null);
 
         assertNotNull(expenses);
-        assertEquals(BigDecimal.ZERO, expenses.getTotalExpense());
+        assertNull(expenses.getTotalExpense());
     }
 
     @Test

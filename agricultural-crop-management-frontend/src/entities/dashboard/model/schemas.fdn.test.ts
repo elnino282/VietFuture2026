@@ -82,6 +82,7 @@ function overviewPayload() {
       summary: 'Overall confidence 72%; 1 measured, 3 estimated/mixed, 1 missing inputs.',
     },
     missingInputs: ['CONTROL_SUPPLY'],
+    unavailableReasons: ['NO_HARVEST'],
     notes: ['Sample note'],
     recommendations: ['Measure irrigation-water nitrogen before reducing mineral nitrogen.'],
     recommendationSource: 'product_rule_config_v1',
@@ -102,6 +103,7 @@ describe('DashboardFdnOverviewSchema', () => {
     const parsed = DashboardFdnOverviewSchema.parse(overviewPayload());
     expect(parsed.fdnMineralMetric.status).toBe('measured');
     expect(parsed.fdnMineralMetric.value).toBe(0);
+    expect(parsed.unavailableReasons).toEqual(['NO_HARVEST']);
   });
 
   it('keeps missing/unavailable values as null instead of coercing to 0', () => {
@@ -122,14 +124,16 @@ describe('DashboardFdnOverviewSchema', () => {
 
   it('requires map metadata fields to avoid frontend semantic guessing', () => {
     const result = DashboardFieldMapResponseSchema.safeParse({
-      items: [
+      fieldsWithBoundary: [],
+      fieldsMissingBoundary: [
         {
           fieldId: 22,
           fieldName: 'Field A',
           farmId: 7,
           farmName: 'Farm 7',
-          geometry: null,
+          boundaryGeoJson: null,
           center: null,
+          boundaryIssue: 'MISSING_BOUNDARY_GEOJSON',
           cropName: 'Lua',
           seasonName: 'Mua 33',
           fdnLevel: 'high',
@@ -155,20 +159,24 @@ describe('DashboardFdnOverviewSchema', () => {
           recommendations: [],
         },
       ],
+      defaultViewport: null,
+      unavailableReason: 'MISSING_BOUNDARY_AND_FARM_LOCATION',
     });
     expect(result.success).toBe(true);
   });
 
   it('fails map payload when threshold/recommendation source metadata is missing', () => {
     const invalid = {
-      items: [
+      fieldsWithBoundary: [],
+      fieldsMissingBoundary: [
         {
           fieldId: 22,
           fieldName: 'Field A',
           farmId: 7,
           farmName: 'Farm 7',
-          geometry: null,
+          boundaryGeoJson: null,
           center: null,
+          boundaryIssue: 'MISSING_BOUNDARY_GEOJSON',
           cropName: 'Lua',
           seasonName: 'Mua 33',
           fdnLevel: 'high',
@@ -192,6 +200,8 @@ describe('DashboardFdnOverviewSchema', () => {
           recommendations: [],
         },
       ],
+      defaultViewport: null,
+      unavailableReason: 'MISSING_BOUNDARY_AND_FARM_LOCATION',
     };
     const result = DashboardFieldMapResponseSchema.safeParse(invalid);
     expect(result.success).toBe(false);

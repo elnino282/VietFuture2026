@@ -18,18 +18,24 @@ import type {
     ExpenseTaskAnalytics,
     ExpenseVendorAnalytics,
     ExpenseTimeSeries,
+    ExpenseCostInsightsSummary,
+    ExpenseCostAiSuggestion,
+    ExpenseCostSuggestionRequest,
 } from '../model/types';
 
-// Context types for optimistic updates
-type CreateExpenseContext = {
-    previousExpenses: PageResponse<Expense> | undefined;
+type CreateExpenseVariables = {
+    seasonId: number;
+    data: ExpenseCreateRequest;
 };
-type UpdateExpenseContext = {
-    previousDetail: Expense | undefined;
-    previousList: PageResponse<Expense> | undefined;
+
+type UpdateExpenseVariables = {
+    id: number;
+    data: ExpenseUpdateRequest;
 };
-type DeleteExpenseContext = {
-    previousExpenses: PageResponse<Expense> | undefined;
+
+type DeleteExpenseVariables = {
+    id: number;
+    seasonId: number;
 };
 
 /**
@@ -49,7 +55,6 @@ export const useExpensesBySeason = (
 
 /**
  * Hook to fetch all farmer expenses across seasons
- * Uses the new /api/v1/expenses endpoint
  */
 export const useAllFarmerExpenses = (
     params?: ExpenseListParams,
@@ -126,137 +131,101 @@ export const useExpenseAnalyticsTimeSeries = (
     ...options,
 });
 
+export const useExpenseCostInsightsSummary = (
+    seasonId: number,
+    options?: Omit<UseQueryOptions<ExpenseCostInsightsSummary, Error>, 'queryKey' | 'queryFn'>
+) => useQuery({
+    queryKey: expenseKeys.costInsightsSummary(seasonId),
+    queryFn: () => expenseApi.getCostInsightsSummary(seasonId),
+    enabled: seasonId > 0,
+    staleTime: 5 * 60 * 1000,
+    ...options,
+});
+
+export const useExpenseCostAiSuggestion = (
+    seasonId: number,
+    options?: Omit<
+    UseMutationOptions<ExpenseCostAiSuggestion, Error, ExpenseCostSuggestionRequest | undefined>,
+    'mutationFn'
+    >
+) => useMutation({
+    mutationFn: async (request) => {
+        if (seasonId <= 0) {
+            throw new Error('Season is required for AI suggestions.');
+        }
+        return expenseApi.getCostAiSuggestion(seasonId, request);
+    },
+    ...options,
+});
+
 /**
- * Hook to create a new expense with optimistic updates
+ * Hook to create a new expense
  */
 export const useCreateExpense = (
-    seasonId: number,
-    options?: Omit<UseMutationOptions<Expense, Error, ExpenseCreateRequest, CreateExpenseContext>, 'mutationFn'>
+    options?: Omit<UseMutationOptions<Expense, Error, CreateExpenseVariables>, 'mutationFn'>
 ) => {
     const queryClient = useQueryClient();
-    return useMutation<Expense, Error, ExpenseCreateRequest, CreateExpenseContext>({
-        mutationFn: (data) => expenseApi.create(seasonId, data),
-        onMutate: async (newExpense) => {
-            const listKey = expenseKeys.listBySeason(seasonId);
-            await queryClient.cancelQueries({ queryKey: listKey });
-
-            const previousExpenses = queryClient.getQueryData<PageResponse<Expense>>(listKey);
-
-            if (previousExpenses) {
-                queryClient.setQueryData<PageResponse<Expense>>(listKey, {
-                    ...previousExpenses,
-                    items: [
-                        { ...newExpense, id: Date.now(), seasonId, createdAt: new Date().toISOString() } as Expense,
-                        ...previousExpenses.items,
-                    ],
-                    totalElements: previousExpenses.totalElements + 1,
-                });
-            }
-
-            return { previousExpenses };
-        },
-        onError: (_err, _newExpense, context) => {
-            if (context?.previousExpenses) {
-                queryClient.setQueryData(expenseKeys.listBySeason(seasonId), context.previousExpenses);
-            }
-        },
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: expenseKeys.listBySeason(seasonId) });
-            queryClient.invalidateQueries({ queryKey: expenseKeys.tracker(seasonId) });
-            queryClient.invalidateQueries({ queryKey: expenseKeys.analytics() });
-        },
+    return useMutation({
         ...options,
+        mutationFn: ({ seasonId, data }) => expenseApi.create(seasonId, data),
+        onSuccess: async (_data, variables, _context, _mutationContext) => {
+            await queryClient.invalidateQueries({ queryKey: expenseKeys.lists() });
+            await queryClient.invalidateQueries({ queryKey: expenseKeys.analytics() });
+            await queryClient.invalidateQueries({ queryKey: expenseKeys.tracker(variables.seasonId) });
+            await queryClient.invalidateQueries({
+                queryKey: expenseKeys.costInsightsSummary(variables.seasonId),
+            });
+            await options?.onSuccess?.(_data, variables, _context, _mutationContext);
+        },
     });
 };
 
 /**
- * Hook to update an expense with optimistic updates
+ * Hook to update an expense
  */
 export const useUpdateExpense = (
-    seasonId: number,
-    options?: Omit<UseMutationOptions<Expense, Error, { id: number; data: ExpenseUpdateRequest }, UpdateExpenseContext>, 'mutationFn'>
+    options?: Omit<UseMutationOptions<Expense, Error, UpdateExpenseVariables>, 'mutationFn'>
 ) => {
     const queryClient = useQueryClient();
-    return useMutation<Expense, Error, { id: number; data: ExpenseUpdateRequest }, UpdateExpenseContext>({
-        mutationFn: ({ id, data }) => expenseApi.update(id, data),
-        onMutate: async ({ id, data }) => {
-            await queryClient.cancelQueries({ queryKey: expenseKeys.detail(id) });
-            await queryClient.cancelQueries({ queryKey: expenseKeys.listBySeason(seasonId) });
-
-            const previousDetail = queryClient.getQueryData<Expense>(expenseKeys.detail(id));
-            const previousList = queryClient.getQueryData<PageResponse<Expense>>(expenseKeys.listBySeason(seasonId));
-
-            if (previousDetail) {
-                queryClient.setQueryData<Expense>(expenseKeys.detail(id), {
-                    ...previousDetail,
-                    ...data,
-                });
-            }
-
-            if (previousList) {
-                queryClient.setQueryData<PageResponse<Expense>>(expenseKeys.listBySeason(seasonId), {
-                    ...previousList,
-                    items: previousList.items.map((item) =>
-                        item.id === id ? { ...item, ...data } : item
-                    ),
-                });
-            }
-
-            return { previousDetail, previousList };
-        },
-        onError: (_err, { id }, context) => {
-            if (context?.previousDetail) {
-                queryClient.setQueryData(expenseKeys.detail(id), context.previousDetail);
-            }
-            if (context?.previousList) {
-                queryClient.setQueryData(expenseKeys.listBySeason(seasonId), context.previousList);
-            }
-        },
-        onSettled: (_, __, { id }) => {
-            queryClient.invalidateQueries({ queryKey: expenseKeys.detail(id) });
-            queryClient.invalidateQueries({ queryKey: expenseKeys.listBySeason(seasonId) });
-            queryClient.invalidateQueries({ queryKey: expenseKeys.tracker(seasonId) });
-            queryClient.invalidateQueries({ queryKey: expenseKeys.analytics() });
-        },
+    return useMutation({
         ...options,
+        mutationFn: ({ id, data }) => expenseApi.update(id, data),
+        onSuccess: async (_data, variables, _context, _mutationContext) => {
+            await queryClient.invalidateQueries({ queryKey: expenseKeys.detail(variables.id) });
+            await queryClient.invalidateQueries({ queryKey: expenseKeys.lists() });
+            await queryClient.invalidateQueries({ queryKey: expenseKeys.analytics() });
+
+            const seasonId = variables.data.seasonId;
+            if (seasonId && seasonId > 0) {
+                await queryClient.invalidateQueries({ queryKey: expenseKeys.tracker(seasonId) });
+                await queryClient.invalidateQueries({
+                    queryKey: expenseKeys.costInsightsSummary(seasonId),
+                });
+            }
+
+            await options?.onSuccess?.(_data, variables, _context, _mutationContext);
+        },
     });
 };
 
 /**
- * Hook to delete an expense with optimistic updates
+ * Hook to delete an expense
  */
 export const useDeleteExpense = (
-    seasonId: number,
-    options?: Omit<UseMutationOptions<void, Error, number, DeleteExpenseContext>, 'mutationFn'>
+    options?: Omit<UseMutationOptions<void, Error, DeleteExpenseVariables>, 'mutationFn'>
 ) => {
     const queryClient = useQueryClient();
-    return useMutation<void, Error, number, DeleteExpenseContext>({
-        mutationFn: expenseApi.delete,
-        onMutate: async (id) => {
-            await queryClient.cancelQueries({ queryKey: expenseKeys.listBySeason(seasonId) });
-
-            const previousExpenses = queryClient.getQueryData<PageResponse<Expense>>(expenseKeys.listBySeason(seasonId));
-
-            if (previousExpenses) {
-                queryClient.setQueryData<PageResponse<Expense>>(expenseKeys.listBySeason(seasonId), {
-                    ...previousExpenses,
-                    items: previousExpenses.items.filter((item) => item.id !== id),
-                    totalElements: Math.max(0, previousExpenses.totalElements - 1),
-                });
-            }
-
-            return { previousExpenses };
-        },
-        onError: (_err, _id, context) => {
-            if (context?.previousExpenses) {
-                queryClient.setQueryData(expenseKeys.listBySeason(seasonId), context.previousExpenses);
-            }
-        },
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: expenseKeys.listBySeason(seasonId) });
-            queryClient.invalidateQueries({ queryKey: expenseKeys.tracker(seasonId) });
-            queryClient.invalidateQueries({ queryKey: expenseKeys.analytics() });
-        },
+    return useMutation({
         ...options,
+        mutationFn: ({ id }) => expenseApi.delete(id),
+        onSuccess: async (_data, variables, _context, _mutationContext) => {
+            await queryClient.invalidateQueries({ queryKey: expenseKeys.lists() });
+            await queryClient.invalidateQueries({ queryKey: expenseKeys.analytics() });
+            await queryClient.invalidateQueries({ queryKey: expenseKeys.tracker(variables.seasonId) });
+            await queryClient.invalidateQueries({
+                queryKey: expenseKeys.costInsightsSummary(variables.seasonId),
+            });
+            await options?.onSuccess?.(_data, variables, _context, _mutationContext);
+        },
     });
 };

@@ -13,6 +13,7 @@ import java.util.Set;
 import org.example.QuanLyMuaVu.Config.AppProperties;
 import org.example.QuanLyMuaVu.Enums.NutrientInputSource;
 import org.example.QuanLyMuaVu.module.sustainability.dto.response.SustainabilityOverviewResponse;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -146,7 +147,10 @@ public class SustainabilityDashboardMetricSupport {
         }
         String summary = String.format(
                 Locale.ROOT,
-                "Overall confidence %s%%; %d measured, %d estimated/mixed, %d missing inputs.",
+                localize(
+                        "Overall confidence %s%%; %d measured, %d estimated/mixed, %d missing inputs.",
+                        "Độ tin cậy tổng thể %s%%; %d nguồn đo thực tế, %d nguồn ước tính/hỗn hợp, %d nguồn thiếu dữ liệu."
+                ),
                 scale2(safe(overallConfidence).multiply(HUNDRED)),
                 measuredCount,
                 estimatedCount,
@@ -389,15 +393,15 @@ public class SustainabilityDashboardMetricSupport {
 
     String mapScoreLabel(BigDecimal score) {
         if (score == null || score.compareTo(BigDecimal.valueOf(50)) < 0) {
-            return "Needs optimization";
+            return localize("Needs optimization", "Cần tối ưu");
         }
         if (score.compareTo(BigDecimal.valueOf(70)) < 0) {
-            return "Fair";
+            return localize("Fair", "Trung bình");
         }
         if (score.compareTo(BigDecimal.valueOf(85)) < 0) {
-            return "Good";
+            return localize("Good", "Tốt");
         }
-        return "Excellent";
+        return localize("Excellent", "Xuất sắc");
     }
 
     String resolveAlertLevel(BigDecimal fdnTotal, AppProperties.AlertThresholds thresholds) {
@@ -415,9 +419,18 @@ public class SustainabilityDashboardMetricSupport {
 
     String resolveAlertExplanation(String level, AppProperties.AlertThresholds thresholds) {
         return switch (normalize(level)) {
-            case "low" -> "FDN is below configured low threshold (" + thresholds.getLowMaxExclusive() + "%).";
-            case "high" -> "FDN is above configured medium threshold (" + thresholds.getMediumMaxExclusive() + "%).";
-            default -> "FDN is between configured low and high thresholds.";
+            case "low" -> localize(
+                    "FDN is below configured low threshold (" + thresholds.getLowMaxExclusive() + "%).",
+                    "FDN thấp hơn ngưỡng thấp đã cấu hình (" + thresholds.getLowMaxExclusive() + "%)."
+            );
+            case "high" -> localize(
+                    "FDN is above configured medium threshold (" + thresholds.getMediumMaxExclusive() + "%).",
+                    "FDN cao hơn ngưỡng trung bình đã cấu hình (" + thresholds.getMediumMaxExclusive() + "%)."
+            );
+            default -> localize(
+                    "FDN is between configured low and high thresholds.",
+                    "FDN nằm trong khoảng giữa các ngưỡng đã cấu hình."
+            );
         };
     }
 
@@ -442,10 +455,19 @@ public class SustainabilityDashboardMetricSupport {
         if (notes != null) {
             merged.addAll(notes);
         }
-        merged.add("FDN and NUE are computed from scientific formulas in the project specification.");
-        merged.add("Alert thresholds, recommendation rules, and sustainability score weights are configurable product rules.");
+        merged.add(localize(
+                "FDN and NUE are computed from scientific formulas in the project specification.",
+                "FDN và NUE được tính theo công thức khoa học trong đặc tả dự án."
+        ));
+        merged.add(localize(
+                "Alert thresholds, recommendation rules, and sustainability score weights are configurable product rules.",
+                "Ngưỡng cảnh báo, luật khuyến nghị và trọng số điểm bền vững là các quy tắc sản phẩm có thể cấu hình."
+        ));
         if (farmScope) {
-            merged.add("Farm scope aggregates field-level nitrogen inputs and outputs before computing FDN/NUE.");
+            merged.add(localize(
+                    "Farm scope aggregates field-level nitrogen inputs and outputs before computing FDN/NUE.",
+                    "Phạm vi nông trại tổng hợp đầu vào và đầu ra đạm ở cấp thửa trước khi tính FDN/NUE."
+            ));
         }
         return merged.stream().limit(20).toList();
     }
@@ -501,5 +523,14 @@ public class SustainabilityDashboardMetricSupport {
             return List.of();
         }
         return values.stream().filter(StringUtils::hasText).limit(maxItems).toList();
+    }
+
+    private boolean isVietnameseLocale() {
+        Locale locale = LocaleContextHolder.getLocale();
+        return locale != null && "vi".equalsIgnoreCase(locale.getLanguage());
+    }
+
+    private String localize(String english, String vietnamese) {
+        return isVietnameseLocale() ? vietnamese : english;
     }
 }

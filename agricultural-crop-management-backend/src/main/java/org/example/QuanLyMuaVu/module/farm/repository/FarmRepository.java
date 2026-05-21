@@ -56,6 +56,13 @@ public interface FarmRepository extends JpaRepository<Farm, Integer> {
         @Query("SELECT f FROM Farm f WHERE f.id = :farmId AND f.user.id = :userId")
         Optional<Farm> findByIdAndUserId(@Param("farmId") Integer farmId, @Param("userId") Long userId);
 
+        @Query("SELECT f FROM Farm f " +
+                        "LEFT JOIN FETCH f.province " +
+                        "LEFT JOIN FETCH f.ward " +
+                        "WHERE f.active = true AND f.user.id IN :userIds " +
+                        "ORDER BY f.user.id ASC, f.id ASC")
+        List<Farm> findActiveByUserIds(@Param("userIds") List<Long> userIds);
+
         /**
          * Check if a farm exists and is owned by the specified user.
          * 

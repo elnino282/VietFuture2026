@@ -6,6 +6,8 @@ export type {
     ProfileResponse,
     ProfileUpdateRequest,
     ProfileChangePasswordRequest,
+    UpdateProfilePayload,
+    ChangePasswordPayload,
 } from './model/types';
 
 // Schemas (for external validation needs)

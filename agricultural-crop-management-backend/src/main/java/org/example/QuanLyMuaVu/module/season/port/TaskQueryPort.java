@@ -21,6 +21,13 @@ public interface TaskQueryPort {
             LocalDate untilDate,
             List<TaskStatus> excludedStatuses);
 
+    List<DashboardTaskView> findOverdueTasksByUser(
+            Long userId,
+            Integer seasonId,
+            LocalDate today,
+            List<TaskStatus> excludedStatuses,
+            int limit);
+
     long countCompletedBySeasonId(Integer seasonId);
 
     long countCompletedOnTimeBySeasonId(Integer seasonId);

@@ -6,22 +6,22 @@ import {
     CalendarClock,
     MoreVertical,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Checkbox } from '@/shared/ui/checkbox';
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+} from '@/shared/ui/tooltip';
+import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+} from '@/shared/ui/popover';
+import { Calendar } from '@/shared/ui/calendar';
 import { EnhancedTask, TaskStatus } from '../types';
 import { TASK_TYPES } from '../constants';
 

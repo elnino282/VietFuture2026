@@ -1,9 +1,11 @@
 package org.example.QuanLyMuaVu.module.admin.controller;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.QuanLyMuaVu.DTO.Common.ApiResponse;
 import org.example.QuanLyMuaVu.module.admin.dto.response.AdminInventoryHealthResponse;
+import org.example.QuanLyMuaVu.module.admin.dto.response.AdminPendingApprovalItemDTO;
 import org.example.QuanLyMuaVu.module.admin.dto.response.DashboardStatsDTO;
 import org.example.QuanLyMuaVu.module.admin.service.AdminDashboardFacade;
 import org.example.QuanLyMuaVu.module.admin.service.AdminInventoryService;
@@ -39,6 +41,20 @@ public class AdminDashboardController {
         DashboardStatsDTO stats = adminDashboardFacade.getDashboardStats();
 
         return ResponseEntity.ok(ApiResponse.success("Dashboard stats retrieved", stats));
+    }
+
+    /**
+     * GET /api/v1/admin/dashboard/pending-approvals
+     * Returns real pending approvals that require admin action.
+     */
+    @GetMapping("/dashboard/pending-approvals")
+    public ResponseEntity<ApiResponse<List<AdminPendingApprovalItemDTO>>> getPendingApprovals(
+            @RequestParam(value = "limit", required = false) Integer limit) {
+        log.info("Admin requesting pending approvals, limit={}", limit);
+
+        List<AdminPendingApprovalItemDTO> approvals = adminDashboardFacade.getPendingApprovals(limit);
+
+        return ResponseEntity.ok(ApiResponse.success("Pending approvals retrieved", approvals));
     }
 
     /**

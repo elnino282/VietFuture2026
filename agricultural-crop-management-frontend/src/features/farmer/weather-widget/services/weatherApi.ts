@@ -1,13 +1,8 @@
-/**
- * Weather API Service
- * Handles all API calls to WeatherAPI.com
- */
-
-const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY || "";
-const WEATHER_API_BASE_URL = "https://api.weatherapi.com/v1";
+import httpClient from "@/shared/api/http";
 
 /**
- * Location Suggestion from Search API
+ * Current Weather API Response
+ * (shape mirrored from backend weather payload)
  */
 export interface LocationSuggestion {
     id: number;
@@ -21,6 +16,7 @@ export interface LocationSuggestion {
 
 /**
  * Current Weather API Response
+ * (shape mirrored from backend weather payload)
  */
 export interface CurrentWeatherResponse {
     location: {
@@ -78,7 +74,7 @@ export interface ForecastDayResponse {
 }
 
 /**
- * Forecast API Response
+ * Forecast API payload used by mapper
  */
 export interface ForecastWeatherResponse {
     location: {
@@ -96,106 +92,46 @@ export interface ForecastWeatherResponse {
     };
 }
 
-/**
- * API Error Response
- */
-export interface WeatherApiError {
-    error: {
-        code: number;
-        message: string;
-    };
+export type DashboardWeatherStatus =
+    | "SUCCESS"
+    | "LOCATION_REQUIRED"
+    | "WEATHER_UNAVAILABLE";
+
+export interface DashboardWeatherResponse {
+    status: DashboardWeatherStatus;
+    message: string;
+    farmId: number | null;
+    seasonId: number | null;
+    farmName: string | null;
+    location: {
+        latitude: number | null;
+        longitude: number | null;
+        displayName: string | null;
+    } | null;
+    weather: ForecastWeatherResponse | null;
+}
+
+interface ApiEnvelope<T> {
+    status: number;
+    code: string;
+    message: string;
+    result: T;
+}
+
+export interface GetDashboardWeatherParams {
+    farmId?: number;
+    seasonId?: number;
 }
 
 /**
- * Search for location suggestions
- * @param query - Search query (city name)
- * @returns Array of location suggestions
+ * Fetch weather summary through backend dashboard endpoint
  */
-export async function searchLocations(
-    query: string
-): Promise<LocationSuggestion[]> {
-    if (!query.trim()) {
-        return [];
-    }
-
-    try {
-        const response = await fetch(
-            `${WEATHER_API_BASE_URL}/search.json?key=${WEATHER_API_KEY}&q=${encodeURIComponent(
-                query
-            )}`
-        );
-
-        if (!response.ok) {
-            const error: WeatherApiError = await response.json();
-            throw new Error(error.error.message || "Failed to search locations");
-        }
-
-        const data: LocationSuggestion[] = await response.json();
-        return data;
-    } catch (error) {
-        console.error("Error searching locations:", error);
-        throw error;
-    }
+export async function getDashboardWeather(
+    params?: GetDashboardWeatherParams
+): Promise<DashboardWeatherResponse> {
+    const response = await httpClient.get<ApiEnvelope<DashboardWeatherResponse>>(
+        "/api/v1/dashboard/weather",
+        { params }
+    );
+    return response.data.result;
 }
-
-/**
- * Get current weather data for a location
- * @param location - Location query (city name, coordinates, etc.)
- * @returns Current weather data
- */
-export async function getCurrentWeather(
-    location: string
-): Promise<CurrentWeatherResponse> {
-    try {
-        const response = await fetch(
-            `${WEATHER_API_BASE_URL}/current.json?key=${WEATHER_API_KEY}&q=${encodeURIComponent(
-                location
-            )}&aqi=no`
-        );
-
-        if (!response.ok) {
-            const error: WeatherApiError = await response.json();
-            throw new Error(error.error.message || "Failed to fetch weather data");
-        }
-
-        const data: CurrentWeatherResponse = await response.json();
-        return data;
-    } catch (error) {
-        console.error("Error fetching current weather:", error);
-        throw error;
-    }
-}
-
-/**
- * Get weather forecast for a location
- * @param location - Location query (city name, coordinates, etc.)
- * @param days - Number of days to forecast (1-14)
- * @returns Forecast weather data including current conditions
- */
-export async function getForecast(
-    location: string,
-    days: number = 3
-): Promise<ForecastWeatherResponse> {
-    try {
-        const response = await fetch(
-            `${WEATHER_API_BASE_URL}/forecast.json?key=${WEATHER_API_KEY}&q=${encodeURIComponent(
-                location
-            )}&days=${days}&aqi=no&alerts=no`
-        );
-
-        if (!response.ok) {
-            const error: WeatherApiError = await response.json();
-            throw new Error(error.error.message || "Failed to fetch forecast data");
-        }
-
-        const data: ForecastWeatherResponse = await response.json();
-        return data;
-    } catch (error) {
-        console.error("Error fetching forecast:", error);
-        throw error;
-    }
-}
-
-
-
-

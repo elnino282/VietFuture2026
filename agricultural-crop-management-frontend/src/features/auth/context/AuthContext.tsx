@@ -492,12 +492,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (profileUpdate: Partial<ProfileInfo>) => {
       setUser((prev) => {
         if (!prev) return null;
+        const mergedProfile = {
+          ...prev.profile,
+          ...profileUpdate,
+        };
+
         const updatedUser = {
           ...prev,
-          profile: {
-            ...prev.profile,
-            ...profileUpdate,
-          },
+          name: mergedProfile.fullName || prev.name || prev.username,
+          email: mergedProfile.email || prev.email,
+          profile: mergedProfile,
         };
         // Also update storage
         const stored = loadStoredAuth();

@@ -20,6 +20,8 @@ public interface IncidentQueryPort {
 
     long countOpenIncidentsByOwnerId(Long ownerId);
 
+    List<Incident> findOpenIncidentsByOwnerId(Long ownerId, Integer seasonId);
+
     Page<Alert> searchAlerts(
             String type,
             String severity,

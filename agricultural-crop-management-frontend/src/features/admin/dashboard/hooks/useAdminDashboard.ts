@@ -3,10 +3,12 @@ import { Users, Boxes, Map, Sprout } from 'lucide-react';
 import {
   adminDashboardStatsApi,
   dashboardStatsKeys,
+  type AdminPendingApprovalItem,
   type DashboardStats,
 } from '@/services/api.admin';
 import {
   type RiskLevel,
+  type RiskDataCoverage,
   type TransformedRiskySeason,
 } from '../types';
 
@@ -31,18 +33,18 @@ const transformDashboardData = (data: DashboardStats) => {
       title: 'Total Users',
       value: data.summary.totalUsers.toLocaleString(),
       icon: Users,
-      color: '#2563EB',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
+      color: '#3BA55D',
+      bgColor: 'bg-emerald-50',
+      textColor: 'text-emerald-600',
     },
     {
       key: 'totalFarms',
       title: 'Total Farms',
       value: data.summary.totalFarms.toLocaleString(),
       icon: Boxes,
-      color: '#0891B2',
-      bgColor: 'bg-cyan-50',
-      textColor: 'text-cyan-600',
+      color: '#2F8A4D',
+      bgColor: 'bg-green-50',
+      textColor: 'text-green-700',
     },
     {
       key: 'totalPlots',
@@ -69,7 +71,7 @@ const transformDashboardData = (data: DashboardStats) => {
     userRoles: data.userRoleCounts.map((r) => ({
       name: r.role || 'Unknown',
       value: r.total,
-      color: r.role === 'ADMIN' ? '#2563EB' : r.role === 'FARMER' ? '#10B981' : '#F59E0B',
+      color: r.role === 'ADMIN' ? '#4A90E2' : r.role === 'FARMER' ? '#3BA55D' : '#F4C542',
     })),
     userStatus: data.userStatusCounts.map((s) => ({
       name: s.status || 'Unknown',
@@ -81,9 +83,9 @@ const transformDashboardData = (data: DashboardStats) => {
       value: s.total,
       color:
         s.status === 'ACTIVE'
-          ? '#2563EB'
+          ? '#3BA55D'
           : s.status === 'COMPLETED'
-            ? '#10B981'
+            ? '#F4C542'
             : s.status === 'CANCELLED'
               ? '#EF4444'
               : '#64748B',
@@ -96,7 +98,10 @@ const transformDashboardData = (data: DashboardStats) => {
     riskLevel: getRiskLevel(s.riskScore),
   }));
 
-  return { kpiMetrics, charts, risks };
+  const riskDataCoverage: RiskDataCoverage = data.dataCoverage;
+  const riskDataLimited = !riskDataCoverage.incidentDataAvailable || !riskDataCoverage.taskDataAvailable;
+
+  return { kpiMetrics, charts, risks, riskDataCoverage, riskDataLimited };
 };
 
 /**
@@ -108,7 +113,7 @@ const transformDashboardData = (data: DashboardStats) => {
  * - Transforms API data to UI-friendly format via select
  */
 export const useAdminDashboard = () => {
-  const query = useQuery({
+  const statsQuery = useQuery({
     queryKey: dashboardStatsKeys.stats(),
     queryFn: adminDashboardStatsApi.getStats,
     refetchInterval: 30_000, // Real-time: poll every 30s
@@ -117,20 +122,40 @@ export const useAdminDashboard = () => {
     select: transformDashboardData,
   });
 
+  const pendingApprovalsQuery = useQuery({
+    queryKey: dashboardStatsKeys.pendingApprovals(10),
+    queryFn: () => adminDashboardStatsApi.getPendingApprovals({ limit: 10 }),
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const refetch = async () => {
+    await Promise.all([statsQuery.refetch(), pendingApprovalsQuery.refetch()]);
+  };
+
   return {
     // Query state
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
-    isFetching: query.isFetching, // Background refetch indicator
+    isLoading: statsQuery.isLoading,
+    isError: statsQuery.isError,
+    error: statsQuery.error,
+    isFetching: statsQuery.isFetching || pendingApprovalsQuery.isFetching, // Background refetch indicator
 
     // Transformed data (undefined when loading)
-    kpiMetrics: query.data?.kpiMetrics ?? [],
-    charts: query.data?.charts ?? { userRoles: [], userStatus: [], seasonStatus: [] },
-    risks: query.data?.risks ?? [],
+    kpiMetrics: statsQuery.data?.kpiMetrics ?? [],
+    charts: statsQuery.data?.charts ?? { userRoles: [], userStatus: [], seasonStatus: [] },
+    risks: statsQuery.data?.risks ?? [],
+    riskDataCoverage: statsQuery.data?.riskDataCoverage,
+    riskDataLimited: statsQuery.data?.riskDataLimited ?? false,
+    pendingApprovals: pendingApprovalsQuery.data ?? [],
+    pendingApprovalsLoading: pendingApprovalsQuery.isLoading,
+    pendingApprovalsError: pendingApprovalsQuery.isError
+      ? (pendingApprovalsQuery.error as Error)
+      : null,
     // Refetch manually if needed
-    refetch: query.refetch,
+    refetch,
   };
 };
 
 export type UseAdminDashboardReturn = ReturnType<typeof useAdminDashboard>;
+export type AdminDashboardPendingApproval = AdminPendingApprovalItem;

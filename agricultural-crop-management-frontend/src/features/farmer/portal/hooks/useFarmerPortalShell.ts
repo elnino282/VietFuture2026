@@ -84,7 +84,7 @@ export function useFarmerPortalShell(): UseFarmerPortalShellReturn {
   const profileFullName = profile?.fullName?.trim();
   const sessionFullName = user?.profile?.fullName?.trim();
   const emailUsername = user?.email?.split('@')[0];
-  const userName = profileFullName || sessionFullName || emailUsername || 'Farmer';
+  const userName = profileFullName || sessionFullName || emailUsername || t('portal.farmer');
   const userEmail = profile?.email || user?.email || 'farmer@acm-platform.com';
 
   /**
@@ -102,9 +102,9 @@ export function useFarmerPortalShell(): UseFarmerPortalShellReturn {
     'field-logs': t('nav.fieldLogs'),
     harvest: t('nav.harvest'),
     'labor-management': t('nav.laborManagement'),
-    'nutrient-inputs': t('nav.nutrientInputs', { defaultValue: 'Nutrient Inputs' }),
-    'irrigation-water-analyses': t('nav.irrigationWaterAnalysis', { defaultValue: 'Irrigation Analysis' }),
-    'soil-tests': t('nav.soilTests', { defaultValue: 'Soil Tests' }),
+    'nutrient-inputs': t('nav.nutrientInputs'),
+    'irrigation-water-analyses': t('nav.irrigationWaterAnalysis'),
+    'soil-tests': t('nav.soilTests'),
     reports: t('nav.reports'),
   };
 
@@ -118,15 +118,15 @@ export function useFarmerPortalShell(): UseFarmerPortalShellReturn {
     'field-logs': t('nav.fieldLogs'),
     expenses: t('nav.expenses'),
     harvest: t('nav.harvest'),
-    'nutrient-inputs': t('nav.nutrientInputs', { defaultValue: 'Nutrient Inputs' }),
+    'nutrient-inputs': t('nav.nutrientInputs'),
     'suppliers-supplies': t('nav.suppliersSupplies'),
     'labor-management': t('nav.laborManagement'),
     inventory: t('nav.inventory'),
     'product-warehouse': t('nav.productWarehouse'),
-    'marketplace-workspace': t('nav.marketplace', { defaultValue: 'Marketplace Workspace' }),
-    'marketplace-dashboard': t('nav.marketplace', { defaultValue: 'Marketplace' }),
-    'marketplace-products': t('nav.marketplace', { defaultValue: 'Marketplace' }),
-    'marketplace-orders': t('nav.marketplace', { defaultValue: 'Marketplace' }),
+    'marketplace-workspace': t('nav.marketplace'),
+    'marketplace-dashboard': t('nav.marketplace'),
+    'marketplace-products': t('nav.marketplace'),
+    'marketplace-orders': t('nav.marketplace'),
     documents: t('nav.documents'),
     incidents: t('nav.incidents'),
     'ai-assistant': t('nav.aiAssistant'),
@@ -136,12 +136,12 @@ export function useFarmerPortalShell(): UseFarmerPortalShellReturn {
     settings: t('userMenu.preferences'),
   };
 
-  const breadcrumbs: BreadcrumbPath[] = [{ label: t('nav.home', { defaultValue: 'Trang chủ' }), href: '/farmer/dashboard' }];
+  const breadcrumbs: BreadcrumbPath[] = [{ label: t('nav.home'), href: '/farmer/dashboard' }];
 
   if (isSeasonWorkspaceRoute && Number.isFinite(workspaceSeasonId) && workspaceSeasonId > 0) {
     breadcrumbs.push({ label: t('nav.seasons'), href: '/farmer/seasons' });
     breadcrumbs.push({
-      label: selectedSeason?.seasonName ?? `Mùa vụ #${workspaceSeasonId}`,
+      label: selectedSeason?.seasonName ?? `${t('seasons.title')} #${workspaceSeasonId}`,
       href: `/farmer/seasons/${workspaceSeasonId}/workspace`,
     });
 
@@ -151,7 +151,7 @@ export function useFarmerPortalShell(): UseFarmerPortalShellReturn {
       });
     } else {
       breadcrumbs.push({
-        label: t('common.details', { defaultValue: 'Chi tiết' }),
+        label: t('common.details'),
       });
     }
   } else if (isFarmDetailRoute) {
@@ -207,7 +207,7 @@ export function useFarmerPortalShell(): UseFarmerPortalShellReturn {
     // Clear active season to enforce selection on next login
     localStorage.removeItem('activeSeasonId');
     await logout();
-    toast.success('Signed out successfully');
+    toast.success(t('common.signedOut'));
     navigate('/sign-in', { replace: true });
   };
 

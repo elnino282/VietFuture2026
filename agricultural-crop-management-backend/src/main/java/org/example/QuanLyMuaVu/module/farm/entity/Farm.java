@@ -51,6 +51,12 @@ public class Farm {
     @Column(name = "area")
     BigDecimal area;
 
+    @Column(name = "latitude", precision = 10, scale = 6)
+    BigDecimal latitude;
+
+    @Column(name = "longitude", precision = 10, scale = 6)
+    BigDecimal longitude;
+
     @Column(name = "average_rating", nullable = false)
     @Builder.Default
     Double averageRating = 0.0;

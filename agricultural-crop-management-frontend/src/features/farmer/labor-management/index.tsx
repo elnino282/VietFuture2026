@@ -38,40 +38,42 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  PageContainer,
 } from "@/shared/ui";
+import { useI18n } from "@/hooks/useI18n";
 import { Calendar, RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 
-const formatDate = (value?: string | null) => {
+const formatDate = (value?: string | null, locale = "en-US") => {
   if (!value) return "-";
   try {
-    return new Date(value).toLocaleString("vi-VN");
+    return new Date(value).toLocaleString(locale);
   } catch {
     return value;
   }
 };
 
-const formatMoney = (value?: number | null) => {
+const formatMoney = (value?: number | null, locale = "en-US") => {
   if (value === undefined || value === null) return "-";
-  return value.toLocaleString("vi-VN");
+  return value.toLocaleString(locale);
 };
 
-const getTaskStatusLabel = (status?: string) => {
+const getTaskStatusLabelKey = (status?: string) => {
   switch (status) {
     case "PENDING":
-      return "Chờ thực hiện";
+      return "tasks.status.pending";
     case "IN_PROGRESS":
-      return "Đang thực hiện";
+      return "tasks.status.inProgress";
     case "DONE":
-      return "Hoàn thành";
+      return "tasks.status.done";
     case "OVERDUE":
-      return "Quá hạn";
+      return "tasks.status.overdue";
     case "CANCELLED":
-      return "Đã hủy";
+      return "seasonWorkspace.status.cancelled";
     default:
-      return status ?? "-";
+      return null;
   }
 };
 
@@ -91,6 +93,7 @@ const getTaskStatusClassName = (status?: string) => {
 };
 
 export function LaborManagementPage() {
+  const { t, locale } = useI18n();
   const { seasonId: workspaceSeasonIdParam } = useParams();
   const workspaceSeasonId = Number(workspaceSeasonIdParam);
   const isWorkspaceScoped = Number.isFinite(workspaceSeasonId) && workspaceSeasonId > 0;
@@ -133,8 +136,8 @@ export function LaborManagementPage() {
       return `${workspaceSeasonDetail.seasonName}${workspaceSeasonDetail.status ? ` (${workspaceSeasonDetail.status})` : ""}`;
     }
 
-    return selectedSeasonId ? `Mùa vụ #${selectedSeasonId}` : null;
-  }, [selectedSeasonId, mySeasons, isWorkspaceScoped, workspaceSeasonDetail]);
+    return selectedSeasonId ? t("seasonWorkspace.fallbackSeasonName", { id: selectedSeasonId }) : null;
+  }, [selectedSeasonId, mySeasons, isWorkspaceScoped, workspaceSeasonDetail, t]);
 
   const selectedSeasonStatus = useMemo(() => {
     if (selectedSeasonId && mySeasons) {
@@ -185,35 +188,35 @@ export function LaborManagementPage() {
 
   const addSeasonEmployeeMutation = useAddSeasonEmployee(seasonId, {
     onSuccess: () => {
-      toast.success("Đã thêm nhân công vào mùa vụ");
+      toast.success(t("laborWorkspace.toast.addEmployeeSuccess"));
       setSelectedDirectoryEmployeeId("");
       setWagePerTask("");
     },
-    onError: (error) => toast.error(error.message || "Không thể thêm nhân công"),
+    onError: (error) => toast.error(error.message || t("laborWorkspace.toast.addEmployeeError")),
   });
 
   const bulkAssignSeasonEmployeesMutation = useBulkAssignSeasonEmployees(seasonId, {
     onSuccess: (rows) => {
-      toast.success(`Đã thêm ${rows.length} nhân công vào mùa vụ`);
+      toast.success(t("laborWorkspace.toast.bulkAddEmployeeSuccess", { count: rows.length }));
       setSelectedBulkEmployeeIds([]);
       setWagePerTask("");
     },
-    onError: (error) => toast.error(error.message || "Không thể thêm nhân công hàng loạt"),
+    onError: (error) => toast.error(error.message || t("laborWorkspace.toast.bulkAddEmployeeError")),
   });
 
   const removeSeasonEmployeeMutation = useRemoveSeasonEmployee(seasonId, {
-    onSuccess: () => toast.success("Đã xóa nhân công khỏi mùa vụ"),
-    onError: (error) => toast.error(error.message || "Không thể xóa nhân công"),
+    onSuccess: () => toast.success(t("laborWorkspace.toast.removeEmployeeSuccess")),
+    onError: (error) => toast.error(error.message || t("laborWorkspace.toast.removeEmployeeError")),
   });
 
   const assignTaskMutation = useAssignTaskToEmployee(seasonId, {
-    onSuccess: () => toast.success("Đã phân công công việc"),
-    onError: (error) => toast.error(error.message || "Không thể phân công công việc"),
+    onSuccess: () => toast.success(t("laborWorkspace.toast.assignTaskSuccess")),
+    onError: (error) => toast.error(error.message || t("laborWorkspace.toast.assignTaskError")),
   });
 
   const recalculatePayrollMutation = useRecalculateSeasonPayroll(seasonId, {
-    onSuccess: () => toast.success("Đã tính lại bảng lương"),
-    onError: (error) => toast.error(error.message || "Không thể tính lại bảng lương"),
+    onSuccess: () => toast.success(t("laborWorkspace.toast.recalculatePayrollSuccess")),
+    onError: (error) => toast.error(error.message || t("laborWorkspace.toast.recalculatePayrollError")),
   });
 
   const seasonEmployees = seasonEmployeesData?.items ?? [];
@@ -244,26 +247,26 @@ export function LaborManagementPage() {
             employee.employeeName ||
             employee.employeeUsername ||
             employee.employeeEmail ||
-            `Employee #${employee.employeeUserId}`,
+            t("seasonWorkspace.employeeFallback", { id: employee.employeeUserId }),
         })),
-    [seasonEmployees]
+    [seasonEmployees, t]
   );
 
   const canMutateSeason = !!selectedSeasonId && !isSeasonLocked;
 
   const handleAddSeasonEmployee = () => {
     if (!canMutateSeason) {
-      toast.error("Mùa vụ đã khóa, không thể cập nhật nhân công.");
+      toast.error(t("laborWorkspace.validation.seasonLockedUpdate"));
       return;
     }
     if (!selectedDirectoryEmployeeId) {
-      toast.error("Vui lòng chọn nhân công");
+      toast.error(t("laborWorkspace.validation.selectEmployee"));
       return;
     }
 
     const parsedWage = wagePerTask.trim().length ? Number(wagePerTask) : undefined;
     if (parsedWage !== undefined && (Number.isNaN(parsedWage) || parsedWage < 0)) {
-      toast.error("Đơn giá theo task không hợp lệ");
+      toast.error(t("laborWorkspace.validation.invalidWagePerTask"));
       return;
     }
 
@@ -275,17 +278,17 @@ export function LaborManagementPage() {
 
   const handleBulkAssignSeasonEmployees = () => {
     if (!canMutateSeason) {
-      toast.error("Mùa vụ đã khóa, không thể cập nhật nhân công.");
+      toast.error(t("laborWorkspace.validation.seasonLockedUpdate"));
       return;
     }
     if (selectedBulkEmployeeIds.length === 0) {
-      toast.error("Vui lòng chọn ít nhất một nhân công.");
+      toast.error(t("laborWorkspace.validation.selectAtLeastOneEmployee"));
       return;
     }
 
     const parsedWage = wagePerTask.trim().length ? Number(wagePerTask) : undefined;
     if (parsedWage !== undefined && (Number.isNaN(parsedWage) || parsedWage < 0)) {
-      toast.error("Đơn giá theo task không hợp lệ");
+      toast.error(t("laborWorkspace.validation.invalidWagePerTask"));
       return;
     }
 
@@ -297,12 +300,12 @@ export function LaborManagementPage() {
 
   const handleAssignTask = (taskId: number) => {
     if (!canMutateSeason) {
-      toast.error("Mùa vụ đã khóa, không thể phân công thêm.");
+      toast.error(t("laborWorkspace.validation.seasonLockedAssign"));
       return;
     }
     const selectedAssigneeId = taskAssigneeDraft[taskId];
     if (!selectedAssigneeId) {
-      toast.error("Vui lòng chọn nhân công để phân công");
+      toast.error(t("laborWorkspace.validation.selectEmployeeForAssignment"));
       return;
     }
 
@@ -314,7 +317,7 @@ export function LaborManagementPage() {
 
   const handleRemoveSeasonEmployee = (employeeUserId: number) => {
     if (!canMutateSeason) {
-      toast.error("Mùa vụ đã khóa, không thể xóa nhân công.");
+      toast.error(t("laborWorkspace.validation.seasonLockedDelete"));
       return;
     }
     removeSeasonEmployeeMutation.mutate(employeeUserId);
@@ -324,52 +327,52 @@ export function LaborManagementPage() {
 
   if (!isWorkspaceScoped && isSeasonsLoading) {
     return (
-      <div className="p-6">
+      <PageContainer variant="wide">
         <Card className="rounded-2xl border border-border">
           <CardContent className="p-6 space-y-3">
             <div className="flex items-center gap-2 text-muted-foreground">
               <RefreshCw className="w-4 h-4 animate-spin" />
-              Đang tải danh sách mùa vụ...
+              {t("laborWorkspace.loadingSeasons")}
             </div>
           </CardContent>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   if (!isWorkspaceScoped && (!mySeasons || mySeasons.length === 0)) {
     return (
-      <div className="p-6">
+      <PageContainer variant="wide">
         <Card className="rounded-2xl border border-border">
           <CardContent className="p-6 space-y-3">
-            <h2 className="text-lg text-foreground">Chưa có mùa vụ nào</h2>
+            <h2 className="text-lg text-foreground">{t("laborWorkspace.emptySeasonsTitle")}</h2>
             <p className="text-sm text-muted-foreground">
-              Vui lòng tạo một mùa vụ trước khi quản lý nhân công.
+              {t("laborWorkspace.emptySeasonsDescription")}
             </p>
           </CardContent>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <PageContainer variant="wide" className="space-y-6">
       <Card className="rounded-2xl border border-border">
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <CardTitle>Quản lý Nhân công</CardTitle>
+              <CardTitle>{t("laborWorkspace.title")}</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 {selectedSeasonName
-                  ? `Mùa vụ hiện tại: ${selectedSeasonName}`
-                  : "Chọn mùa vụ để bắt đầu"}
+                  ? t("laborWorkspace.currentSeasonLabel", { season: selectedSeasonName })
+                  : t("laborWorkspace.selectSeasonToStart")}
               </p>
             </div>
             {isWorkspaceScoped ? (
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
                 <Badge className="bg-muted text-foreground border-border">
-                  {selectedSeasonName ?? `Mùa vụ #${workspaceSeasonId}`}
+                  {selectedSeasonName ?? t("seasonWorkspace.fallbackSeasonName", { id: workspaceSeasonId })}
                 </Badge>
               </div>
             ) : (
@@ -380,7 +383,7 @@ export function LaborManagementPage() {
                   onValueChange={(val) => setSelectedSeasonId(Number(val))}
                 >
                   <SelectTrigger className="w-[260px]">
-                    <SelectValue placeholder="Chọn mùa vụ..." />
+                    <SelectValue placeholder={t("laborWorkspace.selectSeasonPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
                     {(mySeasons ?? []).map((season) => (
@@ -403,39 +406,39 @@ export function LaborManagementPage() {
       {isSeasonLocked && (
         <Card className="rounded-2xl border border-amber-300 bg-amber-50">
           <CardContent className="p-4 text-sm text-amber-900">
-            Mùa vụ hiện tại đã khóa. Chỉ được xem kế hoạch và dữ liệu nhân công, không thể thêm/xóa/phân công/chạy lương.
+            {t("laborWorkspace.lockedSeasonBanner")}
           </CardContent>
         </Card>
       )}
 
       <Tabs defaultValue="employees" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="employees">Danh sách nhân công</TabsTrigger>
-          <TabsTrigger value="assignment">Phân công & tiến độ</TabsTrigger>
-          <TabsTrigger value="payroll">Bảng lương</TabsTrigger>
+          <TabsTrigger value="employees">{t("laborWorkspace.tabs.employees")}</TabsTrigger>
+          <TabsTrigger value="assignment">{t("laborWorkspace.tabs.assignment")}</TabsTrigger>
+          <TabsTrigger value="payroll">{t("laborWorkspace.tabs.payroll")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="employees" className="space-y-4">
           <Card className="rounded-2xl border border-border">
             <CardHeader>
-              <CardTitle className="text-base">Thêm nhân công vào mùa vụ</CardTitle>
+              <CardTitle className="text-base">{t("laborWorkspace.sections.addEmployees.title")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-2">
-                  <Label>Nhân công khả dụng</Label>
+                  <Label>{t("laborWorkspace.fields.availableEmployees")}</Label>
                   <Select
                     value={selectedDirectoryEmployeeId}
                     onValueChange={setSelectedDirectoryEmployeeId}
                     disabled={!canMutateSeason}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Chọn nhân công" />
+                      <SelectValue placeholder={t("laborWorkspace.fields.selectEmployeePlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
                       {availableDirectoryEmployees.map((employee) => (
                         <SelectItem key={employee.userId} value={String(employee.userId)}>
-                          {employee.fullName || employee.username || employee.email || `Employee #${employee.userId}`}
+                          {employee.fullName || employee.username || employee.email || t("seasonWorkspace.employeeFallback", { id: employee.userId })}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -443,13 +446,13 @@ export function LaborManagementPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Đơn giá / task (VND)</Label>
+                  <Label>{t("laborWorkspace.fields.wagePerTaskVnd")}</Label>
                   <Input
                     type="number"
                     min={0}
                     value={wagePerTask}
                     onChange={(event) => setWagePerTask(event.target.value)}
-                    placeholder="Ví dụ: 150000"
+                    placeholder={t("laborWorkspace.fields.wagePerTaskPlaceholder")}
                     disabled={!canMutateSeason}
                   />
                 </div>
@@ -461,7 +464,7 @@ export function LaborManagementPage() {
                     disabled={!canMutateSeason || addSeasonEmployeeMutation.isPending || !selectedDirectoryEmployeeId}
                   >
                     <UserPlus className="w-4 h-4 mr-2" />
-                    Thêm nhân công
+                    {t("laborWorkspace.actions.addEmployee")}
                   </Button>
                 </div>
               </div>
@@ -471,7 +474,7 @@ export function LaborManagementPage() {
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm text-muted-foreground">
-                    Chọn nhiều nhân công từ danh mục để gán vào mùa vụ.
+                    {t("laborWorkspace.bulk.description")}
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
@@ -485,7 +488,7 @@ export function LaborManagementPage() {
                       }
                       disabled={!canMutateSeason || availableDirectoryEmployees.length === 0}
                     >
-                      Chọn tất cả
+                      {t("laborWorkspace.bulk.selectAll")}
                     </Button>
                     <Button
                       type="button"
@@ -494,20 +497,20 @@ export function LaborManagementPage() {
                       onClick={() => setSelectedBulkEmployeeIds([])}
                       disabled={selectedBulkEmployeeIds.length === 0}
                     >
-                      Bỏ chọn
+                      {t("laborWorkspace.bulk.clearSelection")}
                     </Button>
                   </div>
                 </div>
 
                 {availableDirectoryEmployees.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Không còn nhân công nào trong danh mục có thể thêm.
+                    {t("laborWorkspace.bulk.emptyAvailableEmployees")}
                   </p>
                 ) : (
                   <div className="max-h-56 overflow-y-auto rounded-xl border border-border p-3 space-y-2">
                     {availableDirectoryEmployees.map((employee) => {
                       const checked = selectedBulkEmployeeIds.includes(employee.userId);
-                      const label = employee.fullName || employee.username || employee.email || `Employee #${employee.userId}`;
+                      const label = employee.fullName || employee.username || employee.email || t("seasonWorkspace.employeeFallback", { id: employee.userId });
                       return (
                         <label
                           key={employee.userId}
@@ -544,7 +547,7 @@ export function LaborManagementPage() {
                     }
                   >
                     <UserPlus className="w-4 h-4 mr-2" />
-                    Thêm nhân công hàng loạt
+                    {t("laborWorkspace.actions.bulkAddEmployees")}
                   </Button>
                 </div>
               </div>
@@ -553,32 +556,32 @@ export function LaborManagementPage() {
 
           <Card className="rounded-2xl border border-border">
             <CardHeader>
-              <CardTitle className="text-base">Nhân công trong mùa vụ</CardTitle>
+              <CardTitle className="text-base">{t("laborWorkspace.sections.seasonEmployees.title")}</CardTitle>
             </CardHeader>
             <CardContent>
               {isLoadingBase ? (
-                <p className="text-sm text-muted-foreground">Đang tải danh sách nhân công...</p>
+                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.seasonEmployees.loading")}</p>
               ) : seasonEmployees.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Chưa có nhân công trong mùa vụ này.</p>
+                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.seasonEmployees.empty")}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Nhân công</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Đơn giá / task</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                      <TableHead className="text-right">Thao tác</TableHead>
+                      <TableHead>{t("laborWorkspace.table.employee")}</TableHead>
+                      <TableHead>{t("laborWorkspace.table.email")}</TableHead>
+                      <TableHead>{t("laborWorkspace.table.wagePerTask")}</TableHead>
+                      <TableHead>{t("laborWorkspace.table.status")}</TableHead>
+                      <TableHead className="text-right">{t("laborWorkspace.table.actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {seasonEmployees.map((employee) => (
                       <TableRow key={employee.id}>
                         <TableCell>
-                          {employee.employeeName || employee.employeeUsername || `Employee #${employee.employeeUserId}`}
+                          {employee.employeeName || employee.employeeUsername || t("seasonWorkspace.employeeFallback", { id: employee.employeeUserId })}
                         </TableCell>
                         <TableCell>{employee.employeeEmail ?? "-"}</TableCell>
-                        <TableCell>{formatMoney(employee.wagePerTask)}</TableCell>
+                        <TableCell>{formatMoney(employee.wagePerTask, locale)}</TableCell>
                         <TableCell>
                           <Badge
                             className={
@@ -587,7 +590,7 @@ export function LaborManagementPage() {
                                 : "bg-emerald-100 text-emerald-700 border-emerald-200"
                             }
                           >
-                            {employee.active === false ? "Tạm khóa" : "Đang hoạt động"}
+                            {employee.active === false ? t("laborWorkspace.status.inactive") : t("laborWorkspace.status.active")}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -598,7 +601,7 @@ export function LaborManagementPage() {
                             disabled={!canMutateSeason || removeSeasonEmployeeMutation.isPending}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            Xóa
+                            {t("common.delete")}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -613,27 +616,27 @@ export function LaborManagementPage() {
         <TabsContent value="assignment" className="space-y-4">
           <Card className="rounded-2xl border border-border">
             <CardHeader>
-              <CardTitle className="text-base">Phân công công việc</CardTitle>
+              <CardTitle className="text-base">{t("laborWorkspace.sections.assignment.title")}</CardTitle>
             </CardHeader>
             <CardContent>
               {isTasksLoading ? (
-                <p className="text-sm text-muted-foreground">Đang tải công việc...</p>
+                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.assignment.loading")}</p>
               ) : tasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Chưa có công việc trong mùa vụ này.</p>
+                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.assignment.empty")}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Công việc</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                      <TableHead>Đang giao cho</TableHead>
-                      <TableHead>Phân công mới</TableHead>
-                      <TableHead className="text-right">Thao tác</TableHead>
+                      <TableHead>{t("laborWorkspace.assignmentTable.task")}</TableHead>
+                      <TableHead>{t("laborWorkspace.assignmentTable.status")}</TableHead>
+                      <TableHead>{t("laborWorkspace.assignmentTable.currentAssignee")}</TableHead>
+                      <TableHead>{t("laborWorkspace.assignmentTable.newAssignee")}</TableHead>
+                      <TableHead className="text-right">{t("laborWorkspace.assignmentTable.actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {tasks.map((task) => {
-                      const fallbackCurrentAssignee = task.userName || (task.userId ? `User #${task.userId}` : "-");
+                      const fallbackCurrentAssignee = task.userName || (task.userId ? t("laborWorkspace.userFallback", { id: task.userId }) : "-");
                       const currentSelection =
                         taskAssigneeDraft[task.taskId] ??
                         (activeSeasonEmployees.some((employee) => employee.userId === task.userId)
@@ -644,7 +647,10 @@ export function LaborManagementPage() {
                           <TableCell>{task.title}</TableCell>
                           <TableCell>
                             <Badge className={getTaskStatusClassName(task.status)}>
-                              {getTaskStatusLabel(task.status)}
+                              {(() => {
+                                const taskStatusLabelKey = getTaskStatusLabelKey(task.status);
+                                return taskStatusLabelKey ? t(taskStatusLabelKey) : task.status ?? "-";
+                              })()}
                             </Badge>
                           </TableCell>
                           <TableCell>{fallbackCurrentAssignee}</TableCell>
@@ -660,7 +666,7 @@ export function LaborManagementPage() {
                               disabled={!canMutateSeason}
                             >
                               <SelectTrigger className="w-[260px]">
-                                <SelectValue placeholder="Chọn nhân công" />
+                                <SelectValue placeholder={t("laborWorkspace.fields.selectEmployeePlaceholder")} />
                               </SelectTrigger>
                               <SelectContent>
                                 {activeSeasonEmployees.map((employee) => (
@@ -677,7 +683,7 @@ export function LaborManagementPage() {
                               onClick={() => handleAssignTask(task.taskId)}
                               disabled={!canMutateSeason || assignTaskMutation.isPending || !currentSelection}
                             >
-                              Gán việc
+                              {t("laborWorkspace.actions.assignTask")}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -691,32 +697,32 @@ export function LaborManagementPage() {
 
           <Card className="rounded-2xl border border-border">
             <CardHeader>
-              <CardTitle className="text-base">Theo dõi tiến độ nhân công</CardTitle>
+              <CardTitle className="text-base">{t("laborWorkspace.sections.progress.title")}</CardTitle>
             </CardHeader>
             <CardContent>
               {isProgressLoading ? (
-                <p className="text-sm text-muted-foreground">Đang tải dữ liệu tiến độ...</p>
+                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.progress.loading")}</p>
               ) : progressLogs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Chưa có báo cáo tiến độ nào.</p>
+                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.progress.empty")}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Nhân công</TableHead>
-                      <TableHead>Công việc</TableHead>
-                      <TableHead>Tiến độ</TableHead>
-                      <TableHead>Ghi chú</TableHead>
-                      <TableHead>Thời gian</TableHead>
+                      <TableHead>{t("laborWorkspace.progressTable.employee")}</TableHead>
+                      <TableHead>{t("laborWorkspace.progressTable.task")}</TableHead>
+                      <TableHead>{t("laborWorkspace.progressTable.progress")}</TableHead>
+                      <TableHead>{t("laborWorkspace.progressTable.note")}</TableHead>
+                      <TableHead>{t("laborWorkspace.progressTable.time")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {progressLogs.map((log) => (
                       <TableRow key={log.id}>
-                        <TableCell>{log.employeeName || `Employee #${log.employeeUserId}`}</TableCell>
-                        <TableCell>{log.taskTitle || `Task #${log.taskId}`}</TableCell>
+                        <TableCell>{log.employeeName || t("seasonWorkspace.employeeFallback", { id: log.employeeUserId })}</TableCell>
+                        <TableCell>{log.taskTitle || t("laborWorkspace.taskFallback", { id: log.taskId })}</TableCell>
                         <TableCell>{log.progressPercent}%</TableCell>
                         <TableCell className="max-w-[320px] truncate">{log.note || "-"}</TableCell>
-                        <TableCell>{formatDate(log.loggedAt)}</TableCell>
+                        <TableCell>{formatDate(log.loggedAt, locale)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -729,45 +735,45 @@ export function LaborManagementPage() {
         <TabsContent value="payroll" className="space-y-4">
           <Card className="rounded-2xl border border-border">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Tính lương tự động</CardTitle>
+              <CardTitle className="text-base">{t("laborWorkspace.sections.payroll.title")}</CardTitle>
               <Button
                 onClick={() => recalculatePayrollMutation.mutate(undefined)}
                 disabled={!canMutateSeason || recalculatePayrollMutation.isPending}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Tính lại bảng lương
+                {t("laborWorkspace.actions.recalculatePayroll")}
               </Button>
             </CardHeader>
             <CardContent>
               {isPayrollLoading ? (
-                <p className="text-sm text-muted-foreground">Đang tải bảng lương...</p>
+                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.payroll.loading")}</p>
               ) : payrollRecords.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Chưa có dữ liệu bảng lương.</p>
+                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.payroll.empty")}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Nhân công</TableHead>
-                      <TableHead>Kỳ lương</TableHead>
-                      <TableHead>Task hoàn thành</TableHead>
-                      <TableHead>Đơn giá / task</TableHead>
-                      <TableHead>Tổng lương</TableHead>
-                      <TableHead>Cập nhật</TableHead>
+                      <TableHead>{t("laborWorkspace.payrollTable.employee")}</TableHead>
+                      <TableHead>{t("laborWorkspace.payrollTable.period")}</TableHead>
+                      <TableHead>{t("laborWorkspace.payrollTable.completedTasks")}</TableHead>
+                      <TableHead>{t("laborWorkspace.payrollTable.wagePerTask")}</TableHead>
+                      <TableHead>{t("laborWorkspace.payrollTable.totalAmount")}</TableHead>
+                      <TableHead>{t("laborWorkspace.payrollTable.updatedAt")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {payrollRecords.map((record) => (
                       <TableRow key={record.id}>
-                        <TableCell>{record.employeeName || `Employee #${record.employeeUserId}`}</TableCell>
+                        <TableCell>{record.employeeName || t("seasonWorkspace.employeeFallback", { id: record.employeeUserId })}</TableCell>
                         <TableCell>
                           {record.periodStart ?? "-"} - {record.periodEnd ?? "-"}
                         </TableCell>
                         <TableCell>
                           {record.totalCompletedTasks} / {record.totalAssignedTasks}
                         </TableCell>
-                        <TableCell>{formatMoney(record.wagePerTask)}</TableCell>
-                        <TableCell>{formatMoney(record.totalAmount)}</TableCell>
-                        <TableCell>{formatDate(record.generatedAt)}</TableCell>
+                        <TableCell>{formatMoney(record.wagePerTask, locale)}</TableCell>
+                        <TableCell>{formatMoney(record.totalAmount, locale)}</TableCell>
+                        <TableCell>{formatDate(record.generatedAt, locale)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -777,7 +783,7 @@ export function LaborManagementPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }
 

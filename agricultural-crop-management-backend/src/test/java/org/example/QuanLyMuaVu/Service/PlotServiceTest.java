@@ -11,6 +11,8 @@ import org.example.QuanLyMuaVu.Exception.ErrorCode;
 import org.example.QuanLyMuaVu.module.farm.repository.FarmRepository;
 import org.example.QuanLyMuaVu.module.farm.repository.PlotRepository;
 import org.example.QuanLyMuaVu.module.farm.service.PlotService;
+import org.example.QuanLyMuaVu.module.season.repository.SeasonRepository;
+import org.example.QuanLyMuaVu.module.season.repository.TaskRepository;
 import org.example.QuanLyMuaVu.module.shared.security.CurrentUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +44,12 @@ public class PlotServiceTest {
 
         @Mock
         private FarmRepository farmRepository;
+
+        @Mock
+        private SeasonRepository seasonRepository;
+
+        @Mock
+        private TaskRepository taskRepository;
 
         @Mock
         private CurrentUserService currentUserService;
@@ -188,5 +196,55 @@ public class PlotServiceTest {
                                 () -> plotService.createPlotForCurrentFarmer(request));
 
                 assertEquals(ErrorCode.BAD_REQUEST, exception.getErrorCode());
+        }
+
+        @Test
+        @DisplayName("DeletePlotForCurrentFarmer - Throws PLOT_HAS_ACTIVE_SEASONS when plot has open seasons")
+        void deletePlotForCurrentFarmer_WithOpenSeason_ThrowsAppException() {
+                // Arrange
+                when(currentUserService.getCurrentUser()).thenReturn(testUser);
+                when(plotRepository.findByIdAndFarmUserId(1, testUser.getId())).thenReturn(Optional.of(testPlot));
+                when(seasonRepository.existsByPlot_IdAndStatusIn(eq(1), anyIterable())).thenReturn(true);
+
+                // Act & Assert
+                AppException exception = assertThrows(AppException.class,
+                                () -> plotService.deletePlotForCurrentFarmer(1));
+
+                assertEquals(ErrorCode.PLOT_HAS_ACTIVE_SEASONS, exception.getErrorCode());
+                verify(taskRepository, never()).existsBySeason_Plot_IdAndStatusIn(anyInt(), anyIterable());
+                verify(plotRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("DeletePlotForCurrentFarmer - Throws PLOT_HAS_ACTIVE_TASKS when plot has unfinished tasks")
+        void deletePlotForCurrentFarmer_WithUnfinishedTask_ThrowsAppException() {
+                // Arrange
+                when(currentUserService.getCurrentUser()).thenReturn(testUser);
+                when(plotRepository.findByIdAndFarmUserId(1, testUser.getId())).thenReturn(Optional.of(testPlot));
+                when(seasonRepository.existsByPlot_IdAndStatusIn(eq(1), anyIterable())).thenReturn(false);
+                when(taskRepository.existsBySeason_Plot_IdAndStatusIn(eq(1), anyIterable())).thenReturn(true);
+
+                // Act & Assert
+                AppException exception = assertThrows(AppException.class,
+                                () -> plotService.deletePlotForCurrentFarmer(1));
+
+                assertEquals(ErrorCode.PLOT_HAS_ACTIVE_TASKS, exception.getErrorCode());
+                verify(plotRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("DeletePlotForCurrentFarmer - Deletes plot when no open season or unfinished task exists")
+        void deletePlotForCurrentFarmer_WithoutBlockingDependencies_DeletesPlot() {
+                // Arrange
+                when(currentUserService.getCurrentUser()).thenReturn(testUser);
+                when(plotRepository.findByIdAndFarmUserId(1, testUser.getId())).thenReturn(Optional.of(testPlot));
+                when(seasonRepository.existsByPlot_IdAndStatusIn(eq(1), anyIterable())).thenReturn(false);
+                when(taskRepository.existsBySeason_Plot_IdAndStatusIn(eq(1), anyIterable())).thenReturn(false);
+
+                // Act
+                plotService.deletePlotForCurrentFarmer(1);
+
+                // Assert
+                verify(plotRepository).delete(testPlot);
         }
 }

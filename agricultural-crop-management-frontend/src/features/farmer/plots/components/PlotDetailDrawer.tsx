@@ -17,21 +17,21 @@ import {
   Calendar,
   Plus,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+} from "@/shared/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Label } from "@/shared/ui/label";
+import { Separator } from "@/shared/ui/separator";
+import { Badge } from "@/shared/ui/badge";
 import { PlotStatusChip } from "./PlotStatusChip";
-import { Plot, PlotStatus } from "../types";
+import type { Plot } from "../types";
 
 interface PlotDetailDrawerProps {
   plot: Plot | null;
@@ -75,11 +75,11 @@ export function PlotDetailDrawer({
         </SheetHeader>
 
         <Tabs defaultValue="overview" className="mt-6">
-          <TabsList className="grid w-full grid-cols-4 bg-muted">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="soil">Soil Data</TabsTrigger>
-            <TabsTrigger value="seasons">Seasons</TabsTrigger>
-            <TabsTrigger value="actions">Actions</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 gap-1 rounded-xl p-1 sm:grid-cols-4">
+            <TabsTrigger value="overview" className="rounded-lg data-[state=active]:shadow-sm">Overview</TabsTrigger>
+            <TabsTrigger value="soil" className="rounded-lg data-[state=active]:shadow-sm">Soil Data</TabsTrigger>
+            <TabsTrigger value="seasons" className="rounded-lg data-[state=active]:shadow-sm">Seasons</TabsTrigger>
+            <TabsTrigger value="actions" className="rounded-lg data-[state=active]:shadow-sm">Actions</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -178,7 +178,6 @@ export function PlotDetailDrawer({
                     variant="outline"
                     size="sm"
                     onClick={() => onGenerateQR(plot)}
-                    className="border-primary text-primary"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download QR
@@ -242,7 +241,7 @@ export function PlotDetailDrawer({
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      className="flex-1 border-primary text-primary"
+                      className="flex-1"
                     >
                       <Upload className="w-4 h-4 mr-2" />
                       Upload PDF/CSV
@@ -322,7 +321,7 @@ export function PlotDetailDrawer({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="mt-3 border-primary text-primary"
+                      className="mt-3"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Create Season
@@ -336,7 +335,7 @@ export function PlotDetailDrawer({
           {/* Actions Tab */}
           <TabsContent value="actions" className="space-y-3 mt-6">
             <Button
-              className="w-full justify-start bg-secondary hover:bg-secondary/90 text-white"
+              className="w-full justify-start"
               onClick={() => {
                 onClose();
                 onEdit();
@@ -348,7 +347,7 @@ export function PlotDetailDrawer({
 
             <Button
               variant="outline"
-              className="w-full justify-start border-primary text-primary"
+              className="w-full justify-start"
               onClick={() => {
                 onClose();
                 onMerge();
@@ -382,8 +381,8 @@ export function PlotDetailDrawer({
             <Separator className="bg-border my-4" />
 
             <Button
-              variant="outline"
-              className="w-full justify-start border-red-500 text-red-500 hover:bg-red-50"
+              variant="destructive"
+              className="w-full justify-start"
               onClick={() => {
                 onDelete(plot.id);
                 onClose();

@@ -1,13 +1,23 @@
 import { BarChart3 } from "lucide-react";
 import type { ReportSection } from "../types";
 import { SIDEBAR_ITEMS } from "../constants";
+import { useI18n } from "@/hooks/useI18n";
 
 interface SidebarProps {
     activeSection: ReportSection;
     onSectionChange: (section: ReportSection) => void;
 }
 
+const SECTION_I18N_KEY: Record<string, string> = {
+    yield: "reports.sidebar.sections.yield",
+    cost: "reports.sidebar.sections.cost",
+    performance: "reports.sidebar.sections.performance",
+    pesticide: "reports.sidebar.sections.pesticide",
+};
+
 export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
+    const { t } = useI18n();
+
     return (
         <aside className="bg-card border-r border-border min-h-screen sticky top-0 hidden lg:block">
             <div className="p-6">
@@ -21,8 +31,8 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
                         <BarChart3 className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-lg text-foreground">Reports</h2>
-                        <p className="text-xs text-muted-foreground">Analytics</p>
+                        <h2 className="text-lg text-foreground">{t("reports.sidebar.title")}</h2>
+                        <p className="text-xs text-muted-foreground">{t("reports.sidebar.subtitle")}</p>
                     </div>
                 </div>
 
@@ -30,6 +40,9 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
                     {SIDEBAR_ITEMS.map((item) => {
                         const Icon = item.icon;
                         const isActive = activeSection === item.id;
+                        const label = SECTION_I18N_KEY[item.id]
+                            ? t(SECTION_I18N_KEY[item.id])
+                            : item.label;
                         return (
                             <button
                                 key={item.id}
@@ -43,7 +56,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
                                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
                                 )}
                                 <Icon className="w-5 h-5" />
-                                <span>{item.label}</span>
+                                <span>{label}</span>
                             </button>
                         );
                     })}
@@ -52,6 +65,3 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         </aside>
     );
 }
-
-
-

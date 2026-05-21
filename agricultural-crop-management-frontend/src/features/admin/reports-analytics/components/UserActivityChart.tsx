@@ -36,7 +36,7 @@ export const UserActivityChart: React.FC<UserActivityChartProps> = ({
                             variant={userActivityFilter.farmers ? 'default' : 'outline'}
                             size="sm"
                             onClick={() => setUserActivityFilter({ ...userActivityFilter, farmers: !userActivityFilter.farmers })}
-                            className={userActivityFilter.farmers ? 'bg-[#10B981] hover:bg-[#059669]' : ''}
+                            className={userActivityFilter.farmers ? 'bg-primary hover:bg-primary/90' : ''}
                         >
                             Farmers
                         </Button>
@@ -44,7 +44,7 @@ export const UserActivityChart: React.FC<UserActivityChartProps> = ({
                             variant={userActivityFilter.buyers ? 'default' : 'outline'}
                             size="sm"
                             onClick={() => setUserActivityFilter({ ...userActivityFilter, buyers: !userActivityFilter.buyers })}
-                            className={userActivityFilter.buyers ? 'bg-[#0891B2] hover:bg-[#0E7490]' : ''}
+                            className={userActivityFilter.buyers ? 'bg-primary hover:bg-primary/90' : ''}
                         >
                             Buyers
                         </Button>
@@ -52,7 +52,7 @@ export const UserActivityChart: React.FC<UserActivityChartProps> = ({
                             variant={userActivityFilter.admins ? 'default' : 'outline'}
                             size="sm"
                             onClick={() => setUserActivityFilter({ ...userActivityFilter, admins: !userActivityFilter.admins })}
-                            className={userActivityFilter.admins ? 'bg-[#8B5CF6] hover:bg-[#7C3AED]' : ''}
+                            className={userActivityFilter.admins ? 'bg-primary hover:bg-primary/90' : ''}
                         >
                             Admins
                         </Button>

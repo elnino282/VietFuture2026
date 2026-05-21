@@ -1,12 +1,13 @@
 import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/shared/ui/input";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
+import { useI18n } from "@/hooks/useI18n";
 import { CATEGORY_OPTIONS, STATUS_OPTIONS } from "../constants";
 
 interface ExpenseFiltersProps {
@@ -36,12 +37,14 @@ export function ExpenseFilters({
     isSeasonLocked = false,
     lockedSeasonLabel,
 }: ExpenseFiltersProps) {
+    const { t } = useI18n();
+
     return (
         <div className="flex flex-wrap items-center justify-start gap-4">
             <div className="relative w-[260px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                    placeholder="Tìm chi phí..."
+                    placeholder={t("expenses.searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 rounded-xl border-border focus:border-primary"
@@ -50,17 +53,17 @@ export function ExpenseFilters({
 
             {isSeasonLocked ? (
                 <div className="rounded-xl border border-border px-3 py-2 text-sm bg-card">
-                    Mùa vụ: <span className="font-medium">{lockedSeasonLabel ?? "Đang chọn"}</span>
+                    {t("diseaseTracking.season.label")} <span className="font-medium">{lockedSeasonLabel ?? t("common.active")}</span>
                 </div>
             ) : (
                 <Select value={selectedSeason} onValueChange={setSelectedSeason}>
                     <SelectTrigger className="rounded-xl border-border w-[180px]">
-                        <SelectValue placeholder="Chọn mùa vụ" />
+                        <SelectValue placeholder={t("expenses.filters.selectSeason", "Select season")} />
                     </SelectTrigger>
                     <SelectContent>
                         {seasonOptions.length === 0 ? (
                             <SelectItem value="none" disabled>
-                                Chưa có mùa vụ
+                                {t("expenses.filters.noSeasons", "No seasons")}
                             </SelectItem>
                         ) : (
                             seasonOptions.map((option) => (
@@ -75,12 +78,12 @@ export function ExpenseFilters({
 
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger className="rounded-xl border-border w-[150px]">
-                    <SelectValue placeholder="Tất cả danh mục" />
+                    <SelectValue placeholder={t("expenses.filters.allCategories", "All categories")} />
                 </SelectTrigger>
                 <SelectContent>
                     {CATEGORY_OPTIONS.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                            {option.label}
+                            {t(option.labelKey, option.fallbackLabel)}
                         </SelectItem>
                     ))}
                 </SelectContent>
@@ -88,12 +91,12 @@ export function ExpenseFilters({
 
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                 <SelectTrigger className="rounded-xl border-border w-[150px]">
-                    <SelectValue placeholder="Tất cả trạng thái" />
+                    <SelectValue placeholder={t("expenses.filters.allStatuses", "All statuses")} />
                 </SelectTrigger>
                 <SelectContent>
                     {STATUS_OPTIONS.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                            {option.label}
+                            {t(option.labelKey, option.fallbackLabel)}
                         </SelectItem>
                     ))}
                 </SelectContent>
@@ -101,6 +104,3 @@ export function ExpenseFilters({
         </div>
     );
 }
-
-
-

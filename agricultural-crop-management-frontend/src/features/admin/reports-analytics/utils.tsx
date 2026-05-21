@@ -20,18 +20,9 @@ export const getAlertBadge = (severity: SystemAlert['severity']) => {
     const colors = {
         high: 'bg-red-100 text-red-700',
         medium: 'bg-amber-100 text-amber-700',
-        low: 'bg-blue-100 text-blue-700',
+        low: 'bg-emerald-100 text-emerald-700',
     };
     return colors[severity];
-};
-
-export const getHealthStatus = (status: string) => {
-    const colors = {
-        excellent: 'text-emerald-600',
-        good: 'text-blue-600',
-        warning: 'text-amber-600',
-    };
-    return colors[status as keyof typeof colors] || 'text-gray-600';
 };
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•

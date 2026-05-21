@@ -83,3 +83,15 @@ describe('Farmer Portal Navigation Configuration', () => {
         expect(uniqueIds.size).toBe(ids.length);
     });
 });
+
+describe('Admin Portal Navigation Configuration', () => {
+    const adminNav = portalConfig.ADMIN.navigation;
+
+    it('should route account management through users and roles only', () => {
+        const ids = adminNav.map((item) => item.id);
+
+        expect(ids).toContain('users-roles');
+        expect(ids).not.toContain('buyers');
+        expect(ids).not.toContain('farmers');
+    });
+});

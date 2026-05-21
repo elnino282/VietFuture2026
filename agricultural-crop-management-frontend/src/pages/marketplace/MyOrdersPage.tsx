@@ -1,62 +1,80 @@
 import { useState } from "react";
 import { ChevronRight, Package } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ui";
-import { type MarketplaceOrder, type MarketplaceOrderItem, type MarketplaceOrderStatus } from "@/shared/api";
+import {
+  type MarketplaceOrder,
+  type MarketplaceOrderItem,
+  type MarketplaceOrderStatus,
+  type MarketplacePaymentMethod,
+  type MarketplacePaymentVerificationStatus,
+} from "@/shared/api";
 import { useMarketplaceOrders } from "@/features/marketplace/hooks";
 import { formatDate, formatVnd } from "@/features/marketplace/lib/format";
-
-const ORDER_STATUSES: Array<{ value: MarketplaceOrderStatus }> = [
-  { value: "PENDING" },
-  { value: "CONFIRMED" },
-  { value: "PREPARING" },
-  { value: "DELIVERING" },
-  { value: "COMPLETED" },
-  { value: "CANCELLED" },
-];
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Chờ xử lý",
-  CONFIRMED: "Đã xác nhận",
-  PREPARING: "Đang chuẩn bị",
-  DELIVERING: "Đang giao",
-  COMPLETED: "Hoàn tất",
-  CANCELLED: "Đã hủy",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-orange-100 text-orange-700 border border-orange-200",
-  CONFIRMED: "bg-blue-100 text-blue-700 border border-blue-200",
-  PREPARING: "bg-indigo-100 text-indigo-700 border border-indigo-200",
-  DELIVERING: "bg-sky-100 text-sky-700 border border-sky-200",
-  COMPLETED: "bg-emerald-100 text-primary border border-emerald-200",
-  CANCELLED: "bg-red-100 text-destructive border border-destructive/30",
-};
-
-function getStatusLabel(status: string): string {
-  return STATUS_LABELS[status] ?? status;
-}
-
-function getStatusColor(status: string): string {
-  return STATUS_COLORS[status] ?? "bg-muted text-muted-foreground border border-border";
-}
+import {
+  BUYER_ORDER_FILTER_STATUSES,
+  getMarketplaceOrderStatusBadgeClass,
+  getMarketplaceOrderStatusGroup,
+  getMarketplaceOrderStatusLabel,
+  normalizeMarketplaceOrderStatus,
+  isMarketplaceBuyerOrderCancellable,
+} from "@/features/marketplace/lib/orderStatus";
 
 function toPositiveInt(value: string | null, fallback: number) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
 }
 
-function StatusBadge({ status }: { status: string }) {
+function getPaymentMethodLabel(method: MarketplacePaymentMethod, t: (key: string) => string): string {
+  return t(`marketplaceBuyer.myOrders.paymentMethod.${method}`);
+}
+
+function getPaymentVerificationStatusLabel(
+  verificationStatus: MarketplacePaymentVerificationStatus,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string {
+  const knownStatuses: MarketplacePaymentVerificationStatus[] = [
+    "NOT_REQUIRED",
+    "AWAITING_PROOF",
+    "SUBMITTED",
+    "VERIFIED",
+    "REJECTED",
+  ];
+  if (knownStatuses.includes(verificationStatus)) {
+    return t(`marketplaceBuyer.myOrders.paymentVerificationStatus.${verificationStatus}`);
+  }
+  return t("marketplaceBuyer.myOrders.paymentVerificationStatus.unknown", {
+    status: verificationStatus,
+  });
+}
+
+function StatusBadge({
+  status,
+  orderId,
+  t,
+}: {
+  status: MarketplaceOrderStatus;
+  orderId: number;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(status)}`}
+      data-testid={`order-status-${orderId}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getMarketplaceOrderStatusBadgeClass(status)}`}
     >
-      {getStatusLabel(status)}
+      {getMarketplaceOrderStatusLabel(status, t)}
     </span>
   );
 }
 
-function OrderItemPreview({ item }: { item: MarketplaceOrderItem }) {
+function OrderItemPreview({
+  item,
+  t,
+}: {
+  item: MarketplaceOrderItem;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}) {
   const [imgError, setImgError] = useState(false);
   return (
     <div className="flex items-center gap-3 px-4 py-3">
@@ -76,7 +94,7 @@ function OrderItemPreview({ item }: { item: MarketplaceOrderItem }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground line-clamp-1">{item.productName}</p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Số lượng: {item.quantity} x {formatVnd(item.unitPriceSnapshot)}
+          {t("marketplaceBuyer.myOrders.quantity")}: {item.quantity} x {formatVnd(item.unitPriceSnapshot)}
         </p>
       </div>
       <span className="text-sm font-semibold text-foreground shrink-0">
@@ -86,32 +104,60 @@ function OrderItemPreview({ item }: { item: MarketplaceOrderItem }) {
   );
 }
 
-function OrderSummaryCard({ order }: { order: MarketplaceOrder }) {
+function OrderSummaryCard({
+  order,
+  t,
+}: {
+  order: MarketplaceOrder;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}) {
   const previewItems = order.items.slice(0, 2);
   const extraCount = order.items.length - previewItems.length;
+  const cancellable = isMarketplaceBuyerOrderCancellable(order);
+  const paymentInfo =
+    order.payment != null
+      ? `${getPaymentMethodLabel(order.payment.method, t)} · ${getPaymentVerificationStatusLabel(order.payment.verificationStatus, t)}`
+      : null;
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition overflow-hidden">
       <div className="flex items-start justify-between px-4 py-3 border-b border-border">
         <div>
           <p className="text-sm font-medium text-muted-foreground">
-            Mã đơn: <span className="font-semibold text-foreground">#{order.orderCode}</span>
+            {t("marketplaceBuyer.myOrders.orderCode")}:{" "}
+            <span className="font-semibold text-foreground">#{order.orderCode}</span>
           </p>
-          <p className="text-xs text-muted-foreground/70 mt-0.5">Đặt ngày: {formatDate(order.createdAt)}</p>
+          <p className="text-xs text-muted-foreground/70 mt-0.5">
+            {t("marketplaceBuyer.myOrders.orderDate")}: {formatDate(order.createdAt)}
+          </p>
+          <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground/80">
+            <span>
+              {t("marketplaceBuyer.myOrders.group")}:{" "}
+              {getMarketplaceOrderStatusGroup(order.status, t)}
+            </span>
+            <span>{cancellable ? t("marketplaceBuyer.myOrders.eligibleForCancellation") : t("marketplaceBuyer.myOrders.cannotCancel")}</span>
+            {paymentInfo ? (
+              <span>
+                {t("marketplaceBuyer.myOrders.payment")}: {paymentInfo}
+              </span>
+            ) : null}
+          </p>
         </div>
-        <StatusBadge status={order.status} />
+        <StatusBadge status={order.status} orderId={order.id} t={t} />
       </div>
       <div className="divide-y divide-border">
         {previewItems.map((item) => (
-          <OrderItemPreview key={item.id} item={item} />
+          <OrderItemPreview key={item.id} item={item} t={t} />
         ))}
         {extraCount > 0 && (
-          <p className="px-4 py-2 text-xs text-muted-foreground/60 italic">+{extraCount} sản phẩm khác</p>
+          <p className="px-4 py-2 text-xs text-muted-foreground/60 italic">
+            {t("marketplaceBuyer.myOrders.otherItems", { count: extraCount })}
+          </p>
         )}
       </div>
       <div className="border-t border-border px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-sm text-muted-foreground flex-1">
-          Tổng tiền ({order.items.length} sản phẩm):{" "}
+          {t("marketplaceBuyer.myOrders.totalWithCount", { count: order.items.length })}:{" "}
           <span className="font-bold text-primary">{formatVnd(order.totalAmount)}</span>
         </p>
         <Link to={`/marketplace/orders/${order.id}`} className="shrink-0">
@@ -120,7 +166,7 @@ function OrderSummaryCard({ order }: { order: MarketplaceOrder }) {
             size="sm"
             className="w-full sm:w-auto flex items-center justify-center gap-1 acm-rounded-sm border-border hover:bg-muted transition-colors duration-200"
           >
-            Xem chi tiết <ChevronRight size={16} />
+            {t("marketplaceBuyer.myOrders.orderDetail")} <ChevronRight size={16} />
           </Button>
         </Link>
       </div>
@@ -129,14 +175,22 @@ function OrderSummaryCard({ order }: { order: MarketplaceOrder }) {
 }
 
 export function MyOrdersPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = toPositiveInt(searchParams.get("page"), 1);
-  const statusParam = searchParams.get("status");
-  const selectedStatus = ORDER_STATUSES.some((item) => item.value === statusParam)
-    ? (statusParam as MarketplaceOrderStatus)
-    : undefined;
+  const rawStatusParam = searchParams.get("status");
+  const normalizedStatusParam = rawStatusParam ? normalizeMarketplaceOrderStatus(rawStatusParam) : "UNKNOWN";
+  const selectedStatus =
+    normalizedStatusParam !== "UNKNOWN" &&
+    BUYER_ORDER_FILTER_STATUSES.includes(normalizedStatusParam)
+      ? normalizedStatusParam
+      : undefined;
 
-  const ordersQuery = useMarketplaceOrders({ status: selectedStatus, page: page - 1, size: 10 });
+  const ordersQuery = useMarketplaceOrders({
+    status: selectedStatus as MarketplaceOrderStatus | undefined,
+    page: page - 1,
+    size: 10,
+  });
 
   function updateParams(patch: Record<string, string | null>) {
     const next = new URLSearchParams(searchParams);
@@ -157,7 +211,7 @@ export function MyOrdersPage() {
     return (
       <div className="max-w-[1800px] mx-auto px-6 pt-6">
         <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-          Đang tải đơn hàng...
+          {t("marketplaceBuyer.myOrders.loadingOrders")}
         </div>
       </div>
     );
@@ -167,7 +221,7 @@ export function MyOrdersPage() {
     return (
       <div className="max-w-[1800px] mx-auto px-6 pt-6">
         <div className="rounded-xl border border-dashed border-destructive/30 bg-card p-8 text-center text-sm text-destructive">
-          Không thể tải đơn hàng. Vui lòng thử lại.
+          {t("marketplaceBuyer.myOrders.errorOrders")}
         </div>
       </div>
     );
@@ -179,46 +233,45 @@ export function MyOrdersPage() {
 
   return (
     <div className="max-w-[1800px] mx-auto px-6 pt-6">
-      <h1 className="text-2xl font-bold text-foreground">Đơn hàng của tôi</h1>
+      <h1 className="text-2xl font-bold text-foreground">{t("marketplaceBuyer.myOrders.title")}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{t("marketplaceBuyer.myOrders.subtitle")}</p>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button
           type="button"
-          variant="outline"
+          variant={!selectedStatus ? "default" : "outline"}
           size="sm"
-          style={!selectedStatus ? { backgroundColor: "var(--primary)", color: "#fff", borderColor: "var(--primary)" } : undefined}
           onClick={() => updateParams({ status: null })}
         >
-          Tất cả
+          {t("marketplaceBuyer.myOrders.filterAll")}
         </Button>
-        {ORDER_STATUSES.map(({ value }) => (
+        {BUYER_ORDER_FILTER_STATUSES.map((value) => (
           <Button
             key={value}
             type="button"
-            variant="outline"
+            variant={selectedStatus === value ? "default" : "outline"}
             size="sm"
-            style={selectedStatus === value ? { backgroundColor: "var(--primary)", color: "#fff", borderColor: "var(--primary)" } : undefined}
-            onClick={() => updateParams({ status: value === selectedStatus ? null : value })}
+            onClick={() => updateParams({ status: value })}
           >
-            {getStatusLabel(value)}
+            {getMarketplaceOrderStatusLabel(value, t)}
           </Button>
         ))}
       </div>
 
       <div className="mt-6 space-y-4">
         {orders.map((order) => (
-          <OrderSummaryCard key={order.id} order={order} />
+          <OrderSummaryCard key={order.id} order={order} t={t} />
         ))}
 
         {orders.length === 0 && (
           <div className="rounded-xl border border-border bg-card py-20 text-center">
             <Package size={48} className="mx-auto mb-4 text-muted-foreground/40" />
-            <h3 className="mb-2 text-lg font-medium text-foreground">Bạn chưa có đơn hàng nào.</h3>
-            <p className="mb-6 text-sm text-muted-foreground">
-              Hãy khám phá sản phẩm nông sản và đặt đơn đầu tiên của bạn.
-            </p>
+            <h3 className="mb-2 text-lg font-medium text-foreground">{t("marketplaceBuyer.myOrders.emptyTitle")}</h3>
+            <p className="mb-6 text-sm text-muted-foreground">{t("marketplaceBuyer.myOrders.emptyDesc")}</p>
             <Link to="/marketplace/products">
-              <Button className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm acm-button-shadow">Mua sắm ngay</Button>
+              <Button className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm acm-button-shadow">
+                {t("marketplaceBuyer.myOrders.startShopping")}
+              </Button>
             </Link>
           </div>
         )}
@@ -226,7 +279,7 @@ export function MyOrdersPage() {
         {orders.length > 0 && (
           <div className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3">
             <p className="text-sm text-muted-foreground">
-              Trang {page} / {totalPages}
+              {t("marketplaceBuyer.myOrders.page")} {page} {t("marketplaceBuyer.myOrders.of")} {totalPages}
             </p>
             <div className="flex gap-2">
               <Button
@@ -235,7 +288,7 @@ export function MyOrdersPage() {
                 disabled={page <= 1}
                 onClick={() => updateParams({ page: String(page - 1) })}
               >
-                Trước
+                {t("marketplaceBuyer.myOrders.previous")}
               </Button>
               <Button
                 variant="outline"
@@ -243,7 +296,7 @@ export function MyOrdersPage() {
                 disabled={page >= totalPages}
                 onClick={() => updateParams({ page: String(page + 1) })}
               >
-                Sau
+                {t("marketplaceBuyer.myOrders.next")}
               </Button>
             </div>
           </div>

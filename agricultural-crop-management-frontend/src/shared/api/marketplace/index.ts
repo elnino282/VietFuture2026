@@ -49,6 +49,7 @@ export type {
   MarketplaceReview,
   MarketplaceReviewPage,
   MarketplaceReviewQuery,
+  MarketplaceStatsUnavailableReason,
   MarketplaceTraceability,
   MarketplaceUpdateOrderStatusRequest,
   MarketplaceUpdatePaymentVerificationRequest,

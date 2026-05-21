@@ -26,10 +26,22 @@ export type SprayConditionsStatus = "poor" | "fair" | "excellent";
 export type SoilMoistureStatus = "dry" | "optimal" | "wet";
 
 /**
+ * Weather Widget Data State
+ */
+export type WeatherWidgetDataState =
+    | "loading"
+    | "error"
+    | "location_required"
+    | "weather_unavailable"
+    | "success";
+
+/**
  * Props for the main WeatherWidget component
  */
 export interface WeatherWidgetProps {
     variant?: WeatherWidgetVariant;
+    farmId?: number;
+    seasonId?: number | null;
 }
 
 /**
@@ -151,6 +163,8 @@ export interface UseWeatherWidgetReturn {
     // Loading/Error State
     isLoading: boolean;
     error: string | null;
+    uiState: WeatherWidgetDataState;
+    statusMessage: string | null;
 
     // Handlers
     setTempLocation: (value: string) => void;

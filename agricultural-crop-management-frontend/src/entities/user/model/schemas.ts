@@ -46,14 +46,16 @@ export const ProfileUpdateRequestSchema = z.object({
 });
 
 export type ProfileUpdateRequest = z.infer<typeof ProfileUpdateRequestSchema>;
+export type UpdateProfilePayload = ProfileUpdateRequest;
 
 // ═══════════════════════════════════════════════════════════════
 // CHANGE PASSWORD
 // ═══════════════════════════════════════════════════════════════
 
 export const ProfileChangePasswordRequestSchema = z.object({
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    roles: z.array(z.string()).optional(),
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
 }).strict();
 
 export type ProfileChangePasswordRequest = z.infer<typeof ProfileChangePasswordRequestSchema>;
+export type ChangePasswordPayload = ProfileChangePasswordRequest;

@@ -1,10 +1,8 @@
 package org.example.QuanLyMuaVu.Service;
 
-import org.example.QuanLyMuaVu.module.farm.entity.Farm;
 import org.example.QuanLyMuaVu.Constant.PredefinedRole;
-import org.example.QuanLyMuaVu.module.identity.dto.request.FarmerUpdateRequest;
+import org.example.QuanLyMuaVu.module.identity.dto.request.ChangePasswordRequest;
 import org.example.QuanLyMuaVu.module.identity.dto.request.SignUpRequest;
-import org.example.QuanLyMuaVu.module.identity.dto.request.UserProfileUpdateRequest;
 import org.example.QuanLyMuaVu.module.identity.dto.response.FarmerResponse;
 import org.example.QuanLyMuaVu.module.identity.entity.Role;
 import org.example.QuanLyMuaVu.module.identity.entity.User;
@@ -13,11 +11,10 @@ import org.example.QuanLyMuaVu.Exception.AppException;
 import org.example.QuanLyMuaVu.Exception.ErrorCode;
 import org.example.QuanLyMuaVu.module.identity.mapper.FarmerMapper;
 import org.example.QuanLyMuaVu.module.farm.port.FarmQueryPort;
-import org.example.QuanLyMuaVu.module.farm.repository.ProvinceRepository;
 import org.example.QuanLyMuaVu.module.identity.repository.RoleRepository;
 import org.example.QuanLyMuaVu.module.identity.repository.UserRepository;
-import org.example.QuanLyMuaVu.module.farm.repository.WardRepository;
 import org.example.QuanLyMuaVu.module.identity.service.UserService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,14 +23,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Functional tests for UserService.
@@ -48,12 +47,6 @@ public class UserServiceTest {
 
         @Mock
         private RoleRepository roleRepository;
-
-        @Mock
-        private ProvinceRepository provinceRepository;
-
-        @Mock
-        private WardRepository wardRepository;
 
         @Mock
         private FarmerMapper farmerMapper;
@@ -100,6 +93,19 @@ public class UserServiceTest {
                                 .username("testfarmer")
                                 .email("farmer@test.com")
                                 .build();
+        }
+
+        @AfterEach
+        void tearDown() {
+                SecurityContextHolder.clearContext();
+        }
+
+        private void authenticateAsUserId(long userId) {
+                SecurityContextHolder.getContext()
+                                .setAuthentication(new TestingAuthenticationToken(
+                                                String.valueOf(userId),
+                                                "N/A",
+                                                "ROLE_BUYER"));
         }
 
         @Test
@@ -174,19 +180,106 @@ public class UserServiceTest {
         }
 
         @Test
-        @DisplayName("ChangePassword - Throws PASSWORD_INVALID when password is too short")
-        void changeMyPassword_WithShortPassword_ThrowsAppException() {
-                // Arrange
-                FarmerUpdateRequest request = FarmerUpdateRequest.builder()
-                                .password("short") // Less than 8 characters
+        @DisplayName("ChangePassword - Updates password when current password is valid")
+        void changeMyPassword_WithValidCurrentPassword_UpdatesPassword() {
+                authenticateAsUserId(1L);
+                ChangePasswordRequest request = ChangePasswordRequest.builder()
+                                .currentPassword("OldPass123!")
+                                .newPassword("NewPass123!")
                                 .build();
 
-                // Note: This test requires mocking SecurityContext for resolveCurrentUser()
-                // We skip the actual call and focus on validation logic
-                // The service should throw PASSWORD_INVALID for passwords < 8 chars
+                when(userRepository.findByIdWithRoles(1L)).thenReturn(Optional.of(testUser));
+                when(passwordEncoder.matches("OldPass123!", "encodedPassword")).thenReturn(true);
+                when(passwordEncoder.encode("NewPass123!")).thenReturn("encodedNewPassword");
+                when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                when(farmerMapper.toFarmerResponse(any(User.class))).thenReturn(farmerResponse);
 
-                // This tests the validation requirement for minimum password length
-                assertTrue(request.getPassword().length() < 8);
+                FarmerResponse response = userService.changeMyPassword(request);
+
+                assertNotNull(response);
+                verify(passwordEncoder).matches("OldPass123!", "encodedPassword");
+                verify(passwordEncoder).encode("NewPass123!");
+                verify(userRepository).save(argThat(user -> "encodedNewPassword".equals(user.getPassword())));
+        }
+
+        @Test
+        @DisplayName("ChangePassword - Throws CURRENT_PASSWORD_INCORRECT when current password does not match")
+        void changeMyPassword_WithWrongCurrentPassword_ThrowsAppException() {
+                authenticateAsUserId(1L);
+                ChangePasswordRequest request = ChangePasswordRequest.builder()
+                                .currentPassword("WrongPass123!")
+                                .newPassword("NewPass123!")
+                                .build();
+
+                when(userRepository.findByIdWithRoles(1L)).thenReturn(Optional.of(testUser));
+                when(passwordEncoder.matches("WrongPass123!", "encodedPassword")).thenReturn(false);
+
+                AppException exception = assertThrows(AppException.class,
+                                () -> userService.changeMyPassword(request));
+
+                assertEquals(ErrorCode.CURRENT_PASSWORD_INCORRECT, exception.getErrorCode());
+                verify(passwordEncoder, never()).encode(anyString());
+                verify(userRepository, never()).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("ChangePassword - Throws PASSWORD_INVALID when new password is too short")
+        void changeMyPassword_WithShortNewPassword_ThrowsAppException() {
+                authenticateAsUserId(1L);
+                ChangePasswordRequest request = ChangePasswordRequest.builder()
+                                .currentPassword("OldPass123!")
+                                .newPassword("short")
+                                .build();
+
+                when(userRepository.findByIdWithRoles(1L)).thenReturn(Optional.of(testUser));
+
+                AppException exception = assertThrows(AppException.class,
+                                () -> userService.changeMyPassword(request));
+
+                assertEquals(ErrorCode.PASSWORD_INVALID, exception.getErrorCode());
+                verify(passwordEncoder, never()).encode(anyString());
+                verify(userRepository, never()).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("ChangePassword - Throws PASSWORD_NOT_SET when account has no local password")
+        void changeMyPassword_WithoutLocalPassword_ThrowsAppException() {
+                authenticateAsUserId(1L);
+                ChangePasswordRequest request = ChangePasswordRequest.builder()
+                                .currentPassword("OldPass123!")
+                                .newPassword("NewPass123!")
+                                .build();
+
+                User oauthOnlyUser = User.builder()
+                                .id(1L)
+                                .username("oauth_user")
+                                .password(null)
+                                .roles(Set.of(farmerRole))
+                                .build();
+                when(userRepository.findByIdWithRoles(1L)).thenReturn(Optional.of(oauthOnlyUser));
+
+                AppException exception = assertThrows(AppException.class,
+                                () -> userService.changeMyPassword(request));
+
+                assertEquals(ErrorCode.PASSWORD_NOT_SET, exception.getErrorCode());
+                verify(passwordEncoder, never()).matches(anyString(), anyString());
+                verify(userRepository, never()).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("ChangePassword - Throws UNAUTHENTICATED when no authenticated user in context")
+        void changeMyPassword_WithoutAuthentication_ThrowsAppException() {
+                SecurityContextHolder.clearContext();
+                ChangePasswordRequest request = ChangePasswordRequest.builder()
+                                .currentPassword("OldPass123!")
+                                .newPassword("NewPass123!")
+                                .build();
+
+                AppException exception = assertThrows(AppException.class,
+                                () -> userService.changeMyPassword(request));
+
+                assertEquals(ErrorCode.UNAUTHENTICATED, exception.getErrorCode());
+                verify(userRepository, never()).save(any(User.class));
         }
 
         @Test

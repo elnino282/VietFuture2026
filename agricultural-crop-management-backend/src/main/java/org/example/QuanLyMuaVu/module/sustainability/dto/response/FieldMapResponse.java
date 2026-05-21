@@ -17,7 +17,14 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FieldMapResponse {
 
-    List<FieldMapItem> items;
+    @Builder.Default
+    List<FieldMapItem> fieldsWithBoundary = List.of();
+
+    @Builder.Default
+    List<FieldMapItem> fieldsMissingBoundary = List.of();
+
+    MapViewport defaultViewport;
+    String unavailableReason;
 
     @Data
     @Builder
@@ -29,8 +36,9 @@ public class FieldMapResponse {
         String fieldName;
         Integer farmId;
         String farmName;
-        JsonNode geometry;
+        JsonNode boundaryGeoJson;
         LatLng center;
+        String boundaryIssue;
         String cropName;
         String seasonName;
         String fdnLevel;
@@ -45,6 +53,17 @@ public class FieldMapResponse {
         List<String> missingInputs;
         SustainabilityOverviewResponse.InputsBreakdown inputsBreakdown;
         List<String> recommendations;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class MapViewport {
+        LatLng center;
+        Integer zoom;
+        String source;
     }
 
     @Data

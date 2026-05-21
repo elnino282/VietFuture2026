@@ -4,16 +4,19 @@ export type YieldViewMode = "season" | "crop" | "plot";
 
 export type ExportFormat = "excel" | "pdf" | "csv";
 
-export type PesticideStatus = "safe" | "approaching" | "violated";
+export type PesticideStatus = "safe" | "approaching" | "violated" | "review";
 
 export interface PesticideRecord {
-    id: string;
+    id: string | number;
     lotId: string;
-    chemical: string;
-    quantity: number;
-    phi: number;
-    daysRemaining: number;
+    chemical: string | null;
+    quantity: number | null;
+    unit?: string | null;
+    phi: number | null;
+    daysRemaining: number | null;
     status: PesticideStatus;
+    appliedAt?: string | null;
+    notes?: string | null;
 }
 
 export interface YieldBySeason {

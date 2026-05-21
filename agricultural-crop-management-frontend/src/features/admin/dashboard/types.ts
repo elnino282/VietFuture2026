@@ -18,7 +18,7 @@ export type UserType = 'farmer' | 'buyer';
 /**
  * Priority levels for approvals and tasks
  */
-export type Priority = 'high' | 'medium' | 'low';
+export type Priority = 'high' | 'medium' | 'low' | 'HIGH' | 'MEDIUM' | 'LOW' | 'CRITICAL';
 
 /**
  * System health status indicators
@@ -85,15 +85,32 @@ export interface RecentActivity {
 export interface PendingApproval {
   id: number;
   type: string;
-  requester: string;
-  date: string;
+  title: string;
+  subtitle: string;
+  submittedAt: string | null;
   priority: Priority;
+  severity: Priority;
+  actionUrl: string;
+  actionTarget: string;
 }
 
 /**
  * Risk level for seasons based on riskScore
  */
 export type RiskLevel = 'high' | 'medium' | 'low';
+
+/**
+ * Risk reasons returned by backend for each season
+ */
+export type RiskBasis = 'OPEN_INCIDENTS' | 'OVERDUE_TASKS' | 'HIGH_FDN_RISK' | 'INVENTORY_RISK';
+
+/**
+ * Coverage metadata for risk data sources
+ */
+export interface RiskDataCoverage {
+  incidentDataAvailable: boolean;
+  taskDataAvailable: boolean;
+}
 
 /**
  * Transformed risky season with calculated risk level
@@ -106,6 +123,9 @@ export interface TransformedRiskySeason {
   status: string | null;
   incidentCount: number;
   overdueTaskCount: number;
+  highFdnRiskCount: number;
+  inventoryRiskCount: number;
+  riskBasis: RiskBasis[];
   riskScore: number;
   riskLevel: RiskLevel;
 }

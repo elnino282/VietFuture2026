@@ -49,13 +49,6 @@ export interface ExpensesData {
     yield: number;
 }
 
-export interface SystemHealthMetric {
-    metric: string;
-    value: number;
-    unit: string;
-    status: string;
-}
-
 export interface UserActivityFilter {
     farmers: boolean;
     buyers: boolean;
@@ -66,10 +59,4 @@ export interface AlertColors {
     high: string;
     medium: string;
     low: string;
-}
-
-export interface HealthColors {
-    excellent: string;
-    good: string;
-    warning: string;
 }

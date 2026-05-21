@@ -12,8 +12,8 @@ export function BuyerStatCards({ stats }: BuyerStatCardsProps) {
             <Card>
                 <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
-                            <ShoppingCart className="w-6 h-6 text-blue-600" />
+                        <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
+                            <ShoppingCart className="w-6 h-6 text-emerald-600" />
                         </div>
                     </div>
                     <div>

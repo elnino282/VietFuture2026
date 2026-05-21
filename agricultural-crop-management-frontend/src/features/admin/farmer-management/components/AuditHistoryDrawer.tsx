@@ -1,8 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { AlertCircle, Download, Edit, Filter, History, Lock, Plus, Trash2, User } from 'lucide-react';
-import { PLACEHOLDER_AUDIT_LOGS } from '../constants';
-import { AuditLogType } from '../types';
+import { Download, Filter, History, Info } from 'lucide-react';
 
 interface AuditHistoryDrawerProps {
     open: boolean;
@@ -13,23 +11,6 @@ export function AuditHistoryDrawer({
     open,
     onOpenChange,
 }: AuditHistoryDrawerProps) {
-    const getAuditIcon = (type: AuditLogType) => {
-        switch (type) {
-            case 'create':
-                return <Plus className="w-4 h-4 text-green-600" />;
-            case 'update':
-                return <Edit className="w-4 h-4 text-blue-600" />;
-            case 'delete':
-                return <Trash2 className="w-4 h-4 text-red-600" />;
-            case 'login':
-                return <User className="w-4 h-4 text-cyan-600" />;
-            case 'lock':
-                return <Lock className="w-4 h-4 text-orange-600" />;
-            default:
-                return <AlertCircle className="w-4 h-4 text-gray-600" />;
-        }
-    };
-
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent className="w-full sm:w-[600px]">
@@ -55,27 +36,14 @@ export function AuditHistoryDrawer({
                         </Button>
                     </div>
 
-                    <div className="space-y-3">
-                        {PLACEHOLDER_AUDIT_LOGS.map((log) => (
-                            <div
-                                key={log.id}
-                                className="flex gap-3 p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
-                            >
-                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                                    {getAuditIcon(log.type)}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-start justify-between gap-2 mb-1">
-                                        <h4 className="font-medium text-sm">{log.action}</h4>
-                                        <span className="text-xs text-muted-foreground shrink-0">
-                                            {log.timestamp}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mb-1">{log.details}</p>
-                                    <p className="text-xs text-muted-foreground">By: {log.user}</p>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-foreground mb-2">
+                            <Info className="w-4 h-4" />
+                            Audit history endpoint is not available yet.
+                        </div>
+                        <p>
+                            Account activity cannot be loaded in this drawer until backend audit-log API for farmer management is wired.
+                        </p>
                     </div>
                 </div>
             </SheetContent>

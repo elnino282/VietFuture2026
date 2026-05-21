@@ -33,6 +33,11 @@ public interface TaskRepository extends JpaRepository<Task, Integer>,
 
         boolean existsBySeason_Id(Integer seasonId);
 
+        @Query("SELECT COUNT(t) > 0 FROM Task t WHERE t.season.plot.id = :plotId AND t.status IN :statuses")
+        boolean existsBySeason_Plot_IdAndStatusIn(
+                        @Param("plotId") Integer plotId,
+                        @Param("statuses") Iterable<TaskStatus> statuses);
+
         long countBySeason_IdAndStatusIn(Integer seasonId, List<TaskStatus> statuses);
 
         long countBySeason_IdAndStatusNot(Integer seasonId, TaskStatus status);

@@ -25,7 +25,8 @@ describe('auth api', () => {
     });
 
     expect(httpClient.put).toHaveBeenCalledWith('/api/v1/user/change-password', {
-      password: 'new-password',
+      currentPassword: 'old-password',
+      newPassword: 'new-password',
     });
   });
 });

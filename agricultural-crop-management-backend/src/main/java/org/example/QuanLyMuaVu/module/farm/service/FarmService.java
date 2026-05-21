@@ -91,6 +91,8 @@ public class FarmService {
         Farm farm = Farm.builder()
                 .name(request.getFarmName())
                 .area(request.getArea())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
                 .active(request.getActive())
                 .user(currentUser)
                 .province(province)
@@ -145,6 +147,14 @@ public class FarmService {
             farm.setArea(request.getArea());
         }
 
+        if (request.getLatitude() != null) {
+            farm.setLatitude(request.getLatitude());
+        }
+
+        if (request.getLongitude() != null) {
+            farm.setLongitude(request.getLongitude());
+        }
+
         if (request.getActive() != null) {
             farm.setActive(request.getActive());
         }
@@ -184,6 +194,8 @@ public class FarmService {
                 .wardId(farm.getWard().getId())
                 .wardName(farm.getWard().getName())
                 .area(farm.getArea())
+                .latitude(farm.getLatitude())
+                .longitude(farm.getLongitude())
                 .active(farm.getActive())
                 .build();
     }

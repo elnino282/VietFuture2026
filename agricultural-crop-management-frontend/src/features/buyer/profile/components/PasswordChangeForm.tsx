@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Button, Input, Label } from '@/shared/ui';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import type { ChangePasswordPayload } from '@/api/auth';
+import type { ChangePasswordPayload } from '@/entities/user';
 
 interface PasswordChangeFormProps {
   onSave: (data: ChangePasswordPayload) => Promise<void>;

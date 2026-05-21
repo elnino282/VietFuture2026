@@ -20,6 +20,7 @@ import {
 } from "@/entities/disease";
 import { useSeasonById } from "@/entities/season";
 import { useAllSupplyItems, useSupplyLots } from "@/entities/supplies";
+import { useI18n } from "@/hooks/useI18n";
 import { useOptionalSeason } from "@/shared/contexts";
 import {
   AlertDialog,
@@ -73,28 +74,46 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 
+interface LocalizedOption {
+  value: string;
+  labelKey: string;
+  fallbackLabel: string;
+}
+
 const DISEASE_SEVERITY_OPTIONS = [
-  { value: "LOW", label: "Thap" },
-  { value: "MEDIUM", label: "Trung binh" },
-  { value: "HIGH", label: "Cao" },
-  { value: "CRITICAL", label: "Nghiem trong" },
-] as const;
+  { value: "LOW", labelKey: "diseaseTracking.severityOptions.LOW", fallbackLabel: "Low" },
+  { value: "MEDIUM", labelKey: "diseaseTracking.severityOptions.MEDIUM", fallbackLabel: "Medium" },
+  { value: "HIGH", labelKey: "diseaseTracking.severityOptions.HIGH", fallbackLabel: "High" },
+  { value: "CRITICAL", labelKey: "diseaseTracking.severityOptions.CRITICAL", fallbackLabel: "Critical" },
+] satisfies LocalizedOption[];
 
 const DISEASE_STATUS_OPTIONS = [
-  { value: "OPEN", label: "Moi phat hien" },
-  { value: "UNDER_TREATMENT", label: "Dang dieu tri" },
-  { value: "MONITORING", label: "Dang theo doi" },
-  { value: "RESOLVED", label: "Da on dinh" },
-  { value: "CLOSED", label: "Dong ho so" },
-] as const;
+  { value: "OPEN", labelKey: "diseaseTracking.statusOptions.OPEN", fallbackLabel: "Newly detected" },
+  {
+    value: "UNDER_TREATMENT",
+    labelKey: "diseaseTracking.statusOptions.UNDER_TREATMENT",
+    fallbackLabel: "Under treatment",
+  },
+  { value: "MONITORING", labelKey: "diseaseTracking.statusOptions.MONITORING", fallbackLabel: "Monitoring" },
+  { value: "RESOLVED", labelKey: "diseaseTracking.statusOptions.RESOLVED", fallbackLabel: "Stabilized" },
+  { value: "CLOSED", labelKey: "diseaseTracking.statusOptions.CLOSED", fallbackLabel: "Closed record" },
+] satisfies LocalizedOption[];
 
 const TREATMENT_EFFECTIVENESS_OPTIONS = [
-  { value: "UNKNOWN", label: "Chua danh gia" },
-  { value: "POOR", label: "Kem" },
-  { value: "FAIR", label: "Trung binh" },
-  { value: "GOOD", label: "Tot" },
-  { value: "EXCELLENT", label: "Rat tot" },
-] as const;
+  {
+    value: "UNKNOWN",
+    labelKey: "diseaseTracking.effectivenessOptions.UNKNOWN",
+    fallbackLabel: "Not evaluated",
+  },
+  { value: "POOR", labelKey: "diseaseTracking.effectivenessOptions.POOR", fallbackLabel: "Poor" },
+  { value: "FAIR", labelKey: "diseaseTracking.effectivenessOptions.FAIR", fallbackLabel: "Fair" },
+  { value: "GOOD", labelKey: "diseaseTracking.effectivenessOptions.GOOD", fallbackLabel: "Good" },
+  {
+    value: "EXCELLENT",
+    labelKey: "diseaseTracking.effectivenessOptions.EXCELLENT",
+    fallbackLabel: "Excellent",
+  },
+] satisfies LocalizedOption[];
 
 interface DiseaseRecordFormState {
   diseaseName: string;
@@ -175,16 +194,25 @@ const toApiDateTime = (value: string) => {
   return value.length === 16 ? `${value}:00` : value;
 };
 
-const formatDateTime = (value?: string | null) => {
+const formatDateTime = (value: string | null | undefined, locale: string) => {
   if (!value) return "-";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleString("vi-VN");
+  return parsed.toLocaleString(locale);
 };
 
-const formatNumber = (value?: number | null, suffix?: string) => {
+const formatNumber = (value: number | null | undefined, locale: string, suffix?: string) => {
   if (value === null || value === undefined) return "-";
-  return `${value.toLocaleString("vi-VN")}${suffix ? ` ${suffix}` : ""}`;
+  return `${value.toLocaleString(locale)}${suffix ? ` ${suffix}` : ""}`;
+};
+
+const formatCurrencyVnd = (value: number | null | undefined, locale: string) => {
+  if (value === null || value === undefined) return "-";
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(value);
 };
 
 interface ParsedNumberInput {
@@ -255,26 +283,31 @@ const extractApiErrorPayload = (error: unknown): ApiErrorPayload | null => {
   };
 };
 
-const toReadableError = (error: unknown, fallback: string) => {
+const toReadableError = (
+  error: unknown,
+  translate: (key: string, optionsOrDefault?: Record<string, unknown> | string) => string,
+  fallbackKey: string,
+  fallbackText: string,
+) => {
   const payload = extractApiErrorPayload(error);
   const code = payload?.code;
   const status = payload?.status;
 
   if (status === 401 || code === "ERR_UNAUTHENTICATED" || code === "ERR_UNAUTHORIZED") {
-    return "Phien dang nhap da het han. Vui long dang nhap lai.";
+    return translate("diseaseTracking.errors.sessionExpired");
   }
 
   if (status === 403 || (code && PERMISSION_ERROR_CODES.has(code))) {
-    return "Ban khong co quyen truy cap hoac sua du lieu mua vu/benh nay.";
+    return translate("diseaseTracking.errors.permissionDenied");
   }
 
   if (status === 400 || (code && VALIDATION_ERROR_CODES.has(code))) {
-    return payload?.message ?? "Du lieu khong hop le. Vui long kiem tra thong tin va thu lai.";
+    return payload?.message ?? translate("diseaseTracking.errors.invalidData");
   }
 
   if (payload?.message) return payload.message;
   if (error instanceof Error && error.message) return error.message;
-  return fallback;
+  return translate(fallbackKey, fallbackText);
 };
 
 const getSeverityBadgeVariant = (severity: string) => {
@@ -308,18 +341,20 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
-const getSeverityLabel = (severity?: string | null) =>
-  DISEASE_SEVERITY_OPTIONS.find((option) => option.value === severity)?.label ?? severity ?? "-";
-
-const getStatusLabel = (status?: string | null) =>
-  DISEASE_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status ?? "-";
-
-const getEffectivenessLabel = (effectiveness?: string | null) =>
-  TREATMENT_EFFECTIVENESS_OPTIONS.find((option) => option.value === effectiveness)?.label
-  ?? effectiveness
-  ?? "-";
+const resolveOptionLabel = (
+  options: LocalizedOption[],
+  value: string | null | undefined,
+  translate: (key: string, optionsOrDefault?: Record<string, unknown> | string) => string,
+) => {
+  const matched = options.find((option) => option.value === value);
+  if (matched) {
+    return translate(matched.labelKey, matched.fallbackLabel);
+  }
+  return value ?? "-";
+};
 
 export function DiseaseTrackingPage() {
+  const { t, locale } = useI18n();
   const seasonContext = useOptionalSeason();
   const { seasonId: seasonIdParam } = useParams();
 
@@ -372,7 +407,7 @@ export function DiseaseTrackingPage() {
     || selectedSeasonStatus === "CANCELLED"
     || selectedSeasonStatus === "ARCHIVED";
   const seasonWriteLockReason = isSeasonWriteLocked
-    ? "Mua vu da khoa. Khong the tao, sua hoac xoa benh an."
+    ? t("diseaseTracking.season.writeLocked")
     : undefined;
 
   const {
@@ -431,64 +466,91 @@ export function DiseaseTrackingPage() {
 
   const createRecordMutation = useCreateDiseaseRecord({
     onSuccess: () => {
-      toast.success("Da tao ho so benh.");
+      toast.success(t("diseaseTracking.toast.recordCreated"));
       closeRecordDialog();
     },
     onError: (error) => {
-      toast.error(toReadableError(error, "Khong the tao ho so benh."));
+      toast.error(
+        toReadableError(error, t, "diseaseTracking.errors.createRecordFail", "Unable to create disease record."),
+      );
     },
   });
 
   const updateRecordMutation = useUpdateDiseaseRecord({
     onSuccess: () => {
-      toast.success("Da cap nhat ho so benh.");
+      toast.success(t("diseaseTracking.toast.recordUpdated"));
       closeRecordDialog();
     },
     onError: (error) => {
-      toast.error(toReadableError(error, "Khong the cap nhat ho so benh."));
+      toast.error(
+        toReadableError(error, t, "diseaseTracking.errors.updateRecordFail", "Unable to update disease record."),
+      );
     },
   });
 
   const deleteRecordMutation = useDeleteDiseaseRecord({
     onSuccess: () => {
-      toast.success("Da xoa ho so benh.");
+      toast.success(t("diseaseTracking.toast.recordDeleted"));
       setDeleteRecordId(null);
       if (expandedRecordId && expandedRecordId === deleteRecordId) {
         setExpandedRecordId(null);
       }
     },
     onError: (error) => {
-      toast.error(toReadableError(error, "Khong the xoa ho so benh."));
+      toast.error(
+        toReadableError(error, t, "diseaseTracking.errors.deleteRecordFail", "Unable to delete disease record."),
+      );
     },
   });
 
   const createTreatmentMutation = useCreateDiseaseTreatment({
     onSuccess: () => {
-      toast.success("Da them lich su dieu tri.");
+      toast.success(t("diseaseTracking.toast.treatmentCreated"));
       closeTreatmentDialog();
     },
     onError: (error) => {
-      toast.error(toReadableError(error, "Khong the them lich su dieu tri."));
+      toast.error(
+        toReadableError(
+          error,
+          t,
+          "diseaseTracking.errors.createTreatmentFail",
+          "Unable to add treatment history.",
+        ),
+      );
     },
   });
 
   const updateTreatmentMutation = useUpdateDiseaseTreatment({
     onSuccess: () => {
-      toast.success("Da cap nhat lich su dieu tri.");
+      toast.success(t("diseaseTracking.toast.treatmentUpdated"));
       closeTreatmentDialog();
     },
     onError: (error) => {
-      toast.error(toReadableError(error, "Khong the cap nhat lich su dieu tri."));
+      toast.error(
+        toReadableError(
+          error,
+          t,
+          "diseaseTracking.errors.updateTreatmentFail",
+          "Unable to update treatment history.",
+        ),
+      );
     },
   });
 
   const deleteTreatmentMutation = useDeleteDiseaseTreatment({
     onSuccess: () => {
-      toast.success("Da xoa lich su dieu tri.");
+      toast.success(t("diseaseTracking.toast.treatmentDeleted"));
       setDeleteTreatmentTarget(null);
     },
     onError: (error) => {
-      toast.error(toReadableError(error, "Khong the xoa lich su dieu tri."));
+      toast.error(
+        toReadableError(
+          error,
+          t,
+          "diseaseTracking.errors.deleteTreatmentFail",
+          "Unable to delete treatment history.",
+        ),
+      );
     },
   });
 
@@ -498,7 +560,12 @@ export function DiseaseTrackingPage() {
       setAiSuggestionError(null);
     },
     onError: (error) => {
-      const message = toReadableError(error, "Khong the tao goi y AI luc nay.");
+      const message = toReadableError(
+        error,
+        t,
+        "diseaseTracking.errors.aiSuggestionFail",
+        "Unable to generate AI suggestion right now.",
+      );
       setAiSuggestion(null);
       setAiSuggestionError(message);
       toast.error(message);
@@ -512,8 +579,10 @@ export function DiseaseTrackingPage() {
   const aiSuggestionForActiveRecord = aiSuggestion?.diseaseRecordId === detailRecordId
     ? aiSuggestion
     : null;
-  const aiDisclaimerText =
-    "G\u1ee3i \u00fd ch\u1ec9 mang t\u00ednh tham kh\u1ea3o, kh\u00f4ng thay th\u1ebf t\u01b0 v\u1ea5n chuy\u00ean gia.";
+  const aiDisclaimerText = t(
+    "diseaseTracking.detail.ai.disclaimer",
+    "Suggestions are for reference only and do not replace expert consultation.",
+  );
   const isMutating =
     createRecordMutation.isPending
     || updateRecordMutation.isPending
@@ -543,12 +612,27 @@ export function DiseaseTrackingPage() {
     && !parsedTreatmentQuantityUsed.isInvalid
     && !parsedTreatmentCostAmount.isInvalid;
   const recordsErrorForView = recordsError
-    ? new Error(toReadableError(recordsError, "Khong the tai danh sach ho so benh."))
+    ? new Error(
+      toReadableError(
+        recordsError,
+        t,
+        "diseaseTracking.errors.loadRecordsFail",
+        "Unable to load disease records.",
+      ),
+    )
     : null;
   const detailPanelErrorMessage = toReadableError(
     detailError ?? treatmentListError,
-    "Khong the tai chi tiet benh an. Vui long thu lai."
+    t,
+    "diseaseTracking.errors.loadDetailFail",
+    "Unable to load disease record details. Please try again.",
   );
+  const getSeverityLabel = (severity?: string | null) =>
+    resolveOptionLabel(DISEASE_SEVERITY_OPTIONS, severity, t);
+  const getStatusLabel = (status?: string | null) =>
+    resolveOptionLabel(DISEASE_STATUS_OPTIONS, status, t);
+  const getEffectivenessLabel = (effectiveness?: string | null) =>
+    resolveOptionLabel(TREATMENT_EFFECTIVENESS_OPTIONS, effectiveness, t);
 
   const summary = useMemo(() => {
     const total = records.length;
@@ -603,23 +687,23 @@ export function DiseaseTrackingPage() {
   const handleSubmitRecord = () => {
     if (!ensureWritable()) return;
     if (!recordForm.diseaseName.trim()) {
-      toast.error("Ten benh bat buoc.");
+      toast.error(t("diseaseTracking.validation.diseaseNameRequired"));
       return;
     }
     if (!recordForm.detectedAt) {
-      toast.error("Thoi diem phat hien bat buoc.");
+      toast.error(t("diseaseTracking.validation.detectedAtRequired"));
       return;
     }
     if (!isRecordDetectedAtValid) {
-      toast.error("Thoi diem phat hien khong hop le.");
+      toast.error(t("diseaseTracking.validation.detectedAtInvalid"));
       return;
     }
     if (parsedAffectedPlantCount.isInvalid) {
-      toast.error("So cay bi anh huong phai la so nguyen >= 0.");
+      toast.error(t("diseaseTracking.validation.affectedPlantCountInvalid"));
       return;
     }
     if (parsedAffectedAreaPercent.isInvalid) {
-      toast.error("Ty le dien tich anh huong phai la so >= 0.");
+      toast.error(t("diseaseTracking.validation.affectedAreaInvalid"));
       return;
     }
     const affectedAreaValue = parsedAffectedAreaPercent.value;
@@ -672,7 +756,7 @@ export function DiseaseTrackingPage() {
   const handleGenerateAiSuggestion = (recordId: number) => {
     const trimmedAdditionalNote = aiAdditionalNote.trim();
     if (trimmedAdditionalNote.length > 4000) {
-      const message = "Additional note toi da 4000 ky tu.";
+      const message = t("diseaseTracking.validation.additionalNoteTooLong");
       setAiSuggestion(null);
       setAiSuggestionError(message);
       toast.error(message);
@@ -738,27 +822,27 @@ export function DiseaseTrackingPage() {
   const handleSubmitTreatment = () => {
     if (!ensureWritable()) return;
     if (!activeTreatmentRecordId) {
-      toast.error("Khong tim thay ho so benh de cap nhat dieu tri.");
+      toast.error(t("diseaseTracking.validation.recordNotFoundForTreatment"));
       return;
     }
     if (!treatmentForm.treatedAt) {
-      toast.error("Ngay dieu tri bat buoc.");
+      toast.error(t("diseaseTracking.validation.treatedAtRequired"));
       return;
     }
     if (!treatmentForm.method.trim()) {
-      toast.error("Phuong phap dieu tri bat buoc.");
+      toast.error(t("diseaseTracking.validation.methodRequired"));
       return;
     }
     if (!isTreatmentDateValid) {
-      toast.error("Ngay dieu tri khong hop le.");
+      toast.error(t("diseaseTracking.validation.treatedAtInvalid"));
       return;
     }
     if (parsedTreatmentQuantityUsed.isInvalid) {
-      toast.error("So luong su dung phai la so >= 0.");
+      toast.error(t("diseaseTracking.validation.quantityUsedInvalid"));
       return;
     }
     if (parsedTreatmentCostAmount.isInvalid) {
-      toast.error("Chi phi dieu tri phai la so >= 0.");
+      toast.error(t("diseaseTracking.validation.costAmountInvalid"));
       return;
     }
 
@@ -808,7 +892,7 @@ export function DiseaseTrackingPage() {
       <PageContainer>
         <Card className="border border-destructive/20 bg-destructive/5">
           <CardContent className="py-6 text-sm text-destructive">
-            Mua vu khong hop le.
+            {t("diseaseTracking.season.invalid")}
           </CardContent>
         </Card>
       </PageContainer>
@@ -822,8 +906,8 @@ export function DiseaseTrackingPage() {
           <PageHeader
             className="mb-0"
             icon={<Bug className="w-8 h-8" />}
-            title="Theo doi dich benh"
-            subtitle="Quan ly lich su benh va qua trinh dieu tri trong mua vu."
+            title={t("diseaseTracking.title")}
+            subtitle={t("diseaseTracking.subtitle")}
             actions={(
               <Button
                 onClick={openCreateRecordDialog}
@@ -831,7 +915,7 @@ export function DiseaseTrackingPage() {
                 title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Them ho so benh
+                {t("diseaseTracking.actions.addRecord")}
               </Button>
             )}
           />
@@ -841,7 +925,8 @@ export function DiseaseTrackingPage() {
       <Card className="mb-6 border border-border rounded-xl shadow-sm">
         <CardContent className="px-6 py-4 space-y-4">
           <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
-            Mua vu: <span className="font-medium">{seasonDetail?.seasonName ?? `#${selectedSeasonId}`}</span>
+            {t("diseaseTracking.season.label")}{" "}
+            <span className="font-medium">{seasonDetail?.seasonName ?? `#${selectedSeasonId}`}</span>
           </div>
 
           {isSeasonWriteLocked && (
@@ -852,19 +937,19 @@ export function DiseaseTrackingPage() {
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div className="rounded-lg border border-border bg-card px-3 py-3">
-              <p className="text-sm text-muted-foreground">Tong ho so</p>
+              <p className="text-sm text-muted-foreground">{t("diseaseTracking.summary.totalRecords")}</p>
               <p className="text-2xl font-semibold">{summary.total}</p>
             </div>
             <div className="rounded-lg border border-border bg-card px-3 py-3">
-              <p className="text-sm text-muted-foreground">Moi phat hien</p>
+              <p className="text-sm text-muted-foreground">{t("diseaseTracking.summary.newDetected")}</p>
               <p className="text-2xl font-semibold">{summary.open}</p>
             </div>
             <div className="rounded-lg border border-border bg-card px-3 py-3">
-              <p className="text-sm text-muted-foreground">Dang dieu tri</p>
+              <p className="text-sm text-muted-foreground">{t("diseaseTracking.summary.underTreatment")}</p>
               <p className="text-2xl font-semibold">{summary.underTreatment}</p>
             </div>
             <div className="rounded-lg border border-border bg-card px-3 py-3">
-              <p className="text-sm text-muted-foreground">Da on dinh / dong</p>
+              <p className="text-sm text-muted-foreground">{t("diseaseTracking.summary.resolvedClosed")}</p>
               <p className="text-2xl font-semibold">{summary.resolved}</p>
             </div>
           </div>
@@ -876,19 +961,19 @@ export function DiseaseTrackingPage() {
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
                 className="pl-10"
-                placeholder="Tim theo ten benh/trieu chung..."
+                placeholder={t("diseaseTracking.filters.searchPlaceholder")}
               />
             </div>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-[220px]">
-                <SelectValue placeholder="Trang thai" />
+                <SelectValue placeholder={t("diseaseTracking.filters.statusPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tat ca trang thai</SelectItem>
+                <SelectItem value="all">{t("diseaseTracking.filters.allStatuses")}</SelectItem>
                 {DISEASE_STATUS_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey, option.fallbackLabel)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -896,20 +981,20 @@ export function DiseaseTrackingPage() {
 
             <Select value={severityFilter} onValueChange={setSeverityFilter}>
               <SelectTrigger className="w-full md:w-[220px]">
-                <SelectValue placeholder="Muc do" />
+                <SelectValue placeholder={t("diseaseTracking.filters.severityPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tat ca muc do</SelectItem>
+                <SelectItem value="all">{t("diseaseTracking.filters.allSeverities")}</SelectItem>
                 {DISEASE_SEVERITY_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey, option.fallbackLabel)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
             <Button variant="outline" onClick={() => refetchRecords()}>
-              Lam moi
+              {t("diseaseTracking.actions.refresh")}
             </Button>
           </div>
         </CardContent>
@@ -922,17 +1007,17 @@ export function DiseaseTrackingPage() {
             isEmpty={records.length === 0}
             error={recordsErrorForView}
             onRetry={() => refetchRecords()}
-            loadingText="Dang tai ho so benh..."
+            loadingText={t("diseaseTracking.list.loadingRecords")}
             emptyIcon={<ShieldAlert className="w-6 h-6 text-muted-foreground" />}
-            emptyTitle="Chua co ho so benh nao trong mua vu"
-            emptyDescription="Bat dau bang cach them ho so benh dau tien de theo doi qua trinh xu ly."
+            emptyTitle={t("diseaseTracking.list.emptyTitle")}
+            emptyDescription={t("diseaseTracking.list.emptyDescription")}
             emptyAction={(
               <Button
                 onClick={openCreateRecordDialog}
                 disabled={isSeasonWriteLocked}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Them ho so benh
+                {t("diseaseTracking.actions.addRecord")}
               </Button>
             )}
           >
@@ -957,21 +1042,26 @@ export function DiseaseTrackingPage() {
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Phat hien: {formatDateTime(recordToRender.detectedAt)}
+                          {t("diseaseTracking.recordCard.detectedAt")}: {formatDateTime(recordToRender.detectedAt, locale)}
                         </p>
                         {recordToRender.symptomSummary && (
                           <p className="text-sm text-foreground">{recordToRender.symptomSummary}</p>
                         )}
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                          <span>So cay anh huong: {formatNumber(recordToRender.affectedPlantCount)}</span>
                           <span>
-                            Dien tich anh huong:
+                            {t("diseaseTracking.recordCard.affectedPlantCount")}:{" "}
+                            {formatNumber(recordToRender.affectedPlantCount, locale)}
+                          </span>
+                          <span>
+                            {t("diseaseTracking.recordCard.affectedArea")}:
                             {" "}
                             {recordToRender.affectedAreaValue !== undefined && recordToRender.affectedAreaValue !== null
                               ? `${recordToRender.affectedAreaValue} ${recordToRender.affectedAreaUnit ?? ""}`.trim()
                               : "-"}
                           </span>
-                          <span>Lan dieu tri: {recordToRender.treatmentCount ?? 0}</span>
+                          <span>
+                            {t("diseaseTracking.recordCard.treatmentCount")}: {recordToRender.treatmentCount ?? 0}
+                          </span>
                         </div>
                       </div>
 
@@ -983,7 +1073,7 @@ export function DiseaseTrackingPage() {
                           title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
                         >
                           <FlaskConical className="w-4 h-4 mr-2" />
-                          Them dieu tri
+                          {t("diseaseTracking.actions.addTreatment")}
                         </Button>
                         <Button
                           variant="outline"
@@ -992,7 +1082,7 @@ export function DiseaseTrackingPage() {
                           title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
                         >
                           <Pencil className="w-4 h-4 mr-2" />
-                          Sua
+                          {t("diseaseTracking.actions.edit")}
                         </Button>
                         <Button
                           variant="outline"
@@ -1002,7 +1092,7 @@ export function DiseaseTrackingPage() {
                           title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
-                          Xoa
+                          {t("diseaseTracking.actions.delete")}
                         </Button>
                         <Button
                           variant="ghost"
@@ -1010,12 +1100,12 @@ export function DiseaseTrackingPage() {
                         >
                           {isExpanded ? (
                             <>
-                              An chi tiet
+                              {t("diseaseTracking.actions.hideDetails")}
                               <ChevronUp className="w-4 h-4 ml-2" />
                             </>
                           ) : (
                             <>
-                              Xem chi tiet
+                              {t("diseaseTracking.actions.viewDetails")}
                               <ChevronDown className="w-4 h-4 ml-2" />
                             </>
                           )}
@@ -1028,7 +1118,7 @@ export function DiseaseTrackingPage() {
                         {isDetailLoading || isTreatmentListLoading ? (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Dang tai chi tiet benh va lich su dieu tri...
+                            {t("diseaseTracking.detail.loading")}
                           </div>
                         ) : detailError || treatmentListError ? (
                           <div className="rounded-md border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
@@ -1038,27 +1128,27 @@ export function DiseaseTrackingPage() {
                           <div className="space-y-4">
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                               <div className="rounded-lg border border-border bg-card p-3">
-                                <p className="text-xs text-muted-foreground">Nguoi ghi nhan</p>
+                                <p className="text-xs text-muted-foreground">{t("diseaseTracking.detail.reporter")}</p>
                                 <p className="text-sm font-medium">
                                   {recordToRender.reportedByUsername ?? "-"}
                                 </p>
                               </div>
                               <div className="rounded-lg border border-border bg-card p-3">
-                                <p className="text-xs text-muted-foreground">Tong chi phi dieu tri</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {t("diseaseTracking.detail.totalTreatmentCost")}
+                                </p>
                                 <p className="text-sm font-medium">
-                                  {totalTreatmentCost !== null && totalTreatmentCost !== undefined
-                                    ? `${totalTreatmentCost.toLocaleString("vi-VN")} VND`
-                                    : "-"}
+                                  {formatCurrencyVnd(totalTreatmentCost, locale)}
                                 </p>
                               </div>
                               <div className="rounded-lg border border-border bg-card p-3">
-                                <p className="text-xs text-muted-foreground">Lan dieu tri gan nhat</p>
+                                <p className="text-xs text-muted-foreground">{t("diseaseTracking.detail.latestTreatment")}</p>
                                 <p className="text-sm font-medium">
-                                  {formatDateTime(detailData?.latestTreatmentAt)}
+                                  {formatDateTime(detailData?.latestTreatmentAt, locale)}
                                 </p>
                               </div>
                               <div className="rounded-lg border border-border bg-card p-3">
-                                <p className="text-xs text-muted-foreground">Evidence URL</p>
+                                <p className="text-xs text-muted-foreground">{t("diseaseTracking.detail.evidenceUrl")}</p>
                                 <p className="text-sm break-all">
                                   {recordToRender.evidenceUrl ?? "-"}
                                 </p>
@@ -1067,7 +1157,7 @@ export function DiseaseTrackingPage() {
 
                             {recordToRender.notes && (
                               <div className="rounded-lg border border-border bg-card p-3">
-                                <p className="text-xs text-muted-foreground mb-1">Ghi chu ca benh</p>
+                                <p className="text-xs text-muted-foreground mb-1">{t("diseaseTracking.detail.caseNotes")}</p>
                                 <p className="text-sm">{recordToRender.notes}</p>
                               </div>
                             )}
@@ -1077,10 +1167,10 @@ export function DiseaseTrackingPage() {
                                 <div>
                                   <h4 className="text-sm font-semibold flex items-center gap-2">
                                     <Sparkles className="w-4 h-4" />
-                                    Goi y xu ly bang AI
+                                    {t("diseaseTracking.detail.ai.title")}
                                   </h4>
                                   <p className="text-xs text-muted-foreground mt-1">
-                                    AI chi ho tro quyet dinh tham khao. Khong tao treatment tu dong.
+                                    {t("diseaseTracking.detail.ai.description")}
                                   </p>
                                 </div>
                                 <Button
@@ -1094,45 +1184,50 @@ export function DiseaseTrackingPage() {
                                   ) : (
                                     <Sparkles className="w-4 h-4 mr-1" />
                                   )}
-                                  Goi y xu ly bang AI
+                                  {t("diseaseTracking.detail.ai.generate")}
                                 </Button>
                               </div>
 
                               <div className="space-y-2">
-                                <Label htmlFor={`ai-note-${record.id}`}>Additional note (tuy chon)</Label>
+                                <Label htmlFor={`ai-note-${record.id}`}>
+                                  {t("diseaseTracking.detail.ai.additionalNoteLabel")}
+                                </Label>
                                 <Textarea
                                   id={`ai-note-${record.id}`}
                                   rows={2}
                                   value={aiAdditionalNote}
                                   onChange={(event) => setAiAdditionalNote(event.target.value)}
-                                  placeholder="Vi du: Da phun thuoc 1 lan truoc do, tinh hinh chua cai thien..."
+                                  placeholder={t("diseaseTracking.detail.ai.additionalNotePlaceholder")}
                                 />
                               </div>
 
                               <div className="rounded-md border border-border px-3 py-2 flex items-center justify-between gap-3">
                                 <div>
-                                  <p className="text-sm font-medium">Bao gom context ton kho</p>
+                                  <p className="text-sm font-medium">
+                                    {t("diseaseTracking.detail.ai.includeInventoryLabel")}
+                                  </p>
                                   <p className="text-xs text-muted-foreground">
-                                    Bat de AI chi de xuat vat tu trong danh muc ton kho noi bo.
+                                    {t("diseaseTracking.detail.ai.includeInventoryDescription")}
                                   </p>
                                 </div>
                                 <Switch
                                   checked={aiIncludeInventory}
                                   onCheckedChange={(checked) => setAiIncludeInventory(Boolean(checked))}
-                                  aria-label="Bao gom inventory context"
+                                  aria-label={t("diseaseTracking.detail.ai.includeInventoryAriaLabel")}
                                 />
                               </div>
 
                               {aiSuggestionError && (
                                 <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                                  Khong the tao goi y AI: {aiSuggestionError}
+                                  {t("diseaseTracking.detail.ai.generateErrorPrefix")} {aiSuggestionError}
                                 </div>
                               )}
 
                               {aiSuggestionForActiveRecord && (
                                 <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-2">
                                   <p className="text-xs text-muted-foreground">
-                                    Tao luc: {formatDateTime(aiSuggestionForActiveRecord.generatedAt)}
+                                    {t("diseaseTracking.detail.ai.generatedAt")}:{" "}
+                                    {formatDateTime(aiSuggestionForActiveRecord.generatedAt, locale)}
                                   </p>
                                   <p className="text-sm whitespace-pre-wrap leading-6">
                                     {aiSuggestionForActiveRecord.suggestionText}
@@ -1151,7 +1246,7 @@ export function DiseaseTrackingPage() {
                               <div className="flex items-center justify-between">
                                 <h4 className="text-sm font-semibold flex items-center gap-2">
                                   <Stethoscope className="w-4 h-4" />
-                                  Timeline dieu tri
+                                  {t("diseaseTracking.detail.timeline.title")}
                                 </h4>
                                 <Button
                                   variant="outline"
@@ -1161,13 +1256,13 @@ export function DiseaseTrackingPage() {
                                   title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
                                 >
                                   <Plus className="w-4 h-4 mr-1" />
-                                  Them
+                                  {t("diseaseTracking.actions.addTimelineItem")}
                                 </Button>
                               </div>
 
                               {treatmentTimeline.length === 0 ? (
                                 <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
-                                  Chua co lich su dieu tri.
+                                  {t("diseaseTracking.detail.timeline.empty")}
                                 </div>
                               ) : (
                                 <div className="space-y-2">
@@ -1179,31 +1274,33 @@ export function DiseaseTrackingPage() {
                                       <div className="flex flex-wrap items-start justify-between gap-3">
                                         <div className="space-y-1">
                                           <p className="text-sm font-medium">
-                                            {formatDateTime(treatment.treatedAt)} - {treatment.method}
+                                            {formatDateTime(treatment.treatedAt, locale)} - {treatment.method}
                                           </p>
                                           <p className="text-xs text-muted-foreground">
-                                            Hieu qua: {getEffectivenessLabel(treatment.effectiveness)}
+                                            {t("diseaseTracking.detail.timeline.effectiveness")}:
+                                            {" "}
+                                            {getEffectivenessLabel(treatment.effectiveness)}
                                           </p>
                                           <p className="text-xs text-muted-foreground">
-                                            Vat tu:
+                                            {t("diseaseTracking.detail.timeline.material")}:
                                             {" "}
                                             {treatment.supplyItemName
                                               ?? treatment.materialName
                                               ?? "-"}
-                                            {treatment.batchCode ? ` (Lo ${treatment.batchCode})` : ""}
+                                            {treatment.batchCode ? ` (${t("diseaseTracking.form.treatment.supplyLot")}: ${treatment.batchCode})` : ""}
                                           </p>
                                           <p className="text-xs text-muted-foreground">
-                                            So luong:
+                                            {t("diseaseTracking.detail.timeline.quantity")}:
                                             {" "}
                                             {treatment.quantityUsed !== undefined && treatment.quantityUsed !== null
                                               ? `${treatment.quantityUsed} ${treatment.unit ?? ""}`.trim()
                                               : "-"}
                                           </p>
                                           <p className="text-xs text-muted-foreground">
-                                            Chi phi:
+                                            {t("diseaseTracking.detail.timeline.cost")}:
                                             {" "}
                                             {treatment.costAmount !== undefined && treatment.costAmount !== null
-                                              ? `${treatment.costAmount.toLocaleString("vi-VN")} VND`
+                                              ? formatCurrencyVnd(treatment.costAmount, locale)
                                               : "-"}
                                           </p>
                                         </div>
@@ -1237,7 +1334,7 @@ export function DiseaseTrackingPage() {
                                       )}
                                       {treatment.notes && (
                                         <p className="text-xs mt-2 text-muted-foreground">
-                                          Dosage note: {treatment.notes}
+                                          {t("diseaseTracking.detail.timeline.dosageNote")}: {treatment.notes}
                                         </p>
                                       )}
                                     </div>
@@ -1260,16 +1357,20 @@ export function DiseaseTrackingPage() {
       <Dialog open={isRecordDialogOpen} onOpenChange={setIsRecordDialogOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingRecord ? "Cap nhat ho so benh" : "Tao ho so benh moi"}</DialogTitle>
+            <DialogTitle>
+              {editingRecord
+                ? t("diseaseTracking.dialogs.record.editTitle")
+                : t("diseaseTracking.dialogs.record.createTitle")}
+            </DialogTitle>
             <DialogDescription>
-              Ghi nhan thong tin phat hien benh de theo doi xu ly trong mua vu.
+              {t("diseaseTracking.dialogs.record.description")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="disease-name">
-                Ten benh <span className="text-destructive">*</span>
+                {t("diseaseTracking.form.record.diseaseName")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="disease-name"
@@ -1277,12 +1378,12 @@ export function DiseaseTrackingPage() {
                 onChange={(event) =>
                   setRecordForm((previous) => ({ ...previous, diseaseName: event.target.value }))
                 }
-                placeholder="Vi du: Dao on la"
+                placeholder={t("diseaseTracking.form.record.diseaseNamePlaceholder")}
               />
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="disease-symptoms">Trieu chung</Label>
+              <Label htmlFor="disease-symptoms">{t("diseaseTracking.form.record.symptoms")}</Label>
               <Textarea
                 id="disease-symptoms"
                 rows={3}
@@ -1290,12 +1391,12 @@ export function DiseaseTrackingPage() {
                 onChange={(event) =>
                   setRecordForm((previous) => ({ ...previous, symptomSummary: event.target.value }))
                 }
-                placeholder="Mo ta trieu chung quan sat duoc..."
+                placeholder={t("diseaseTracking.form.record.symptomsPlaceholder")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Muc do</Label>
+              <Label>{t("diseaseTracking.form.record.severity")}</Label>
               <Select
                 value={recordForm.severity}
                 onValueChange={(value) =>
@@ -1308,7 +1409,7 @@ export function DiseaseTrackingPage() {
                 <SelectContent>
                   {DISEASE_SEVERITY_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.labelKey, option.fallbackLabel)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1316,7 +1417,7 @@ export function DiseaseTrackingPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Trang thai</Label>
+              <Label>{t("diseaseTracking.form.record.status")}</Label>
               <Select
                 value={recordForm.status}
                 onValueChange={(value) =>
@@ -1329,7 +1430,7 @@ export function DiseaseTrackingPage() {
                 <SelectContent>
                   {DISEASE_STATUS_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.labelKey, option.fallbackLabel)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1338,7 +1439,7 @@ export function DiseaseTrackingPage() {
 
             <div className="space-y-2">
               <Label htmlFor="disease-detected-at">
-                Thoi diem phat hien <span className="text-destructive">*</span>
+                {t("diseaseTracking.form.record.detectedAt")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="disease-detected-at"
@@ -1351,7 +1452,7 @@ export function DiseaseTrackingPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="disease-affected-count">So cay bi anh huong</Label>
+              <Label htmlFor="disease-affected-count">{t("diseaseTracking.form.record.affectedPlantCount")}</Label>
               <Input
                 id="disease-affected-count"
                 inputMode="numeric"
@@ -1359,17 +1460,17 @@ export function DiseaseTrackingPage() {
                 onChange={(event) =>
                   setRecordForm((previous) => ({ ...previous, affectedPlantCount: event.target.value }))
                 }
-                placeholder="Vi du: 120"
+                placeholder={t("diseaseTracking.form.record.affectedPlantCountPlaceholder")}
               />
               {parsedAffectedPlantCount.isInvalid && (
                 <p className="text-xs text-destructive">
-                  Vui long nhap so nguyen {">= 0"}.
+                  {t("diseaseTracking.validation.nonNegativeIntegerHint")}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="disease-affected-area">Ty le dien tich anh huong (%)</Label>
+              <Label htmlFor="disease-affected-area">{t("diseaseTracking.form.record.affectedAreaPercent")}</Label>
               <Input
                 id="disease-affected-area"
                 inputMode="decimal"
@@ -1377,17 +1478,17 @@ export function DiseaseTrackingPage() {
                 onChange={(event) =>
                   setRecordForm((previous) => ({ ...previous, affectedAreaPercent: event.target.value }))
                 }
-                placeholder="Vi du: 35"
+                placeholder={t("diseaseTracking.form.record.affectedAreaPercentPlaceholder")}
               />
               {parsedAffectedAreaPercent.isInvalid && (
                 <p className="text-xs text-destructive">
-                  Vui long nhap so {">= 0"}.
+                  {t("diseaseTracking.validation.nonNegativeNumberHint")}
                 </p>
               )}
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="disease-evidence-url">Evidence URL</Label>
+              <Label htmlFor="disease-evidence-url">{t("diseaseTracking.form.record.evidenceUrl")}</Label>
               <Input
                 id="disease-evidence-url"
                 value={recordForm.evidenceUrl}
@@ -1399,7 +1500,7 @@ export function DiseaseTrackingPage() {
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="disease-notes">Ghi chu</Label>
+              <Label htmlFor="disease-notes">{t("diseaseTracking.form.record.notes")}</Label>
               <Textarea
                 id="disease-notes"
                 rows={3}
@@ -1407,21 +1508,21 @@ export function DiseaseTrackingPage() {
                 onChange={(event) =>
                   setRecordForm((previous) => ({ ...previous, notes: event.target.value }))
                 }
-                placeholder="Thong tin bo sung cho ca benh..."
+                placeholder={t("diseaseTracking.form.record.notesPlaceholder")}
               />
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={closeRecordDialog}>
-              Huy
+              {t("diseaseTracking.actions.cancel")}
             </Button>
             <Button
               onClick={handleSubmitRecord}
               disabled={isMutating || !isRecordFormSubmittable}
             >
               {isMutating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {editingRecord ? "Cap nhat" : "Tao moi"}
+              {editingRecord ? t("diseaseTracking.actions.update") : t("diseaseTracking.actions.create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1430,16 +1531,20 @@ export function DiseaseTrackingPage() {
       <Dialog open={isTreatmentDialogOpen} onOpenChange={setIsTreatmentDialogOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingTreatment ? "Cap nhat dieu tri" : "Them lich su dieu tri"}</DialogTitle>
+            <DialogTitle>
+              {editingTreatment
+                ? t("diseaseTracking.dialogs.treatment.editTitle")
+                : t("diseaseTracking.dialogs.treatment.createTitle")}
+            </DialogTitle>
             <DialogDescription>
-              Ghi nhan vat tu su dung, lieu luong, chi phi va ket qua dieu tri.
+              {t("diseaseTracking.dialogs.treatment.description")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="treatment-date">
-                Ngay dieu tri <span className="text-destructive">*</span>
+                {t("diseaseTracking.form.treatment.treatedAt")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="treatment-date"
@@ -1453,7 +1558,7 @@ export function DiseaseTrackingPage() {
 
             <div className="space-y-2">
               <Label htmlFor="treatment-method">
-                Phuong phap <span className="text-destructive">*</span>
+                {t("diseaseTracking.form.treatment.method")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="treatment-method"
@@ -1461,12 +1566,12 @@ export function DiseaseTrackingPage() {
                 onChange={(event) =>
                   setTreatmentForm((previous) => ({ ...previous, method: event.target.value }))
                 }
-                placeholder="Phun, cat tia, xu ly sinh hoc..."
+                placeholder={t("diseaseTracking.form.treatment.methodPlaceholder")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Supply item</Label>
+              <Label>{t("diseaseTracking.form.treatment.supplyItem")}</Label>
               <Select
                 value={treatmentForm.supplyItemId}
                 onValueChange={(value) =>
@@ -1478,10 +1583,10 @@ export function DiseaseTrackingPage() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chon vat tu" />
+                  <SelectValue placeholder={t("diseaseTracking.form.treatment.selectSupplyItem")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Khong chon</SelectItem>
+                  <SelectItem value="none">{t("diseaseTracking.form.treatment.noneOption")}</SelectItem>
                   {supplyItems.map((item) => (
                     <SelectItem key={item.id} value={String(item.id)}>
                       {item.name}
@@ -1492,7 +1597,7 @@ export function DiseaseTrackingPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Supply lot</Label>
+              <Label>{t("diseaseTracking.form.treatment.supplyLot")}</Label>
               <Select
                 value={treatmentForm.supplyLotId}
                 onValueChange={(value) =>
@@ -1501,13 +1606,17 @@ export function DiseaseTrackingPage() {
                 disabled={!selectedSupplyItemId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={selectedSupplyItemId ? "Chon lo vat tu" : "Chon supply item truoc"} />
+                  <SelectValue
+                    placeholder={selectedSupplyItemId
+                      ? t("diseaseTracking.form.treatment.selectSupplyLot")
+                      : t("diseaseTracking.form.treatment.selectSupplyItemFirst")}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Khong chon</SelectItem>
+                  <SelectItem value="none">{t("diseaseTracking.form.treatment.noneOption")}</SelectItem>
                   {supplyLots.map((lot) => (
                     <SelectItem key={lot.id} value={String(lot.id)}>
-                      {lot.batchCode ?? `Lot #${lot.id}`}
+                      {lot.batchCode ?? t("diseaseTracking.form.treatment.lotFallback", { id: lot.id })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1515,7 +1624,7 @@ export function DiseaseTrackingPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="treatment-quantity">Quantity used</Label>
+              <Label htmlFor="treatment-quantity">{t("diseaseTracking.form.treatment.quantityUsed")}</Label>
               <Input
                 id="treatment-quantity"
                 inputMode="decimal"
@@ -1523,29 +1632,29 @@ export function DiseaseTrackingPage() {
                 onChange={(event) =>
                   setTreatmentForm((previous) => ({ ...previous, quantityUsed: event.target.value }))
                 }
-                placeholder="Vi du: 2.5"
+                placeholder={t("diseaseTracking.form.treatment.quantityUsedPlaceholder")}
               />
               {parsedTreatmentQuantityUsed.isInvalid && (
                 <p className="text-xs text-destructive">
-                  Vui long nhap so {">= 0"}.
+                  {t("diseaseTracking.validation.nonNegativeNumberHint")}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="treatment-unit">Unit</Label>
+              <Label htmlFor="treatment-unit">{t("diseaseTracking.form.treatment.unit")}</Label>
               <Input
                 id="treatment-unit"
                 value={treatmentForm.unit}
                 onChange={(event) =>
                   setTreatmentForm((previous) => ({ ...previous, unit: event.target.value }))
                 }
-                placeholder="ml, g, chai..."
+                placeholder={t("diseaseTracking.form.treatment.unitPlaceholder")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="treatment-cost">Cost amount (VND)</Label>
+              <Label htmlFor="treatment-cost">{t("diseaseTracking.form.treatment.costAmountVnd")}</Label>
               <Input
                 id="treatment-cost"
                 inputMode="decimal"
@@ -1553,17 +1662,17 @@ export function DiseaseTrackingPage() {
                 onChange={(event) =>
                   setTreatmentForm((previous) => ({ ...previous, costAmount: event.target.value }))
                 }
-                placeholder="Vi du: 150000"
+                placeholder={t("diseaseTracking.form.treatment.costAmountPlaceholder")}
               />
               {parsedTreatmentCostAmount.isInvalid && (
                 <p className="text-xs text-destructive">
-                  Vui long nhap so {">= 0"}.
+                  {t("diseaseTracking.validation.nonNegativeNumberHint")}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label>Effectiveness</Label>
+              <Label>{t("diseaseTracking.form.treatment.effectiveness")}</Label>
               <Select
                 value={treatmentForm.effectiveness}
                 onValueChange={(value) =>
@@ -1576,7 +1685,7 @@ export function DiseaseTrackingPage() {
                 <SelectContent>
                   {TREATMENT_EFFECTIVENESS_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.labelKey, option.fallbackLabel)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1584,7 +1693,7 @@ export function DiseaseTrackingPage() {
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="treatment-dosage-note">Dosage note</Label>
+              <Label htmlFor="treatment-dosage-note">{t("diseaseTracking.form.treatment.dosageNote")}</Label>
               <Textarea
                 id="treatment-dosage-note"
                 rows={2}
@@ -1592,12 +1701,12 @@ export function DiseaseTrackingPage() {
                 onChange={(event) =>
                   setTreatmentForm((previous) => ({ ...previous, dosageNote: event.target.value }))
                 }
-                placeholder="Chi tiet lieu dung / cach dung..."
+                placeholder={t("diseaseTracking.form.treatment.dosageNotePlaceholder")}
               />
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="treatment-result-note">Result note</Label>
+              <Label htmlFor="treatment-result-note">{t("diseaseTracking.form.treatment.resultNote")}</Label>
               <Textarea
                 id="treatment-result-note"
                 rows={3}
@@ -1605,21 +1714,21 @@ export function DiseaseTrackingPage() {
                 onChange={(event) =>
                   setTreatmentForm((previous) => ({ ...previous, resultNote: event.target.value }))
                 }
-                placeholder="Ket qua sau dieu tri..."
+                placeholder={t("diseaseTracking.form.treatment.resultNotePlaceholder")}
               />
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={closeTreatmentDialog}>
-              Huy
+              {t("diseaseTracking.actions.cancel")}
             </Button>
             <Button
               onClick={handleSubmitTreatment}
               disabled={isMutating || !isTreatmentFormSubmittable}
             >
               {isMutating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {editingTreatment ? "Cap nhat" : "Them dieu tri"}
+              {editingTreatment ? t("diseaseTracking.actions.update") : t("diseaseTracking.actions.addTreatment")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1628,19 +1737,19 @@ export function DiseaseTrackingPage() {
       <AlertDialog open={deleteRecordId !== null} onOpenChange={() => setDeleteRecordId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xoa ho so benh</AlertDialogTitle>
+            <AlertDialogTitle>{t("diseaseTracking.dialogs.deleteRecord.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Ban chac chan muon xoa ho so benh nay? Hanh dong nay khong the phuc hoi.
+              {t("diseaseTracking.dialogs.deleteRecord.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Huy</AlertDialogCancel>
+            <AlertDialogCancel>{t("diseaseTracking.actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDeleteRecord}
             >
               {deleteRecordMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Xoa
+              {t("diseaseTracking.actions.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1652,29 +1761,34 @@ export function DiseaseTrackingPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xoa lich su dieu tri</AlertDialogTitle>
+            <AlertDialogTitle>{t("diseaseTracking.dialogs.deleteTreatment.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Ban chac chan muon xoa muc dieu tri nay? Du lieu se bi xoa vinh vien.
+              {t("diseaseTracking.dialogs.deleteTreatment.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Huy</AlertDialogCancel>
+            <AlertDialogCancel>{t("diseaseTracking.actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDeleteTreatment}
             >
               {deleteTreatmentMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Xoa
+              {t("diseaseTracking.actions.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {isMutating && (
-        <div className="acm-page-loading-overlay" role="status" aria-live="polite" aria-label="Dang xu ly du lieu dich benh">
+        <div
+          className="acm-page-loading-overlay"
+          role="status"
+          aria-live="polite"
+          aria-label={t("diseaseTracking.overlay.processingAriaLabel")}
+        >
           <div className="acm-page-loading-card acm-body-text">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <span>Dang xu ly du lieu dich benh...</span>
+            <span>{t("diseaseTracking.overlay.processingText")}</span>
           </div>
         </div>
       )}
@@ -1682,7 +1796,7 @@ export function DiseaseTrackingPage() {
       {!hasValidSeasonId && (
         <div className="rounded-md border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
-          Mua vu khong hop le.
+          {t("diseaseTracking.season.invalid")}
         </div>
       )}
     </PageContainer>

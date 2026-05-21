@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import org.example.QuanLyMuaVu.Enums.IncidentStatus;
 import lombok.RequiredArgsConstructor;
 import org.example.QuanLyMuaVu.Enums.TaskStatus;
 import org.example.QuanLyMuaVu.module.admin.dto.response.DashboardStatsDTO;
@@ -43,6 +44,8 @@ public class AdminDashboardReadRepository {
                     .status(rs.getString("status"))
                     .incidentCount(getLong(rs, "incidentCount"))
                     .overdueTaskCount(getLong(rs, "overdueTaskCount"))
+                    .highFdnRiskCount(getLong(rs, "highFdnRiskCount"))
+                    .inventoryRiskCount(getLong(rs, "inventoryRiskCount"))
                     .riskScore(getLong(rs, "riskScore"))
                     .build();
 
@@ -94,37 +97,96 @@ public class AdminDashboardReadRepository {
 
     public List<DashboardStatsDTO.RiskySeason> findRiskySeasons(TaskStatus overdueStatus, int limit) {
         MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("incidentOpenStatus", IncidentStatus.OPEN.name())
+                .addValue("incidentInProgressStatus", IncidentStatus.IN_PROGRESS.name())
                 .addValue("overdueStatus", overdueStatus != null ? overdueStatus.name() : TaskStatus.OVERDUE.name())
+                .addValue("highFdnAlertType", "SEASON_RISK")
+                .addValue("highFdnWarningType", "SUSTAINABILITY_WARNING")
+                .addValue("inventoryExpiringType", "INVENTORY_EXPIRING")
+                .addValue("inventoryExpiredType", "INVENTORY_EXPIRED")
+                .addValue("resolvedAlertStatus", "RESOLVED")
+                .addValue("dismissedAlertStatus", "DISMISSED")
                 .addValue("limit", limit);
         return jdbcTemplate.query(
                 """
-                        select s.season_id as seasonId,
-                               s.season_name as seasonName,
-                               f.farm_name as farmName,
-                               p.plot_name as plotName,
-                               s.status as status,
-                               coalesce(incident_agg.incident_count, 0) as incidentCount,
-                               coalesce(task_agg.overdue_task_count, 0) as overdueTaskCount,
-                               (coalesce(incident_agg.incident_count, 0) + coalesce(task_agg.overdue_task_count, 0)) as riskScore
-                        from seasons s
-                        join plots p on p.plot_id = s.plot_id
-                        join farms f on f.farm_id = p.farm_id
-                        left join (
-                            select i.season_id, count(distinct i.id) as incident_count
-                            from incidents i
-                            group by i.season_id
-                        ) incident_agg on incident_agg.season_id = s.season_id
-                        left join (
-                            select t.season_id, count(distinct t.task_id) as overdue_task_count
-                            from tasks t
-                            where t.status = :overdueStatus
-                            group by t.season_id
-                        ) task_agg on task_agg.season_id = s.season_id
-                        order by riskScore desc, s.season_id desc
+                        select *
+                        from (
+                            select s.season_id as seasonId,
+                                   s.season_name as seasonName,
+                                   f.farm_name as farmName,
+                                   p.plot_name as plotName,
+                                   s.status as status,
+                                   coalesce(incident_agg.incident_count, 0) as incidentCount,
+                                   coalesce(task_agg.overdue_task_count, 0) as overdueTaskCount,
+                                   coalesce(fdn_agg.high_fdn_risk_count, 0) as highFdnRiskCount,
+                                   coalesce(inventory_agg.inventory_risk_count, 0) as inventoryRiskCount,
+                                   (coalesce(incident_agg.incident_count, 0)
+                                       + coalesce(task_agg.overdue_task_count, 0)
+                                       + case when coalesce(fdn_agg.high_fdn_risk_count, 0) > 0 then 1 else 0 end
+                                       + case when coalesce(inventory_agg.inventory_risk_count, 0) > 0 then 1 else 0 end) as riskScore
+                            from seasons s
+                            join plots p on p.plot_id = s.plot_id
+                            join farms f on f.farm_id = p.farm_id
+                            left join (
+                                select i.season_id, count(distinct i.id) as incident_count
+                                from incidents i
+                                where i.status in (:incidentOpenStatus, :incidentInProgressStatus)
+                                group by i.season_id
+                            ) incident_agg on incident_agg.season_id = s.season_id
+                            left join (
+                                select t.season_id, count(distinct t.task_id) as overdue_task_count
+                                from tasks t
+                                where t.status = :overdueStatus
+                                group by t.season_id
+                            ) task_agg on task_agg.season_id = s.season_id
+                            left join (
+                                select a.season_id, count(distinct a.id) as high_fdn_risk_count
+                                from alerts a
+                                where a.season_id is not null
+                                  and upper(a.type) in (:highFdnAlertType, :highFdnWarningType)
+                                  and upper(a.severity) = 'HIGH'
+                                  and upper(a.status) not in (:resolvedAlertStatus, :dismissedAlertStatus)
+                                group by a.season_id
+                            ) fdn_agg on fdn_agg.season_id = s.season_id
+                            left join (
+                                select a.season_id, count(distinct a.id) as inventory_risk_count
+                                from alerts a
+                                where a.season_id is not null
+                                  and upper(a.type) in (:inventoryExpiringType, :inventoryExpiredType)
+                                  and upper(a.status) not in (:resolvedAlertStatus, :dismissedAlertStatus)
+                                group by a.season_id
+                            ) inventory_agg on inventory_agg.season_id = s.season_id
+                        ) risk_view
+                        where risk_view.riskScore > 0
+                        order by risk_view.riskScore desc, risk_view.seasonId desc
                         limit :limit
                         """,
                 params,
                 RISKY_SEASON_ROW_MAPPER);
+    }
+
+    public boolean hasIncidentSeasonData() {
+        Integer count = jdbcTemplate.queryForObject(
+                """
+                        select count(1)
+                        from incidents i
+                        where i.season_id is not null
+                        """,
+                new MapSqlParameterSource(),
+                Integer.class);
+        return count != null && count > 0;
+    }
+
+    public boolean hasTaskSeasonData() {
+        Integer count = jdbcTemplate.queryForObject(
+                """
+                        select count(1)
+                        from tasks t
+                        where t.season_id is not null
+                        """,
+                new MapSqlParameterSource(),
+                Integer.class);
+        return count != null && count > 0;
     }
 
     public List<DashboardStatsDTO.InventoryHealth> findInventoryHealth(LocalDate today, LocalDate cutoff) {

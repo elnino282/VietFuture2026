@@ -2,8 +2,10 @@ package org.example.QuanLyMuaVu.module.inventory.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.example.QuanLyMuaVu.module.inventory.entity.SupplyLot;
 import org.example.QuanLyMuaVu.module.inventory.entity.Warehouse;
 import org.example.QuanLyMuaVu.module.inventory.port.HarvestStockContextView;
 import org.example.QuanLyMuaVu.module.inventory.port.InventoryLowStockView;
+import org.example.QuanLyMuaVu.module.inventory.port.InventoryLotMovementSummaryView;
 import org.example.QuanLyMuaVu.module.inventory.port.InventoryQueryPort;
 import org.example.QuanLyMuaVu.module.inventory.repository.InventoryBalanceRepository;
 import org.example.QuanLyMuaVu.module.inventory.repository.ProductWarehouseLotRepository;
@@ -195,5 +198,26 @@ public class InventoryQueryService implements InventoryQueryPort {
             return List.of();
         }
         return stockMovementRepository.findBySupplyLotIdOrderByMovementDateDesc(lotId);
+    }
+
+    @Override
+    public Map<Integer, InventoryLotMovementSummaryView> findMovementSummaryBySupplyLotIds(List<Integer> lotIds) {
+        if (lotIds == null || lotIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Integer, InventoryLotMovementSummaryView> summaryByLotId = new LinkedHashMap<>();
+        for (StockMovementRepository.LotMovementSummaryProjection projection : stockMovementRepository.summarizeBySupplyLotIds(lotIds)) {
+            if (projection == null || projection.getLotId() == null) {
+                continue;
+            }
+            summaryByLotId.put(
+                    projection.getLotId(),
+                    new InventoryLotMovementSummaryView(
+                            projection.getLotId(),
+                            projection.getMovementCount() != null ? projection.getMovementCount() : 0L,
+                            projection.getLatestMovementDate()));
+        }
+        return summaryByLotId;
     }
 }

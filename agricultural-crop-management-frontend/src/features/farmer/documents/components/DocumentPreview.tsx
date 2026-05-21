@@ -7,12 +7,12 @@ import {
     ZoomOut,
     ChevronRight,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Badge } from "@/shared/ui/badge";
+import { Label } from "@/shared/ui/label";
+import { Separator } from "@/shared/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/shared/ui/sheet";
 import type { Document, DocumentType } from "../types";
 
 interface DocumentPreviewProps {

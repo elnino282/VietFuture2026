@@ -3,6 +3,7 @@ import {
   type SearchEntityType,
   type SearchResultItem,
 } from "@/entities/search";
+import { useI18n } from "@/hooks/useI18n";
 import { useDebounce } from "@/shared/lib";
 import { Badge, Input, ScrollArea } from "@/shared/ui";
 import { Loader2, Search } from "lucide-react";
@@ -20,14 +21,14 @@ type PortalKind = "admin" | "farmer";
 
 const DEFAULT_LIMIT = 5;
 
-const TYPE_LABELS: Record<SearchEntityType, string> = {
-  FARM: "Farms",
-  PLOT: "Plots",
-  SEASON: "Seasons",
-  TASK: "Tasks",
-  EXPENSE: "Expenses",
-  DOCUMENT: "Documents",
-  USER: "Users",
+const TYPE_LABEL_KEYS: Record<SearchEntityType, string> = {
+  FARM: "search.types.farms",
+  PLOT: "search.types.plots",
+  SEASON: "search.types.seasons",
+  TASK: "search.types.tasks",
+  EXPENSE: "search.types.expenses",
+  DOCUMENT: "search.types.documents",
+  USER: "search.types.users",
 };
 
 const TYPE_ORDER: Record<PortalKind, SearchEntityType[]> = {
@@ -37,20 +38,56 @@ const TYPE_ORDER: Record<PortalKind, SearchEntityType[]> = {
 
 const QUICK_LINKS: Record<
   PortalKind,
-  Array<{ label: string; route: string }>
+  Array<{ labelKey: string; fallback: string; route: string }>
 > = {
   admin: [
-    { label: "Inventory Risks", route: "/admin/inventory?status=RISK" },
-    { label: "Incidents", route: "/admin/incidents" },
-    { label: "Alerts Center", route: "/admin/alerts" },
-    { label: "Farms & Plots", route: "/admin/farms-plots" },
-    { label: "Documents", route: "/admin/documents" },
+    {
+      labelKey: "search.global.quickLinks.admin.inventoryRisks",
+      fallback: "Inventory Risks",
+      route: "/admin/inventory?status=RISK",
+    },
+    {
+      labelKey: "search.global.quickLinks.admin.incidents",
+      fallback: "Incidents",
+      route: "/admin/incidents",
+    },
+    {
+      labelKey: "search.global.quickLinks.admin.alertsCenter",
+      fallback: "Alerts Center",
+      route: "/admin/alerts",
+    },
+    {
+      labelKey: "search.global.quickLinks.admin.farmsPlots",
+      fallback: "Farms & Plots",
+      route: "/admin/farms-plots",
+    },
+    {
+      labelKey: "search.global.quickLinks.admin.documents",
+      fallback: "Documents",
+      route: "/admin/documents",
+    },
   ],
   farmer: [
-    { label: "Tasks Workspace", route: "/farmer/tasks" },
-    { label: "Expenses", route: "/farmer/expenses" },
-    { label: "Documents", route: "/farmer/documents" },
-    { label: "Inventory", route: "/farmer/inventory" },
+    {
+      labelKey: "search.global.quickLinks.farmer.tasksWorkspace",
+      fallback: "Tasks Workspace",
+      route: "/farmer/tasks",
+    },
+    {
+      labelKey: "search.global.quickLinks.farmer.expenses",
+      fallback: "Expenses",
+      route: "/farmer/expenses",
+    },
+    {
+      labelKey: "search.global.quickLinks.farmer.documents",
+      fallback: "Documents",
+      route: "/farmer/documents",
+    },
+    {
+      labelKey: "search.global.quickLinks.farmer.inventory",
+      fallback: "Inventory",
+      route: "/farmer/inventory",
+    },
   ],
 };
 
@@ -63,8 +100,9 @@ type NavItem = {
 
 export function GlobalSearchBar({
   portal,
-  placeholder = "Search plots, seasons, tasks, docs...",
+  placeholder,
 }: SearchBarProps) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
@@ -74,6 +112,12 @@ export function GlobalSearchBar({
   const debouncedQuery = useDebounce(query, 300);
   const normalizedQuery = debouncedQuery.trim();
   const canSearch = normalizedQuery.length >= 2;
+  const resolvedPlaceholder =
+    placeholder ??
+    t(
+      "search.global.placeholder",
+      "Search plots, seasons, tasks, docs...",
+    );
 
   const { data, isFetching, isError } = useGlobalSearch(
     { q: normalizedQuery, limit: DEFAULT_LIMIT },
@@ -124,9 +168,9 @@ export function GlobalSearchBar({
     () =>
       quickLinks.map((link) => ({
         route: link.route,
-        title: link.label,
+        title: t(link.labelKey, link.fallback),
       })),
-    [quickLinks],
+    [quickLinks, t],
   );
 
   const navigationItems = canSearch
@@ -206,7 +250,10 @@ export function GlobalSearchBar({
     if (normalizedQuery.length === 1) {
       return (
         <div className="px-3 py-2 text-xs text-muted-foreground">
-          Type at least 2 characters to search.
+          {t(
+            "search.global.minChars",
+            "Type at least 2 characters to search.",
+          )}
         </div>
       );
     }
@@ -214,7 +261,7 @@ export function GlobalSearchBar({
     if (canSearch && !isFetching && flatResults.length === 0) {
       return (
         <div className="px-3 py-2 text-xs text-muted-foreground">
-          No results found.
+          {t("search.global.noResults", "No results found.")}
         </div>
       );
     }
@@ -223,7 +270,7 @@ export function GlobalSearchBar({
       return (
         <div className="space-y-2">
           <div className="px-3 pt-2 text-xs font-medium text-muted-foreground">
-            Quick links
+            {t("search.global.quickLinks.title", "Quick links")}
           </div>
           {quickLinkItems.map((link, index) => (
             <button
@@ -255,7 +302,7 @@ export function GlobalSearchBar({
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
       <Input
         type="search"
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         value={query}
         onChange={(event) => {
           setQuery(event.target.value);
@@ -277,11 +324,11 @@ export function GlobalSearchBar({
       {open && (
         <div className="absolute left-0 right-0 mt-2 rounded-xl border border-border bg-card shadow-lg z-50">
           <div className="flex items-center justify-between px-3 py-2 border-b border-border text-xs text-muted-foreground">
-            <span>Global search</span>
+            <span>{t("search.global.title", "Global search")}</span>
             {isFetching && (
               <span className="inline-flex items-center gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" />
-                Loading
+                {t("search.global.loading", "Loading")}
               </span>
             )}
           </div>
@@ -290,7 +337,7 @@ export function GlobalSearchBar({
             <div className="py-1" role="listbox" id="global-search-listbox">
               {isError && (
                 <div className="px-3 py-2 text-xs text-destructive">
-                  Search failed. Please try again.
+                  {t("search.global.error", "Search failed. Please try again.")}
                 </div>
               )}
 
@@ -307,7 +354,7 @@ export function GlobalSearchBar({
                     return (
                       <div key={type}>
                         <div className="flex items-center justify-between px-3 pt-2 text-xs font-medium text-muted-foreground">
-                          <span>{TYPE_LABELS[type] ?? type}</span>
+                          <span>{t(TYPE_LABEL_KEYS[type], type)}</span>
                           <Badge variant="secondary" className="text-[10px]">
                             {items.length}
                           </Badge>

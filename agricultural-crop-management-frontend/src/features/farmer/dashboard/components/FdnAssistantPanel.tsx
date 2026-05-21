@@ -1,7 +1,8 @@
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Separator } from '@/shared/ui/separator';
+import { Skeleton } from '@/shared/ui/skeleton';
 import type { DashboardFdnOverview } from '@/entities/dashboard';
 import { AlertTriangle, Bot, CheckCircle2, Leaf, ShieldAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -11,10 +12,17 @@ import {
   hasNumericValue,
   metricStatusColor,
 } from '../lib/metrics';
+import {
+  buildUnavailableActionLinks,
+  getUnavailableReasons,
+  hasUnavailableCoreMetrics,
+  unavailableReasonLabel,
+} from '../lib/unavailable';
 
 interface FdnAssistantPanelProps {
   overview: DashboardFdnOverview | null;
   isLoading: boolean;
+  errorMessage?: string | null;
 }
 
 function sourceLabel(
@@ -66,10 +74,14 @@ function methodLabel(
   return t('dashboard.fdn.metricStatus.unavailable', { defaultValue: 'Unavailable' });
 }
 
-export function FdnAssistantPanel({ overview, isLoading }: FdnAssistantPanelProps) {
+export function FdnAssistantPanel({
+  overview,
+  isLoading,
+  errorMessage,
+}: FdnAssistantPanelProps) {
   const { t } = useTranslation();
 
-  if (isLoading || !overview) {
+  if (isLoading) {
     return (
       <Card className="border-border acm-card-elevated">
         <CardHeader>
@@ -92,6 +104,37 @@ export function FdnAssistantPanel({ overview, isLoading }: FdnAssistantPanelProp
     );
   }
 
+  if (!overview) {
+    return (
+      <Card className="border-border acm-card-elevated">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            {t('dashboard.fdn.alertAndAssistantTitle', {
+              defaultValue: 'Alert and Assistant',
+            })}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-base font-medium">
+            {t('dashboard.fdn.unavailableTitle', {
+              defaultValue: 'FDN dashboard metrics are unavailable',
+            })}
+          </p>
+          <p className="acm-body-text text-muted-foreground">
+            {errorMessage
+              ?? t('dashboard.fdn.unavailableHint', {
+                defaultValue: 'The dashboard is missing context or required records for this panel.',
+              })}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const unavailableReasons = getUnavailableReasons(overview);
+  const unavailableActions = buildUnavailableActionLinks(overview, unavailableReasons, t);
+  const showUnavailableBanner = unavailableReasons.length > 0 && hasUnavailableCoreMetrics(overview);
   const fdnMetric = overview.fdnTotalMetric;
   const confidencePercent = hasNumericValue(overview.confidence)
     ? Math.round((overview.confidence ?? 0) * 100)
@@ -99,6 +142,36 @@ export function FdnAssistantPanel({ overview, isLoading }: FdnAssistantPanelProp
   const fdnValue = formatMetricValue(fdnMetric, 2);
 
   const quality = overview.dataQualitySummary;
+  const missingInputSuggestions = Array.from(
+    new Set(
+      overview.missingInputs.map((input) => {
+        const normalized = input.toLowerCase();
+        if (normalized === 'mineral_fertilizer' || normalized === 'organic_fertilizer' || normalized === 'control_supply') {
+          return t('dashboard.fdn.assistantInputAction.fertilizer', {
+            defaultValue: 'Record mineral/organic fertilizer nitrogen inputs in the season workspace.',
+          });
+        }
+        if (normalized === 'irrigation_water') {
+          return t('dashboard.fdn.assistantInputAction.irrigation', {
+            defaultValue: 'Add irrigation water analysis records so irrigation N can be measured.',
+          });
+        }
+        if (normalized === 'soil_legacy') {
+          return t('dashboard.fdn.assistantInputAction.soil', {
+            defaultValue: 'Add soil test records to unlock soil legacy nitrogen contribution.',
+          });
+        }
+        if (normalized === 'biological_fixation') {
+          return t('dashboard.fdn.assistantInputAction.fixation', {
+            defaultValue: 'Record biological fixation inputs for the current season.',
+          });
+        }
+        return t('dashboard.fdn.assistantInputAction.generic', {
+          defaultValue: 'Complete missing nitrogen input records from the season workspace.',
+        });
+      })
+    )
+  );
 
   return (
     <Card className="border-border acm-card-elevated acm-hover-surface">
@@ -111,6 +184,33 @@ export function FdnAssistantPanel({ overview, isLoading }: FdnAssistantPanelProp
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {showUnavailableBanner && (
+          <>
+            <div className="space-y-2 rounded-md border border-dashed border-border p-3">
+              <p className="text-base font-medium">
+                {t('dashboard.fdn.unavailableTitle', {
+                  defaultValue: 'FDN dashboard metrics are unavailable',
+                })}
+              </p>
+              <ul className="space-y-1 acm-body-text text-muted-foreground">
+                {unavailableReasons.map((reason) => (
+                  <li key={reason}>- {unavailableReasonLabel(reason, t)}</li>
+                ))}
+              </ul>
+              {unavailableActions.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {unavailableActions.map((action) => (
+                    <Button key={action.key} asChild variant="outline" size="sm">
+                      <a href={action.href}>{action.label}</a>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <Separator />
+          </>
+        )}
+
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-base font-semibold">
@@ -183,6 +283,16 @@ export function FdnAssistantPanel({ overview, isLoading }: FdnAssistantPanelProp
               })}
             </p>
           </div>
+          {missingInputSuggestions.length > 0 && (
+            <ul className="space-y-2">
+              {missingInputSuggestions.map((suggestion, index) => (
+                <li key={`missing-input-${index}`} className="flex items-start gap-2 acm-body-text">
+                  <Leaf className="h-4 w-4 mt-0.5 text-primary" />
+                  <span>{suggestion}</span>
+                </li>
+              ))}
+            </ul>
+          )}
           {overview.recommendations.length === 0 ? (
             <p className="acm-body-text text-muted-foreground">
               {t('dashboard.fdn.noRecommendation', {

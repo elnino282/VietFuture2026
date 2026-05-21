@@ -1,497 +1,436 @@
-/* ═══════════════════════════════════════════════════════════════
-   INVENTORY PAGE STYLES
-   Matches the ACM Platform farmer portal design system
-   ═══════════════════════════════════════════════════════════════ */
+/* Inventory page visual alignment with Suppliers & Supplies */
 
-.inventory-page {
+.farmer-inventory-page {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   HEADER
-   ═══════════════════════════════════════════════════════════════ */
+.farmer-inventory-page .inventory-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 16px;
+}
 
-.inventory-header {
-  margin-bottom: 1rem;
-  padding: 1rem 1.5rem;
+.farmer-inventory-page .inventory-warehouse-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.farmer-inventory-page .control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.farmer-inventory-page .control-group--search {
+  min-width: 320px;
+  flex: 1 1 320px;
+}
+
+.farmer-inventory-page .control-group label {
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.farmer-inventory-page .control-group select,
+.farmer-inventory-page .control-group input[type="text"],
+.farmer-inventory-page .control-group input[type="date"],
+.farmer-inventory-page .control-group input[type="number"],
+.farmer-inventory-page .control-group textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-background);
+  color: var(--foreground);
+  font-size: var(--text-body, 0.95rem);
+}
+
+.farmer-inventory-page .control-group textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.farmer-inventory-page .control-group select:focus,
+.farmer-inventory-page .control-group input:focus,
+.farmer-inventory-page .control-group textarea:focus,
+.farmer-inventory-page .action-btn:focus-visible,
+.farmer-inventory-page .pagination button:focus-visible,
+.farmer-inventory-page .tab:focus-visible,
+.farmer-inventory-page .btn-cancel:focus-visible,
+.farmer-inventory-page .btn-submit:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 165, 93, 0.16);
+}
+
+.farmer-inventory-page .inventory-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--border);
+}
+
+.farmer-inventory-page .inventory-tabs .tab {
+  position: relative;
+  border: none;
+  background: transparent;
+  color: var(--muted-foreground);
+  padding: 12px 24px;
+  font-size: var(--text-body, 1rem);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.farmer-inventory-page .inventory-tabs .tab:hover,
+.farmer-inventory-page .inventory-tabs .tab.active {
+  color: var(--primary);
+}
+
+.farmer-inventory-page .inventory-tabs .tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--primary);
+}
+
+.farmer-inventory-page .inventory-content {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.inventory-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 0.5rem 0;
-}
-
-.inventory-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: #059669;
-  flex-shrink: 0;
-}
-
-.inventory-header h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--foreground);
-  margin: 0;
-}
-
-.inventory-header .subtitle {
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
-  margin: 0;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CONTROLS
-   ═══════════════════════════════════════════════════════════════ */
-
-.inventory-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.inventory-warehouse-toolbar {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.control-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.control-group.control-group--search {
-  width: 320px;
-}
-
-.control-group.control-group--search input[type="text"] {
-  width: 320px;
-}
-
-.control-group label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--muted-foreground);
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-}
-
-.control-group select,
-.control-group input[type="text"],
-.control-group input[type="date"],
-.control-group input[type="number"] {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  background: var(--card);
-  color: var(--foreground);
-  width: 220px;
-}
-
-.control-group select:focus,
-.control-group input:focus {
-  outline: none;
-  border-color: var(--color-primary, #3b82f6);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   TABS
-   ═══════════════════════════════════════════════════════════════ */
-
-.inventory-tabs {
-  display: flex;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 1.5rem;
-}
-
-.inventory-tabs .tab {
-  padding: 0.75rem 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--muted-foreground);
-  background: none;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  transition: color 0.2s;
-}
-
-.inventory-tabs .tab:hover {
-  color: var(--foreground);
-}
-
-.inventory-tabs .tab.active {
-  color: var(--color-primary, #3b82f6);
-}
-
-.inventory-tabs .tab.active::after {
-  content: "";
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--color-primary, #3b82f6);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CONTENT & TABLE
-   ═══════════════════════════════════════════════════════════════ */
-
-.inventory-content {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
-.table-container {
+.farmer-inventory-page .table-container {
   overflow-x: auto;
 }
 
-.inventory-table {
+.farmer-inventory-page .inventory-table {
   width: 100%;
+  min-width: 920px;
   border-collapse: collapse;
-  font-size: 0.875rem;
 }
 
-.inventory-table th {
+.farmer-inventory-page .inventory-table th {
   text-align: left;
-  padding: 0.75rem 1rem;
+  padding: 14px 16px;
   background: var(--muted);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--text-body-sm, 0.875rem);
   color: var(--foreground);
   border-bottom: 1px solid var(--border);
-  white-space: nowrap;
 }
 
-.inventory-table td {
-  padding: 0.75rem 1rem;
+.farmer-inventory-page .inventory-table td {
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
+  font-size: var(--text-body, 0.95rem);
   color: var(--foreground);
+  vertical-align: middle;
 }
 
-.inventory-table tr:hover {
+.farmer-inventory-page .inventory-table tr:hover {
   background: var(--muted);
 }
 
-.inventory-table .quantity {
-  font-weight: 600;
+.farmer-inventory-page .inventory-table .quantity {
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-weight: var(--font-weight-semibold);
 }
 
-.inventory-table .note {
-  max-width: 200px;
+.farmer-inventory-page .inventory-table .note {
+  max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   BADGES
-   ═══════════════════════════════════════════════════════════════ */
-
-.status-badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 9999px;
-  text-transform: uppercase;
+.farmer-inventory-page .actions-cell {
+  text-align: center;
+  width: 92px;
 }
 
-.status-badge.in_stock {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.status-badge.pending,
-.status-badge.reserved,
-.status-badge.hold {
-  background: #fff3e0;
-  color: #e65100;
-}
-
-.status-badge.depleted,
-.status-badge.expired,
-.status-badge.archived {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.type-badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 0.25rem;
-}
-
-.type-badge.movement-in {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.type-badge.movement-out {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.type-badge.movement-adjust {
-  background: #fff3e0;
-  color: #e65100;
-}
-
-.quantity.movement-out {
-  color: #c62828;
-}
-
-.quantity.movement-in {
-  color: #2e7d32;
-}
-
-.quantity.movement-adjust {
-  color: #e65100;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   ACTIONS
-   ═══════════════════════════════════════════════════════════════ */
-
-.inventory-table .actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-out,
-.btn-adjust {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  border-radius: 0.375rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-out {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.btn-out:hover {
-  background: #ffcdd2;
-}
-
-.btn-adjust {
-  background: #fff3e0;
-  color: #e65100;
-}
-
-.btn-adjust:hover {
-  background: #ffe0b2;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   PAGINATION
-   ═══════════════════════════════════════════════════════════════ */
-
-.pagination {
-  display: flex;
+.farmer-inventory-page .action-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  padding: 1rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.farmer-inventory-page .action-btn:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.farmer-inventory-page .status-badge,
+.farmer-inventory-page .type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: var(--text-body-xs, 0.75rem);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.farmer-inventory-page .status-in-stock {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.farmer-inventory-page .status-low-stock,
+.farmer-inventory-page .status-hold,
+.farmer-inventory-page .movement-adjust {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.farmer-inventory-page .status-expired,
+.farmer-inventory-page .movement-out {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.farmer-inventory-page .status-out-of-stock,
+.farmer-inventory-page .status-neutral {
+  background: #eceff1;
+  color: #455a64;
+}
+
+.farmer-inventory-page .movement-in {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.farmer-inventory-page .pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
   border-top: 1px solid var(--border);
 }
 
-.pagination button {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--foreground);
-  background: var(--card);
+.farmer-inventory-page .pagination button {
+  min-height: 40px;
+  padding: 8px 16px;
   border: 1px solid var(--border);
-  border-radius: 0.375rem;
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--foreground);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
-.pagination button:hover:not(:disabled) {
+.farmer-inventory-page .pagination button:hover:not(:disabled) {
   background: var(--muted);
 }
 
-.pagination button:disabled {
+.farmer-inventory-page .pagination button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   STATES
-   ═══════════════════════════════════════════════════════════════ */
+.farmer-inventory-page .pagination span {
+  color: var(--muted-foreground);
+  font-size: var(--text-body, 0.95rem);
+}
 
-.loading-state,
-.empty-state {
-  padding: 3rem;
+.farmer-inventory-page .loading-state,
+.farmer-inventory-page .empty-state {
+  padding: 48px;
   text-align: center;
   color: var(--muted-foreground);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   MODAL
-   ═══════════════════════════════════════════════════════════════ */
-
-.modal-overlay {
+.farmer-inventory-page .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
+  padding: 20px;
 }
 
-.modal-content {
-  background: var(--card);
-  border-radius: 0.5rem;
-  padding: 1.5rem;
+.farmer-inventory-page .modal-content {
   width: 100%;
-  max-width: 400px;
+  max-width: 430px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  background: var(--card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }
 
-.modal-content h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem 0;
+.farmer-inventory-page .modal-content h2 {
+  margin: 0 0 8px;
+  font-size: var(--text-section-title, 1.25rem);
   color: var(--foreground);
 }
 
-.modal-subtitle {
-  font-size: 0.875rem;
+.farmer-inventory-page .modal-subtitle {
+  margin: 0 0 12px;
+  font-size: var(--text-body, 0.95rem);
   color: var(--muted-foreground);
-  margin: 0 0 0.5rem 0;
 }
 
-.on-hand-info {
-  font-size: 0.875rem;
-  color: var(--foreground);
-  padding: 0.75rem;
+.farmer-inventory-page .on-hand-info {
+  margin: 0 0 16px;
+  padding: 12px;
+  border-radius: 8px;
   background: var(--muted);
-  border-radius: 0.375rem;
-  margin-bottom: 1rem;
+  color: var(--foreground);
+  font-size: var(--text-body, 0.95rem);
 }
 
-.form-group {
-  margin-bottom: 1rem;
+.farmer-inventory-page .form-group {
+  margin-bottom: 16px;
 }
 
-.form-group label {
+.farmer-inventory-page .form-group label {
   display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--foreground);
-  margin-bottom: 0.375rem;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  background: var(--input-background);
+  margin-bottom: 6px;
+  font-size: var(--text-body-sm, 0.875rem);
+  font-weight: var(--font-weight-medium);
   color: var(--foreground);
 }
 
-.form-group textarea {
-  min-height: 80px;
-  resize: vertical;
-}
-
-.form-group .preview {
-  margin: 0.5rem 0 0 0;
-  font-size: 0.875rem;
+.farmer-inventory-page .form-group .preview {
+  margin-top: 8px;
+  font-size: var(--text-body-sm, 0.875rem);
   color: var(--muted-foreground);
 }
 
-.form-group .preview .negative {
-  color: #dc2626;
+.farmer-inventory-page .form-group .preview .negative {
+  color: #c62828;
 }
 
-.error-message {
-  padding: 0.75rem;
+.farmer-inventory-page .error-message {
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 8px;
   background: #ffebee;
   color: #c62828;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
+  font-size: var(--text-body-sm, 0.875rem);
 }
 
-.modal-actions {
+.farmer-inventory-page .modal-actions {
   display: flex;
-  gap: 0.75rem;
   justify-content: flex-end;
-  margin-top: 1.5rem;
+  gap: 12px;
+  margin-top: 20px;
 }
 
-.btn-cancel {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--foreground);
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
+.farmer-inventory-page .btn-cancel,
+.farmer-inventory-page .btn-submit {
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: var(--text-body, 0.95rem);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.btn-cancel:hover:not(:disabled) {
+.farmer-inventory-page .btn-cancel {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.farmer-inventory-page .btn-cancel:hover:not(:disabled) {
   background: var(--muted);
 }
 
-.btn-submit {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--primary-foreground);
+.farmer-inventory-page .btn-submit {
+  border: 1px solid transparent;
   background: var(--primary);
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
+  color: var(--primary-foreground);
 }
 
-.btn-submit:hover:not(:disabled) {
-  background: #2563eb;
+.farmer-inventory-page .btn-submit:hover:not(:disabled) {
+  filter: brightness(0.94);
 }
 
-.btn-submit:disabled,
-.btn-cancel:disabled {
+.farmer-inventory-page .btn-submit.btn-submit-danger {
+  background: #e74c3c;
+}
+
+.farmer-inventory-page .btn-submit:disabled,
+.farmer-inventory-page .btn-cancel:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+@media (max-width: 1024px) {
+  .farmer-inventory-page .control-group,
+  .farmer-inventory-page .control-group--search {
+    min-width: 240px;
+    flex: 1 1 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .farmer-inventory-page {
+    padding: 16px;
+  }
+
+  .farmer-inventory-page .inventory-controls {
+    gap: 12px;
+  }
+
+  .farmer-inventory-page .inventory-warehouse-toolbar {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .farmer-inventory-page .inventory-warehouse-toolbar [data-slot="button"] {
+    flex: 1 1 calc(33.333% - 8px);
+    min-width: 140px;
+  }
+
+  .farmer-inventory-page .control-group,
+  .farmer-inventory-page .control-group--search {
+    min-width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .farmer-inventory-page .inventory-tabs .tab {
+    padding: 10px 14px;
+  }
+
+  .farmer-inventory-page .loading-state,
+  .farmer-inventory-page .empty-state {
+    padding: 28px 16px;
+  }
+
+  .farmer-inventory-page .modal-content {
+    padding: 18px;
+  }
+}
+

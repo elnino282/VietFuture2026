@@ -2,6 +2,7 @@ package org.example.QuanLyMuaVu.module.marketplace.entity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -59,7 +60,7 @@ public class MarketplaceOrder {
     @JoinColumn(name = "farmer_user_id", nullable = false)
     org.example.QuanLyMuaVu.module.identity.entity.User farmerUser;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceOrderStatusConverter.class)
     @Column(name = "status", nullable = false, length = 30)
     MarketplaceOrderStatus status;
 

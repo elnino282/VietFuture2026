@@ -1,14 +1,14 @@
 import { Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Card, CardContent } from '@/shared/ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/ui/select';
 import type { FilterState } from '../types';
 
 interface SearchFilterBarProps {
@@ -35,7 +35,7 @@ export function SearchFilterBar({
     || searchQuery.length > 0;
 
   return (
-    <Card className="border border-border rounded-xl shadow-sm">
+    <Card variant="filter">
       <CardContent className="px-6 py-4">
         <div className="flex flex-wrap items-center justify-start gap-4">
           {/* Search Input */}
@@ -124,7 +124,7 @@ export function SearchFilterBar({
                 onFiltersChange({ status: 'all', type: 'all', assignee: 'all', plot: 'all' });
                 onSearchChange('');
               }}
-              className="h-9 px-3 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+              className="h-9 px-3 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               Xóa lọc
             </Button>

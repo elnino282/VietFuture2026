@@ -8,10 +8,12 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,8 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional(readOnly = true)
 public class AdminInventoryService {
+
+    private static final BigDecimal DEFAULT_LOW_STOCK_THRESHOLD = BigDecimal.valueOf(5);
 
     InventoryQueryPort inventoryQueryPort;
     FarmQueryPort farmQueryPort;
@@ -249,25 +253,99 @@ public class AdminInventoryService {
 
         LocalDate today = LocalDate.now();
         LocalDate cutoff = today.plusDays(safeWindowDays);
+        LocalDateTime slowMovementThreshold = LocalDateTime.now().minusDays(Math.max(safeWindowDays, 1));
 
         int totalExpiredLots = 0;
-        int totalExpiringLots = 0;
-        int totalUnknownExpiryLots = 0;
+        int totalExpiringSoonLots = 0;
+        int totalLowStockLots = 0;
+        int totalNoMovementLots = 0;
+        int totalSlowMovementLots = 0;
+        int missingExpiryDateCount = 0;
+        int missingMovementHistoryCount = 0;
+        int totalLotsEvaluated = 0;
+
         BigDecimal totalQtyAtRisk = BigDecimal.ZERO;
+        Set<Integer> affectedFarmIds = new HashSet<>();
+        Set<Integer> affectedItemIds = new HashSet<>();
+
+        List<LotAggregate> lotAggregates = buildLotAggregates().stream()
+                .filter(aggregate -> aggregate.onHand.compareTo(BigDecimal.ZERO) > 0)
+                .toList();
+
+        List<Integer> lotIds = lotAggregates.stream()
+                .map(aggregate -> aggregate.lot != null ? aggregate.lot.getId() : null)
+                .filter(id -> id != null)
+                .distinct()
+                .toList();
+        Map<Integer, org.example.QuanLyMuaVu.module.inventory.port.InventoryLotMovementSummaryView> movementSummaryByLotId =
+                inventoryQueryPort.findMovementSummaryBySupplyLotIds(lotIds);
 
         Map<Integer, FarmHealthAccumulator> farmAccumulatorMap = new LinkedHashMap<>();
-        for (LotAggregate aggregate : buildLotAggregates()) {
-            if (aggregate.onHand.compareTo(BigDecimal.ZERO) <= 0) {
+        for (LotAggregate aggregate : lotAggregates) {
+            if (aggregate.lot == null || aggregate.lot.getId() == null) {
                 continue;
             }
 
-            for (org.example.QuanLyMuaVu.module.farm.entity.Farm farm : aggregate.farmsById.values()) {
+            totalLotsEvaluated++;
+
+            org.example.QuanLyMuaVu.module.inventory.port.InventoryLotMovementSummaryView movementSummary =
+                    movementSummaryByLotId.get(aggregate.lot.getId());
+            boolean missingExpiryDate = aggregate.lot.getExpiryDate() == null;
+            boolean noMovement = movementSummary == null || movementSummary.movementCount() <= 0;
+            boolean slowMovement = !noMovement
+                    && (movementSummary.latestMovementDate() == null
+                    || movementSummary.latestMovementDate().isBefore(slowMovementThreshold));
+            boolean expired = aggregate.lot.getExpiryDate() != null && aggregate.lot.getExpiryDate().isBefore(today);
+            boolean expiringSoon = includeExpiringValue
+                    && aggregate.lot.getExpiryDate() != null
+                    && !aggregate.lot.getExpiryDate().isBefore(today)
+                    && !aggregate.lot.getExpiryDate().isAfter(cutoff);
+            boolean lowStock = aggregate.onHand.compareTo(DEFAULT_LOW_STOCK_THRESHOLD) <= 0;
+            boolean hasRisk = expired || expiringSoon || lowStock || noMovement || slowMovement;
+
+            if (missingExpiryDate) {
+                missingExpiryDateCount++;
+            }
+            if (noMovement) {
+                missingMovementHistoryCount++;
+            }
+
+            if (expired) {
+                totalExpiredLots++;
+            }
+            if (expiringSoon) {
+                totalExpiringSoonLots++;
+            }
+            if (lowStock) {
+                totalLowStockLots++;
+            }
+            if (noMovement) {
+                totalNoMovementLots++;
+            }
+            if (slowMovement) {
+                totalSlowMovementLots++;
+            }
+
+            if (hasRisk) {
+                totalQtyAtRisk = totalQtyAtRisk.add(aggregate.onHand);
+                if (aggregate.lot.getSupplyItem() != null && aggregate.lot.getSupplyItem().getId() != null) {
+                    affectedItemIds.add(aggregate.lot.getSupplyItem().getId());
+                }
+            }
+
+            for (Map.Entry<Integer, org.example.QuanLyMuaVu.module.farm.entity.Farm> farmEntry : aggregate.farmsById.entrySet()) {
+                Integer farmId = farmEntry.getKey();
+                org.example.QuanLyMuaVu.module.farm.entity.Farm farm = farmEntry.getValue();
                 if (farm == null) {
                     continue;
                 }
 
-                String lotStatus = resolveHealthStatus(aggregate.lot.getExpiryDate(), today, cutoff, includeExpiringValue);
-                if ("HEALTHY".equals(lotStatus)) {
+                BigDecimal farmOnHand = aggregate.onHandByFarmId.getOrDefault(farmId, BigDecimal.ZERO);
+                if (farmOnHand.compareTo(BigDecimal.ZERO) <= 0) {
+                    continue;
+                }
+
+                if (!hasRisk) {
                     continue;
                 }
 
@@ -275,24 +353,32 @@ public class AdminInventoryService {
                         farm.getId(),
                         ignored -> new FarmHealthAccumulator(farm.getId(), farm.getName()));
 
-                if ("EXPIRED".equals(lotStatus)) {
-                    totalExpiredLots++;
+                if (expired) {
                     farmAccumulator.expiredLots++;
-                } else if ("EXPIRING".equals(lotStatus)) {
-                    totalExpiringLots++;
-                    farmAccumulator.expiringLots++;
-                } else if ("UNKNOWN_EXPIRY".equals(lotStatus)) {
-                    totalUnknownExpiryLots++;
+                }
+                if (expiringSoon) {
+                    farmAccumulator.expiringSoonLots++;
+                }
+                if (lowStock) {
+                    farmAccumulator.lowStockLots++;
+                }
+                if (noMovement) {
+                    farmAccumulator.noMovementLots++;
+                }
+                if (slowMovement) {
+                    farmAccumulator.slowMovementLots++;
                 }
 
-                totalQtyAtRisk = totalQtyAtRisk.add(aggregate.onHand);
-                farmAccumulator.qtyAtRisk = farmAccumulator.qtyAtRisk.add(aggregate.onHand);
+                farmAccumulator.qtyAtRisk = farmAccumulator.qtyAtRisk.add(farmOnHand);
+                affectedFarmIds.add(farm.getId());
+
+                String lotStatus = resolveInventoryHealthStatus(expired, expiringSoon, noMovement, slowMovement, lowStock);
 
                 farmAccumulator.topRiskLots.add(AdminInventoryHealthResponse.RiskLot.builder()
                         .lotId(aggregate.lot.getId())
                         .itemName(aggregate.lot.getSupplyItem() != null ? aggregate.lot.getSupplyItem().getName() : "Unknown Item")
                         .expiryDate(aggregate.lot.getExpiryDate() != null ? aggregate.lot.getExpiryDate().toString() : null)
-                        .onHand(toDouble(aggregate.onHand))
+                        .onHand(toDouble(farmOnHand))
                         .status(lotStatus)
                         .build());
             }
@@ -302,17 +388,37 @@ public class AdminInventoryService {
                 .stream()
                 .sorted(Comparator
                         .comparingInt(FarmHealthAccumulator::getExpiredLots).reversed()
-                        .thenComparingInt(FarmHealthAccumulator::getExpiringLots).reversed()
+                        .thenComparingInt(FarmHealthAccumulator::getExpiringSoonLots).reversed()
+                        .thenComparingInt(FarmHealthAccumulator::getLowStockLots).reversed()
+                        .thenComparingInt(FarmHealthAccumulator::getNoMovementLots).reversed()
+                        .thenComparingInt(FarmHealthAccumulator::getSlowMovementLots).reversed()
                         .thenComparing((FarmHealthAccumulator acc) -> acc.qtyAtRisk, Comparator.reverseOrder()))
                 .limit(safeLimit)
                 .map(this::toFarmHealthResponse)
                 .toList();
 
+        Double coveragePercent = calculateCoveragePercent(
+                totalLotsEvaluated,
+                missingExpiryDateCount,
+                missingMovementHistoryCount);
+
         AdminInventoryHealthResponse.Summary summary = AdminInventoryHealthResponse.Summary.builder()
                 .expiredLots(totalExpiredLots)
-                .expiringLots(totalExpiringLots)
+                .expiringSoonLots(totalExpiringSoonLots)
+                .expiringLots(totalExpiringSoonLots)
+                .lowStockLots(totalLowStockLots)
+                .noMovementLots(totalNoMovementLots)
+                .slowMovementLots(totalSlowMovementLots)
                 .qtyAtRisk(toDouble(totalQtyAtRisk))
-                .unknownExpiryLots(totalUnknownExpiryLots)
+                .totalAffectedFarms(affectedFarmIds.size())
+                .totalAffectedItems(affectedItemIds.size())
+                .unknownExpiryLots(missingExpiryDateCount)
+                .build();
+
+        AdminInventoryHealthResponse.DataQuality dataQuality = AdminInventoryHealthResponse.DataQuality.builder()
+                .missingExpiryDateCount(missingExpiryDateCount)
+                .missingMovementHistoryCount(missingMovementHistoryCount)
+                .coveragePercent(coveragePercent)
                 .build();
 
         return AdminInventoryHealthResponse.builder()
@@ -320,6 +426,7 @@ public class AdminInventoryService {
                 .windowDays(safeWindowDays)
                 .includeExpiring(includeExpiringValue)
                 .summary(summary)
+                .dataQuality(dataQuality)
                 .farms(farms)
                 .build();
     }
@@ -337,7 +444,11 @@ public class AdminInventoryService {
                 .farmId(accumulator.farmId)
                 .farmName(accumulator.farmName)
                 .expiredLots(accumulator.expiredLots)
-                .expiringLots(accumulator.expiringLots)
+                .expiringSoonLots(accumulator.expiringSoonLots)
+                .expiringLots(accumulator.expiringSoonLots)
+                .lowStockLots(accumulator.lowStockLots)
+                .noMovementLots(accumulator.noMovementLots)
+                .slowMovementLots(accumulator.slowMovementLots)
                 .qtyAtRisk(toDouble(accumulator.qtyAtRisk))
                 .topRiskLots(topLots)
                 .build();
@@ -347,13 +458,22 @@ public class AdminInventoryService {
         if ("EXPIRED".equals(status)) {
             return 1;
         }
-        if ("EXPIRING".equals(status)) {
+        if ("EXPIRING_SOON".equals(status)) {
             return 2;
         }
-        if ("UNKNOWN_EXPIRY".equals(status)) {
+        if ("NO_MOVEMENT".equals(status)) {
             return 3;
         }
-        return 4;
+        if ("SLOW_MOVEMENT".equals(status)) {
+            return 4;
+        }
+        if ("LOW_STOCK".equals(status)) {
+            return 5;
+        }
+        if ("UNKNOWN_EXPIRY".equals(status)) {
+            return 6;
+        }
+        return 7;
     }
 
     private AdminInventoryMovementResponse toMovementResponse(org.example.QuanLyMuaVu.module.inventory.entity.StockMovement movement) {
@@ -493,22 +613,43 @@ public class AdminInventoryService {
         return recentAdjustCount >= 2 || hasLargeAdjust || recentMovementCount >= 8;
     }
 
-    private String resolveHealthStatus(
-            LocalDate expiryDate,
-            LocalDate today,
-            LocalDate cutoff,
-            boolean includeExpiring) {
-
-        if (expiryDate == null) {
-            return "UNKNOWN_EXPIRY";
-        }
-        if (expiryDate.isBefore(today)) {
+    private String resolveInventoryHealthStatus(
+            boolean expired,
+            boolean expiringSoon,
+            boolean noMovement,
+            boolean slowMovement,
+            boolean lowStock) {
+        if (expired) {
             return "EXPIRED";
         }
-        if (includeExpiring && !expiryDate.isAfter(cutoff)) {
-            return "EXPIRING";
+        if (expiringSoon) {
+            return "EXPIRING_SOON";
         }
-        return "HEALTHY";
+        if (noMovement) {
+            return "NO_MOVEMENT";
+        }
+        if (slowMovement) {
+            return "SLOW_MOVEMENT";
+        }
+        if (lowStock) {
+            return "LOW_STOCK";
+        }
+        return "UNKNOWN_EXPIRY";
+    }
+
+    private Double calculateCoveragePercent(
+            int totalLotsEvaluated,
+            int missingExpiryDateCount,
+            int missingMovementHistoryCount) {
+        if (totalLotsEvaluated <= 0) {
+            return null;
+        }
+
+        double totalSignals = totalLotsEvaluated * 2d;
+        double availableSignals = (totalLotsEvaluated - missingExpiryDateCount)
+                + (totalLotsEvaluated - missingMovementHistoryCount);
+        double rawCoveragePercent = (availableSignals / totalSignals) * 100d;
+        return Math.round(rawCoveragePercent * 100.0) / 100.0;
     }
 
     private boolean matchesStatusFilter(String statusFilter, String currentStatus) {
@@ -593,13 +734,14 @@ public class AdminInventoryService {
     }
 
     private Double toDouble(BigDecimal value) {
-        return value != null ? value.doubleValue() : 0d;
+        return value != null ? value.doubleValue() : null;
     }
 
     private static class LotAggregate {
         private final org.example.QuanLyMuaVu.module.inventory.entity.SupplyLot lot;
         private BigDecimal onHand = BigDecimal.ZERO;
         private final Map<Integer, org.example.QuanLyMuaVu.module.farm.entity.Farm> farmsById = new LinkedHashMap<>();
+        private final Map<Integer, BigDecimal> onHandByFarmId = new LinkedHashMap<>();
 
         private LotAggregate(org.example.QuanLyMuaVu.module.inventory.entity.SupplyLot lot) {
             this.lot = lot;
@@ -613,6 +755,7 @@ public class AdminInventoryService {
                 org.example.QuanLyMuaVu.module.farm.entity.Farm farm = balance.getWarehouse().getFarm();
                 if (farm.getId() != null) {
                     farmsById.putIfAbsent(farm.getId(), farm);
+                    onHandByFarmId.merge(farm.getId(), quantity, BigDecimal::add);
                 }
             }
         }
@@ -622,7 +765,10 @@ public class AdminInventoryService {
         private final Integer farmId;
         private final String farmName;
         private int expiredLots = 0;
-        private int expiringLots = 0;
+        private int expiringSoonLots = 0;
+        private int lowStockLots = 0;
+        private int noMovementLots = 0;
+        private int slowMovementLots = 0;
         private BigDecimal qtyAtRisk = BigDecimal.ZERO;
         private final List<AdminInventoryHealthResponse.RiskLot> topRiskLots = new ArrayList<>();
 
@@ -635,8 +781,20 @@ public class AdminInventoryService {
             return expiredLots;
         }
 
-        private int getExpiringLots() {
-            return expiringLots;
+        private int getExpiringSoonLots() {
+            return expiringSoonLots;
+        }
+
+        private int getLowStockLots() {
+            return lowStockLots;
+        }
+
+        private int getNoMovementLots() {
+            return noMovementLots;
+        }
+
+        private int getSlowMovementLots() {
+            return slowMovementLots;
         }
     }
 }

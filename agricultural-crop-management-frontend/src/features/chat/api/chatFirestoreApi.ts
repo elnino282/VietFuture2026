@@ -8,6 +8,7 @@ import {
   runTransaction,
   serverTimestamp,
   setDoc,
+  Timestamp,
   writeBatch,
   where,
   type Firestore,
@@ -16,6 +17,7 @@ import { firestoreDb } from "@/shared/lib/firebase/firebaseApp";
 import type {
   ChatConversation,
   ChatMessage,
+  ChatParticipantState,
   MarkReadInput,
   SendChatMessageInput,
 } from "../model/types";
@@ -24,6 +26,7 @@ const CONVERSATIONS_COLLECTION = "conversations";
 const PARTICIPANTS_SUBCOLLECTION = "participants";
 const MESSAGES_SUBCOLLECTION = "messages";
 const MAX_MESSAGE_LENGTH = 2000;
+const TYPING_TTL_MS = 4500;
 
 type SubscribeConversationParams = {
   currentUid: string;
@@ -34,6 +37,13 @@ type SubscribeConversationParams = {
 type SubscribeMessagesParams = {
   conversationId: string;
   onData: (messages: ChatMessage[]) => void;
+  onError?: (error: Error) => void;
+};
+
+type SubscribeParticipantStateParams = {
+  conversationId: string;
+  uid: string;
+  onData: (state: ChatParticipantState) => void;
   onError?: (error: Error) => void;
 };
 
@@ -56,6 +66,12 @@ type MarkAsReadParams = {
   conversationId: string;
   uid: string;
   lastReadSeq: number;
+};
+
+type SetTypingStateParams = {
+  conversationId: string;
+  uid: string;
+  isTyping: boolean;
 };
 
 function requireFirestore(): Firestore {
@@ -96,6 +112,16 @@ function toDateOrNull(value: unknown): Date | null {
   }
 }
 
+function toParticipantState(data: Record<string, unknown> | null): ChatParticipantState {
+  const typingUntil = toDateOrNull(data?.typingUntil);
+  return {
+    lastReadSeq: safeNumber(data?.lastReadSeq, 0),
+    lastReadAt: toDateOrNull(data?.lastReadAt),
+    typingUntil,
+    isTyping: Boolean(typingUntil && typingUntil.getTime() > Date.now()),
+  };
+}
+
 function normalizeParticipantIds(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -131,6 +157,24 @@ function normalizeMessageText(text: string): string {
 function normalizeNumericUserIdSegment(value: string): string {
   const compact = value.replace(/^0+/, "");
   return compact || "0";
+}
+
+export function toInternalUserId(value: string | null | undefined): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const match = /^u_(\d+)$/i.exec(value.trim());
+  if (!match) {
+    return null;
+  }
+
+  const numericId = Number.parseInt(match[1], 10);
+  if (!Number.isInteger(numericId) || numericId <= 0) {
+    return null;
+  }
+
+  return numericId;
 }
 
 export function toFirebaseChatUid(userId: string | number): string {
@@ -273,6 +317,8 @@ export function subscribeConversations({
               type: "direct",
               participantIds,
               peerUid,
+              peerUserId: toInternalUserId(peerUid),
+              peerProfile: null,
               lastMessageText: safeString(data.lastMessageText),
               lastMessageAt: toDateOrNull(data.lastMessageAt),
               lastMessageSenderUid: data.lastMessageSenderUid
@@ -325,6 +371,33 @@ export function subscribeMessages({
       });
 
       onData(messages);
+    },
+    (error) => {
+      onError?.(error as Error);
+    }
+  );
+}
+
+export function subscribeParticipantState({
+  conversationId,
+  uid,
+  onData,
+  onError,
+}: SubscribeParticipantStateParams): () => void {
+  const db = requireFirestore();
+  const normalizedUid = toFirebaseChatUid(uid);
+  const participantRef = doc(
+    db,
+    CONVERSATIONS_COLLECTION,
+    conversationId,
+    PARTICIPANTS_SUBCOLLECTION,
+    normalizedUid
+  );
+
+  return onSnapshot(
+    participantRef,
+    (snapshot) => {
+      onData(toParticipantState(snapshot.exists() ? snapshot.data() : null));
     },
     (error) => {
       onError?.(error as Error);
@@ -440,6 +513,31 @@ export async function markAsRead({
     {
       lastReadSeq: Math.max(0, lastReadSeq),
       lastReadAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+export async function setTypingState({
+  conversationId,
+  uid,
+  isTyping,
+}: SetTypingStateParams): Promise<void> {
+  const db = requireFirestore();
+  const normalizedUid = toFirebaseChatUid(uid);
+  const participantRef = doc(
+    db,
+    CONVERSATIONS_COLLECTION,
+    conversationId,
+    PARTICIPANTS_SUBCOLLECTION,
+    normalizedUid
+  );
+
+  await setDoc(
+    participantRef,
+    {
+      typingUntil: isTyping ? Timestamp.fromMillis(Date.now() + TYPING_TTL_MS) : null,
+      typingAt: isTyping ? serverTimestamp() : null,
     },
     { merge: true }
   );

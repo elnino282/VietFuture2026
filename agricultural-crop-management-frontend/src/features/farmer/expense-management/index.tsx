@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
     Card,
     CardContent,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@/shared/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { useI18n } from "@/hooks/useI18n";
 import { useOptionalSeason } from "@/shared/contexts";
 import { ConfirmDialog, PageContainer, PageHeader } from "@/shared/ui";
@@ -26,7 +26,9 @@ import type { Expense } from "./types";
 export function ExpenseManagement() {
     const { seasonId: workspaceSeasonIdParam } = useParams();
     const workspaceSeasonId = Number(workspaceSeasonIdParam);
+    const hasWorkspaceSeasonParam = typeof workspaceSeasonIdParam === "string";
     const isWorkspaceScoped = Number.isFinite(workspaceSeasonId) && workspaceSeasonId > 0;
+    const invalidWorkspaceSeason = hasWorkspaceSeasonParam && !isWorkspaceScoped;
 
     const [searchParams, setSearchParams] = useSearchParams();
     const {
@@ -70,11 +72,14 @@ export function ExpenseManagement() {
         isLoading,
         error,
         hasSeason,
+        refetch,
         isDeleting,
         isCreating,
         isUpdating,
         showValidationErrors,
-    } = useExpenseManagement();
+    } = useExpenseManagement({
+        scopedSeasonId: isWorkspaceScoped ? workspaceSeasonId : null,
+    });
 
     const { t } = useI18n();
     const seasonContext = useOptionalSeason();
@@ -101,6 +106,21 @@ export function ExpenseManagement() {
     const parsedSeasonId = Number.isFinite(seasonIdParam) ? seasonIdParam : null;
     const parsedExpenseId = Number.isFinite(expenseIdParam) ? expenseIdParam : null;
 
+    if (invalidWorkspaceSeason) {
+        return (
+            <PageContainer>
+                <Card className="mb-6 border border-destructive/30 bg-destructive/5 rounded-xl">
+                    <CardContent className="px-6 py-5 text-sm text-destructive space-y-3">
+                        <div>Invalid season id in workspace route.</div>
+                        <Button variant="outline" asChild>
+                            <Link to="/farmer/seasons">Back to Seasons</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </PageContainer>
+        );
+    }
+
     const handleDetailOpenChange = (open: boolean) => {
         if (!open && searchParams.get("expenseId")) {
             const next = new URLSearchParams(searchParams);
@@ -126,9 +146,8 @@ export function ExpenseManagement() {
 
     useEffect(() => {
         if (!isWorkspaceScoped) return;
-        const workspaceSeason = String(workspaceSeasonId);
-        if (selectedSeason === workspaceSeason) return;
-        setSelectedSeason(workspaceSeason);
+        if (selectedSeason === String(workspaceSeasonId)) return;
+        setSelectedSeason(String(workspaceSeasonId));
     }, [isWorkspaceScoped, workspaceSeasonId, selectedSeason, setSelectedSeason]);
 
     useEffect(() => {
@@ -181,7 +200,7 @@ export function ExpenseManagement() {
                                         if (!ensureSeasonWritable()) return;
                                         handleOpenAddExpense();
                                     }}
-                                    disabled={isSeasonWriteLocked}
+                                    disabled={isSeasonWriteLocked || !hasSeason}
                                     title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
                                 >
                                     <Plus className="w-4 h-4 mr-2" />
@@ -243,8 +262,11 @@ export function ExpenseManagement() {
 
                                 <TabsContent value="list" className="space-y-4">
                                     {error && (
-                                        <div className="rounded-xl border border-border bg-card p-4 text-sm text-destructive">
-                                            Failed to load expenses: {error.message}
+                                        <div className="rounded-xl border border-border bg-card p-4 text-sm text-destructive space-y-3">
+                                            <div>Failed to load expenses: {error.message}</div>
+                                            <Button size="sm" variant="outline" onClick={() => refetch()}>
+                                                Retry
+                                            </Button>
                                         </div>
                                     )}
                                     {!hasSeason && !isLoading && (
@@ -299,7 +321,7 @@ export function ExpenseManagement() {
                         budgetAmount={budgetAmount}
                     />
                     <UpcomingPayables pendingExpenses={pendingExpenses} />
-                    <AIOptimizationTips />
+                    <AIOptimizationTips seasonId={seasonIdForLock} expenses={expenses} />
                 </div>
             </div>
 

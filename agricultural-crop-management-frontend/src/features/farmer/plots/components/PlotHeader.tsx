@@ -1,7 +1,7 @@
 import { MapPin, List, Plus, MapIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ViewMode } from "../types";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent } from "@/shared/ui/card";
+import type { ViewMode } from "../types";
 
 interface PlotHeaderProps {
   viewMode: ViewMode;
@@ -21,7 +21,7 @@ export function PlotHeader({ viewMode, setViewMode, onAddPlot }: PlotHeaderProps
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex-shrink-0">
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
-              <MapPin className="w-6 h-6 text-emerald-600" />
+              <MapPin className="w-6 h-6 text-primary" />
               My Plots
             </h1>
             <p className="text-sm text-muted-foreground mt-1">

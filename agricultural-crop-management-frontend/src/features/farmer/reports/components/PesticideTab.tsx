@@ -1,40 +1,36 @@
 import { AlertTriangle, AlertCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import type { PesticideStatus } from "../types";
-
-// TODO: Replace with API data when available
-const PESTICIDE_RECORDS: any[] = [];
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/shared/ui/table";
+import { useI18n } from "@/hooks/useI18n";
+import type { PesticideRecord, PesticideStatus } from "../types";
 
 interface PesticideTabProps {
+    records: PesticideRecord[];
     getPesticideStatusBadge: (status: PesticideStatus) => {
         className: string;
         label: string;
     };
 }
 
-export function PesticideTab({ getPesticideStatusBadge }: PesticideTabProps) {
+const formatNullableNumber = (value: number | null, digits = 1) =>
+    value === null ? "N/A" : value.toFixed(digits);
+
+export function PesticideTab({ records, getPesticideStatusBadge }: PesticideTabProps) {
+    const { t } = useI18n();
+    const recordsNeedingReview = records.filter((r) => r.status !== "safe").length;
+
     return (
         <div className="space-y-6">
             <div className="flex items-start justify-between">
                 <div>
-                    <h3 className="text-lg text-foreground mb-1">
-                        Pesticide & Compliance
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                        Track PHI compliance and chemical usage
-                    </p>
+                    <h3 className="text-lg text-foreground mb-1">{t("reports.pesticide.title")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("reports.pesticide.subtitle")}</p>
                 </div>
-                <Badge className="bg-destructive/10 text-destructive border-destructive/20">
+                <Badge className="bg-muted text-muted-foreground border-border">
                     <AlertCircle className="w-3 h-3 mr-1" />
-                    3 lots need review
+                    {t("reports.pesticide.recordsNeedReview", { count: recordsNeedingReview })}
                 </Badge>
             </div>
 
@@ -42,47 +38,49 @@ export function PesticideTab({ getPesticideStatusBadge }: PesticideTabProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-muted hover:bg-muted">
-                            <TableHead className="text-foreground">Lot ID</TableHead>
-                            <TableHead className="text-foreground">Chemical</TableHead>
-                            <TableHead className="text-foreground text-right">
-                                Quantity (L)
-                            </TableHead>
-                            <TableHead className="text-foreground text-right">
-                                PHI (days)
-                            </TableHead>
-                            <TableHead className="text-foreground text-right">
-                                Days Remaining
-                            </TableHead>
-                            <TableHead className="text-foreground">Status</TableHead>
+                            <TableHead className="text-foreground">{t("reports.pesticide.record")}</TableHead>
+                            <TableHead className="text-foreground">{t("reports.pesticide.chemicalNotes")}</TableHead>
+                            <TableHead className="text-foreground text-right">{t("reports.pesticide.quantity")}</TableHead>
+                            <TableHead className="text-foreground text-right">{t("reports.pesticide.phiDays")}</TableHead>
+                            <TableHead className="text-foreground text-right">{t("reports.pesticide.daysRemaining")}</TableHead>
+                            <TableHead className="text-foreground">{t("reports.pesticide.status")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {PESTICIDE_RECORDS.map((record) => {
+                        {records.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                                    {t("reports.pesticide.noRecords")}
+                                </TableCell>
+                            </TableRow>
+                        )}
+                        {records.map((record) => {
                             const statusBadge = getPesticideStatusBadge(record.status);
                             return (
                                 <TableRow key={record.id} className="hover:bg-muted/50">
-                                    <TableCell className="numeric text-foreground">
-                                        {record.lotId}
-                                    </TableCell>
+                                    <TableCell className="numeric text-foreground">{record.lotId}</TableCell>
                                     <TableCell className="text-foreground">
-                                        {record.chemical}
+                                        {record.chemical ?? record.notes ?? "N/A"}
                                     </TableCell>
                                     <TableCell className="text-right numeric text-foreground">
-                                        {record.quantity.toFixed(1)}
+                                        {formatNullableNumber(record.quantity)}
+                                        {record.unit ? ` ${record.unit}` : ""}
                                     </TableCell>
                                     <TableCell className="text-right numeric text-foreground">
-                                        {record.phi}
+                                        {record.phi ?? "N/A"}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <span
-                                            className={`numeric ${record.daysRemaining < 0
+                                            className={`numeric ${record.daysRemaining === null
+                                                ? "text-muted-foreground"
+                                                : record.daysRemaining < 0
                                                 ? "text-destructive"
                                                 : record.daysRemaining <= 5
                                                     ? "text-accent"
                                                     : "text-primary"
                                                 }`}
                                         >
-                                            {record.daysRemaining}
+                                            {record.daysRemaining ?? "N/A"}
                                         </span>
                                     </TableCell>
                                     <TableCell>
@@ -101,18 +99,11 @@ export function PesticideTab({ getPesticideStatusBadge }: PesticideTabProps) {
                 <div className="flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-accent mt-0.5" />
                     <div>
-                        <p className="text-sm text-foreground mb-1">Compliance Reminder</p>
-                        <p className="text-xs text-muted-foreground">
-                            PHI (Pre-Harvest Interval) must be observed before harvesting.
-                            Lots marked in red have violated the PHI period and require
-                            review before sale.
-                        </p>
+                        <p className="text-sm text-foreground mb-1">{t("reports.pesticide.complianceReminder")}</p>
+                        <p className="text-xs text-muted-foreground">{t("reports.pesticide.complianceDescription")}</p>
                     </div>
                 </div>
             </div>
         </div>
     );
 }
-
-
-

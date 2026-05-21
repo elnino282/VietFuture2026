@@ -1,8 +1,9 @@
-import { useDrop } from 'react-dnd';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Task, TaskStatus } from '../types';
-import { TaskCard } from './TaskCard';
+import { useDrop } from "react-dnd";
+import { Badge } from "@/shared/ui/badge";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import { useI18n } from "@/hooks/useI18n";
+import type { Task, TaskStatus } from "../types";
+import { TaskCard } from "./TaskCard";
 
 interface KanbanColumnProps {
   status: TaskStatus;
@@ -23,8 +24,9 @@ export function KanbanColumn({
   onDelete,
   disableMutations = false,
 }: KanbanColumnProps) {
+  const { t } = useI18n();
   const [{ isOver }, drop] = useDrop({
-    accept: 'TASK',
+    accept: "TASK",
     canDrop: () => !disableMutations,
     drop: (item: { id: string }) => {
       if (disableMutations) return;
@@ -39,7 +41,7 @@ export function KanbanColumn({
     <div
       ref={drop}
       className={`bg-card rounded-xl border-2 transition-all ${
-        isOver ? 'border-primary bg-primary/5' : 'border-border'
+        isOver ? "border-primary bg-primary/5" : "border-border"
       }`}
     >
       <div className="p-4 border-b border-border">
@@ -62,13 +64,10 @@ export function KanbanColumn({
             />
           ))}
           {tasks.length === 0 && (
-            <div className="text-center py-8 text-sm text-muted-foreground">Không có công việc</div>
+            <div className="text-center py-8 text-sm text-muted-foreground">{t("tasks.empty.title")}</div>
           )}
         </div>
       </ScrollArea>
     </div>
   );
 }
-
-
-

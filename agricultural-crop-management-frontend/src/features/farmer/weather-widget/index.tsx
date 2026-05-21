@@ -1,5 +1,5 @@
-import { Card } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Card } from "@/shared/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { useWeatherWidget } from "./hooks/useWeatherWidget";
 import { CompactView } from "./components/CompactView";
 import { DetailedView } from "./components/DetailedView";
@@ -9,8 +9,12 @@ import type { WeatherWidgetProps } from "./types";
  * Weather Widget - Composition Root
  * Main entry point that initializes the hook and composes the view
  */
-export function WeatherWidget({ variant = "compact" }: WeatherWidgetProps) {
-    const controller = useWeatherWidget();
+export function WeatherWidget({
+    variant = "compact",
+    farmId,
+    seasonId,
+}: WeatherWidgetProps) {
+    const controller = useWeatherWidget({ farmId, seasonId });
 
     if (variant === "compact") {
         return (
@@ -19,6 +23,8 @@ export function WeatherWidget({ variant = "compact" }: WeatherWidgetProps) {
                     <CompactView
                         weatherData={controller.weatherData}
                         location={controller.location}
+                        uiState={controller.uiState}
+                        statusMessage={controller.statusMessage}
                     />
                 </PopoverTrigger>
                 <PopoverContent className="w-[480px] p-0" align="end" sideOffset={8}>

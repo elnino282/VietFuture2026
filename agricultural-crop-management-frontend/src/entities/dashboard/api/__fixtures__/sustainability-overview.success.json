@@ -72,6 +72,10 @@
     "missingInputs": [
       "CONTROL_SUPPLY"
     ],
+    "unavailableReasons": [
+      "NO_HARVEST",
+      "INSUFFICIENT_HISTORY"
+    ],
     "notes": [
       "Scientific formula based calculation."
     ],

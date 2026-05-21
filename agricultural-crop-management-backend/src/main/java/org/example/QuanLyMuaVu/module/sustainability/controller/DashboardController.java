@@ -1,16 +1,20 @@
 package org.example.QuanLyMuaVu.module.sustainability.controller;
 
-
-
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.QuanLyMuaVu.DTO.Common.ApiResponse;
+import org.example.QuanLyMuaVu.module.inventory.dto.response.DashboardInventoryAlertsResponse;
 import org.example.QuanLyMuaVu.module.inventory.dto.response.LowStockAlertResponse;
+import org.example.QuanLyMuaVu.module.sustainability.dto.response.DashboardDataCompletenessWarningResponse;
+import org.example.QuanLyMuaVu.module.sustainability.dto.response.DashboardIncidentAlertResponse;
 import org.example.QuanLyMuaVu.module.sustainability.dto.response.DashboardOverviewResponse;
+import org.example.QuanLyMuaVu.module.sustainability.dto.response.DashboardRecentActivityResponse;
+import org.example.QuanLyMuaVu.module.sustainability.dto.response.DashboardWeatherResponse;
 import org.example.QuanLyMuaVu.module.sustainability.dto.response.PlotStatusResponse;
 import org.example.QuanLyMuaVu.module.sustainability.dto.response.TodayTaskResponse;
 import org.example.QuanLyMuaVu.module.sustainability.service.DashboardService;
+import org.example.QuanLyMuaVu.module.sustainability.service.DashboardWeatherService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
 public class DashboardController {
 
         private final DashboardService dashboardService;
+        private final DashboardWeatherService dashboardWeatherService;
 
         /**
          * GET /api/v1/dashboard/overview
@@ -83,6 +88,31 @@ public class DashboardController {
         }
 
         /**
+         * GET /api/v1/dashboard/recent-activities
+         * Returns recent farmer activities aggregated from real operational sources.
+         */
+        @GetMapping("/recent-activities")
+        public ApiResponse<List<DashboardRecentActivityResponse>> getRecentActivities(
+                        @RequestParam(defaultValue = "10") int limit) {
+                log.debug("GET /dashboard/recent-activities?limit={}", limit);
+                List<DashboardRecentActivityResponse> activities = dashboardService.getRecentActivities(limit);
+                return ApiResponse.success(activities);
+        }
+
+        /**
+         * GET /api/v1/dashboard/data-completeness-warnings
+         * Returns warnings for required sustainability inputs that are still missing.
+         */
+        @GetMapping("/data-completeness-warnings")
+        public ApiResponse<List<DashboardDataCompletenessWarningResponse>> getDataCompletenessWarnings(
+                        @RequestParam(required = false) Integer seasonId) {
+                log.debug("GET /dashboard/data-completeness-warnings?seasonId={}", seasonId);
+                List<DashboardDataCompletenessWarningResponse> warnings = dashboardService
+                                .getDataCompletenessWarnings(seasonId);
+                return ApiResponse.success(warnings);
+        }
+
+        /**
          * GET /api/v1/dashboard/plot-status
          * Returns plot status list for the Plot Status Map panel.
          */
@@ -104,5 +134,43 @@ public class DashboardController {
                 log.debug("GET /dashboard/low-stock?limit={}", limit);
                 List<LowStockAlertResponse> items = dashboardService.getLowStock(limit);
                 return ApiResponse.success(items);
+        }
+
+        /**
+         * GET /api/v1/dashboard/inventory-alerts
+         * Returns real inventory alerts computed from warehouse balances and movements.
+         */
+        @GetMapping("/inventory-alerts")
+        public ApiResponse<DashboardInventoryAlertsResponse> getInventoryAlerts(
+                        @RequestParam(defaultValue = "20") int limit) {
+                log.debug("GET /dashboard/inventory-alerts?limit={}", limit);
+                DashboardInventoryAlertsResponse response = dashboardService.getInventoryAlerts(limit);
+                return ApiResponse.success(response);
+        }
+
+        /**
+         * GET /api/v1/dashboard/incident-alerts
+         * Returns farmer dashboard alerts merged from open incidents, high severity
+         * incidents, overdue tasks, and season sustainability risks.
+         */
+        @GetMapping("/incident-alerts")
+        public ApiResponse<List<DashboardIncidentAlertResponse>> getIncidentAlerts(
+                        @RequestParam(required = false) Integer seasonId) {
+                log.debug("GET /dashboard/incident-alerts?seasonId={}", seasonId);
+                List<DashboardIncidentAlertResponse> alerts = dashboardService.getIncidentAlerts(seasonId);
+                return ApiResponse.success(alerts);
+        }
+
+        /**
+         * GET /api/v1/dashboard/weather
+         * Returns weather dashboard payload resolved from farmer farm location.
+         */
+        @GetMapping("/weather")
+        public ApiResponse<DashboardWeatherResponse> getWeather(
+                        @RequestParam(required = false) Integer farmId,
+                        @RequestParam(required = false) Integer seasonId) {
+                log.debug("GET /dashboard/weather?farmId={}&seasonId={}", farmId, seasonId);
+                DashboardWeatherResponse response = dashboardWeatherService.getWeather(farmId, seasonId);
+                return ApiResponse.success(response);
         }
 }

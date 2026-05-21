@@ -87,7 +87,7 @@ export interface HeaderProps {
     onAiDrawerOpen: () => void;
     onNotificationsOpen: () => void;
     onThemeChange: (theme: Theme) => void;
-    onLanguageChange: (language: Language) => void;
+    onLanguageChange: (language: Language) => void | Promise<void>;
     onLogout?: () => void;
 }
 
@@ -114,7 +114,7 @@ export interface ProfileMenuProps {
     theme: Theme;
     language: Language;
     onThemeChange: (theme: Theme) => void;
-    onLanguageChange: (language: Language) => void;
+    onLanguageChange: (language: Language) => void | Promise<void>;
     onViewChange: (view: string) => void;
     onLogout?: () => void;
 }

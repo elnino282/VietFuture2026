@@ -11,6 +11,9 @@ const firestoreMocks = vi.hoisted(() => ({
   runTransaction: vi.fn(),
   serverTimestamp: vi.fn(),
   setDoc: vi.fn(),
+  Timestamp: {
+    fromMillis: vi.fn((millis: number) => ({ toDate: () => new Date(millis) })),
+  },
   where: vi.fn(),
 }));
 
@@ -28,6 +31,7 @@ vi.mock("firebase/firestore", () => ({
   runTransaction: firestoreMocks.runTransaction,
   serverTimestamp: firestoreMocks.serverTimestamp,
   setDoc: firestoreMocks.setDoc,
+  Timestamp: firestoreMocks.Timestamp,
   where: firestoreMocks.where,
 }));
 
@@ -40,6 +44,7 @@ vi.mock("@/shared/lib/firebase/firebaseApp", () => ({
 import {
   buildDirectConversationId,
   sendDirectMessage,
+  setTypingState,
   subscribeConversations,
   toFirebaseChatUid,
 } from "./firestoreChatRepository";
@@ -120,6 +125,25 @@ describe("firestoreChatRepository", () => {
     expect(onError).not.toHaveBeenCalled();
 
     unsubscribe();
+  });
+
+  it("writes throttled typing state to the current participant document", async () => {
+    firestoreMocks.serverTimestamp.mockReturnValue({ server: "timestamp" });
+
+    await setTypingState({
+      conversationId: "u_11__u_12",
+      uid: "u_11",
+      isTyping: true,
+    });
+
+    expect(firestoreMocks.setDoc).toHaveBeenCalledWith(
+      { kind: "doc" },
+      expect.objectContaining({
+        typingAt: { server: "timestamp" },
+      }),
+      { merge: true }
+    );
+    expect(firestoreMocks.Timestamp.fromMillis).toHaveBeenCalled();
   });
 
   it("does not allow sending empty message text", async () => {

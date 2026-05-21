@@ -27,6 +27,8 @@ public class FarmMapper {
         return Farm.builder()
                 .name(request.getFarmName())
                 .area(request.getArea())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
                 .province(province)
                 .ward(ward)
                 .active(true)
@@ -42,6 +44,12 @@ public class FarmMapper {
         }
         if (request.getArea() != null) {
             farm.setArea(request.getArea());
+        }
+        if (request.getLatitude() != null) {
+            farm.setLatitude(request.getLatitude());
+        }
+        if (request.getLongitude() != null) {
+            farm.setLongitude(request.getLongitude());
         }
         if (request.getActive() != null) {
             farm.setActive(request.getActive());
@@ -62,6 +70,8 @@ public class FarmMapper {
                 .id(farm.getId())
                 .farmName(farm.getName())
                 .area(farm.getArea())
+                .latitude(farm.getLatitude())
+                .longitude(farm.getLongitude())
                 .active(farm.getActive())
                 .build();
     }
@@ -78,6 +88,8 @@ public class FarmMapper {
                 .provinceName(farm.getProvince() != null ? farm.getProvince().getName() : null)
                 .wardName(farm.getWard() != null ? farm.getWard().getName() : null)
                 .area(farm.getArea())
+                .latitude(farm.getLatitude())
+                .longitude(farm.getLongitude())
                 .active(farm.getActive())
                 .ownerUsername(farm.getUser() != null ? farm.getUser().getUsername() : null)
                 .build();

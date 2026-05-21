@@ -63,7 +63,7 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
               size="sm"
               onClick={onExport}
               disabled={isExporting}
-              className="w-full sm:w-auto h-8 px-3 rounded-[14px] bg-[#3ba55d] hover:bg-[#2e8b4a] text-white font-medium text-sm"
+              className="w-full sm:w-auto h-8 px-3 rounded-[14px] bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm"
             >
               <Download
                 className={`w-4 h-4 mr-2 ${isExporting ? "animate-pulse" : ""}`}

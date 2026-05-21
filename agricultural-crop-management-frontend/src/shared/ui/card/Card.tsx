@@ -1,16 +1,42 @@
 import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/shared/lib";
 
+const cardVariants = cva(
+    "bg-card text-card-foreground flex flex-col rounded-xl border border-border",
+    {
+        variants: {
+            variant: {
+                default: "gap-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)]",
+                "page-header": "gap-4 shadow-sm",
+                filter: "gap-4 shadow-sm",
+                metric: "gap-3 shadow-sm",
+                content: "gap-4 shadow-sm",
+                elevated: "gap-6 acm-card-elevated acm-hover-surface",
+            },
+        },
+        defaultVariants: {
+            variant: "default",
+        },
+    },
+);
+
+type CardVariantProps = VariantProps<typeof cardVariants>;
+
+export interface CardProps
+    extends React.HTMLAttributes<HTMLDivElement>,
+    CardVariantProps {}
+
 const Card = React.forwardRef<
     HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+    CardProps
+>(({ className, variant, ...props }, ref) => (
     <div
         ref={ref}
         data-slot="card"
         className={cn(
-            "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border border-border shadow-[0_4px_12px_rgba(0,0,0,0.05)]",
+            cardVariants({ variant }),
             className,
         )}
         {...props}
@@ -103,6 +129,7 @@ const CardFooter = React.forwardRef<
 CardFooter.displayName = "CardFooter";
 
 export {
+    cardVariants,
     Card,
     CardHeader,
     CardFooter,

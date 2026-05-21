@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.example.QuanLyMuaVu.Enums.PlotStatus;
+import org.example.QuanLyMuaVu.Enums.SeasonStatus;
+import org.example.QuanLyMuaVu.Enums.TaskStatus;
 import org.example.QuanLyMuaVu.Exception.AppException;
 import org.example.QuanLyMuaVu.Exception.ErrorCode;
 import org.example.QuanLyMuaVu.module.shared.security.CurrentUserService;
@@ -13,6 +15,8 @@ import org.example.QuanLyMuaVu.module.farm.entity.Farm;
 import org.example.QuanLyMuaVu.module.farm.entity.Plot;
 import org.example.QuanLyMuaVu.module.farm.repository.FarmRepository;
 import org.example.QuanLyMuaVu.module.farm.repository.PlotRepository;
+import org.example.QuanLyMuaVu.module.season.repository.SeasonRepository;
+import org.example.QuanLyMuaVu.module.season.repository.TaskRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +25,18 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PlotService {
 
+    private static final List<SeasonStatus> BLOCKING_SEASON_STATUSES = List.of(
+            SeasonStatus.PLANNED,
+            SeasonStatus.ACTIVE);
+    private static final List<TaskStatus> BLOCKING_TASK_STATUSES = List.of(
+            TaskStatus.PENDING,
+            TaskStatus.IN_PROGRESS,
+            TaskStatus.OVERDUE);
+
     private final PlotRepository plotRepository;
     private final FarmRepository farmRepository;
+    private final SeasonRepository seasonRepository;
+    private final TaskRepository taskRepository;
     private final CurrentUserService currentUserService;
 
     @Transactional(readOnly = true)
@@ -121,7 +135,14 @@ public class PlotService {
         Plot plot = plotRepository.findByIdAndFarmUserId(id, currentUser.getId())
                 .orElseThrow(() -> new RuntimeException("Plot not found or access denied"));
 
-        // TODO: Check for dependencies (seasons, tasks etc) before delete
+        if (seasonRepository.existsByPlot_IdAndStatusIn(plot.getId(), BLOCKING_SEASON_STATUSES)) {
+            throw new AppException(ErrorCode.PLOT_HAS_ACTIVE_SEASONS);
+        }
+
+        if (taskRepository.existsBySeason_Plot_IdAndStatusIn(plot.getId(), BLOCKING_TASK_STATUSES)) {
+            throw new AppException(ErrorCode.PLOT_HAS_ACTIVE_TASKS);
+        }
+
         plotRepository.delete(plot);
     }
 

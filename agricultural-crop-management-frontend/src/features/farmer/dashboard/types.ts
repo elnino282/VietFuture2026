@@ -16,7 +16,13 @@ export type IncidentSeverity = "high" | "medium" | "low";
 /**
  * Activity type classification
  */
-export type ActivityType = "task" | "expense" | "incident" | "season";
+export type ActivityType =
+  | "TASK_UPDATE"
+  | "FIELD_LOG"
+  | "INCIDENT"
+  | "HARVEST"
+  | "WAREHOUSE_MOVEMENT"
+  | "MARKETPLACE_ORDER";
 
 /**
  * Task item with assignment and status tracking
@@ -71,10 +77,26 @@ export interface Incident {
  */
 export interface Activity {
   id: string;
-  action: string;
-  user: string;
-  time: string;
-  type: ActivityType;
+  type: ActivityType | string;
+  title: string;
+  description: string;
+  occurredAt: string;
+  actorName?: string | null;
+  entityType: string;
+  entityId: string;
+  actionUrl?: string | null;
+}
+
+export interface RecentActivityItem {
+  id: string;
+  type: ActivityType | string;
+  title: string;
+  description: string;
+  occurredAt: string;
+  actorName: string | null;
+  entityType: string;
+  entityId: string;
+  actionUrl: string | null;
 }
 
 /**
@@ -95,6 +117,17 @@ export interface DashboardTaskItem {
   status: string;
   dueDateLabel: string;
   done: boolean;
+}
+
+export interface DashboardDataCompletenessWarningItem {
+  id: string;
+  title: string;
+  source: string;
+  type: string;
+  status: string;
+  dueDateLabel: string;
+  actionTarget: string;
+  inputCode: string;
 }
 
 export interface DashboardKpiModel {
@@ -129,6 +162,7 @@ export interface FarmerDashboardViewModel {
   kpis: DashboardKpiModel;
   todayTasks: DashboardTaskItem[];
   upcomingTasks: DashboardTaskItem[];
+  dataCompletenessWarnings: DashboardDataCompletenessWarningItem[];
   assistant: DashboardAssistantModel;
 }
 

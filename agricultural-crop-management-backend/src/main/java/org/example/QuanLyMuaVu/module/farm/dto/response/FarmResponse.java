@@ -23,5 +23,7 @@ public class FarmResponse {
     Integer wardId;
     String wardName;
     BigDecimal area;
+    BigDecimal latitude;
+    BigDecimal longitude;
     Boolean active;
 }

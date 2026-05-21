@@ -6,10 +6,12 @@ import {
   type MarketplaceAddCartItemRequest,
   type MarketplaceAdminOrderQuery,
   type MarketplaceAdminProductQuery,
+  type MarketplaceAdminStats,
   type MarketplaceAddressUpsertRequest,
   type MarketplaceCart,
   type MarketplaceCreateOrderRequest,
   type MarketplaceCreateReviewRequest,
+  type MarketplaceFarmerDashboard,
   type MarketplaceFarmerOrderQuery,
   type MarketplaceFarmerProductFormOptions,
   type MarketplaceFarmerProductQuery,
@@ -18,12 +20,14 @@ import {
   type MarketplaceOrderQuery,
   type MarketplaceOrderAuditLog,
   type MarketplaceOrderStatus,
+  type MarketplaceProductPage,
   type MarketplaceProductQuery,
   type MarketplaceReviewQuery,
   type MarketplaceUpdateOrderStatusRequest,
   type MarketplaceUpdatePaymentVerificationRequest,
   type MarketplaceUpdateProductStatusRequest,
   type MarketplaceUpdateCartItemRequest,
+  type MarketplaceStatsUnavailableReason,
 } from "@/shared/api";
 
 export const marketplaceQueryKeys = {
@@ -117,6 +121,39 @@ function removeCartItemFromCache(
 
   const items = cart.items.filter((item) => item.productId !== productId);
   return recalculateCart({ ...cart, items });
+}
+
+function isMarketplaceUnavailableReason(value: string): value is MarketplaceStatsUnavailableReason {
+  return value === "NO_PRODUCTS"
+    || value === "NO_ORDERS"
+    || value === "NO_REVENUE_DATA"
+    || value === "NO_COMPLETED_ORDERS";
+}
+
+function normalizeUnavailableReasons(
+  reasons: string[] | undefined,
+): MarketplaceStatsUnavailableReason[] {
+  return Array.from(
+    new Set((Array.isArray(reasons) ? reasons : []).filter(isMarketplaceUnavailableReason)),
+  );
+}
+
+function normalizeFarmerDashboard(
+  dashboard: MarketplaceFarmerDashboard,
+): MarketplaceFarmerDashboard {
+  return {
+    ...dashboard,
+    unavailableReasons: normalizeUnavailableReasons(dashboard.unavailableReasons),
+    lastOrderAt: dashboard.lastOrderAt ?? null,
+  };
+}
+
+function normalizeAdminStats(stats: MarketplaceAdminStats): MarketplaceAdminStats {
+  return {
+    ...stats,
+    unavailableReasons: normalizeUnavailableReasons(stats.unavailableReasons),
+    lastOrderAt: stats.lastOrderAt ?? null,
+  };
 }
 
 export function useMarketplaceProducts(query?: MarketplaceProductQuery) {
@@ -447,6 +484,7 @@ export function useMarketplaceFarmerDashboard() {
       const response = await marketplaceApi.getFarmerDashboard();
       return response.result;
     },
+    select: normalizeFarmerDashboard,
   });
 }
 
@@ -457,6 +495,10 @@ export function useMarketplaceFarmerProducts(query?: MarketplaceFarmerProductQue
       const response = await marketplaceApi.listFarmerProducts(query);
       return response.result;
     },
+    select: (page: MarketplaceProductPage): MarketplaceProductPage => ({
+      ...page,
+      items: page.items ?? [],
+    }),
   });
 }
 
@@ -671,5 +713,6 @@ export function useMarketplaceAdminStats() {
       const response = await marketplaceApi.getAdminStats();
       return response.result;
     },
+    select: normalizeAdminStats,
   });
 }

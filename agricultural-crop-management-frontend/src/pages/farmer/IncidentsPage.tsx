@@ -98,7 +98,7 @@ const filterSelectBaseClass = "border-border acm-rounded-sm h-9 text-sm";
 // ═══════════════════════════════════════════════════════════════
 
 export function IncidentsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   // State
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -318,11 +318,11 @@ export function IncidentsPage() {
   const getSeverityBadge = (severity: string | null | undefined) => {
     switch (severity?.toUpperCase()) {
       case "HIGH":
-        return <Badge variant="destructive">High</Badge>;
+        return <Badge variant="destructive">{t("incidents.severity.high")}</Badge>;
       case "MEDIUM":
-        return <Badge variant="warning">Medium</Badge>;
+        return <Badge variant="warning">{t("incidents.severity.medium")}</Badge>;
       case "LOW":
-        return <Badge variant="secondary">Low</Badge>;
+        return <Badge variant="secondary">{t("incidents.severity.low")}</Badge>;
       default:
         return <Badge variant="outline">-</Badge>;
     }
@@ -366,25 +366,25 @@ export function IncidentsPage() {
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return "-";
     try {
-      return new Date(dateString).toLocaleDateString("vi-VN");
+      return new Date(dateString).toLocaleDateString(locale);
     } catch {
       return dateString;
     }
   };
 
   const incidentTypes = [
-    { value: "PEST_OUTBREAK", label: "Pest Outbreak" },
-    { value: "DISEASE", label: "Disease" },
-    { value: "EQUIPMENT_FAILURE", label: "Equipment Failure" },
-    { value: "WEATHER_DAMAGE", label: "Weather Damage" },
-    { value: "SAFETY", label: "Safety Issue" },
-    { value: "OTHER", label: "Other" },
+    { value: "PEST_OUTBREAK", label: t("incidents.types.pestOutbreak") },
+    { value: "DISEASE", label: t("incidents.types.disease") },
+    { value: "EQUIPMENT_FAILURE", label: t("incidents.types.equipmentFailure") },
+    { value: "WEATHER_DAMAGE", label: t("incidents.types.weatherDamage") },
+    { value: "SAFETY", label: t("incidents.types.safety") },
+    { value: "OTHER", label: t("incidents.types.other") },
   ];
 
   const severities = [
-    { value: "LOW", label: "Low" },
-    { value: "MEDIUM", label: "Medium" },
-    { value: "HIGH", label: "High" },
+    { value: "LOW", label: t("incidents.severity.low") },
+    { value: "MEDIUM", label: t("incidents.severity.medium") },
+    { value: "HIGH", label: t("incidents.severity.high") },
   ];
 
   const statuses = [
@@ -687,8 +687,11 @@ export function IncidentsPage() {
             {incidentsData && incidentsData.totalPages > 1 && (
               <div className="flex items-center justify-between mt-4">
                 <p className="text-sm text-muted-foreground">
-                  Page {currentPage + 1} of {incidentsData.totalPages} (
-                  {incidentsData.totalElements} total)
+                  {t("incidents.pagination.summary", {
+                    page: currentPage + 1,
+                    totalPages: incidentsData.totalPages,
+                    total: incidentsData.totalElements,
+                  })}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -741,17 +744,19 @@ export function IncidentsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {isEditDialogOpen ? "Edit Incident" : "Report New Incident"}
+              {isEditDialogOpen
+                ? t("incidents.dialog.editTitle")
+                : t("incidents.dialog.createTitle")}
             </DialogTitle>
             <DialogDescription>
               {isEditDialogOpen
-                ? "Update incident details"
-                : "Fill in the details to report a new incident"}
+                ? t("incidents.dialog.editDescription")
+                : t("incidents.dialog.createDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Incident Type *</Label>
+              <Label>{t("incidents.form.type")} *</Label>
               <Select
                 value={formState.incidentType ?? ""}
                 onValueChange={(val) =>
@@ -759,7 +764,7 @@ export function IncidentsPage() {
                 }
               >
                 <SelectTrigger className={selectTriggerClass}>
-                  <SelectValue placeholder="Select type..." />
+                  <SelectValue placeholder={t("incidents.form.selectType")} />
                 </SelectTrigger>
                 <SelectContent>
                   {incidentTypes.map((t) => (
@@ -771,7 +776,7 @@ export function IncidentsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Severity *</Label>
+              <Label>{t("incidents.form.severity")} *</Label>
               <Select
                 value={formState.severity ?? ""}
                 onValueChange={(val) =>
@@ -779,7 +784,7 @@ export function IncidentsPage() {
                 }
               >
                 <SelectTrigger className={selectTriggerClass}>
-                  <SelectValue placeholder="Select severity..." />
+                  <SelectValue placeholder={t("incidents.form.selectSeverity")} />
                 </SelectTrigger>
                 <SelectContent>
                   {severities.map((s) => (
@@ -791,9 +796,9 @@ export function IncidentsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Description *</Label>
+              <Label>{t("incidents.form.description")} *</Label>
               <Textarea
-                placeholder="Describe the incident..."
+                placeholder={t("incidents.form.descriptionPlaceholder")}
                 value={formState.description ?? ""}
                 onChange={(e) =>
                   setFormState((s) => ({ ...s, description: e.target.value }))
@@ -802,7 +807,7 @@ export function IncidentsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Deadline (Optional)</Label>
+              <Label>{t("incidents.form.deadlineOptional")}</Label>
               <Input
                 type="date"
                 value={formState.deadline ?? ""}
@@ -844,16 +849,16 @@ export function IncidentsPage() {
       <Dialog open={isResolveDialogOpen} onOpenChange={setIsResolveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Resolve Incident</DialogTitle>
+            <DialogTitle>{t("incidents.dialog.resolveTitle")}</DialogTitle>
             <DialogDescription>
-              Provide a resolution note to close this incident
+              {t("incidents.dialog.resolveDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Resolution Note *</Label>
+              <Label>{t("incidents.form.resolutionNote")} *</Label>
               <Textarea
-                placeholder="Describe how the incident was resolved..."
+                placeholder={t("incidents.form.resolutionPlaceholder")}
                 value={resolutionNote}
                 onChange={(e) => setResolutionNote(e.target.value)}
                 rows={4}
@@ -887,10 +892,9 @@ export function IncidentsPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Incident</DialogTitle>
+            <DialogTitle>{t("incidents.dialog.deleteTitle")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this incident? This action cannot
-              be undone.
+              {t("incidents.dialog.deleteDescription")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

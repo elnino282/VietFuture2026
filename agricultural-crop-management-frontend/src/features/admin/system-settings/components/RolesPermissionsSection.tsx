@@ -28,7 +28,7 @@ export function RolesPermissionsSection({
                         <CardTitle>Role & Permission Matrix</CardTitle>
                         <CardDescription>Manage user roles and module permissions</CardDescription>
                     </div>
-                    <Button className="bg-[#2563EB] hover:bg-[#1E40AF]" onClick={onAddRole}>
+                    <Button onClick={onAddRole}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Role
                     </Button>
@@ -108,7 +108,7 @@ export function RolesPermissionsSection({
                 </div>
 
                 <div className="flex gap-2">
-                    <Button className="bg-[#2563EB] hover:bg-[#1E40AF]">
+                    <Button>
                         <Save className="w-4 h-4 mr-2" />
                         Save Permissions
                     </Button>

@@ -9,16 +9,16 @@ import { QuickActionsPanel } from "./components/QuickActionsPanel";
 import { AddBatchDialog } from "./components/AddBatchDialog";
 import { HarvestDetailsDrawer } from "./components/HarvestDetailsDrawer";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import { useMyWarehouses } from "@/entities/inventory";
 import { useSeasons } from "@/entities/season";
 import { useParams } from "react-router-dom";
@@ -55,7 +55,7 @@ export function HarvestManagement() {
     selectedBatch,
     isDetailsDrawerOpen,
     setIsDetailsDrawerOpen,
-    batches,
+    selectedBatchIds,
     formData,
     setFormData,
 
@@ -77,6 +77,9 @@ export function HarvestManagement() {
     // Handlers
     handleAddBatch,
     handleDeleteBatch,
+    handleDeleteSelectedBatches,
+    handleToggleBatchSelection,
+    handleToggleAllSelection,
     resetForm,
     handleViewDetails,
     handleQuickAction,
@@ -293,8 +296,12 @@ export function HarvestManagement() {
             <HarvestTable
               batches={filteredBySearch}
               totalBatches={filteredBatches.length}
+              selectedBatchIds={selectedBatchIds}
               onViewDetails={handleViewDetails}
               onDeleteBatch={handleDeleteBatch}
+              onDeleteSelected={handleDeleteSelectedBatches}
+              onToggleBatchSelection={handleToggleBatchSelection}
+              onToggleAllSelection={handleToggleAllSelection}
               onExport={handleExport}
               onPrint={handlePrint}
               getStatusBadge={getStatusBadge}

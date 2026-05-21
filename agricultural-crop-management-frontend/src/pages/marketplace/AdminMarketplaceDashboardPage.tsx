@@ -1,19 +1,22 @@
 import { Package, ShieldAlert, ShoppingBag, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { MarketplaceStatsUnavailableReason } from "@/shared/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
 import { useMarketplaceAdminStats } from "@/features/marketplace/hooks";
-import { formatVnd } from "@/features/marketplace/lib/format";
+import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
 
 function MetricCard({
   icon: Icon,
   label,
   value,
   tone,
+  helperText,
 }: {
   icon: typeof Package;
   label: string;
   value: string | number;
   tone: string;
+  helperText?: string;
 }) {
   return (
     <Card className="border-border shadow-sm">
@@ -24,10 +27,28 @@ function MetricCard({
         <div>
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
           <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
+          {helperText ? (
+            <p className="mt-1 text-xs text-muted-foreground">{helperText}</p>
+          ) : null}
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function unavailableReasonLabel(reason: MarketplaceStatsUnavailableReason) {
+  switch (reason) {
+    case "NO_PRODUCTS":
+      return "No marketplace products are available in the system yet.";
+    case "NO_ORDERS":
+      return "No marketplace orders have been created yet.";
+    case "NO_REVENUE_DATA":
+      return "Revenue data is unavailable because there are no orders yet.";
+    case "NO_COMPLETED_ORDERS":
+      return "Revenue data is unavailable because no order has reached completed status.";
+    default:
+      return "Some marketplace metrics are unavailable.";
+  }
 }
 
 export function AdminMarketplaceDashboardPage() {
@@ -54,6 +75,12 @@ export function AdminMarketplaceDashboardPage() {
   }
 
   const stats = statsQuery.data;
+  const hasProducts = stats.hasProducts;
+  const hasOrders = stats.hasOrders;
+  const hasRevenueData = stats.hasRevenueData;
+  const showSystemEmpty = !hasProducts && !hasOrders;
+  const pendingPaymentVerificationOrders = stats.pendingPaymentVerificationOrders;
+  const unavailableReasons = stats.unavailableReasons;
 
   return (
     <div className="space-y-6">
@@ -62,7 +89,7 @@ export function AdminMarketplaceDashboardPage() {
           <p className="text-sm font-medium text-primary">FarmTrace Admin</p>
           <h1 className="mt-1 text-3xl font-bold text-foreground">Marketplace dashboard</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Restore the older moderation dashboard feel while keeping the current live statistics and admin workflows.
+            Live marketplace metrics only. Empty states are shown when product, order, or revenue data is not available yet.
           </p>
         </div>
         <div className="flex flex-wrap gap-3 text-sm">
@@ -81,12 +108,28 @@ export function AdminMarketplaceDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+      {showSystemEmpty ? (
+        <Card className="border-dashed border-border">
+          <CardContent className="space-y-3 p-8 text-center">
+            <h2 className="text-xl font-semibold text-foreground">Marketplace has no product or order yet</h2>
+            <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
+              Admin stats are live and currently empty because sellers have not published products and buyers have not placed orders.
+            </p>
+            {unavailableReasons.length > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {unavailableReasons.map(unavailableReasonLabel).join(" ")}
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard
           icon={Package}
           label="Total products"
           value={stats.totalProducts}
-          tone="bg-blue-100 text-blue-600"
+          tone="bg-emerald-100 text-primary"
         />
         <MetricCard
           icon={Package}
@@ -105,6 +148,13 @@ export function AdminMarketplaceDashboardPage() {
           label="Total orders"
           value={stats.totalOrders}
           tone="bg-purple-100 text-purple-600"
+        />
+        <MetricCard
+          icon={ShieldAlert}
+          label="Payment proofs pending"
+          value={pendingPaymentVerificationOrders}
+          tone={pendingPaymentVerificationOrders > 0 ? "bg-orange-100 text-orange-600" : "bg-muted text-muted-foreground"}
+          helperText={pendingPaymentVerificationOrders > 0 ? "Requires admin verification." : "No pending verification."}
         />
       </div>
 
@@ -130,6 +180,12 @@ export function AdminMarketplaceDashboardPage() {
               <span className="text-muted-foreground">Hidden products</span>
               <span className="font-semibold text-foreground">{stats.hiddenProducts}</span>
             </div>
+            <div className="flex items-center justify-between rounded-xl border border-border p-4">
+              <span className="text-muted-foreground">Last order activity</span>
+              <span className="font-semibold text-foreground">
+                {stats.lastOrderAt ? formatDateTime(stats.lastOrderAt) : "No orders yet"}
+              </span>
+            </div>
           </CardContent>
         </Card>
 
@@ -145,10 +201,27 @@ export function AdminMarketplaceDashboardPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Marketplace revenue</p>
-                  <p className="mt-1 text-3xl font-bold text-primary">{formatVnd(stats.totalRevenue)}</p>
+                  <p className="mt-1 text-3xl font-bold text-primary">
+                    {hasRevenueData && stats.totalRevenue != null ? formatVnd(stats.totalRevenue) : "--"}
+                  </p>
+                  {!hasRevenueData ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Revenue metric is empty until completed orders are available.
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </div>
+
+            {pendingPaymentVerificationOrders > 0 ? (
+              <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
+                <p className="text-sm font-medium text-orange-800">Pending payment verifications</p>
+                <p className="mt-2 text-2xl font-bold text-foreground">{pendingPaymentVerificationOrders}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Review bank transfer proof submissions in the order moderation screen.
+                </p>
+              </div>
+            ) : null}
 
             <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-5">
               <p className="text-sm font-medium text-yellow-800">Pending product approvals</p>

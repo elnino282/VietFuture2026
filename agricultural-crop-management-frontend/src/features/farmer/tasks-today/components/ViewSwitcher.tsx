@@ -1,11 +1,11 @@
 import { Table as TableIcon, CalendarDays, Columns2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/shared/ui/tooltip';
 import { TaskViewMode } from '../types';
 
 interface ViewSwitcherProps {

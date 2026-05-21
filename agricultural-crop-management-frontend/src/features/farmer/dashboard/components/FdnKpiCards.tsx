@@ -1,6 +1,7 @@
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Skeleton } from '@/shared/ui/skeleton';
 import type { DashboardFdnOverview, DashboardMetricStatus } from '@/entities/dashboard';
 import { FlaskConical, Leaf, LineChart, Sprout, WavesLadder, Wheat } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -11,10 +12,17 @@ import {
   isMetricUnavailable,
   metricStatusColor,
 } from '../lib/metrics';
+import {
+  buildUnavailableActionLinks,
+  getUnavailableReasons,
+  hasUnavailableCoreMetrics,
+  unavailableReasonLabel,
+} from '../lib/unavailable';
 
 interface FdnKpiCardsProps {
   overview: DashboardFdnOverview | null;
   isLoading: boolean;
+  errorMessage?: string | null;
 }
 
 function KpiSkeletonCard() {
@@ -51,16 +59,83 @@ function missingLabel(status: DashboardMetricStatus, t: (key: string, options?: 
   return t('dashboard.fdn.metricUnavailable', { defaultValue: 'Unavailable' });
 }
 
-export function FdnKpiCards({ overview, isLoading }: FdnKpiCardsProps) {
+export function FdnKpiCards({ overview, isLoading, errorMessage }: FdnKpiCardsProps) {
   const { t } = useTranslation();
 
-  if (isLoading || !overview) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
         {Array.from({ length: 6 }).map((_, index) => (
           <KpiSkeletonCard key={index} />
         ))}
       </div>
+    );
+  }
+
+  if (!overview) {
+    return (
+      <Card className="border-border acm-card-elevated">
+        <CardHeader>
+          <CardTitle>
+            {t('dashboard.fdn.unavailableTitle', {
+              defaultValue: 'FDN dashboard metrics are unavailable',
+            })}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="acm-body-text text-muted-foreground">
+            {errorMessage
+              ?? t('dashboard.fdn.unavailableHint', {
+                defaultValue: 'The dashboard is missing context or required records for this panel.',
+              })}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const unavailableReasons = getUnavailableReasons(overview);
+  const unavailableActions = buildUnavailableActionLinks(overview, unavailableReasons, t);
+  const showUnavailablePanel = unavailableReasons.length > 0 && hasUnavailableCoreMetrics(overview);
+
+  if (showUnavailablePanel) {
+    return (
+      <Card className="border-border acm-card-elevated">
+        <CardHeader>
+          <CardTitle>
+            {t('dashboard.fdn.unavailableTitle', {
+              defaultValue: 'FDN dashboard metrics are unavailable',
+            })}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="acm-body-text text-muted-foreground">
+            {t('dashboard.fdn.unavailableHint', {
+              defaultValue: 'Complete missing season, harvest and nitrogen inputs to unlock FDN indicators.',
+            })}
+          </p>
+          <ul className="space-y-1 acm-body-text text-muted-foreground">
+            {unavailableReasons.map((reason) => (
+              <li key={reason}>- {unavailableReasonLabel(reason, t)}</li>
+            ))}
+          </ul>
+          {overview.missingInputs.length > 0 && (
+            <p className="acm-body-text text-amber-700">
+              {t('dashboard.fdn.missingInputs', { defaultValue: 'Missing inputs' })}:{' '}
+              {overview.missingInputs.join(', ')}
+            </p>
+          )}
+          {unavailableActions.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {unavailableActions.map((action) => (
+                <Button key={action.key} asChild variant="outline" size="sm">
+                  <a href={action.href}>{action.label}</a>
+                </Button>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     );
   }
 

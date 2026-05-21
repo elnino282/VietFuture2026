@@ -37,4 +37,18 @@ public interface DashboardTaskViewRepository extends JpaRepository<DashboardTask
             @Param("today") LocalDate today,
             @Param("untilDate") LocalDate untilDate,
             @Param("excludedStatuses") List<TaskStatus> excludedStatuses);
+
+    @Query("SELECT d FROM DashboardTaskView d " +
+            "WHERE d.userId = :userId " +
+            "AND (:seasonId IS NULL OR d.seasonId = :seasonId) " +
+            "AND d.dueDate IS NOT NULL " +
+            "AND d.dueDate < :today " +
+            "AND d.status NOT IN :excludedStatuses " +
+            "ORDER BY d.dueDate ASC")
+    List<DashboardTaskView> findOverdueTasks(
+            @Param("userId") Long userId,
+            @Param("seasonId") Integer seasonId,
+            @Param("today") LocalDate today,
+            @Param("excludedStatuses") List<TaskStatus> excludedStatuses,
+            Pageable pageable);
 }

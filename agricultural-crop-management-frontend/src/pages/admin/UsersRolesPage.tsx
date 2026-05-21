@@ -5,8 +5,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+// eslint-disable-next-line no-restricted-imports -- Existing page still uses legacy i18n hook until migration is completed.
 import { useI18n } from "@/hooks/useI18n";
+// eslint-disable-next-line no-restricted-imports -- Existing page still relies on legacy admin service module during FSD migration.
 import {
+    adminBuyerApi,
+    adminFarmerApi,
     adminRoleApi,
     adminUsersApi,
     type AdminUser,
@@ -68,6 +72,7 @@ export function UsersRolesPage() {
   const [editingRole, setEditingRole] = useState<Role | null>(null);
 
   const tabParam = searchParams.get("tab");
+  const roleParam = (searchParams.get("role") ?? "").toUpperCase();
   const qParam = searchParams.get("q") ?? "";
   const userIdParam = Number(searchParams.get("userId"));
   const parsedUserId = Number.isFinite(userIdParam) ? userIdParam : null;
@@ -90,11 +95,18 @@ export function UsersRolesPage() {
     setError(null);
     try {
       const keyword = keywordOverride ?? searchTerm;
-      const response = await adminUsersApi.list({
+      const listParams = {
         page,
         size: 20,
         keyword: keyword || undefined,
-      });
+      };
+
+      const response =
+        roleParam === "BUYER"
+          ? await adminBuyerApi.list(listParams)
+          : roleParam === "FARMER"
+            ? await adminFarmerApi.list(listParams)
+            : await adminUsersApi.list(listParams);
       if (response?.items) {
         setUsers(response.items);
         setTotalPages(response.totalPages || 0);
@@ -127,7 +139,7 @@ export function UsersRolesPage() {
     } else {
       fetchRoles();
     }
-  }, [activeTab, page]);
+  }, [activeTab, page, roleParam]);
 
   useEffect(() => {
     if (tabParam === "users" || tabParam === "roles") {
@@ -228,9 +240,15 @@ export function UsersRolesPage() {
       await adminUsersApi.delete(Number(user.id));
       toast.success(t('admin.users.toast.deleteSuccess'));
       fetchUsers();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to delete user:", err);
-      const errorCode = err?.response?.data?.code;
+      const errorCode =
+        typeof err === "object" &&
+        err !== null &&
+        "response" in err &&
+        typeof (err as { response?: { data?: { code?: unknown } } }).response?.data?.code === "string"
+          ? (err as { response?: { data?: { code?: string } } }).response?.data?.code
+          : undefined;
       if (errorCode === "ERR_USER_HAS_ASSOCIATED_DATA") {
         toast.error(t('admin.users.toast.deleteHasData'));
       } else {
@@ -504,9 +522,15 @@ export function UsersRolesPage() {
       await adminRoleApi.delete(role.code || "");
       toast.success(t('admin.roles.toast.deleteSuccess'));
       fetchRoles();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to delete role:", err);
-      const errorCode = err?.response?.data?.code;
+      const errorCode =
+        typeof err === "object" &&
+        err !== null &&
+        "response" in err &&
+        typeof (err as { response?: { data?: { code?: unknown } } }).response?.data?.code === "string"
+          ? (err as { response?: { data?: { code?: string } } }).response?.data?.code
+          : undefined;
       if (errorCode === "ROLE_NOT_FOUND") {
         toast.error(t('admin.roles.toast.deleteNotFound'));
       } else {

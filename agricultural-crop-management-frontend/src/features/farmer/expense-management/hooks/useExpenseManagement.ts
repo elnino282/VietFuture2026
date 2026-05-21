@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -6,15 +7,18 @@ import {
     expenseApi,
     expenseKeys,
     useAllFarmerExpenses,
-    useBudgetTracker,
     useCreateExpense,
-    useUpdateExpense,
     useDeleteExpense,
+    useUpdateExpense,
     type Expense as ApiExpense,
 } from "@/entities/expense";
 import { useTasksBySeason, type Task as ApiTask } from "@/entities/task";
 import { useAllSuppliers } from "@/entities/supplies";
 import type { Expense, ExpenseFormData, TaskOption } from "../types";
+
+interface UseExpenseManagementOptions {
+    scopedSeasonId?: number | null;
+}
 
 const INITIAL_FORM_DATA: ExpenseFormData = {
     date: "",
@@ -35,6 +39,8 @@ const INITIAL_FORM_DATA: ExpenseFormData = {
     attachmentUrl: undefined,
 };
 
+const LOCKED_SEASON_STATUSES = new Set(["COMPLETED", "CANCELLED", "ARCHIVED"]);
+
 const CATEGORY_KEYWORDS: Array<{ keywords: string[]; category: string }> = [
     { keywords: ["fertilizer", "npk", "urea", "compost"], category: "Fertilizer" },
     { keywords: ["seed", "seedling", "seedlings"], category: "Seeds" },
@@ -45,6 +51,20 @@ const CATEGORY_KEYWORDS: Array<{ keywords: string[]; category: string }> = [
     { keywords: ["utility", "electric", "water", "fuel"], category: "Utilities" },
     { keywords: ["repair", "maintenance", "service"], category: "Maintenance" },
 ];
+
+const isValidSeasonId = (value: unknown): value is number =>
+    typeof value === "number" && Number.isInteger(value) && value > 0;
+
+const toLocalDate = (value?: string | null) => {
+    if (!value) {
+        return null;
+    }
+    const parsed = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) {
+        return null;
+    }
+    return parsed;
+};
 
 const inferCategory = (itemName: string | null | undefined): string => {
     if (!itemName) return "Other";
@@ -81,20 +101,45 @@ const mapApiExpense = (expense: ApiExpense, fallbackSeasonName: string): Expense
     };
 };
 
-export function useExpenseManagement() {
+const toReadableApiError = (error: unknown, fallback: string) => {
+    if (isAxiosError(error)) {
+        const payload = error.response?.data as { message?: string; code?: string } | undefined;
+        if (payload?.message) {
+            return payload.message;
+        }
+        if (typeof error.message === "string" && error.message.length > 0) {
+            return error.message;
+        }
+    }
+
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+
+    return fallback;
+};
+
+export function useExpenseManagement(options: UseExpenseManagementOptions = {}) {
     const queryClient = useQueryClient();
     const seasonContext = useOptionalSeason();
     const seasons = seasonContext?.seasons ?? [];
-    const seasonId = seasonContext?.selectedSeasonId ?? null;
-    const setSeasonId = seasonContext?.setSelectedSeasonId ?? (() => {});
+    const fixedSeasonId = isValidSeasonId(options.scopedSeasonId) ? options.scopedSeasonId : null;
+    const contextSeasonId = seasonContext?.selectedSeasonId ?? null;
+    const seasonId = fixedSeasonId ?? contextSeasonId;
+    const setSeasonIdFromContext = seasonContext?.setSelectedSeasonId ?? (() => { });
 
-    const selectedSeason = seasonId ? String(seasonId) : "";
-
-    const currentSeasonPlotId = useMemo(() => {
-        if (!seasonId) return undefined;
-        const season = seasons.find((s) => s.id === seasonId);
-        return season?.plotId ?? undefined;
+    const selectedSeasonData = useMemo(() => {
+        if (!isValidSeasonId(seasonId)) {
+            return null;
+        }
+        return seasons.find((season) => season.id === seasonId) ?? null;
     }, [seasonId, seasons]);
+
+    const selectedSeason = isValidSeasonId(seasonId) ? String(seasonId) : "";
+    const selectedSeasonName = selectedSeasonData?.seasonName ?? "";
+    const selectedSeasonStatus = selectedSeasonData?.status ?? null;
+    const isSeasonWriteLocked =
+        !!selectedSeasonStatus && LOCKED_SEASON_STATUSES.has(selectedSeasonStatus);
 
     const seasonOptions = useMemo(() => {
         return seasons.map((season) => ({
@@ -103,20 +148,6 @@ export function useExpenseManagement() {
             plotId: season.plotId,
         }));
     }, [seasons]);
-
-    const selectedSeasonName = useMemo(() => {
-        if (!seasonId) return "";
-        return seasons.find((season) => season.id === seasonId)?.seasonName ?? "";
-    }, [seasonId, seasons]);
-
-    const selectedSeasonStatus = useMemo(() => {
-        if (!seasonId) return null;
-        return seasons.find((season) => season.id === seasonId)?.status ?? null;
-    }, [seasonId, seasons]);
-    const isSeasonWriteLocked =
-        selectedSeasonStatus === "COMPLETED"
-        || selectedSeasonStatus === "CANCELLED"
-        || selectedSeasonStatus === "ARCHIVED";
 
     // Tab State
     const [activeTab, setActiveTab] = useState("list");
@@ -137,15 +168,15 @@ export function useExpenseManagement() {
     const resetForm = useCallback(() => {
         setFormData({
             ...INITIAL_FORM_DATA,
-            linkedSeason: selectedSeasonName || "",
-            linkedSeasonId: seasonId ?? undefined,
-            linkedPlotId: currentSeasonPlotId,
+            linkedSeason: selectedSeasonName,
+            linkedSeasonId: selectedSeasonData?.id,
+            linkedPlotId: selectedSeasonData?.plotId,
         });
         setSelectedExpense(null);
         setShowValidationErrors(false);
-    }, [selectedSeasonName, seasonId, currentSeasonPlotId]);
+    }, [selectedSeasonData?.id, selectedSeasonData?.plotId, selectedSeasonName]);
 
-    const hasSeason = !!seasonId && seasonId > 0;
+    const hasSeason = isValidSeasonId(seasonId);
 
     const listParams = useMemo(() => ({
         seasonId: seasonId ?? undefined,
@@ -164,20 +195,18 @@ export function useExpenseManagement() {
     } = useAllFarmerExpenses(listParams, { enabled: hasSeason });
 
     const {
-        data: tracker,
-        isLoading: isLoadingTracker,
-        refetch: refetchTracker,
-    } = useBudgetTracker(seasonId ?? 0, { enabled: hasSeason });
-
-    const {
         data: taskData,
         isLoading: isLoadingTasks,
-    } = useTasksBySeason(seasonId ?? 0, {
-        page: 0,
-        size: 100,
-        sortBy: "title",
-        sortDirection: "asc",
-    }, { enabled: hasSeason });
+    } = useTasksBySeason(
+        seasonId ?? 0,
+        {
+            page: 0,
+            size: 100,
+            sortBy: "title",
+            sortDirection: "asc",
+        },
+        { enabled: hasSeason }
+    );
 
     const { data: supplierData } = useAllSuppliers();
 
@@ -199,9 +228,9 @@ export function useExpenseManagement() {
         }));
     }, [supplierData]);
 
-    const createMutation = useCreateExpense(seasonId ?? 0);
-    const updateMutation = useUpdateExpense(seasonId ?? 0);
-    const deleteMutation = useDeleteExpense(seasonId ?? 0);
+    const createMutation = useCreateExpense();
+    const updateMutation = useUpdateExpense();
+    const deleteMutation = useDeleteExpense();
 
     const expenses = useMemo(() => {
         const items = expenseData?.items ?? [];
@@ -210,18 +239,67 @@ export function useExpenseManagement() {
 
     const totalCount = expenseData?.totalElements ?? expenses.length;
 
-    const totalExpenses = tracker?.total ?? 0;
-    const budgetUsagePercentage = tracker?.usagePercent ?? null;
-    const remainingBudget = tracker?.remaining ?? null;
-    const paidExpenses = tracker?.paid ?? 0;
-    const unpaidExpenses = tracker?.unpaid ?? 0;
-    const budgetAmount = tracker?.budgetAmount ?? null;
+    const totalExpenses = useMemo(
+        () => expenses.reduce((sum, expense) => sum + (Number.isFinite(expense.amount) ? expense.amount : 0), 0),
+        [expenses]
+    );
 
-    const pendingExpenses = useMemo(() =>
-        expenses.filter((expense) => expense.status === "PENDING" || expense.status === "UNPAID"),
-    [expenses]);
+    const paidExpenses = useMemo(
+        () => expenses.filter((expense) => expense.status === "PAID").reduce((sum, expense) => sum + expense.amount, 0),
+        [expenses]
+    );
+    const unpaidExpenses = useMemo(
+        () => expenses.filter((expense) => expense.status === "UNPAID").reduce((sum, expense) => sum + expense.amount, 0),
+        [expenses]
+    );
+
+    const budgetAmount = selectedSeasonData?.budgetAmount ?? null;
+    const budgetUsagePercentage =
+        budgetAmount && budgetAmount > 0
+            ? (totalExpenses / budgetAmount) * 100
+            : null;
+    const remainingBudget =
+        budgetAmount && budgetAmount > 0
+            ? budgetAmount - totalExpenses
+            : null;
+
+    const pendingExpenses = useMemo(
+        () => expenses.filter((expense) => expense.status === "PENDING" || expense.status === "UNPAID"),
+        [expenses]
+    );
 
     const filteredExpenses = expenses;
+
+    const validateExpenseDateInSeason = useCallback((dateValue: string, selectedSeasonId: number) => {
+        const selectedSeasonRecord = seasons.find((season) => season.id === selectedSeasonId);
+        if (!selectedSeasonRecord) {
+            return "Selected season does not exist.";
+        }
+
+        const expenseDate = toLocalDate(dateValue);
+        if (!expenseDate) {
+            return "Expense date is invalid.";
+        }
+
+        const seasonStartDate = toLocalDate(selectedSeasonRecord.startDate);
+        const seasonEndDate = toLocalDate(
+            selectedSeasonRecord.endDate ?? selectedSeasonRecord.plannedHarvestDate ?? null
+        );
+
+        if (!seasonStartDate) {
+            return "Season start date is invalid.";
+        }
+
+        if (expenseDate < seasonStartDate) {
+            return `Expense date must be on or after ${selectedSeasonRecord.startDate}.`;
+        }
+
+        if (seasonEndDate && expenseDate > seasonEndDate) {
+            return `Expense date must be on or before ${selectedSeasonRecord.endDate ?? selectedSeasonRecord.plannedHarvestDate}.`;
+        }
+
+        return null;
+    }, [seasons]);
 
     const handleAddExpense = useCallback(async () => {
         if (isSeasonWriteLocked) {
@@ -230,6 +308,7 @@ export function useExpenseManagement() {
             });
             return;
         }
+
         if (!hasSeason) {
             toast.error("Select a season", {
                 description: "Choose a season before recording expenses.",
@@ -239,8 +318,17 @@ export function useExpenseManagement() {
 
         if (!formData.date || !formData.category || !formData.amount) {
             setShowValidationErrors(true);
-            toast.error("Missing Required Fields", {
-                description: "Please fill in all required fields marked with *",
+            toast.error("Missing required fields", {
+                description: "Date, category, and amount are required.",
+            });
+            return;
+        }
+
+        const parsedDate = toLocalDate(formData.date);
+        if (!parsedDate) {
+            setShowValidationErrors(true);
+            toast.error("Invalid date", {
+                description: "Expense date must be a valid calendar date.",
             });
             return;
         }
@@ -254,49 +342,60 @@ export function useExpenseManagement() {
             return;
         }
 
-        // Validation: Date cannot be in the future
-        const expenseDate = new Date(formData.date);
-        const today = new Date();
-        today.setHours(23, 59, 59, 999); // End of today
-        if (expenseDate > today) {
-            setShowValidationErrors(true);
-            toast.error("Invalid date", {
-                description: "Expense date cannot be in the future.",
-            });
-            return;
-        }
-
         const selectedSeasonId = formData.linkedSeasonId ?? seasonId;
-        if (!selectedSeasonId) {
+        if (!isValidSeasonId(selectedSeasonId)) {
             setShowValidationErrors(true);
             toast.error("Season required", {
-                description: "Select a season for this expense.",
+                description: "Select a valid season for this expense.",
             });
             return;
         }
 
-        const plotId = formData.linkedPlotId ?? currentSeasonPlotId;
+        const selectedSeasonRecord = seasons.find((season) => season.id === selectedSeasonId);
+        if (!selectedSeasonRecord) {
+            setShowValidationErrors(true);
+            toast.error("Invalid season", {
+                description: "The selected season was not found.",
+            });
+            return;
+        }
+
+        const selectedSeasonStatus = selectedSeasonRecord.status ?? "";
+        if (LOCKED_SEASON_STATUSES.has(selectedSeasonStatus)) {
+            toast.error("Season is locked", {
+                description: "Expense write actions are disabled for this season.",
+            });
+            return;
+        }
+
+        const dateValidationError = validateExpenseDateInSeason(formData.date, selectedSeasonId);
+        if (dateValidationError) {
+            setShowValidationErrors(true);
+            toast.error("Invalid date", {
+                description: dateValidationError,
+            });
+            return;
+        }
+
+        const plotId = formData.linkedPlotId ?? selectedSeasonRecord.plotId;
         if (!plotId) {
             setShowValidationErrors(true);
-            toast.error("Missing Plot Information", {
+            toast.error("Missing plot information", {
                 description: "Season must have an associated plot.",
             });
             return;
         }
 
         const taskId = formData.linkedTaskId ??
-            (formData.linkedTask ? parseInt(formData.linkedTask, 10) : undefined);
-
+            (formData.linkedTask ? Number.parseInt(formData.linkedTask, 10) : undefined);
         const payload = {
-            amount: amount,
+            amount,
             expenseDate: formData.date,
-            category: formData.category,
-            paymentStatus: formData.status,
-            plotId: plotId,
-            taskId: taskId && !isNaN(taskId) ? taskId : undefined,
-            vendorId: formData.vendorId,
+            category: formData.category.trim(),
+            plotId,
+            taskId: taskId && !Number.isNaN(taskId) ? taskId : undefined,
             note: formData.notes || undefined,
-            itemName: formData.description.trim() || formData.category,
+            itemName: formData.description.trim() || formData.category.trim(),
             unitPrice: amount,
             quantity: 1,
         };
@@ -310,31 +409,39 @@ export function useExpenseManagement() {
                         seasonId: selectedSeasonId,
                     },
                 })
-                : await createMutation.mutateAsync(payload);
+                : await createMutation.mutateAsync({
+                    seasonId: selectedSeasonId,
+                    data: payload,
+                });
 
             if (formData.attachmentFile) {
-                await expenseApi.uploadAttachment(savedExpense.id, formData.attachmentFile);
-                queryClient.invalidateQueries({ queryKey: expenseKeys.detail(savedExpense.id) });
-                queryClient.invalidateQueries({ queryKey: expenseKeys.lists() });
+                try {
+                    await expenseApi.uploadAttachment(savedExpense.id, formData.attachmentFile);
+                    await queryClient.invalidateQueries({ queryKey: expenseKeys.detail(savedExpense.id) });
+                    await queryClient.invalidateQueries({ queryKey: expenseKeys.lists() });
+                } catch (uploadError) {
+                    toast.warning("Expense saved, but attachment upload failed", {
+                        description: toReadableApiError(uploadError, "You can upload the receipt later."),
+                    });
+                }
             }
 
-            toast.success(selectedExpense ? "Expense Updated" : "Expense Added", {
+            toast.success(selectedExpense ? "Expense updated" : "Expense added", {
                 description: `${formData.description || formData.category} has been recorded.`,
             });
 
-            // Budget warning: Check if spending exceeds 80% after this expense
             if (!selectedExpense && budgetAmount && budgetAmount > 0) {
                 const newTotal = totalExpenses + amount;
                 const newUsagePercent = (newTotal / budgetAmount) * 100;
-                
+
                 if (newUsagePercent >= 100) {
-                    toast.warning("Budget Exceeded!", {
-                        description: `You have exceeded your season budget. Current spending: ${newUsagePercent.toFixed(1)}% of budget.`,
+                    toast.warning("Budget exceeded", {
+                        description: `Current spending is ${newUsagePercent.toFixed(1)}% of season budget.`,
                         duration: 6000,
                     });
                 } else if (newUsagePercent >= 80) {
-                    toast.warning("Budget Warning", {
-                        description: `You have used ${newUsagePercent.toFixed(1)}% of your season budget. Consider reviewing your expenses.`,
+                    toast.warning("Budget warning", {
+                        description: `You have used ${newUsagePercent.toFixed(1)}% of season budget.`,
                         duration: 5000,
                     });
                 }
@@ -344,30 +451,29 @@ export function useExpenseManagement() {
             setShowValidationErrors(false);
             resetForm();
             refetch();
-            refetchTracker();
-        } catch (err: any) {
+        } catch (err: unknown) {
             toast.error(selectedExpense ? "Failed to update expense" : "Failed to add expense", {
-                description: err?.message ?? "Please try again.",
+                description: toReadableApiError(err, "Please try again."),
             });
         }
     }, [
+        budgetAmount,
+        createMutation,
+        formData,
         hasSeason,
         isSeasonWriteLocked,
-        formData,
-        seasonId,
-        currentSeasonPlotId,
-        selectedExpense,
-        updateMutation,
-        createMutation,
         queryClient,
         refetch,
-        refetchTracker,
         resetForm,
-        budgetAmount,
+        seasonId,
+        selectedExpense,
+        seasons,
         totalExpenses,
+        updateMutation,
+        validateExpenseDateInSeason,
     ]);
 
-    const handleEditExpense = (expense: Expense) => {
+    const handleEditExpense = useCallback((expense: Expense) => {
         setSelectedExpense(expense);
         setFormData({
             date: expense.date,
@@ -389,43 +495,58 @@ export function useExpenseManagement() {
         });
         setShowValidationErrors(false);
         setIsAddExpenseOpen(true);
-    };
+    }, []);
 
-    const handleDeleteExpense = (id: number) => {
+    const handleDeleteExpense = useCallback((id: number) => {
+        if (!hasSeason || !isValidSeasonId(seasonId)) {
+            toast.error("Invalid season", {
+                description: "Select a valid season before deleting expenses.",
+            });
+            return;
+        }
+
         if (isSeasonWriteLocked) {
             toast.error("Season is locked", {
                 description: "Expense write actions are disabled for this season.",
             });
             return;
         }
-        deleteMutation.mutate(id, {
-            onSuccess: () => toast.success("Expense Deleted"),
-            onError: (err) =>
-                toast.error("Failed to delete expense", { description: err.message }),
-        });
-    };
 
-    const handleOpenAddExpense = () => {
+        deleteMutation.mutate(
+            { id, seasonId },
+            {
+                onSuccess: () => toast.success("Expense deleted"),
+                onError: (err) => toast.error("Failed to delete expense", {
+                    description: toReadableApiError(err, "Please try again."),
+                }),
+            }
+        );
+    }, [deleteMutation, hasSeason, isSeasonWriteLocked, seasonId]);
+
+    const handleOpenAddExpense = useCallback(() => {
         resetForm();
         setShowValidationErrors(false);
         setIsAddExpenseOpen(true);
-    };
+    }, [resetForm]);
 
-    const handleSeasonChange = (value: string) => {
-        const numericId = parseInt(value, 10);
-        if (!isNaN(numericId)) {
-            setSeasonId(numericId);
+    const handleSeasonChange = useCallback((value: string) => {
+        if (fixedSeasonId) {
+            return;
         }
-    };
+        const numericId = Number.parseInt(value, 10);
+        if (!Number.isNaN(numericId) && numericId > 0) {
+            setSeasonIdFromContext(numericId);
+        }
+    }, [fixedSeasonId, setSeasonIdFromContext]);
 
-    const handleTaskChange = (taskIdStr: string) => {
-        const taskId = parseInt(taskIdStr, 10);
-        setFormData({
-            ...formData,
+    const handleTaskChange = useCallback((taskIdStr: string) => {
+        const taskId = Number.parseInt(taskIdStr, 10);
+        setFormData((prev) => ({
+            ...prev,
             linkedTask: taskIdStr,
-            linkedTaskId: isNaN(taskId) ? undefined : taskId,
-        });
-    };
+            linkedTaskId: Number.isNaN(taskId) ? undefined : taskId,
+        }));
+    }, []);
 
     const handleExportExpenses = useCallback(async () => {
         if (!hasSeason) {
@@ -446,21 +567,31 @@ export function useExpenseManagement() {
             link.download = `expenses-${seasonLabel}-${date}.csv`;
             link.click();
             window.URL.revokeObjectURL(url);
-        } catch (err: any) {
+        } catch (err: unknown) {
+            if (isAxiosError(err) && err.response?.status === 404) {
+                toast.error("Export is not available", {
+                    description: "The backend does not expose expense CSV export in this environment.",
+                });
+                return;
+            }
             toast.error("Export failed", {
-                description: err?.message ?? "Please try again.",
+                description: toReadableApiError(err, "Please try again."),
             });
         }
     }, [hasSeason, listParams, selectedSeasonName]);
 
-    const handleQuickUpdate = useCallback(async (expense: Expense, updates: { status?: Expense["status"]; notes?: string }) => {
+    const handleQuickUpdate = useCallback(async (
+        expense: Expense,
+        updates: { status?: Expense["status"]; notes?: string }
+    ) => {
         if (isSeasonWriteLocked) {
             toast.error("Season is locked", {
                 description: "Expense write actions are disabled for this season.",
             });
             return;
         }
-        if (!expense.linkedSeasonId || !expense.linkedPlotId) {
+
+        if (!isValidSeasonId(expense.linkedSeasonId) || !expense.linkedPlotId) {
             toast.error("Cannot update expense", {
                 description: "Missing season or plot information.",
             });
@@ -476,23 +607,25 @@ export function useExpenseManagement() {
                     category: expense.category,
                     seasonId: expense.linkedSeasonId,
                     plotId: expense.linkedPlotId,
-                    paymentStatus: updates.status ?? expense.status,
                     taskId: expense.linkedTaskId,
-                    vendorId: expense.vendorId,
                     note: updates.notes ?? expense.notes,
                     itemName: expense.description,
                     unitPrice: expense.amount,
                     quantity: 1,
                 },
             });
+            if (updates.status && updates.status !== expense.status) {
+                toast.info("Payment status is local-only", {
+                    description: "This backend does not persist payment status on expense update.",
+                });
+            }
             refetch();
-            refetchTracker();
-        } catch (err: any) {
+        } catch (err: unknown) {
             toast.error("Failed to update expense", {
-                description: err?.message ?? "Please try again.",
+                description: toReadableApiError(err, "Please try again."),
             });
         }
-    }, [isSeasonWriteLocked, refetch, refetchTracker, updateMutation]);
+    }, [isSeasonWriteLocked, refetch, updateMutation]);
 
     return {
         // Tab State
@@ -554,7 +687,7 @@ export function useExpenseManagement() {
 
         // API state
         isLoading,
-        isLoadingTracker,
+        isLoadingTracker: false,
         error: error ?? null,
         refetch,
         isCreating: createMutation.isPending,

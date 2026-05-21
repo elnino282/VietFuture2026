@@ -83,6 +83,8 @@ public class AdminFarmQueryService {
                 .wardId(farm.getWard() != null ? farm.getWard().getId() : null)
                 .wardName(farm.getWard() != null ? farm.getWard().getName() : null)
                 .area(farm.getArea())
+                .latitude(farm.getLatitude())
+                .longitude(farm.getLongitude())
                 .active(farm.getActive())
                 .build();
     }

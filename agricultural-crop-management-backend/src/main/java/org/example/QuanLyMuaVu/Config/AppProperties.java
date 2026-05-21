@@ -13,6 +13,7 @@ public class AppProperties {
     private Mail mail = new Mail();
     private Ai ai = new Ai();
     private Marketplace marketplace = new Marketplace();
+    private Inventory inventory = new Inventory();
     private Sustainability sustainability = new Sustainability();
 
     public Jwt getJwt() {
@@ -47,6 +48,14 @@ public class AppProperties {
         this.marketplace = marketplace;
     }
 
+    public Inventory getInventory() {
+        return inventory;
+    }
+
+    public void setInventory(Inventory inventory) {
+        this.inventory = inventory;
+    }
+
     public Sustainability getSustainability() {
         return sustainability;
     }
@@ -64,6 +73,66 @@ public class AppProperties {
 
         public void setStorage(Storage storage) {
             this.storage = storage;
+        }
+    }
+
+    public static class Inventory {
+        private InventoryAlerts alerts = new InventoryAlerts();
+
+        public InventoryAlerts getAlerts() {
+            return alerts;
+        }
+
+        public void setAlerts(InventoryAlerts alerts) {
+            this.alerts = alerts;
+        }
+    }
+
+    public static class InventoryAlerts {
+        private BigDecimal lowStockThreshold = BigDecimal.valueOf(5);
+        private Integer expiringSoonDays = 30;
+        private Integer noMovementDays = 30;
+        private Integer abnormalAdjustCount = 2;
+        private BigDecimal abnormalAdjustRatio = new BigDecimal("0.50");
+
+        public BigDecimal getLowStockThreshold() {
+            return lowStockThreshold;
+        }
+
+        public void setLowStockThreshold(BigDecimal lowStockThreshold) {
+            this.lowStockThreshold = lowStockThreshold;
+        }
+
+        public Integer getExpiringSoonDays() {
+            return expiringSoonDays;
+        }
+
+        public void setExpiringSoonDays(Integer expiringSoonDays) {
+            this.expiringSoonDays = expiringSoonDays;
+        }
+
+        public Integer getNoMovementDays() {
+            return noMovementDays;
+        }
+
+        public void setNoMovementDays(Integer noMovementDays) {
+            this.noMovementDays = noMovementDays;
+        }
+
+        public Integer getAbnormalAdjustCount() {
+            return abnormalAdjustCount;
+        }
+
+        public void setAbnormalAdjustCount(Integer abnormalAdjustCount) {
+            this.abnormalAdjustCount = abnormalAdjustCount;
+        }
+
+        public BigDecimal getAbnormalAdjustRatio() {
+            return abnormalAdjustRatio;
+        }
+
+        public void setAbnormalAdjustRatio(BigDecimal abnormalAdjustRatio) {
+            this.abnormalAdjustRatio = abnormalAdjustRatio;
         }
     }
 

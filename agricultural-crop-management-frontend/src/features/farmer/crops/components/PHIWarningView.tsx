@@ -1,7 +1,7 @@
 import { AlertTriangle, CheckCircle, Zap } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
+import { Alert, AlertDescription } from '@/shared/ui/alert';
 import type { Crop } from '../types';
 
 interface PHIWarningViewProps {

@@ -3,6 +3,7 @@ package org.example.QuanLyMuaVu.module.marketplace.repository;
 import java.util.List;
 import java.util.Optional;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import org.example.QuanLyMuaVu.module.marketplace.entity.MarketplaceOrder;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceOrderStatus;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplacePaymentVerificationStatus;
@@ -32,6 +33,8 @@ public interface MarketplaceOrderRepository extends JpaRepository<MarketplaceOrd
     long countByStatus(MarketplaceOrderStatus status);
 
     long countByFarmerUser_Id(Long farmerUserId);
+
+    long countByPaymentVerificationStatus(MarketplacePaymentVerificationStatus paymentVerificationStatus);
 
     @Query("""
             SELECT o.id FROM MarketplaceOrder o
@@ -127,4 +130,17 @@ public interface MarketplaceOrderRepository extends JpaRepository<MarketplaceOrd
     List<MarketplaceOrder> findRecentByFarmerUserId(
             @Param("farmerUserId") Long farmerUserId,
             Pageable pageable);
+
+    @Query("""
+            SELECT MAX(o.createdAt)
+            FROM MarketplaceOrder o
+            WHERE o.farmerUser.id = :farmerUserId
+            """)
+    LocalDateTime findLastOrderAtByFarmerUserId(@Param("farmerUserId") Long farmerUserId);
+
+    @Query("""
+            SELECT MAX(o.createdAt)
+            FROM MarketplaceOrder o
+            """)
+    LocalDateTime findLastOrderAt();
 }

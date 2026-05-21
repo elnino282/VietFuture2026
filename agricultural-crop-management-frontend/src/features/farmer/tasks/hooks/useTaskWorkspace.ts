@@ -1,22 +1,33 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
+  taskKeys,
   useTasksBySeason,
   useCreateTask,
+  useUpdateTask,
   useUpdateTaskStatus,
   useDeleteTask,
   type Task as ApiTask,
   type TaskStatus as ApiTaskStatus,
+  type TaskStatusUpdateRequest,
+  type TaskUpdateRequest,
 } from '@/entities/task';
 import { useSeasonEmployees } from '@/entities/labor';
 import { useOptionalSeason } from '@/shared/contexts';
 import type { Task, TaskStatus, TaskType, ViewMode, FilterState } from '../types';
-import { STATUS_LABELS } from '../constants';
 
 /**
  * Transform API task to feature task format
  */
 const today = new Date().toISOString().split('T')[0];
+
+const TASK_QUERY_PARAMS = {
+  page: 0,
+  size: 200,
+  sortBy: 'dueDate',
+  sortDirection: 'asc',
+} as const;
 
 const toDateOnly = (value?: string | null) => (value ? value.split('T')[0] : undefined);
 
@@ -100,7 +111,39 @@ const mapFeatureStatusToApi = (status: TaskStatus): ApiTaskStatus => {
   }
 };
 
+const isValidDateInput = (value: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  return !Number.isNaN(new Date(value).getTime());
+};
+
+const buildTaskUpdatePayload = (
+  task: ApiTask,
+  overrides: Partial<Pick<TaskUpdateRequest, 'assigneeUserId' | 'dueDate'>>
+): TaskUpdateRequest => ({
+  title: task.title,
+  description: task.description ?? undefined,
+  seasonId: task.seasonId ?? undefined,
+  plannedDate: task.plannedDate ?? undefined,
+  dueDate: overrides.dueDate ?? task.dueDate ?? undefined,
+  notes: task.notes ?? undefined,
+  assigneeUserId: overrides.assigneeUserId ?? task.userId ?? undefined,
+});
+
+const buildStatusUpdatePayload = (status: TaskStatus): TaskStatusUpdateRequest => {
+  if (status === 'completed') {
+    return {
+      status: 'DONE',
+      actualStartDate: today,
+      actualEndDate: today,
+    };
+  }
+  return { status: mapFeatureStatusToApi(status) };
+};
+
 export function useTaskWorkspace() {
+  const queryClient = useQueryClient();
   const seasonContext = useOptionalSeason();
   const seasonId = seasonContext?.selectedSeasonId ?? 0;
   const selectedSeasonStatus = seasonContext?.selectedSeason?.status ?? null;
@@ -120,22 +163,15 @@ export function useTaskWorkspace() {
     refetch,
   } = useTasksBySeason(
     seasonId,
-    {
-      page: 0,
-      size: 200,
-      sortBy: "dueDate",
-      sortDirection: "asc",
-    },
+    TASK_QUERY_PARAMS,
     { enabled: seasonId > 0 }
   );
   const createMutation = useCreateTask(seasonId, {
     onSuccess: () => { toast.success('Task created'); setCreateTaskOpen(false); },
     onError: (err) => toast.error('Failed to create task', { description: err.message }),
   });
-  const updateStatusMutation = useUpdateTaskStatus(seasonId, {
-    onSuccess: () => toast.success('Task status updated'),
-    onError: (err) => toast.error('Failed to update', { description: err.message }),
-  });
+  const updateTaskMutation = useUpdateTask(seasonId);
+  const updateStatusMutation = useUpdateTaskStatus(seasonId);
   const deleteMutation = useDeleteTask(seasonId, {
     onSuccess: () => toast.success('Task deleted'),
     onError: (err) => toast.error('Failed to delete', { description: err.message }),
@@ -152,12 +188,111 @@ export function useTaskWorkspace() {
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [reassignOpen, setReassignOpen] = useState(false);
+  const [dueDateOpen, setDueDateOpen] = useState(false);
+  const [isBulkApplying, setIsBulkApplying] = useState(false);
 
   const { data: seasonEmployeesData } = useSeasonEmployees(
     seasonId,
     { page: 0, size: 200 },
     { enabled: seasonId > 0 }
   );
+
+  const invalidateTaskQueries = useCallback(async () => {
+    if (seasonId <= 0) {
+      return;
+    }
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: taskKeys.listBySeason(seasonId, TASK_QUERY_PARAMS),
+        exact: true,
+      }),
+      queryClient.invalidateQueries({
+        queryKey: taskKeys.listBySeason(seasonId),
+        exact: false,
+      }),
+      queryClient.invalidateQueries({
+        queryKey: taskKeys.listWorkspace(),
+        exact: false,
+      }),
+    ]);
+  }, [queryClient, seasonId]);
+
+  const selectedApiTasks = useMemo(() => {
+    const items = apiTasksData?.items ?? [];
+    if (items.length === 0 || selectedTasks.length === 0) {
+      return [] as ApiTask[];
+    }
+    const byId = new Map(items.map((task) => [String(task.taskId), task]));
+    return selectedTasks
+      .map((taskId) => byId.get(taskId))
+      .filter((task): task is ApiTask => Boolean(task));
+  }, [apiTasksData, selectedTasks]);
+
+  const executeBulkTaskUpdate = useCallback(async (
+    buildPayload: (task: ApiTask) => TaskUpdateRequest,
+    successMessageBuilder: (count: number) => string
+  ) => {
+    if (isSeasonWriteLocked) {
+      toast.error(seasonWriteLockReason);
+      return { executed: false };
+    }
+    if (seasonId <= 0) {
+      toast.error('Invalid season context');
+      return { executed: false };
+    }
+    if (selectedTasks.length === 0) {
+      toast.error('No tasks selected');
+      return { executed: false };
+    }
+    if (selectedApiTasks.length === 0) {
+      toast.error('Unable to resolve selected tasks');
+      return { executed: false };
+    }
+
+    setIsBulkApplying(true);
+    try {
+      const results = await Promise.allSettled(
+        selectedApiTasks.map((task) =>
+          updateTaskMutation.mutateAsync({
+            id: task.taskId,
+            data: buildPayload(task),
+          })
+        )
+      );
+
+      const failedTaskIds: string[] = [];
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          failedTaskIds.push(String(selectedApiTasks[index].taskId));
+        }
+      });
+
+      await invalidateTaskQueries();
+
+      const successCount = selectedApiTasks.length - failedTaskIds.length;
+      if (successCount > 0) {
+        toast.success(successMessageBuilder(successCount));
+      }
+      if (failedTaskIds.length > 0) {
+        toast.error(`Failed to update ${failedTaskIds.length} task(s).`);
+        setSelectedTasks(failedTaskIds);
+      } else {
+        setSelectedTasks([]);
+      }
+
+      return { executed: true };
+    } finally {
+      setIsBulkApplying(false);
+    }
+  }, [
+    invalidateTaskQueries,
+    isSeasonWriteLocked,
+    seasonId,
+    seasonWriteLockReason,
+    selectedApiTasks,
+    selectedTasks.length,
+    updateTaskMutation,
+  ]);
 
   // Transformed data - no mock fallback
   const tasks = useMemo(() => {
@@ -192,25 +327,71 @@ export function useTaskWorkspace() {
       return;
     }
     const id = parseInt(taskId, 10);
-    if (!isNaN(id)) {
-      updateStatusMutation.mutate({ id, data: { status: mapFeatureStatusToApi(newStatus) } });
-    } else {
-      toast.success(`Task moved to ${STATUS_LABELS[newStatus]}`);
+    if (Number.isNaN(id) || id <= 0) {
+      toast.error('Invalid task ID');
+      return;
     }
+    updateStatusMutation.mutate(
+      { id, data: buildStatusUpdatePayload(newStatus) },
+      {
+        onSuccess: () => toast.success('Task status updated'),
+        onError: (err) => toast.error('Failed to update', { description: err.message }),
+      }
+    );
   }, [isSeasonWriteLocked, seasonWriteLockReason, updateStatusMutation]);
 
-  const handleBulkComplete = useCallback(() => {
+  const handleBulkComplete = useCallback(async () => {
     if (isSeasonWriteLocked) {
       toast.error(seasonWriteLockReason);
       return;
     }
-    selectedTasks.forEach(taskId => {
-      const id = parseInt(taskId, 10);
-      if (!isNaN(id)) updateStatusMutation.mutate({ id, data: { status: 'DONE' } });
-    });
-    toast.success(`${selectedTasks.length} tasks completed`);
-    setSelectedTasks([]);
-  }, [isSeasonWriteLocked, seasonWriteLockReason, selectedTasks, updateStatusMutation]);
+    if (selectedTasks.length === 0) {
+      toast.error('No tasks selected');
+      return;
+    }
+
+    const selectedIds = selectedTasks
+      .map((taskId) => parseInt(taskId, 10))
+      .filter((id) => Number.isFinite(id) && id > 0);
+    if (selectedIds.length === 0) {
+      toast.error('Unable to resolve selected tasks');
+      return;
+    }
+
+    setIsBulkApplying(true);
+    try {
+      const results = await Promise.allSettled(
+        selectedIds.map((id) =>
+          updateStatusMutation.mutateAsync({
+            id,
+            data: buildStatusUpdatePayload('completed'),
+          })
+        )
+      );
+
+      const failedTaskIds: string[] = [];
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          failedTaskIds.push(String(selectedIds[index]));
+        }
+      });
+
+      await invalidateTaskQueries();
+
+      const successCount = selectedIds.length - failedTaskIds.length;
+      if (successCount > 0) {
+        toast.success(`${successCount} task(s) completed`);
+      }
+      if (failedTaskIds.length > 0) {
+        toast.error(`Failed to complete ${failedTaskIds.length} task(s).`);
+        setSelectedTasks(failedTaskIds);
+      } else {
+        setSelectedTasks([]);
+      }
+    } finally {
+      setIsBulkApplying(false);
+    }
+  }, [invalidateTaskQueries, isSeasonWriteLocked, seasonWriteLockReason, selectedTasks, updateStatusMutation]);
 
   const handleDeleteTask = useCallback((taskId: string) => {
     if (isSeasonWriteLocked) {
@@ -218,25 +399,47 @@ export function useTaskWorkspace() {
       return;
     }
     const id = parseInt(taskId, 10);
-    if (!isNaN(id)) deleteMutation.mutate(id);
-    else toast.success('Task deleted');
+    if (Number.isNaN(id) || id <= 0) {
+      toast.error('Invalid task ID');
+      return;
+    }
+    deleteMutation.mutate(id);
   }, [deleteMutation, isSeasonWriteLocked, seasonWriteLockReason]);
 
   const handleSelectAll = useCallback((checked: boolean) => setSelectedTasks(checked ? filteredTasks.map(t => t.id) : []), [filteredTasks]);
   const handleSelectTask = useCallback((taskId: string, checked: boolean) => setSelectedTasks(prev => checked ? [...prev, taskId] : prev.filter(id => id !== taskId)), []);
-  const handleReassign = useCallback(() => {
-    if (isSeasonWriteLocked) {
-      toast.error(seasonWriteLockReason);
+  const handleReassign = useCallback(async (assigneeUserId: number) => {
+    if (!Number.isFinite(assigneeUserId) || assigneeUserId <= 0) {
+      toast.error('Select a valid assignee');
       return;
     }
-    toast.success(`${selectedTasks.length} tasks reassigned`);
-    setReassignOpen(false);
-    setSelectedTasks([]);
-  }, [isSeasonWriteLocked, seasonWriteLockReason, selectedTasks]);
-  const handleCreateTask = useCallback((data: { 
-    title: string; 
-    plannedDate: string; 
-    dueDate: string; 
+    const result = await executeBulkTaskUpdate(
+      (task) => buildTaskUpdatePayload(task, { assigneeUserId }),
+      (count) => `${count} task(s) reassigned`
+    );
+    if (result.executed) {
+      setReassignOpen(false);
+    }
+  }, [executeBulkTaskUpdate]);
+
+  const handleBulkDueDateChange = useCallback(async (dueDate: string) => {
+    if (!isValidDateInput(dueDate)) {
+      toast.error('Please choose a valid due date');
+      return;
+    }
+    const result = await executeBulkTaskUpdate(
+      (task) => buildTaskUpdatePayload(task, { dueDate }),
+      (count) => `${count} task(s) due date updated`
+    );
+    if (result.executed) {
+      setDueDateOpen(false);
+    }
+  }, [executeBulkTaskUpdate]);
+
+  const handleCreateTask = useCallback((data: {
+    title: string;
+    plannedDate: string;
+    dueDate: string;
     description?: string;
     seasonId?: number;
     plot?: string;
@@ -245,7 +448,7 @@ export function useTaskWorkspace() {
   }) => {
     // Always use pinned season from workspace context
     const effectiveSeasonId = seasonId;
-    
+
     if (!effectiveSeasonId) {
       toast.error('Select a season', { description: 'Pick a season to create tasks.' });
       return;
@@ -297,13 +500,12 @@ export function useTaskWorkspace() {
     viewMode, setViewMode, calendarMode, setCalendarMode, currentDate, setCurrentDate,
     searchQuery, setSearchQuery, filters, setFilters, activeFilterCount,
     selectedTasks, setSelectedTasks,
-    filterDrawerOpen, setFilterDrawerOpen, createTaskOpen, setCreateTaskOpen, reassignOpen, setReassignOpen,
+    filterDrawerOpen, setFilterDrawerOpen, createTaskOpen, setCreateTaskOpen, reassignOpen, setReassignOpen, dueDateOpen, setDueDateOpen,
     tasks, filteredTasks, uniqueAssignees, uniquePlots, assigneeOptions,
     isLoading, error: error ?? null, refetch,
-    handleTaskMove, handleBulkComplete, handleDeleteTask, handleSelectAll, handleSelectTask, handleReassign, handleCreateTask,
-    isCreating: createMutation.isPending, isUpdating: updateStatusMutation.isPending, isDeleting: deleteMutation.isPending,
+    handleTaskMove, handleBulkComplete, handleDeleteTask, handleSelectAll, handleSelectTask, handleReassign, handleBulkDueDateChange, handleCreateTask,
+    isCreating: createMutation.isPending,
+    isUpdating: updateStatusMutation.isPending || updateTaskMutation.isPending || isBulkApplying,
+    isDeleting: deleteMutation.isPending,
   };
 }
-
-
-

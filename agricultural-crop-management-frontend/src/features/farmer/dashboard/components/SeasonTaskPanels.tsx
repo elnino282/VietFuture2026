@@ -1,15 +1,20 @@
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle2, Circle } from 'lucide-react';
+import { Badge } from '@/shared/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Separator } from '@/shared/ui/separator';
+import { Skeleton } from '@/shared/ui/skeleton';
+import { AlertTriangle, CheckCircle2, Circle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { DashboardTaskItem } from '../types';
+import type {
+  DashboardDataCompletenessWarningItem,
+  DashboardTaskItem,
+} from '../types';
 
 interface SeasonTaskPanelsProps {
   todayTasks: DashboardTaskItem[];
   upcomingTasks: DashboardTaskItem[];
+  dataCompletenessWarnings: DashboardDataCompletenessWarningItem[];
   isLoading: boolean;
+  errorMessage?: string | null;
 }
 
 function TaskList({
@@ -44,10 +49,40 @@ function TaskList({
   );
 }
 
+function WarningList({
+  warnings,
+  emptyLabel,
+}: {
+  warnings: DashboardDataCompletenessWarningItem[];
+  emptyLabel: string;
+}) {
+  if (warnings.length === 0) {
+    return <p className="acm-body-text text-muted-foreground">{emptyLabel}</p>;
+  }
+
+  return (
+    <ul className="space-y-3">
+      {warnings.map((warning) => (
+        <li key={warning.id} className="flex items-start gap-3">
+          <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-600" />
+          <div className="flex-1">
+            <p className="text-base font-medium leading-snug">{warning.title}</p>
+            <p className="acm-body-text text-muted-foreground">
+              {warning.source} - {warning.dueDateLabel}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function SeasonTaskPanels({
   todayTasks,
   upcomingTasks,
+  dataCompletenessWarnings,
   isLoading,
+  errorMessage,
 }: SeasonTaskPanelsProps) {
   const { t } = useTranslation();
 
@@ -61,6 +96,10 @@ export function SeasonTaskPanels({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
+        {!isLoading && errorMessage ? (
+          <p className="acm-body-text text-destructive">{errorMessage}</p>
+        ) : null}
+
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-base font-semibold">
@@ -106,6 +145,33 @@ export function SeasonTaskPanels({
               tasks={upcomingTasks}
               emptyLabel={t('dashboard.fdn.noUpcomingTasks', {
                 defaultValue: 'No upcoming tasks.',
+              })}
+            />
+          )}
+        </div>
+
+        <Separator />
+
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-base font-semibold">
+              {t('dashboard.fdn.dataCompletenessTitle', {
+                defaultValue: 'Missing required inputs',
+              })}
+            </h3>
+            <Badge variant="outline">{dataCompletenessWarnings.length}</Badge>
+          </div>
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          ) : (
+            <WarningList
+              warnings={dataCompletenessWarnings}
+              emptyLabel={t('dashboard.fdn.noDataCompletenessWarnings', {
+                defaultValue: 'No data completeness warnings.',
               })}
             />
           )}

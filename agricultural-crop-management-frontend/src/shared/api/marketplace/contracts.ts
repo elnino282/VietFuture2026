@@ -6,6 +6,8 @@ export type MarketplaceApiResponse<T> = {
   code: string;
   message: string;
   result: T;
+  data?: T;
+  generatedAt?: string;
   status?: number;
 };
 
@@ -20,7 +22,9 @@ export type MarketplacePage<T> = {
 const MarketplaceEnvelopeSchema = z.object({
   code: z.string(),
   message: z.string(),
-  result: z.unknown(),
+  result: z.unknown().optional(),
+  data: z.unknown().optional(),
+  generatedAt: z.string().optional(),
   status: z.number().optional(),
 });
 
@@ -40,7 +44,34 @@ export function parseMarketplaceEnvelope<T>(
   payload: unknown,
 ): MarketplaceApiResponse<T> {
   const parsed = MarketplaceEnvelopeSchema.parse(payload);
-  return parsed as MarketplaceApiResponse<T>;
+  const data = parsed.data ?? parsed.result;
+  if (data === undefined) {
+    throw new MarketplaceApiClientError("Marketplace response payload is missing both 'data' and 'result'.");
+  }
+  return {
+    code: parsed.code,
+    message: parsed.message,
+    status: parsed.status,
+    generatedAt: parsed.generatedAt,
+    result: data as T,
+    data: data as T,
+  };
+}
+
+export function assertMarketplaceDashboardContract<T extends Record<string, unknown>>(
+  payload: T,
+  requiredFields: readonly (keyof T)[],
+  context: string,
+): T {
+  for (const field of requiredFields) {
+    if (payload[field] === undefined) {
+      throw new MarketplaceApiClientError(
+        `${context} is missing required field '${String(field)}'.`,
+        "ERR_MARKETPLACE_CONTRACT",
+      );
+    }
+  }
+  return payload;
 }
 
 export function okMarketplaceResponse<T>(
@@ -52,6 +83,7 @@ export function okMarketplaceResponse<T>(
     code,
     message,
     result,
+    data: result,
   };
 }
 

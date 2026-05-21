@@ -26,6 +26,7 @@ import org.example.QuanLyMuaVu.module.sustainability.entity.SoilTest;
 import org.example.QuanLyMuaVu.module.sustainability.repository.IrrigationWaterAnalysisRepository;
 import org.example.QuanLyMuaVu.module.sustainability.repository.NutrientInputEventRepository;
 import org.example.QuanLyMuaVu.module.sustainability.repository.SoilTestRepository;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,13 +106,17 @@ public class SustainabilityCalculationService {
         BigDecimal harvestQuantityKg = harvestFromBatchesKg;
         if (isZero(harvestQuantityKg) && hasActualYieldRecord) {
             harvestQuantityKg = season.getActualYieldKg();
-            notes.add("Used season.actualYieldKg as harvest output because harvest batches are empty.");
+            notes.add(localize(
+                    "Used season.actualYieldKg as harvest output because harvest batches are empty.",
+                    "Đã dùng season.actualYieldKg làm sản lượng thu hoạch vì danh sách lô thu hoạch đang trống."
+            ));
         }
         boolean yieldObserved = hasHarvestBatches || hasActualYieldRecord;
 
         BigDecimal nContent = resolveCropNContent(season, est, notes);
         boolean usedDefaultCropNContent = notes.stream()
-                .anyMatch(note -> note.contains("default crop N concentration"));
+                .anyMatch(note -> note.contains("default crop N concentration")
+                        || note.contains("hàm lượng N mặc định của cây trồng"));
         BigDecimal nOutputKg = yieldObserved ? harvestQuantityKg.multiply(nContent) : null;
 
         BigDecimal fdnTotal = percent(
@@ -140,7 +145,9 @@ public class SustainabilityCalculationService {
         BigDecimal sustainabilityScore = computeScore(componentScores, weights);
         String sustainabilityLabel = mapScoreLabel(sustainabilityScore);
 
-        String unit = areaHa != null ? "kg N/ha/season" : "kg N/season (plot area missing)";
+        String unit = areaHa != null
+                ? "kg N/ha/season"
+                : localize("kg N/season (plot area missing)", "kg N/mùa vụ (thiếu diện tích thửa)");
         SustainabilityOverviewResponse.InputsBreakdown breakdown = buildBreakdown(inputKg, sourceMethod, areaHa);
         BigDecimal nOutput = toPerUnit(nOutputKg, areaHa);
         BigDecimal nSurplus = toPerUnit(nSurplusKg, areaHa);
@@ -263,7 +270,10 @@ public class SustainabilityCalculationService {
 
         inputKg.put(NutrientInputSource.IRRIGATION_WATER, totalKg);
         sourceMethod.put(NutrientInputSource.IRRIGATION_WATER, method);
-        notes.add("Used dedicated irrigation-water-analysis records for irrigation water N contribution.");
+        notes.add(localize(
+                "Used dedicated irrigation-water-analysis records for irrigation water N contribution.",
+                "Đã dùng dữ liệu phân tích nước tưới chuyên biệt để tính đóng góp N từ nước tưới."
+        ));
     }
 
     private void applyDedicatedSoilTests(
@@ -295,7 +305,10 @@ public class SustainabilityCalculationService {
             if (area == null) {
                 sourceMethod.put(NutrientInputSource.SOIL_LEGACY, "unavailable");
                 inputKg.put(NutrientInputSource.SOIL_LEGACY, ZERO);
-                notes.add("Soil test exists but plot area is missing, so soil legacy contribution is unavailable.");
+                notes.add(localize(
+                        "Soil test exists but plot area is missing, so soil legacy contribution is unavailable.",
+                        "Đã có xét nghiệm đất nhưng thiếu diện tích thửa, nên chưa thể tính đóng góp đạm tồn dư trong đất."
+                ));
                 return;
             }
             soilLegacyKg = latest.getMineralNKgPerHa().multiply(area);
@@ -309,7 +322,10 @@ public class SustainabilityCalculationService {
                         latest.getSourceType() != null && latest.getSourceType().isMeasured()
                 )
         );
-        notes.add("Used dedicated soil-test domain record as soil legacy N contribution source.");
+        notes.add(localize(
+                "Used dedicated soil-test domain record as soil legacy N contribution source.",
+                "Đã dùng bản ghi xét nghiệm đất chuyên biệt làm nguồn đóng góp đạm tồn dư trong đất."
+        ));
     }
 
     private BigDecimal irrigationContributionKg(IrrigationWaterAnalysis analysis) {
@@ -356,7 +372,10 @@ public class SustainabilityCalculationService {
         List<ExpenseQueryPort.ExpenseFertilizerSnapshot> fertilizerExpenses =
                 expenseQueryPort.findFertilizerExpensesBySeasonId(season.getId());
         if (fertilizerExpenses.isEmpty()) {
-            notes.add("No fertilizer expenses found for fallback estimation.");
+            notes.add(localize(
+                    "No fertilizer expenses found for fallback estimation.",
+                    "Không tìm thấy chi phí phân bón để ước tính dự phòng."
+            ));
             return;
         }
 
@@ -385,7 +404,10 @@ public class SustainabilityCalculationService {
             sourceMethod.put(NutrientInputSource.ORGANIC_FERTILIZER, "estimated");
         }
         if (mineralEstimate.compareTo(ZERO) > 0 || organicEstimate.compareTo(ZERO) > 0) {
-            notes.add("Estimated fertilizer N from expense quantity because explicit nutrient events were missing.");
+            notes.add(localize(
+                    "Estimated fertilizer N from expense quantity because explicit nutrient events were missing.",
+                    "Đã ước tính N từ phân bón theo số lượng chi phí vì thiếu sự kiện đầu vào dinh dưỡng tường minh."
+            ));
         }
     }
 
@@ -414,7 +436,10 @@ public class SustainabilityCalculationService {
         BigDecimal estimated = areaHa.multiply(safe(est.getLegumeFixationKgPerHa()));
         inputKg.put(NutrientInputSource.BIOLOGICAL_FIXATION, estimated);
         sourceMethod.put(NutrientInputSource.BIOLOGICAL_FIXATION, "estimated");
-        notes.add("Estimated biological fixation from legume crop rule.");
+        notes.add(localize(
+                "Estimated biological fixation from legume crop rule.",
+                "Đã ước tính cố định đạm sinh học theo quy tắc cây họ đậu."
+        ));
     }
 
     private void estimateIrrigationWater(
@@ -440,7 +465,10 @@ public class SustainabilityCalculationService {
         inputKg.put(NutrientInputSource.IRRIGATION_WATER, estimated);
         sourceMethod.put(NutrientInputSource.IRRIGATION_WATER, "estimated");
         if (irrigationEvents > 0) {
-            notes.add("Estimated irrigation water N from IRRIGATE logs.");
+            notes.add(localize(
+                    "Estimated irrigation water N from IRRIGATE logs.",
+                    "Đã ước tính N trong nước tưới từ nhật ký IRRIGATE."
+            ));
         }
     }
 
@@ -460,7 +488,10 @@ public class SustainabilityCalculationService {
         BigDecimal estimated = areaHa.multiply(safe(est.getAtmosphericDepositionKgPerHa()));
         inputKg.put(NutrientInputSource.ATMOSPHERIC_DEPOSITION, estimated);
         sourceMethod.put(NutrientInputSource.ATMOSPHERIC_DEPOSITION, "estimated");
-        notes.add("Estimated atmospheric deposition from configurable default.");
+        notes.add(localize(
+                "Estimated atmospheric deposition from configurable default.",
+                "Đã ước tính lắng đọng khí quyển theo giá trị mặc định có cấu hình."
+        ));
     }
 
     private void estimateOptionalSources(
@@ -471,10 +502,16 @@ public class SustainabilityCalculationService {
         if ("missing".equals(sourceMethod.get(NutrientInputSource.SEED_IMPORT))) {
             inputKg.put(NutrientInputSource.SEED_IMPORT, ZERO);
             sourceMethod.put(NutrientInputSource.SEED_IMPORT, "estimated");
-            notes.add("Source SEED_IMPORT defaulted to 0 because no model input is available.");
+            notes.add(localize(
+                    "Source SEED_IMPORT defaulted to 0 because no model input is available.",
+                    "Nguồn SEED_IMPORT được mặc định bằng 0 vì chưa có đầu vào mô hình."
+            ));
         }
         if ("missing".equals(sourceMethod.get(NutrientInputSource.SOIL_LEGACY))) {
-            notes.add("Soil legacy N is missing; record soil test input to improve confidence.");
+            notes.add(localize(
+                    "Soil legacy N is missing; record soil test input to improve confidence.",
+                    "Thiếu dữ liệu đạm tồn dư trong đất; hãy ghi nhận dữ liệu xét nghiệm đất để tăng độ tin cậy."
+            ));
         }
     }
 
@@ -522,7 +559,10 @@ public class SustainabilityCalculationService {
                 return safe(found.get().getNContentKgPerKgYield());
             }
         }
-        notes.add("Using default crop N concentration because crop-specific reference is missing.");
+        notes.add(localize(
+                "Using default crop N concentration because crop-specific reference is missing.",
+                "Đang dùng hàm lượng N mặc định của cây trồng vì thiếu dữ liệu tham chiếu theo cây trồng."
+        ));
         return safe(est.getDefaultCropNContentKgPerKgYield());
     }
 
@@ -541,9 +581,18 @@ public class SustainabilityCalculationService {
 
     private String resolveAlertExplanation(String level, AppProperties.AlertThresholds thresholds) {
         return switch (level) {
-            case "low" -> "FDN is below configured low threshold (" + thresholds.getLowMaxExclusive() + "%).";
-            case "high" -> "FDN is above configured medium threshold (" + thresholds.getMediumMaxExclusive() + "%).";
-            default -> "FDN is between configured low and high thresholds.";
+            case "low" -> localize(
+                    "FDN is below configured low threshold (" + thresholds.getLowMaxExclusive() + "%).",
+                    "FDN thấp hơn ngưỡng thấp đã cấu hình (" + thresholds.getLowMaxExclusive() + "%)."
+            );
+            case "high" -> localize(
+                    "FDN is above configured medium threshold (" + thresholds.getMediumMaxExclusive() + "%).",
+                    "FDN cao hơn ngưỡng trung bình đã cấu hình (" + thresholds.getMediumMaxExclusive() + "%)."
+            );
+            default -> localize(
+                    "FDN is between configured low and high thresholds.",
+                    "FDN nằm trong khoảng giữa các ngưỡng thấp và cao đã cấu hình."
+            );
         };
     }
 
@@ -687,18 +736,18 @@ public class SustainabilityCalculationService {
 
     private String mapScoreLabel(BigDecimal score) {
         if (score == null) {
-            return "Needs optimization";
+            return localize("Needs optimization", "Cần tối ưu");
         }
         if (score.compareTo(BigDecimal.valueOf(50)) < 0) {
-            return "Needs optimization";
+            return localize("Needs optimization", "Cần tối ưu");
         }
         if (score.compareTo(BigDecimal.valueOf(70)) < 0) {
-            return "Fair";
+            return localize("Fair", "Trung bình");
         }
         if (score.compareTo(BigDecimal.valueOf(85)) < 0) {
-            return "Good";
+            return localize("Good", "Tốt");
         }
-        return "Excellent";
+        return localize("Excellent", "Xuất sắc");
     }
 
     private SustainabilityOverviewResponse.InputsBreakdown buildBreakdown(
@@ -886,7 +935,10 @@ public class SustainabilityCalculationService {
                     .fdnMineral(null)
                     .fdnOrganic(null)
                     .alertLevel("medium")
-                    .alertExplanation("No season or plot context available.")
+                    .alertExplanation(localize(
+                            "No season or plot context available.",
+                            "Không có ngữ cảnh mùa vụ hoặc thửa đất."
+                    ))
                     .nue(null)
                     .nOutput(null)
                     .nSurplus(null)
@@ -902,9 +954,12 @@ public class SustainabilityCalculationService {
                             .build())
                     .sourceMethod(missingSourceMap)
                     .missingInputs(missingSourceMap.keySet().stream().map(Enum::name).toList())
-                    .notes(List.of("No data available for this context."))
+                    .notes(List.of(localize(
+                            "No data available for this context.",
+                            "Không có dữ liệu cho ngữ cảnh này."
+                    )))
                     .sustainabilityScore(null)
-                    .sustainabilityLabel("Needs optimization")
+                    .sustainabilityLabel(localize("Needs optimization", "Cần tối ưu"))
                     .scoreComponents(Map.of())
                     .scoreWeights(Map.of())
                     .thresholdSource("config_default_v1")
@@ -915,6 +970,15 @@ public class SustainabilityCalculationService {
                     .usedDefaultCropNContent(false)
                     .build();
         }
+    }
+
+    private static boolean isVietnameseLocale() {
+        Locale locale = LocaleContextHolder.getLocale();
+        return locale != null && "vi".equalsIgnoreCase(locale.getLanguage());
+    }
+
+    private static String localize(String english, String vietnamese) {
+        return isVietnameseLocale() ? vietnamese : english;
     }
 }
 

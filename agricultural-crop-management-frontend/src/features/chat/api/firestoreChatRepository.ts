@@ -4,8 +4,11 @@ import {
   ensureDirectConversation as ensureDirectConversationApi,
   markAsRead,
   sendMessage,
+  setTypingState,
   subscribeConversations,
   subscribeMessages,
+  subscribeParticipantState,
+  toInternalUserId,
   toFirebaseChatUid,
 } from "./chatFirestoreApi";
 
@@ -13,6 +16,9 @@ export {
   buildDirectConversationId,
   subscribeConversations,
   subscribeMessages,
+  subscribeParticipantState,
+  setTypingState,
+  toInternalUserId,
   toFirebaseChatUid,
 };
 

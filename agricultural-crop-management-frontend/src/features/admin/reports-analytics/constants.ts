@@ -3,7 +3,7 @@ import {
 } from 'lucide-react';
 import type {
     KPIData, UserActivityData, SeasonStatusData, ExpensesData,
-    MetricData, SystemAlert, SystemHealthMetric, AlertColors, HealthColors
+    MetricData, SystemAlert, AlertColors
 } from './types';
 
 // Mock data for KPIs
@@ -14,9 +14,9 @@ export const KPI_DATA: KPIData[] = [
         change: 12.5,
         trend: 'up',
         icon: Users,
-        color: '#2563EB',
-        bgColor: 'bg-blue-50',
-        textColor: 'text-blue-600',
+        color: '#3BA55D',
+        bgColor: 'bg-emerald-50',
+        textColor: 'text-emerald-600',
         subtitle: 'DAU/WAU',
         trendData: [65, 72, 68, 75, 82, 78, 85],
     },
@@ -197,24 +197,9 @@ export const SYSTEM_ALERTS: SystemAlert[] = [
     },
 ];
 
-// System health metrics
-export const SYSTEM_HEALTH: SystemHealthMetric[] = [
-    { metric: 'API Uptime', value: 99.97, unit: '%', status: 'excellent' },
-    { metric: 'Avg Response Time', value: 125, unit: 'ms', status: 'good' },
-    { metric: 'Error Rate', value: 0.03, unit: '%', status: 'excellent' },
-    { metric: 'Database Load', value: 68, unit: '%', status: 'good' },
-];
-
 // Alert badge colors
 export const ALERT_COLORS: AlertColors = {
     high: 'bg-red-100 text-red-700',
     medium: 'bg-amber-100 text-amber-700',
-    low: 'bg-blue-100 text-blue-700',
-};
-
-// Health status colors
-export const HEALTH_COLORS: HealthColors = {
-    excellent: 'text-emerald-600',
-    good: 'text-blue-600',
-    warning: 'text-amber-600',
+    low: 'bg-emerald-100 text-emerald-700',
 };

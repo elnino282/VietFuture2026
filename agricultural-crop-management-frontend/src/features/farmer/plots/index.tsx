@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { GitMerge, MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Skeleton, QueryError } from "@/shared/ui";
+import { MessageSquare } from "lucide-react";
+import { Button, PageContainer, QueryError, Skeleton } from "@/shared/ui";
 import { toast } from "sonner";
 import { usePlotManagement } from "./hooks/usePlotManagement";
 import { PlotToolbar } from "./components/PlotToolbar";
@@ -47,7 +46,6 @@ export function PlotManagement() {
     error,
     refetch,
     selectedPlot,
-    setSelectedPlot,
     isDrawerOpen,
     setIsDrawerOpen,
     isAddPlotOpen,
@@ -60,7 +58,6 @@ export function PlotManagement() {
     setMergeStep,
     selectedPlots,
     setSelectedPlots,
-    plotToDelete,
     setPlotToDelete,
     handleClearFilters,
     handleViewPlotDetails,
@@ -74,11 +71,8 @@ export function PlotManagement() {
     handleBulkDelete,
     handleBulkStatusChange,
     handleClearSelection,
-    isAllSelected,
-    isSomeSelected,
     selectedCount,
     isCreating,
-    isDeleting,
   } = usePlotManagement();
 
   const plotIdParam = searchParams.get("plotId");
@@ -127,8 +121,8 @@ export function PlotManagement() {
   );
 
   return (
-    <div className="min-h-screen acm-main-content pb-20">
-      <div className="max-w-[1600px] mx-auto p-8 space-y-6">
+    <>
+      <PageContainer variant="dashboard" className="space-y-6">
         {/* Unified Toolbar */}
         <PlotToolbar
           viewMode={viewMode}
@@ -182,7 +176,7 @@ export function PlotManagement() {
             onGenerateQR={handleGenerateQR}
           />
         )}
-      </div>
+      </PageContainer>
 
       {/* AI Assistant Floating Button */}
       <div className="fixed bottom-6 right-6 z-50">
@@ -240,7 +234,7 @@ export function PlotManagement() {
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDeletePlot}
       />
-    </div>
+    </>
   );
 }
 

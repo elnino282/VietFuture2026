@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown, Sprout } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Button } from "@/shared/ui/button";
 import { PlotStatusChip } from "./PlotStatusChip";
 import { PlotActionsMenu } from "./PlotActionsMenu";
 import { PlotBulkActionBar } from "./PlotBulkActionBar";

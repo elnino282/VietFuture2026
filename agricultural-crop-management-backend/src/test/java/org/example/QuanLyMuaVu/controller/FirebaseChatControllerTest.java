@@ -3,12 +3,16 @@ package org.example.QuanLyMuaVu.controller;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
+import org.example.QuanLyMuaVu.firebase.FirebaseChatContactResponse;
 import org.example.QuanLyMuaVu.firebase.FirebaseChatTokenController;
+import org.example.QuanLyMuaVu.firebase.FirebaseChatContactService;
 import org.example.QuanLyMuaVu.firebase.FirebaseChatTokenResponse;
 import org.example.QuanLyMuaVu.firebase.FirebaseChatTokenService;
 import org.example.QuanLyMuaVu.module.shared.security.CurrentUserService;
@@ -28,6 +32,9 @@ class FirebaseChatControllerTest {
 
     @MockBean
     private FirebaseChatTokenService firebaseChatTokenService;
+
+    @MockBean
+    private FirebaseChatContactService firebaseChatContactService;
 
     @MockBean
     private CurrentUserService currentUserService;
@@ -70,5 +77,34 @@ class FirebaseChatControllerTest {
         mockMvc.perform(post("/api/v1/firebase/chat-token").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.appUid").value("u_51"));
+    }
+
+    @Test
+    @WithMockUser(roles = "FARMER")
+    @DisplayName("GET /api/v1/firebase/chat-contacts returns wrapped contact list")
+    void getChatContacts_ReturnsWrappedResult() throws Exception {
+        List<FirebaseChatContactResponse> contacts = List.of(
+                new FirebaseChatContactResponse(
+                        2L,
+                        "u_2",
+                        "Farm Rep",
+                        "Farm Rep",
+                        "Green Farm",
+                        "Ward A, Province B",
+                        "FARMER"));
+
+        when(firebaseChatContactService.findContacts("farm", List.of(2L, 4L), 5))
+                .thenReturn(contacts);
+
+        mockMvc.perform(get("/api/v1/firebase/chat-contacts")
+                .param("q", "farm")
+                .param("userIds", "2,4")
+                .param("limit", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.result[0].userId").value(2))
+                .andExpect(jsonPath("$.result[0].farmName").value("Green Farm"));
+
+        verify(firebaseChatContactService).findContacts("farm", List.of(2L, 4L), 5);
     }
 }

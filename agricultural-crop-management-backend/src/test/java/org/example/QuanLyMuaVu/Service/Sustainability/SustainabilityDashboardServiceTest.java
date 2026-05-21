@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -129,6 +130,7 @@ class SustainabilityDashboardServiceTest {
         assertNotNull(response.getNSurplusMetric());
         assertEquals("estimated", response.getNSurplusMetric().getStatus());
         assertEquals(1, response.getHistoricalTrend().size());
+        assertTrue(response.getUnavailableReasons().contains("INSUFFICIENT_HISTORY"));
     }
 
     @Test
@@ -148,10 +150,12 @@ class SustainabilityDashboardServiceTest {
         assertNull(response.getNSurplus());
         assertEquals("unavailable", response.getNOutputMetric().getStatus());
         assertEquals("unavailable", response.getNSurplusMetric().getStatus());
+        assertTrue(response.getUnavailableReasons().contains("NO_ACTIVE_SEASON"));
+        assertTrue(response.getUnavailableReasons().contains("MISSING_NITROGEN_INPUT"));
     }
 
     @Test
-    @DisplayName("Field map for plots without season keeps metric values null instead of 0")
+    @DisplayName("Field map separates missing boundary and reports unavailable reason without fake geometry")
     void getFieldMap_WhenSeasonMissing_UsesNullMetricValues() {
         when(currentUserService.getCurrentUserId()).thenReturn(1L);
         when(farmQueryPort.findPlotsByOwnerId(1L)).thenReturn(List.of(plot));
@@ -162,8 +166,12 @@ class SustainabilityDashboardServiceTest {
         FieldMapResponse map = service.getFieldMap(null, null, null, null);
 
         assertNotNull(map);
-        assertEquals(1, map.getItems().size());
-        FieldMapResponse.FieldMapItem item = map.getItems().get(0);
+        assertEquals(0, map.getFieldsWithBoundary().size());
+        assertEquals(1, map.getFieldsMissingBoundary().size());
+        assertEquals("MISSING_BOUNDARY_AND_FARM_LOCATION", map.getUnavailableReason());
+        FieldMapResponse.FieldMapItem item = map.getFieldsMissingBoundary().get(0);
+        assertNull(item.getBoundaryGeoJson());
+        assertEquals("MISSING_BOUNDARY_GEOJSON", item.getBoundaryIssue());
         assertNull(item.getFdnTotal());
         assertNull(item.getFdnMineral());
         assertNull(item.getFdnOrganic());

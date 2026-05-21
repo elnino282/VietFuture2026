@@ -59,6 +59,7 @@ class SustainabilityControllerTest {
                 .andExpect(jsonPath("$.result.fdnTotalMetric.status").value("estimated"))
                 .andExpect(jsonPath("$.result.fdnTotalMetric.assumptions").isArray())
                 .andExpect(jsonPath("$.result.nSurplusMetric.status").value("estimated"))
+                .andExpect(jsonPath("$.result.unavailableReasons").isArray())
                 .andExpect(jsonPath("$.result.recommendationSource").value("product_rule_config_v1"));
     }
 
@@ -176,18 +177,20 @@ class SustainabilityControllerTest {
     }
 
     @Test
-    @DisplayName("GET field map keeps null metric values and includes metadata fields")
+    @DisplayName("GET field map separates boundary-ready fields and missing-boundary fields")
     void getFieldMap_ReturnsStableShapeWithSemanticNulls() throws Exception {
         when(sustainabilityDashboardService.getFieldMap(33, null, null, "all"))
                 .thenReturn(FieldMapResponse.builder()
-                        .items(List.of(
+                        .fieldsWithBoundary(List.of())
+                        .fieldsMissingBoundary(List.of(
                                 FieldMapResponse.FieldMapItem.builder()
                                         .fieldId(22)
                                         .fieldName("Field A")
                                         .farmId(7)
                                         .farmName("Farm 7")
-                                        .geometry(null)
+                                        .boundaryGeoJson(null)
                                         .center(null)
+                                        .boundaryIssue("MISSING_BOUNDARY_GEOJSON")
                                         .cropName("Rice")
                                         .seasonName("Season 33")
                                         .fdnLevel("high")
@@ -213,6 +216,8 @@ class SustainabilityControllerTest {
                                         .recommendations(List.of("Collect measured fertilizer records first."))
                                         .build()
                         ))
+                        .defaultViewport(null)
+                        .unavailableReason("MISSING_BOUNDARY_AND_FARM_LOCATION")
                         .build());
 
         mockMvc.perform(get("/api/v1/fields/map")
@@ -221,11 +226,14 @@ class SustainabilityControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.result.items[0].fdnTotal").value(nullValue()))
-                .andExpect(jsonPath("$.result.items[0].fdnMineral").value(nullValue()))
-                .andExpect(jsonPath("$.result.items[0].calculationMode").value("hybrid_estimated"))
-                .andExpect(jsonPath("$.result.items[0].thresholdSource").value("config_default_v1"))
-                .andExpect(jsonPath("$.result.items[0].recommendationSource").value("product_rule_config_v1"));
+                .andExpect(jsonPath("$.result.fieldsWithBoundary").isArray())
+                .andExpect(jsonPath("$.result.fieldsMissingBoundary[0].fdnTotal").value(nullValue()))
+                .andExpect(jsonPath("$.result.fieldsMissingBoundary[0].fdnMineral").value(nullValue()))
+                .andExpect(jsonPath("$.result.fieldsMissingBoundary[0].calculationMode").value("hybrid_estimated"))
+                .andExpect(jsonPath("$.result.fieldsMissingBoundary[0].thresholdSource").value("config_default_v1"))
+                .andExpect(jsonPath("$.result.fieldsMissingBoundary[0].recommendationSource").value("product_rule_config_v1"))
+                .andExpect(jsonPath("$.result.fieldsMissingBoundary[0].boundaryIssue").value("MISSING_BOUNDARY_GEOJSON"))
+                .andExpect(jsonPath("$.result.unavailableReason").value("MISSING_BOUNDARY_AND_FARM_LOCATION"));
     }
 
     private SustainabilityOverviewResponse sampleOverview() {
@@ -297,6 +305,7 @@ class SustainabilityControllerTest {
                         .summary("Overall confidence 62%; 1 measured, 3 estimated/mixed, 1 missing inputs.")
                         .build())
                 .missingInputs(List.of("CONTROL_SUPPLY"))
+                .unavailableReasons(List.of("NO_HARVEST", "INSUFFICIENT_HISTORY"))
                 .notes(List.of("FDN and NUE are computed from scientific formulas in the project specification."))
                 .recommendations(List.of("Measure irrigation-water nitrogen before changing mineral inputs."))
                 .recommendationSource("product_rule_config_v1")

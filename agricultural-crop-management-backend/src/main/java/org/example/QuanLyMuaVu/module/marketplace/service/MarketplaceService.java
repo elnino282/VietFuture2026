@@ -1385,11 +1385,20 @@ public class MarketplaceService {
         long pendingOrders = marketplaceOrderRepository.countByFarmerUser_IdAndStatus(
                 farmerUserId,
                 MarketplaceOrderStatus.PENDING_PAYMENT);
-        BigDecimal totalRevenue = Optional.ofNullable(
-                marketplaceOrderRepository.sumTotalAmountByFarmerUserIdAndStatus(
-                        farmerUserId,
-                        MarketplaceOrderStatus.COMPLETED))
-                .orElse(BigDecimal.ZERO);
+        long totalOrders = marketplaceOrderRepository.countByFarmerUser_Id(farmerUserId);
+        long completedOrders = marketplaceOrderRepository.countByFarmerUser_IdAndStatus(
+                farmerUserId,
+                MarketplaceOrderStatus.COMPLETED);
+        BigDecimal revenueValue = marketplaceOrderRepository.sumTotalAmountByFarmerUserIdAndStatus(
+                farmerUserId,
+                MarketplaceOrderStatus.COMPLETED);
+        LocalDateTime lastOrderAt = marketplaceOrderRepository.findLastOrderAtByFarmerUserId(farmerUserId);
+
+        boolean hasProducts = totalProducts > 0;
+        boolean hasOrders = totalOrders > 0;
+        boolean hasRevenueData = completedOrders > 0;
+        BigDecimal totalRevenue = hasRevenueData ? Optional.ofNullable(revenueValue).orElse(BigDecimal.ZERO) : null;
+        List<String> unavailableReasons = buildMarketplaceUnavailableReasons(hasProducts, hasOrders, hasRevenueData);
 
         List<MarketplaceOrderResponse> recentOrders = marketplaceOrderRepository
                 .findRecentByFarmerUserId(farmerUserId, PageRequest.of(0, 5))
@@ -1404,6 +1413,11 @@ public class MarketplaceService {
                 lowStockProducts,
                 pendingOrders,
                 totalRevenue,
+                hasProducts,
+                hasOrders,
+                hasRevenueData,
+                lastOrderAt,
+                unavailableReasons,
                 recentOrders);
     }
 
@@ -1827,11 +1841,18 @@ public class MarketplaceService {
         long deliveringOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.SHIPPED);
         long completedOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.COMPLETED);
         long cancelledOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.CANCELLED);
+        long pendingPaymentVerificationOrders = marketplaceOrderRepository.countByPaymentVerificationStatus(
+                MarketplacePaymentVerificationStatus.SUBMITTED);
         long activeOrders = pendingOrders + confirmedOrders + preparingOrders + deliveringOrders;
 
-        BigDecimal totalRevenue = Optional.ofNullable(
-                marketplaceOrderRepository.sumTotalAmountByStatus(MarketplaceOrderStatus.COMPLETED))
-                .orElse(BigDecimal.ZERO);
+        BigDecimal revenueValue = marketplaceOrderRepository.sumTotalAmountByStatus(MarketplaceOrderStatus.COMPLETED);
+        LocalDateTime lastOrderAt = marketplaceOrderRepository.findLastOrderAt();
+
+        boolean hasProducts = totalProducts > 0;
+        boolean hasOrders = totalOrders > 0;
+        boolean hasRevenueData = completedOrders > 0;
+        BigDecimal totalRevenue = hasRevenueData ? Optional.ofNullable(revenueValue).orElse(BigDecimal.ZERO) : null;
+        List<String> unavailableReasons = buildMarketplaceUnavailableReasons(hasProducts, hasOrders, hasRevenueData);
 
         return new MarketplaceAdminStatsResponse(
                 totalProducts,
@@ -1842,7 +1863,27 @@ public class MarketplaceService {
                 activeOrders,
                 completedOrders,
                 cancelledOrders,
-                totalRevenue);
+                pendingPaymentVerificationOrders,
+                totalRevenue,
+                hasProducts,
+                hasOrders,
+                hasRevenueData,
+                lastOrderAt,
+                unavailableReasons);
+    }
+
+    private List<String> buildMarketplaceUnavailableReasons(boolean hasProducts, boolean hasOrders, boolean hasRevenueData) {
+        List<String> reasons = new ArrayList<>();
+        if (!hasProducts) {
+            reasons.add("NO_PRODUCTS");
+        }
+        if (!hasOrders) {
+            reasons.add("NO_ORDERS");
+        }
+        if (!hasRevenueData) {
+            reasons.add(hasOrders ? "NO_COMPLETED_ORDERS" : "NO_REVENUE_DATA");
+        }
+        return reasons;
     }
 
     private MarketplaceCreateOrderResultResponse buildOrderResultForExistingGroup(Long orderGroupId, String groupCode) {

@@ -1,10 +1,10 @@
 import { Filter, Wheat, Sprout, FolderOpen, FileCheck, CalendarDays } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/shared/ui/button";
+import { Badge } from "@/shared/ui/badge";
+import { Label } from "@/shared/ui/label";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Separator } from "@/shared/ui/separator";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import type { Filters } from "../types";
 import {
     CROP_OPTIONS,

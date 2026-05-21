@@ -52,19 +52,19 @@ export function NotificationsPage() {
 
       <Card className="border border-border rounded-xl shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">{t('common.inbox', 'Inbox')}</CardTitle>
+          <CardTitle className="text-base">{t('notifications.inbox')}</CardTitle>
           <Badge variant={unreadCount ? 'destructive' : 'secondary'}>
-            {unreadCount} {t('notifications.filters.unread', 'unread').toLowerCase()}
+            {unreadCount} {t('notifications.filters.unread').toLowerCase()}
           </Badge>
         </CardHeader>
         <CardContent className="space-y-4">
           {notificationsQuery.isLoading && (
-            <div className="text-sm text-muted-foreground">{t('common.loading', 'Loading')}...</div>
+            <div className="text-sm text-muted-foreground">{t('common.loading')}...</div>
           )}
 
           {notificationsQuery.isError && (
             <div className="text-sm text-destructive">
-              {notificationsQuery.error?.message || t('errors.loadFailed', 'Failed to load')}
+              {notificationsQuery.error?.message || t('common.error.description')}
             </div>
           )}
 
@@ -82,11 +82,11 @@ export function NotificationsPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold">{notification.title || t('common.notification', 'Notification')}</p>
+                    <p className="text-sm font-semibold">{notification.title || t('common.notification')}</p>
                     {!notification.readAt && <Badge variant="outline">{t('notifications.filters.unread')}</Badge>}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {notification.message || t('common.noMessage', 'No message provided.')}
+                    {notification.message || t('common.noMessage')}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {formatDateTime(notification.createdAt, preferences.locale)}
@@ -98,7 +98,7 @@ export function NotificationsPage() {
                     size="sm"
                     onClick={() => handleOpenNotification(notification)}
                   >
-                    {t('common.view', 'View')}
+                    {t('common.view')}
                   </Button>
                   {!notification.readAt && (
                     <Button
@@ -108,7 +108,7 @@ export function NotificationsPage() {
                       disabled={markReadMutation.isPending}
                     >
                       <CheckCircle2 className="h-4 w-4 mr-1" />
-                      {t('common.markRead', 'Mark read')}
+                      {t('common.markRead')}
                     </Button>
                   )}
                 </div>

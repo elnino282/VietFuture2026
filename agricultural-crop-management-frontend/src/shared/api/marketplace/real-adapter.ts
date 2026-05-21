@@ -2,6 +2,7 @@ import httpClient from '../http';
 import type { MarketplaceApiAdapter } from './adapter';
 import {
   MARKETPLACE_API_PREFIX,
+  assertMarketplaceDashboardContract,
   parseMarketplaceEnvelope,
   toMarketplaceClientError,
   type MarketplaceApiResponse,
@@ -231,7 +232,27 @@ export function createMarketplaceRealAdapter(): MarketplaceApiAdapter {
     getFarmerDashboard() {
       return requestEnvelope<MarketplaceFarmerDashboard>(() =>
         httpClient.get(`${MARKETPLACE_API_PREFIX}/farmer/dashboard`),
-      );
+      ).then((response) => ({
+        ...response,
+        result: assertMarketplaceDashboardContract(
+          response.result,
+          [
+            "totalProducts",
+            "pendingReviewProducts",
+            "publishedProducts",
+            "lowStockProducts",
+            "pendingOrders",
+            "totalRevenue",
+            "hasProducts",
+            "hasOrders",
+            "hasRevenueData",
+            "lastOrderAt",
+            "unavailableReasons",
+            "recentOrders",
+          ] as const,
+          "Marketplace farmer dashboard payload",
+        ),
+      }));
     },
 
     listFarmerProducts(query?: MarketplaceFarmerProductQuery) {
@@ -353,7 +374,30 @@ export function createMarketplaceRealAdapter(): MarketplaceApiAdapter {
     getAdminStats() {
       return requestEnvelope<MarketplaceAdminStats>(() =>
         httpClient.get(`${MARKETPLACE_API_PREFIX}/admin/stats`),
-      );
+      ).then((response) => ({
+        ...response,
+        result: assertMarketplaceDashboardContract(
+          response.result,
+          [
+            "totalProducts",
+            "pendingReviewProducts",
+            "publishedProducts",
+            "hiddenProducts",
+            "totalOrders",
+            "activeOrders",
+            "completedOrders",
+            "cancelledOrders",
+            "pendingPaymentVerificationOrders",
+            "totalRevenue",
+            "hasProducts",
+            "hasOrders",
+            "hasRevenueData",
+            "lastOrderAt",
+            "unavailableReasons",
+          ] as const,
+          "Marketplace admin stats payload",
+        ),
+      }));
     },
   };
 }

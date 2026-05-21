@@ -9,6 +9,11 @@ import type { BreadcrumbPath } from '@/features/shared/layout/types';
 import { ADMIN_VIEW_CONFIG, getAdminBreadcrumbLabel } from '../constants';
 import type { AdminView } from '../types';
 
+const LEGACY_ADMIN_VIEW_REDIRECTS: Record<string, string> = {
+  buyers: '/admin/users-roles?tab=users&role=BUYER',
+  farmers: '/admin/users-roles?tab=users&role=FARMER',
+};
+
 export function useAdminPortalShell(initialView: AdminView = 'dashboard') {
   const { user, logout } = useAuth();
   const { data: profile } = useProfileMe();
@@ -46,13 +51,18 @@ export function useAdminPortalShell(initialView: AdminView = 'dashboard') {
   useEffect(() => {
     const segments = location.pathname.split('/').filter(Boolean);
     const viewSegment = segments[0] === 'admin' ? segments[1] : undefined;
+    if (viewSegment && viewSegment in LEGACY_ADMIN_VIEW_REDIRECTS) {
+      navigate(LEGACY_ADMIN_VIEW_REDIRECTS[viewSegment], { replace: true });
+      return;
+    }
+
     if (viewSegment && viewSegment in ADMIN_VIEW_CONFIG) {
       const resolvedView = viewSegment as AdminView;
       if (resolvedView !== currentView) {
         setCurrentView(resolvedView);
       }
     }
-  }, [location.pathname, currentView]);
+  }, [location.pathname, currentView, navigate]);
 
   const handleViewChange = (view: AdminView) => {
     setCurrentView(view);

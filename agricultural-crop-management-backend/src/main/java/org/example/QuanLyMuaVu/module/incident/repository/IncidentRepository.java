@@ -3,6 +3,7 @@ package org.example.QuanLyMuaVu.module.incident.repository;
 import java.util.List;
 import org.example.QuanLyMuaVu.Enums.IncidentStatus;
 import org.example.QuanLyMuaVu.module.incident.entity.Incident;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -49,6 +50,18 @@ public interface IncidentRepository extends JpaRepository<Incident, Integer>, Jp
     long countByFarmUserIdAndStatusIn(@Param("ownerId") Long ownerId,
             @Param("openStatuses") List<IncidentStatus> openStatuses);
 
+    @Query("SELECT i FROM Incident i " +
+            "LEFT JOIN FETCH i.season s " +
+            "LEFT JOIN FETCH s.plot p " +
+            "WHERE s.plot.farm.user.id = :ownerId " +
+            "AND i.status IN :openStatuses " +
+            "AND (:seasonId IS NULL OR i.seasonId = :seasonId) " +
+            "ORDER BY i.createdAt DESC")
+    List<Incident> findOpenByOwnerIdAndSeasonId(
+            @Param("ownerId") Long ownerId,
+            @Param("seasonId") Integer seasonId,
+            @Param("openStatuses") List<IncidentStatus> openStatuses);
+
     // ═══════════════════════════════════════════════════════════════
     // ADMIN QUERY METHODS
     // ═══════════════════════════════════════════════════════════════
@@ -58,4 +71,14 @@ public interface IncidentRepository extends JpaRepository<Incident, Integer>, Jp
      */
     @Query("SELECT COUNT(i) FROM Incident i WHERE i.status IN :statuses")
     long countByStatusIn(@Param("statuses") List<String> statuses);
+
+    @Query("""
+            SELECT i FROM Incident i
+            LEFT JOIN FETCH i.reportedBy reporter
+            LEFT JOIN FETCH i.season s
+            LEFT JOIN FETCH s.plot p
+            WHERE s.plot.farm.user.id = :ownerId
+            ORDER BY i.createdAt DESC, i.id DESC
+            """)
+    List<Incident> findRecentByOwnerId(@Param("ownerId") Long ownerId, Pageable pageable);
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import type { MarketplaceFarmerProductUpsertRequest } from "@/shared/api";
+import { useI18n } from "@/hooks/useI18n";
+import type { MarketplaceFarmerProductUpsertRequest, MarketplaceProductStatus } from "@/shared/api";
 import {
   Button,
   Card,
@@ -25,10 +26,7 @@ import {
 } from "@/features/marketplace/hooks";
 import { SellerMarketplaceTabs } from "@/features/marketplace/layout";
 import { formatDate, formatVnd } from "@/features/marketplace/lib/format";
-import {
-  getNextSellerProductStatusAction,
-  getNextSellerProductStatusLabel,
-} from "@/features/marketplace/lib/sellerProductStatus";
+import { getNextSellerProductStatusAction } from "@/features/marketplace/lib/sellerProductStatus";
 
 type ProductFormState = {
   name: string;
@@ -43,6 +41,8 @@ type ProductFormState = {
   selectedLotId: string;
 };
 
+type Translator = (key: string, optionsOrDefault?: Record<string, unknown> | string) => string;
+
 const EMPTY_FORM: ProductFormState = {
   name: "",
   category: "",
@@ -56,7 +56,23 @@ const EMPTY_FORM: ProductFormState = {
   selectedLotId: "",
 };
 
+function nextStatusActionLabel(status: MarketplaceProductStatus, t: Translator): string {
+  switch (status) {
+    case "DRAFT":
+      return t("marketplaceSeller.productForm.actions.submitForReview", "Submit for review");
+    case "PENDING_REVIEW":
+      return t("marketplaceSeller.productForm.actions.moveToDraft", "Move back to draft");
+    case "PUBLISHED":
+      return t("marketplaceSeller.productForm.actions.hideProduct", "Hide product");
+    case "HIDDEN":
+      return t("marketplaceSeller.productForm.actions.resubmitReview", "Resubmit for review");
+    default:
+      return t("marketplaceSeller.productForm.actions.updateStatus", "Update status");
+  }
+}
+
 export function SellerProductFormPage() {
+  const { t, locale } = useI18n();
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
@@ -188,7 +204,12 @@ export function SellerProductFormPage() {
     setErrorMessage(null);
 
     if (!selectedLot) {
-      setErrorMessage("Choose a harvested lot before saving the listing.");
+      setErrorMessage(
+        t(
+          "marketplaceSeller.productForm.validation.selectLot",
+          "Choose a harvested lot before saving the listing.",
+        ),
+      );
       return;
     }
 
@@ -196,18 +217,24 @@ export function SellerProductFormPage() {
     const stockQuantity = Number(form.stockQuantity);
 
     if (!Number.isFinite(price) || price <= 0) {
-      setErrorMessage("Price must be greater than 0.");
+      setErrorMessage(t("marketplaceSeller.productForm.validation.pricePositive", "Price must be greater than 0."));
       return;
     }
 
     if (!Number.isFinite(stockQuantity) || stockQuantity <= 0) {
-      setErrorMessage("Quantity to sell must be greater than 0.");
+      setErrorMessage(
+        t("marketplaceSeller.productForm.validation.quantityPositive", "Quantity to sell must be greater than 0."),
+      );
       return;
     }
 
     if (stockQuantity > selectedLot.availableQuantity) {
       setErrorMessage(
-        `Quantity to sell cannot exceed the harvested lot availability of ${selectedLot.availableQuantity} ${selectedLot.unit ?? ""}.`.trim(),
+        t("marketplaceSeller.productForm.validation.quantityExceed", {
+          quantity: selectedLot.availableQuantity,
+          unit: selectedLot.unit ?? "",
+          defaultValue: "Quantity to sell cannot exceed {{quantity}} {{unit}} from the selected harvested lot.",
+        }).trim(),
       );
       return;
     }
@@ -232,7 +259,7 @@ export function SellerProductFormPage() {
 
       navigate("/farmer/marketplace-products");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Failed to save product.");
+      setErrorMessage(error instanceof Error ? error.message : t("marketplaceSeller.productForm.errors.save", "Failed to save product."));
     }
   }
 
@@ -251,7 +278,11 @@ export function SellerProductFormPage() {
       await statusMutation.mutateAsync(request);
       navigate("/farmer/marketplace-products");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Failed to update product status.");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : t("marketplaceSeller.productForm.errors.updateStatus", "Failed to update product status."),
+      );
     }
   }
 
@@ -265,7 +296,7 @@ export function SellerProductFormPage() {
         <SellerMarketplaceTabs />
         <Card className="border-dashed">
           <CardContent className="p-8 text-sm text-muted-foreground">
-            Loading harvest-based seller workflow...
+            {t("marketplaceSeller.productForm.loading", "Loading harvest-based seller workflow...")}
           </CardContent>
         </Card>
       </div>
@@ -280,8 +311,14 @@ export function SellerProductFormPage() {
           <CardContent className="space-y-4 p-8">
             <p className="text-sm text-destructive">
               {isEdit
-                ? "Failed to load the product detail or harvest options."
-                : "Failed to load your harvest-based selling options."}
+                ? t(
+                    "marketplaceSeller.productForm.errors.loadEdit",
+                    "Failed to load the product detail or harvest options.",
+                  )
+                : t(
+                    "marketplaceSeller.productForm.errors.loadCreate",
+                    "Failed to load your harvest-based selling options.",
+                  )}
             </p>
             <div className="flex flex-wrap gap-3">
               <Button
@@ -289,10 +326,10 @@ export function SellerProductFormPage() {
                 variant="outline"
                 onClick={() => void Promise.all([formOptionsQuery.refetch(), productQuery.refetch()])}
               >
-                Try again
+                {t("marketplaceSeller.common.tryAgain", "Try again")}
               </Button>
               <Button type="button" variant="outline" onClick={() => navigate("/farmer/marketplace-products")}>
-                Back to products
+                {t("marketplaceSeller.common.backToProducts", "Back to products")}
               </Button>
             </div>
           </CardContent>
@@ -307,9 +344,11 @@ export function SellerProductFormPage() {
         <SellerMarketplaceTabs />
         <Card>
           <CardContent className="space-y-4 p-8">
-            <p className="text-sm text-muted-foreground">This product could not be found for your account.</p>
+            <p className="text-sm text-muted-foreground">
+              {t("marketplaceSeller.productForm.notFound", "This product could not be found for your account.")}
+            </p>
             <Button type="button" variant="outline" onClick={() => navigate("/farmer/marketplace-products")}>
-              Back to products
+              {t("marketplaceSeller.common.backToProducts", "Back to products")}
             </Button>
           </CardContent>
         </Card>
@@ -324,13 +363,19 @@ export function SellerProductFormPage() {
         <Card>
           <CardContent className="space-y-4 p-8">
             <p className="text-sm text-foreground">
-              You do not have any harvested lots with remaining quantity ready to sell yet.
+              {t(
+                "marketplaceSeller.productForm.noLots.title",
+                "You do not have any harvested lots with remaining quantity ready to sell yet.",
+              )}
             </p>
             <p className="text-sm text-muted-foreground">
-              Finish harvest intake first, then come back here to turn a harvested lot into a marketplace listing.
+              {t(
+                "marketplaceSeller.productForm.noLots.description",
+                "Finish harvest intake first, then come back here to turn a harvested lot into a marketplace listing.",
+              )}
             </p>
             <Button type="button" variant="outline" onClick={() => navigate("/farmer/marketplace-products")}>
-              Back to products
+              {t("marketplaceSeller.common.backToProducts", "Back to products")}
             </Button>
           </CardContent>
         </Card>
@@ -344,19 +389,26 @@ export function SellerProductFormPage() {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-primary">FarmTrace Seller Portal</p>
+          <p className="text-sm font-medium text-primary">
+            {t("marketplaceSeller.common.brand", "Seller Portal")}
+          </p>
           <h1 className="mt-1 text-3xl font-bold text-foreground">
-            {isEdit ? "Edit marketplace listing" : "Create marketplace listing"}
+            {isEdit
+              ? t("marketplaceSeller.productForm.header.editTitle", "Edit marketplace listing")
+              : t("marketplaceSeller.productForm.header.createTitle", "Create marketplace listing")}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Keep the current harvest-backed workflow, but present it with the simpler legacy seller form layout.
+            {t(
+              "marketplaceSeller.productForm.header.subtitle",
+              "Create a marketplace listing from harvested lots with full traceability and stock controls.",
+            )}
           </p>
         </div>
         <Link
           to="/farmer/marketplace-products"
           className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
         >
-          Back to products
+          {t("marketplaceSeller.common.backToProducts", "Back to products")}
         </Link>
       </div>
 
@@ -367,32 +419,35 @@ export function SellerProductFormPage() {
         <div className="space-y-6">
           <Card className="border-border shadow-sm">
             <CardHeader>
-              <CardTitle>Basic information</CardTitle>
+              <CardTitle>{t("marketplaceSeller.productForm.sections.basicInfo", "Basic information")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="product-name">Listing name *</Label>
+                <Label htmlFor="product-name">{t("marketplaceSeller.productForm.fields.name", "Listing name")} *</Label>
                 <Input
                   id="product-name"
                   value={form.name}
                   onChange={(event) => updateForm({ name: event.target.value })}
-                  placeholder="Example: Premium jasmine rice from harvest lot 2026"
+                  placeholder={t(
+                    "marketplaceSeller.productForm.placeholders.name",
+                    "Example: Premium jasmine rice from harvest lot 2026",
+                  )}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="product-category">Category</Label>
+                <Label htmlFor="product-category">{t("marketplaceSeller.productForm.fields.category", "Category")}</Label>
                 <Input
                   id="product-category"
                   value={form.category}
                   onChange={(event) => updateForm({ category: event.target.value })}
-                  placeholder="Grain, vegetable, fruit..."
+                  placeholder={t("marketplaceSeller.productForm.placeholders.category", "Grain, vegetable, fruit...")}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="product-price">Price *</Label>
+                <Label htmlFor="product-price">{t("marketplaceSeller.productForm.fields.price", "Price")} *</Label>
                 <Input
                   id="product-price"
                   type="number"
@@ -406,7 +461,8 @@ export function SellerProductFormPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="product-stock">
-                  Quantity to sell *{selectedLot?.unit ? ` (${selectedLot.unit})` : ""}
+                  {t("marketplaceSeller.productForm.fields.quantityToSell", "Quantity to sell")} *
+                  {selectedLot?.unit ? ` (${selectedLot.unit})` : ""}
                 </Label>
                 <Input
                   id="product-stock"
@@ -420,13 +476,17 @@ export function SellerProductFormPage() {
                 />
                 {selectedLot ? (
                   <p className="text-xs text-muted-foreground">
-                    Max allowed: {selectedLot.availableQuantity} {selectedLot.unit ?? ""}
+                    {t("marketplaceSeller.productForm.maxAllowed", {
+                      quantity: selectedLot.availableQuantity,
+                      unit: selectedLot.unit ?? "",
+                      defaultValue: "Max allowed: {{quantity}} {{unit}}",
+                    })}
                   </p>
                 ) : null}
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="product-image-url">Main image URL</Label>
+                <Label htmlFor="product-image-url">{t("marketplaceSeller.productForm.fields.imageUrl", "Main image URL")}</Label>
                 <Input
                   id="product-image-url"
                   value={form.imageUrl}
@@ -439,26 +499,36 @@ export function SellerProductFormPage() {
 
           <Card className="border-border shadow-sm">
             <CardHeader>
-              <CardTitle>Descriptions</CardTitle>
+              <CardTitle>{t("marketplaceSeller.productForm.sections.descriptions", "Descriptions")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="product-short-desc">Short description</Label>
+                <Label htmlFor="product-short-desc">
+                  {t("marketplaceSeller.productForm.fields.shortDescription", "Short description")}
+                </Label>
                 <Input
                   id="product-short-desc"
                   value={form.shortDescription}
                   onChange={(event) => updateForm({ shortDescription: event.target.value })}
-                  placeholder="A short summary buyers can scan quickly"
+                  placeholder={t(
+                    "marketplaceSeller.productForm.placeholders.shortDescription",
+                    "A short summary buyers can scan quickly",
+                  )}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="product-description">Full description</Label>
+                <Label htmlFor="product-description">
+                  {t("marketplaceSeller.productForm.fields.fullDescription", "Full description")}
+                </Label>
                 <Textarea
                   id="product-description"
                   value={form.description}
                   onChange={(event) => updateForm({ description: event.target.value })}
-                  placeholder="Add packaging notes, harvest quality, shipping notes, or handling instructions"
+                  placeholder={t(
+                    "marketplaceSeller.productForm.placeholders.fullDescription",
+                    "Add packaging notes, harvest quality, shipping notes, or handling instructions",
+                  )}
                   className="min-h-36"
                 />
               </div>
@@ -469,14 +539,14 @@ export function SellerProductFormPage() {
         <div className="space-y-6">
           <Card className="border-border shadow-sm">
             <CardHeader>
-              <CardTitle>Harvest source</CardTitle>
+              <CardTitle>{t("marketplaceSeller.productForm.sections.harvestSource", "Harvest source")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label id="product-farm-label">Farm</Label>
+                <Label id="product-farm-label">{t("marketplaceSeller.productForm.fields.farm", "Farm")}</Label>
                 <Select value={form.selectedFarmId} onValueChange={handleFarmChange}>
                   <SelectTrigger aria-labelledby="product-farm-label">
-                    <SelectValue placeholder="Choose your farm" />
+                    <SelectValue placeholder={t("marketplaceSeller.productForm.placeholders.selectFarm", "Choose your farm")} />
                   </SelectTrigger>
                   <SelectContent>
                     {formOptionsQuery.data?.farms.map((farm) => (
@@ -489,14 +559,20 @@ export function SellerProductFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label id="product-season-label">Season</Label>
+                <Label id="product-season-label">{t("marketplaceSeller.productForm.fields.season", "Season")}</Label>
                 <Select
                   value={form.selectedSeasonId}
                   onValueChange={handleSeasonChange}
                   disabled={!form.selectedFarmId}
                 >
                   <SelectTrigger aria-labelledby="product-season-label">
-                    <SelectValue placeholder={form.selectedFarmId ? "Choose a season" : "Pick a farm first"} />
+                    <SelectValue
+                      placeholder={
+                        form.selectedFarmId
+                          ? t("marketplaceSeller.productForm.placeholders.selectSeason", "Choose a season")
+                          : t("marketplaceSeller.productForm.placeholders.pickFarmFirst", "Pick a farm first")
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {filteredSeasons.map((season) => (
@@ -509,58 +585,77 @@ export function SellerProductFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label id="product-lot-label">Harvested lot</Label>
+                <Label id="product-lot-label">{t("marketplaceSeller.productForm.fields.harvestLot", "Harvested lot")}</Label>
                 <Select
                   value={form.selectedLotId}
                   onValueChange={handleLotChange}
                   disabled={!form.selectedFarmId}
                 >
                   <SelectTrigger aria-labelledby="product-lot-label">
-                    <SelectValue placeholder={form.selectedFarmId ? "Choose a harvested lot" : "Pick a farm first"} />
+                    <SelectValue
+                      placeholder={
+                        form.selectedFarmId
+                          ? t("marketplaceSeller.productForm.placeholders.selectLot", "Choose a harvested lot")
+                          : t("marketplaceSeller.productForm.placeholders.pickFarmFirst", "Pick a farm first")
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {filteredLots.map((lot) => (
                       <SelectItem key={lot.id} value={String(lot.id)}>
-                        {lot.lotCode} - {lot.productName ?? "Harvested lot"}
+                        {lot.lotCode} - {lot.productName ?? t("marketplaceSeller.productForm.harvestLotFallback", "Harvested lot")}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm">
+              <div className="rounded-xl border border-primary/20 bg-primary/10 p-4 text-sm">
                 {selectedLot ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-muted-foreground">Lot code</span>
+                      <span className="text-muted-foreground">{t("marketplaceSeller.productForm.lotInfo.lotCode", "Lot code")}</span>
                       <span className="font-medium text-foreground">{selectedLot.lotCode}</span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-muted-foreground">Farm</span>
-                      <span className="font-medium text-foreground">{selectedLot.farmName ?? "Unknown"}</span>
+                      <span className="text-muted-foreground">{t("marketplaceSeller.productForm.lotInfo.farm", "Farm")}</span>
+                      <span className="font-medium text-foreground">
+                        {selectedLot.farmName ?? t("marketplaceSeller.productForm.lotInfo.unknown", "Unknown")}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-muted-foreground">Season</span>
-                      <span className="font-medium text-foreground">{selectedLot.seasonName ?? "Unknown"}</span>
+                      <span className="text-muted-foreground">{t("marketplaceSeller.productForm.lotInfo.season", "Season")}</span>
+                      <span className="font-medium text-foreground">
+                        {selectedLot.seasonName ?? t("marketplaceSeller.productForm.lotInfo.unknown", "Unknown")}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-muted-foreground">Available quantity</span>
+                      <span className="text-muted-foreground">
+                        {t("marketplaceSeller.productForm.lotInfo.availableQuantity", "Available quantity")}
+                      </span>
                       <span className="font-medium text-foreground">
                         {selectedLot.availableQuantity} {selectedLot.unit ?? ""}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-muted-foreground">Harvested</span>
+                      <span className="text-muted-foreground">{t("marketplaceSeller.productForm.lotInfo.harvested", "Harvested")}</span>
                       <span className="font-medium text-foreground">
-                        {selectedLot.harvestedAt ? formatDate(selectedLot.harvestedAt) : "N/A"}
+                        {selectedLot.harvestedAt
+                          ? formatDate(selectedLot.harvestedAt, locale)
+                          : t("marketplaceSeller.productForm.lotInfo.na", "N/A")}
                       </span>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-1">
-                    <p className="font-medium text-foreground">Select a harvested lot first.</p>
+                    <p className="font-medium text-foreground">
+                      {t("marketplaceSeller.productForm.selectLotFirst.title", "Select a harvested lot first.")}
+                    </p>
                     <p className="text-muted-foreground">
-                      Farm, season, traceability, and quantity limits are driven by that lot.
+                      {t(
+                        "marketplaceSeller.productForm.selectLotFirst.description",
+                        "Farm, season, traceability, and quantity limits are driven by that lot.",
+                      )}
                     </p>
                   </div>
                 )}
@@ -568,7 +663,11 @@ export function SellerProductFormPage() {
 
               {lotsAlreadyLinkedCount > 0 ? (
                 <p className="text-xs text-muted-foreground">
-                  {lotsAlreadyLinkedCount} harvested lot{lotsAlreadyLinkedCount > 1 ? "s are" : " is"} already linked to other marketplace listings and excluded here.
+                  {t("marketplaceSeller.productForm.lotsLinkedNotice", {
+                    count: lotsAlreadyLinkedCount,
+                    defaultValue:
+                      "{{count}} harvested lots are already linked to other marketplace listings and excluded here.",
+                  })}
                 </p>
               ) : null}
             </CardContent>
@@ -576,54 +675,65 @@ export function SellerProductFormPage() {
 
           <Card className="border-border shadow-sm">
             <CardHeader>
-              <CardTitle>Listing preview</CardTitle>
+              <CardTitle>{t("marketplaceSeller.productForm.sections.preview", "Listing preview")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="overflow-hidden rounded-xl border border-border bg-muted/50">
                 {form.imageUrl ? (
                   <img
                     src={form.imageUrl}
-                    alt={form.name || "Listing preview"}
+                    alt={form.name || t("marketplaceSeller.productForm.preview.title", "Listing preview")}
                     className="h-48 w-full object-cover"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
                   <div className="flex h-48 items-center justify-center text-sm text-muted-foreground/60">
-                    Product image preview
+                    {t("marketplaceSeller.productForm.preview.imageFallback", "Product image preview")}
                   </div>
                 )}
               </div>
 
               <div>
-                <p className="text-lg font-semibold text-foreground">{form.name || "Untitled listing"}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{form.shortDescription || "Short description preview"}</p>
+                <p className="text-lg font-semibold text-foreground">
+                  {form.name || t("marketplaceSeller.productForm.preview.untitled", "Untitled listing")}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {form.shortDescription ||
+                    t("marketplaceSeller.productForm.preview.shortDescriptionFallback", "Short description preview")}
+                </p>
               </div>
 
               <div className="rounded-xl border border-border bg-muted/50 p-4 text-sm">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Price</span>
+                  <span className="text-muted-foreground">{t("marketplaceSeller.productForm.preview.price", "Price")}</span>
                   <span className="font-semibold text-primary">
-                    {Number(form.price) > 0 ? formatVnd(Number(form.price)) : "--"}
+                    {Number(form.price) > 0 ? formatVnd(Number(form.price), locale) : "--"}
                     {selectedLot?.unit ? ` / ${selectedLot.unit}` : ""}
                   </span>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Quantity to sell</span>
+                  <span className="text-muted-foreground">
+                    {t("marketplaceSeller.productForm.preview.quantityToSell", "Quantity to sell")}
+                  </span>
                   <span className="font-medium text-foreground">
                     {form.stockQuantity || "--"} {selectedLot?.unit ?? ""}
                   </span>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Traceability</span>
+                  <span className="text-muted-foreground">
+                    {t("marketplaceSeller.productForm.preview.traceability", "Traceability")}
+                  </span>
                   <span className="font-medium text-primary">
-                    {selectedLot ? "Enabled from harvest lot" : "Waiting for lot"}
+                    {selectedLot
+                      ? t("marketplaceSeller.productForm.preview.traceabilityEnabled", "Enabled from harvest lot")
+                      : t("marketplaceSeller.productForm.preview.traceabilityWaiting", "Waiting for lot")}
                   </span>
                 </div>
               </div>
 
               {productModerationReason ? (
-                <div className="rounded-xl border border-destructive/30 bg-red-50 p-3 text-sm text-red-700">
-                  Admin reason: {productModerationReason}
+                <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  {t("marketplaceSeller.productForm.adminReasonPrefix", "Admin reason")}: {productModerationReason}
                 </div>
               ) : null}
 
@@ -636,10 +746,10 @@ export function SellerProductFormPage() {
                   className="w-full"
                 >
                   {createMutation.isPending || updateMutation.isPending
-                    ? "Saving..."
+                    ? t("marketplaceSeller.productForm.actions.saving", "Saving...")
                     : isEdit
-                      ? "Save changes"
-                      : "Create draft"}
+                      ? t("marketplaceSeller.productForm.actions.saveChanges", "Save changes")
+                      : t("marketplaceSeller.productForm.actions.createDraft", "Create draft")}
                 </Button>
 
                 {isEdit && product && getNextSellerProductStatusAction(product.status) ? (
@@ -651,8 +761,8 @@ export function SellerProductFormPage() {
                     className="w-full"
                   >
                     {statusMutation.isPending
-                      ? "Updating..."
-                      : getNextSellerProductStatusLabel(product.status)}
+                      ? t("marketplaceSeller.productForm.actions.updating", "Updating...")
+                      : nextStatusActionLabel(product.status, t)}
                   </Button>
                 ) : null}
               </div>

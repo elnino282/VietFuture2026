@@ -1,12 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/shared/ui/button";
+import { Label } from "@/shared/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -15,13 +15,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
+import { useEffect, useState } from "react";
+
+interface AssigneeOption {
+  userId: number;
+  displayName: string;
+}
 
 interface ReassignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedCount: number;
-  onReassign: () => void;
-  uniqueAssignees: string[];
+  onReassign: (assigneeUserId: number) => void;
+  assigneeOptions: AssigneeOption[];
   disabled?: boolean;
   disabledReason?: string;
 }
@@ -31,10 +37,26 @@ export function ReassignDialog({
   onOpenChange,
   selectedCount,
   onReassign,
-  uniqueAssignees,
+  assigneeOptions,
   disabled = false,
   disabledReason,
 }: ReassignDialogProps) {
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState("");
+
+  useEffect(() => {
+    if (!open) {
+      setSelectedAssigneeId("");
+    }
+  }, [open]);
+
+  const handleReassign = () => {
+    const assigneeUserId = Number(selectedAssigneeId);
+    if (!Number.isFinite(assigneeUserId) || assigneeUserId <= 0) {
+      return;
+    }
+    onReassign(assigneeUserId);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="acm-rounded-lg">
@@ -51,18 +73,27 @@ export function ReassignDialog({
             </div>
           )}
           <Label>New Assignee</Label>
-          <Select disabled={disabled}>
+          <Select
+            disabled={disabled || assigneeOptions.length === 0}
+            value={selectedAssigneeId}
+            onValueChange={setSelectedAssigneeId}
+          >
             <SelectTrigger className="border-border acm-rounded-sm">
               <SelectValue placeholder="Select assignee" />
             </SelectTrigger>
             <SelectContent>
-              {uniqueAssignees.map((assignee) => (
-                <SelectItem key={assignee} value={assignee}>
-                  {assignee}
+              {assigneeOptions.map((assignee) => (
+                <SelectItem key={assignee.userId} value={String(assignee.userId)}>
+                  {assignee.displayName}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {assigneeOptions.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              No assignees available for this season.
+            </p>
+          )}
         </div>
         <DialogFooter>
           <Button
@@ -73,9 +104,9 @@ export function ReassignDialog({
             Cancel
           </Button>
           <Button
-            onClick={onReassign}
+            onClick={handleReassign}
             className="bg-primary hover:bg-primary/90 text-primary-foreground acm-rounded-sm"
-            disabled={disabled}
+            disabled={disabled || !selectedAssigneeId}
             title={disabled ? disabledReason : undefined}
           >
             Reassign

@@ -24,4 +24,7 @@ public class SeasonCostOptimizationSuggestionRequest {
     String additionalNote;
 
     Boolean includeInventory;
+
+    @Size(max = 32, message = "KEY_INVALID")
+    String locale;
 }

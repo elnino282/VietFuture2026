@@ -2,6 +2,7 @@ package org.example.QuanLyMuaVu.module.sustainability.dto.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,6 +32,8 @@ public class DashboardOverviewResponse {
     InventoryRisk inventoryRisk;
     LotStatus lotStatus;
     SustainabilityAlerts sustainabilityAlerts;
+    List<String> unavailableReasons;
+    List<String> missingInputs;
 
     @Data
     @Builder

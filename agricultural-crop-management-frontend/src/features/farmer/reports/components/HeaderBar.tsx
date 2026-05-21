@@ -2,16 +2,17 @@ import { Download, Filter, BarChart3 } from "lucide-react";
 import {
     Card,
     CardContent,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import { SEASON_OPTIONS } from "../constants";
+import { useI18n } from "@/hooks/useI18n";
 
 interface HeaderBarProps {
     selectedSeason: string;
@@ -36,9 +37,10 @@ export function HeaderBar({
     subtitle,
     progressPercent,
 }: HeaderBarProps) {
+    const { t } = useI18n();
     const options = seasonOptions ?? SEASON_OPTIONS;
-    const headingTitle = title ?? "Reports Overview";
-    const headingSubtitle = subtitle ?? "Track productivity, costs, and compliance";
+    const headingTitle = title ?? t("reports.header.defaultTitle");
+    const headingSubtitle = subtitle ?? t("reports.header.defaultSubtitle");
 
     return (
         <Card className="border border-border rounded-xl shadow-sm mb-6 sticky top-0 z-10 bg-card">
@@ -52,7 +54,7 @@ export function HeaderBar({
                             </h1>
                             {typeof progressPercent === "number" && (
                                 <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                                    Tiến độ: {progressPercent}%
+                                    {t("reports.header.progress", { percent: progressPercent })}
                                 </span>
                             )}
                         </div>
@@ -81,7 +83,7 @@ export function HeaderBar({
                             onClick={onFilterClick}
                         >
                             <Filter className="w-4 h-4 mr-2" />
-                            Filter
+                            {t("reports.header.filterButton")}
                         </Button>
 
                         <Button
@@ -89,7 +91,7 @@ export function HeaderBar({
                             onClick={onExportClick}
                         >
                             <Download className="w-4 h-4 mr-2" />
-                            Export
+                            {t("reports.header.exportButton")}
                         </Button>
                     </div>
                 </div>

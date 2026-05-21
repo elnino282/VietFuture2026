@@ -3,12 +3,15 @@ import { ArrowLeft, CreditCard, MapPin, Phone, Truck } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import type { MarketplaceOrderStatus } from "@/shared/api";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
+import { useI18n } from "@/hooks/useI18n";
 import {
   useMarketplaceFarmerOrderDetail,
   useMarketplaceUpdateFarmerOrderStatusMutation,
 } from "@/features/marketplace/hooks";
 import { SellerMarketplaceTabs } from "@/features/marketplace/layout";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
+
+type Translator = (key: string, optionsOrDefault?: Record<string, unknown> | string) => string;
 
 function nextStatusOptions(status: MarketplaceOrderStatus): MarketplaceOrderStatus[] {
   switch (status) {
@@ -25,45 +28,74 @@ function nextStatusOptions(status: MarketplaceOrderStatus): MarketplaceOrderStat
   }
 }
 
-function sellerOrderStatusLabel(status: MarketplaceOrderStatus) {
+function sellerOrderStatusLabel(status: MarketplaceOrderStatus, t: Translator) {
   switch (status) {
     case "PENDING":
-      return "Pending";
+      return t("marketplaceSeller.status.order.pending", "Pending");
     case "CONFIRMED":
-      return "Confirmed";
+      return t("marketplaceSeller.status.order.confirmed", "Confirmed");
     case "PREPARING":
-      return "Preparing";
+      return t("marketplaceSeller.status.order.preparing", "Preparing");
     case "DELIVERING":
-      return "Shipped";
+      return t("marketplaceSeller.status.order.delivering", "Delivering");
     case "COMPLETED":
-      return "Delivered";
+      return t("marketplaceSeller.status.order.completed", "Completed");
     case "CANCELLED":
-      return "Cancelled";
+      return t("marketplaceSeller.status.order.cancelled", "Cancelled");
     default:
       return status;
   }
 }
 
-function statusBadge(status: MarketplaceOrderStatus) {
+function statusBadge(status: MarketplaceOrderStatus, t: Translator) {
   switch (status) {
     case "PENDING":
-      return <Badge variant="warning">{sellerOrderStatusLabel(status)}</Badge>;
+      return <Badge variant="warning">{sellerOrderStatusLabel(status, t)}</Badge>;
     case "CONFIRMED":
-      return <Badge variant="secondary">{sellerOrderStatusLabel(status)}</Badge>;
+      return <Badge variant="secondary">{sellerOrderStatusLabel(status, t)}</Badge>;
     case "PREPARING":
-      return <Badge variant="secondary">{sellerOrderStatusLabel(status)}</Badge>;
+      return <Badge variant="secondary">{sellerOrderStatusLabel(status, t)}</Badge>;
     case "DELIVERING":
-      return <Badge variant="default">{sellerOrderStatusLabel(status)}</Badge>;
+      return <Badge variant="default">{sellerOrderStatusLabel(status, t)}</Badge>;
     case "COMPLETED":
-      return <Badge variant="success">{sellerOrderStatusLabel(status)}</Badge>;
+      return <Badge variant="success">{sellerOrderStatusLabel(status, t)}</Badge>;
     case "CANCELLED":
-      return <Badge variant="destructive">{sellerOrderStatusLabel(status)}</Badge>;
+      return <Badge variant="destructive">{sellerOrderStatusLabel(status, t)}</Badge>;
     default:
       return <Badge variant="secondary">{status}</Badge>;
   }
 }
 
+function paymentMethodLabel(method: string, t: Translator) {
+  switch (method) {
+    case "COD":
+      return t("marketplaceSeller.orderDetail.paymentMethod.cod", "Cash on delivery");
+    case "BANK_TRANSFER":
+      return t("marketplaceSeller.orderDetail.paymentMethod.bankTransfer", "Bank transfer");
+    default:
+      return method;
+  }
+}
+
+function verificationStatusLabel(status: string, t: Translator) {
+  switch (status) {
+    case "NOT_REQUIRED":
+      return t("marketplaceSeller.orderDetail.verificationStatus.notRequired", "Not required");
+    case "AWAITING_PROOF":
+      return t("marketplaceSeller.orderDetail.verificationStatus.awaitingProof", "Awaiting proof");
+    case "SUBMITTED":
+      return t("marketplaceSeller.orderDetail.verificationStatus.submitted", "Submitted");
+    case "VERIFIED":
+      return t("marketplaceSeller.orderDetail.verificationStatus.verified", "Verified");
+    case "REJECTED":
+      return t("marketplaceSeller.orderDetail.verificationStatus.rejected", "Rejected");
+    default:
+      return status;
+  }
+}
+
 export function SellerOrderDetailPage() {
+  const { t, locale } = useI18n();
   const { id } = useParams();
   const orderId = Number(id ?? 0);
   const orderQuery = useMarketplaceFarmerOrderDetail(orderId);
@@ -83,7 +115,9 @@ export function SellerOrderDetailPage() {
       <div className="max-w-[1800px] mx-auto px-6 pt-6 space-y-6">
         <SellerMarketplaceTabs />
         <Card className="border-dashed">
-          <CardContent className="p-8 text-sm text-muted-foreground">Loading order detail...</CardContent>
+          <CardContent className="p-8 text-sm text-muted-foreground">
+            {t("marketplaceSeller.orderDetail.loading", "Loading order detail...")}
+          </CardContent>
         </Card>
       </div>
     );
@@ -94,7 +128,9 @@ export function SellerOrderDetailPage() {
       <div className="max-w-[1800px] mx-auto px-6 pt-6 space-y-6">
         <SellerMarketplaceTabs />
         <Card className="border-destructive/30">
-          <CardContent className="p-8 text-sm text-destructive">Failed to load seller order detail.</CardContent>
+          <CardContent className="p-8 text-sm text-destructive">
+            {t("marketplaceSeller.orderDetail.error", "Failed to load seller order detail.")}
+          </CardContent>
         </Card>
       </div>
     );
@@ -111,12 +147,14 @@ export function SellerOrderDetailPage() {
           <Link
             to="/farmer/marketplace-orders"
             className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Back to orders"
+            aria-label={t("marketplaceSeller.orderDetail.backToOrders", "Back to orders")}
           >
             <ArrowLeft size={18} />
           </Link>
           <div>
-            <p className="text-sm font-medium text-primary">FarmTrace Seller Portal</p>
+            <p className="text-sm font-medium text-primary">
+              {t("marketplaceSeller.common.brand", "Seller Portal")}
+            </p>
             <h1 className="mt-1 text-3xl font-bold text-foreground">{order.orderCode}</h1>
           </div>
         </div>
@@ -130,7 +168,7 @@ export function SellerOrderDetailPage() {
               onClick={() => statusMutation.mutate({ status: action })}
               disabled={statusMutation.isPending}
             >
-              {sellerOrderStatusLabel(action)}
+              {sellerOrderStatusLabel(action, t)}
             </Button>
           ))}
         </div>
@@ -143,10 +181,10 @@ export function SellerOrderDetailPage() {
           <CardHeader className="border-b border-border/50">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <CardTitle>Order items</CardTitle>
-                <p className="mt-2 text-sm text-muted-foreground">{formatDateTime(order.createdAt)}</p>
+                <CardTitle>{t("marketplaceSeller.orderDetail.itemsTitle", "Order items")}</CardTitle>
+                <p className="mt-2 text-sm text-muted-foreground">{formatDateTime(order.createdAt, locale)}</p>
               </div>
-              {statusBadge(order.status)}
+              {statusBadge(order.status, t)}
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -162,26 +200,26 @@ export function SellerOrderDetailPage() {
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-foreground">{item.productName}</p>
                     <p className="text-sm text-muted-foreground">
-                      {formatVnd(item.unitPriceSnapshot)} x {item.quantity}
+                      {formatVnd(item.unitPriceSnapshot, locale)} x {item.quantity}
                     </p>
                   </div>
-                  <p className="font-semibold text-foreground">{formatVnd(item.lineTotal)}</p>
+                  <p className="font-semibold text-foreground">{formatVnd(item.lineTotal, locale)}</p>
                 </div>
               ))}
             </div>
 
             <div className="space-y-2 border-t border-border bg-muted/50 p-4 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Subtotal</span>
-                <span>{formatVnd(order.subtotal)}</span>
+                <span>{t("marketplaceSeller.orderDetail.summary.subtotal", "Subtotal")}</span>
+                <span>{formatVnd(order.subtotal, locale)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Shipping fee</span>
-                <span>{formatVnd(order.shippingFee)}</span>
+                <span>{t("marketplaceSeller.orderDetail.summary.shippingFee", "Shipping fee")}</span>
+                <span>{formatVnd(order.shippingFee, locale)}</span>
               </div>
               <div className="flex justify-between border-t border-border pt-2 text-lg font-bold text-primary">
-                <span>Total</span>
-                <span>{formatVnd(order.totalAmount)}</span>
+                <span>{t("marketplaceSeller.orderDetail.summary.total", "Total")}</span>
+                <span>{formatVnd(order.totalAmount, locale)}</span>
               </div>
             </div>
           </CardContent>
@@ -191,7 +229,7 @@ export function SellerOrderDetailPage() {
           <Card className="border-border shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm uppercase tracking-[0.18em] text-muted-foreground">
-                Customer information
+                {t("marketplaceSeller.orderDetail.customerInfo", "Customer information")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -212,29 +250,32 @@ export function SellerOrderDetailPage() {
           <Card className="border-border shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm uppercase tracking-[0.18em] text-muted-foreground">
-                Payment and shipping
+                {t("marketplaceSeller.orderDetail.paymentShipping", "Payment and shipping")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 <CreditCard size={16} className="shrink-0 text-muted-foreground/60" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">{order.payment.method}</p>
+                  <p className="text-sm font-medium text-foreground">{paymentMethodLabel(order.payment.method, t)}</p>
                   <p className="text-xs text-muted-foreground">
-                    Verification: {order.payment.verificationStatus}
+                    {t("marketplaceSeller.orderDetail.verificationPrefix", "Verification")}:{" "}
+                    {verificationStatusLabel(order.payment.verificationStatus, t)}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Truck size={16} className="shrink-0 text-muted-foreground/60" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">Shipping status</p>
-                  <p className="text-xs text-muted-foreground">{sellerOrderStatusLabel(order.status)}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {t("marketplaceSeller.orderDetail.shippingStatus", "Shipping status")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{sellerOrderStatusLabel(order.status, t)}</p>
                 </div>
               </div>
               {order.note ? (
                 <div className="rounded-xl border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
-                  Note: {order.note}
+                  {t("marketplaceSeller.orderDetail.notePrefix", "Note")}: {order.note}
                 </div>
               ) : null}
             </CardContent>

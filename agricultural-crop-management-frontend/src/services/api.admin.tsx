@@ -574,10 +574,10 @@ export const adminSummaryApi = {
 
 // Business-validated schemas matching backend DashboardStatsDTO
 export const DashboardStatsSummarySchema = z.object({
-  totalUsers: z.number().int().nonnegative().default(0),
-  totalFarms: z.number().int().nonnegative().default(0),
-  totalPlots: z.number().int().nonnegative().optional().default(0),
-  totalSeasons: z.number().int().nonnegative().default(0),
+  totalUsers: z.number().int().nonnegative(),
+  totalFarms: z.number().int().nonnegative(),
+  totalPlots: z.number().int().nonnegative(),
+  totalSeasons: z.number().int().nonnegative(),
 });
 
 export const UserRoleCountSchema = z.object({
@@ -595,6 +595,13 @@ export const SeasonStatusCountSchema = z.object({
   total: z.number().int().nonnegative(),
 });
 
+export const RiskBasisSchema = z.enum([
+  'OPEN_INCIDENTS',
+  'OVERDUE_TASKS',
+  'HIGH_FDN_RISK',
+  'INVENTORY_RISK',
+]);
+
 export const RiskySeasonSchema = z.object({
   seasonId: z.number().int().positive(),
   seasonName: z.string(),
@@ -603,7 +610,15 @@ export const RiskySeasonSchema = z.object({
   status: z.string().nullable(),
   incidentCount: z.number().int().nonnegative(),
   overdueTaskCount: z.number().int().nonnegative(),
+  highFdnRiskCount: z.number().int().nonnegative(),
+  inventoryRiskCount: z.number().int().nonnegative(),
+  riskBasis: z.array(RiskBasisSchema),
   riskScore: z.number().int().nonnegative(),
+});
+
+export const RiskDataCoverageSchema = z.object({
+  incidentDataAvailable: z.boolean(),
+  taskDataAvailable: z.boolean(),
 });
 
 export const InventoryHealthSchema = z.object({
@@ -615,31 +630,47 @@ export const InventoryHealthSchema = z.object({
 });
 
 export const DashboardStatsSchema = z.object({
-  summary: DashboardStatsSummarySchema.optional().default({
-    totalUsers: 0,
-    totalFarms: 0,
-    totalPlots: 0,
-    totalSeasons: 0,
-  }),
-  userRoleCounts: z.array(UserRoleCountSchema).optional().default([]),
-  userStatusCounts: z.array(UserStatusCountSchema).optional().default([]),
-  seasonStatusCounts: z.array(SeasonStatusCountSchema).optional().default([]),
-  riskySeasons: z.array(RiskySeasonSchema).optional().default([]),
-  inventoryHealth: z.array(InventoryHealthSchema).optional().default([]),
+  summary: DashboardStatsSummarySchema,
+  userRoleCounts: z.array(UserRoleCountSchema),
+  userStatusCounts: z.array(UserStatusCountSchema),
+  seasonStatusCounts: z.array(SeasonStatusCountSchema),
+  riskySeasons: z.array(RiskySeasonSchema),
+  dataCoverage: RiskDataCoverageSchema,
+  inventoryHealth: z.array(InventoryHealthSchema),
+  unavailableReasons: z.array(z.string()),
 });
+
+export const AdminPendingApprovalItemSchema = z.object({
+  id: z.number().int().positive(),
+  type: z.string(),
+  title: z.string(),
+  subtitle: z.string().nullable().optional(),
+  submittedAt: z.string().nullable().optional(),
+  priority: z.string().nullable().optional(),
+  severity: z.string().nullable().optional(),
+  actionUrl: z.string().nullable().optional(),
+  actionTarget: z.string().nullable().optional(),
+});
+
+export const AdminPendingApprovalsSchema = z.array(AdminPendingApprovalItemSchema);
 
 export type DashboardStatsSummary = z.infer<typeof DashboardStatsSummarySchema>;
 export type UserRoleCount = z.infer<typeof UserRoleCountSchema>;
 export type UserStatusCount = z.infer<typeof UserStatusCountSchema>;
 export type SeasonStatusCount = z.infer<typeof SeasonStatusCountSchema>;
+export type RiskBasis = z.infer<typeof RiskBasisSchema>;
 export type RiskySeason = z.infer<typeof RiskySeasonSchema>;
+export type RiskDataCoverage = z.infer<typeof RiskDataCoverageSchema>;
 export type InventoryHealth = z.infer<typeof InventoryHealthSchema>;
 export type DashboardStats = z.infer<typeof DashboardStatsSchema>;
+export type AdminPendingApprovalItem = z.infer<typeof AdminPendingApprovalItemSchema>;
 
 // Query keys for TanStack Query
 export const dashboardStatsKeys = {
   all: ["admin", "dashboard-stats"] as const,
   stats: () => [...dashboardStatsKeys.all] as const,
+  pendingApprovals: (limit = 10) =>
+    [...dashboardStatsKeys.all, "pending-approvals", { limit }] as const,
 };
 
 export const adminDashboardStatsApi = {
@@ -647,6 +678,15 @@ export const adminDashboardStatsApi = {
   getStats: async (): Promise<DashboardStats> => {
     const response = await httpClient.get("/api/v1/admin/dashboard-stats");
     return parseApiResponse(response.data, DashboardStatsSchema);
+  },
+  /** GET /api/v1/admin/dashboard/pending-approvals - Pending admin approvals */
+  getPendingApprovals: async (params?: {
+    limit?: number;
+  }): Promise<AdminPendingApprovalItem[]> => {
+    const response = await httpClient.get("/api/v1/admin/dashboard/pending-approvals", {
+      params,
+    });
+    return parseApiResponse(response.data, AdminPendingApprovalsSchema);
   },
 };
 
@@ -674,31 +714,58 @@ export const InventoryHealthWidgetRiskLotSchema = z.object({
   itemName: z.string(),
   expiryDate: z.string().optional().nullable(),
   onHand: z.number(),
-  status: z.enum(["EXPIRED", "EXPIRING_SOON"]),
+  status: z.enum([
+    "EXPIRED",
+    "EXPIRING_SOON",
+    "LOW_STOCK",
+    "NO_MOVEMENT",
+    "SLOW_MOVEMENT",
+    "UNKNOWN_EXPIRY",
+  ]),
 });
 
-export const InventoryHealthWidgetFarmSchema = z.object({
-  farmId: z.number().int(),
-  farmName: z.string(),
-  expiredLots: z.number().int().nonnegative(),
-  expiringLots: z.number().int().nonnegative(),
-  qtyAtRisk: z.number().nonnegative(),
-  topRiskLots: z.array(InventoryHealthWidgetRiskLotSchema).optional().default([]),
-});
+export const InventoryHealthWidgetFarmSchema = z
+  .object({
+    farmId: z.number().int(),
+    farmName: z.string(),
+    expiredLots: z.number().int().nonnegative(),
+    expiringSoonLots: z.number().int().nonnegative(),
+    expiringLots: z.number().int().nonnegative(),
+    lowStockLots: z.number().int().nonnegative(),
+    noMovementLots: z.number().int().nonnegative(),
+    slowMovementLots: z.number().int().nonnegative(),
+    qtyAtRisk: z.number().nonnegative().nullable(),
+    topRiskLots: z.array(InventoryHealthWidgetRiskLotSchema),
+  });
 
-export const InventoryHealthWidgetSummarySchema = z.object({
-  expiredLots: z.number().int().nonnegative(),
-  expiringLots: z.number().int().nonnegative(),
-  qtyAtRisk: z.number().nonnegative(),
-  unknownExpiryLots: z.number().int().nonnegative(),
-});
+export const InventoryHealthWidgetSummarySchema = z
+  .object({
+    expiredLots: z.number().int().nonnegative(),
+    expiringSoonLots: z.number().int().nonnegative(),
+    expiringLots: z.number().int().nonnegative(),
+    lowStockLots: z.number().int().nonnegative(),
+    noMovementLots: z.number().int().nonnegative(),
+    slowMovementLots: z.number().int().nonnegative(),
+    qtyAtRisk: z.number().nonnegative().nullable(),
+    totalAffectedFarms: z.number().int().nonnegative(),
+    totalAffectedItems: z.number().int().nonnegative(),
+    unknownExpiryLots: z.number().int().nonnegative(),
+  });
+
+export const InventoryHealthWidgetDataQualitySchema = z
+  .object({
+    missingExpiryDateCount: z.number().int().nonnegative(),
+    missingMovementHistoryCount: z.number().int().nonnegative(),
+    coveragePercent: z.number().nullable(),
+  });
 
 export const InventoryHealthWidgetResponseSchema = z.object({
   asOfDate: z.string(),
   windowDays: z.number().int(),
   includeExpiring: z.boolean(),
   summary: InventoryHealthWidgetSummarySchema,
-  farms: z.array(InventoryHealthWidgetFarmSchema).optional().default([]),
+  dataQuality: InventoryHealthWidgetDataQualitySchema,
+  farms: z.array(InventoryHealthWidgetFarmSchema),
 });
 
 export type InventoryHealthWidgetRiskLot = z.infer<
@@ -709,6 +776,9 @@ export type InventoryHealthWidgetFarm = z.infer<
 >;
 export type InventoryHealthWidgetSummary = z.infer<
   typeof InventoryHealthWidgetSummarySchema
+>;
+export type InventoryHealthWidgetDataQuality = z.infer<
+  typeof InventoryHealthWidgetDataQualitySchema
 >;
 export type InventoryHealthWidgetResponse = z.infer<
   typeof InventoryHealthWidgetResponseSchema

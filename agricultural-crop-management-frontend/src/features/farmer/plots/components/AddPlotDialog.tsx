@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -9,15 +9,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/shared/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+} from "@/shared/ui/select";
+import { Label } from "@/shared/ui/label";
 import type { PlotRequest } from "@/entities/plot";
 import { useSoilTypes } from "@/entities/soil-type";
 import { usePlotStatuses } from "@/entities/plot-status";

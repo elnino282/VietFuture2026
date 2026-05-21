@@ -115,10 +115,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                         >
                             Cancel
                         </Button>
-                        <Button
-                            className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF]"
-                            onClick={handleSettingsSave}
-                        >
+                        <Button className="flex-1" onClick={handleSettingsSave}>
                             <Check className="w-4 h-4 mr-2" />
                             Save Settings
                         </Button>

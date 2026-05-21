@@ -1,9 +1,9 @@
 import { Calendar, Clock, MapPin, Wheat, TrendingUp, ListChecks, Edit, Trash2, Pill } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Alert, AlertDescription } from '@/shared/ui/alert';
+import { Separator } from '@/shared/ui/separator';
 import { Sprout } from 'lucide-react';
 import type { Crop } from '../types';
 

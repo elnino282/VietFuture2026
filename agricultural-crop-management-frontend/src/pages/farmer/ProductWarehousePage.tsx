@@ -30,6 +30,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  PageContainer,
   PageHeader,
 } from "@/shared/ui";
 import { Boxes, History, MapPin, PackageCheck } from "lucide-react";
@@ -243,7 +244,7 @@ export function ProductWarehousePage() {
   const submitWarehouseDialog = async () => {
     const trimmedName = warehouseNameInput.trim();
     if (!trimmedName) {
-      setWarehouseFormError("Tên kho là bắt buộc.");
+      setWarehouseFormError(t("productWarehouse.validation.warehouseNameRequired"));
       return;
     }
 
@@ -252,7 +253,7 @@ export function ProductWarehousePage() {
         ? warehouseFarmIdInput
         : selectedWarehouse?.farmId;
     if (!farmId) {
-      setWarehouseFormError("Vui lòng chọn nông trại.");
+      setWarehouseFormError(t("productWarehouse.validation.farmRequired"));
       return;
     }
 
@@ -264,7 +265,7 @@ export function ProductWarehousePage() {
           farmId,
           type: "OUTPUT",
         });
-        toast.success("Đã tạo kho sản phẩm.");
+        toast.success(t("productWarehouse.toast.warehouseCreateSuccess"));
       } else if (warehouseDialogMode === "edit" && selectedWarehouse) {
         await updateWarehouseMutation.mutateAsync({
           id: selectedWarehouse.id,
@@ -273,14 +274,14 @@ export function ProductWarehousePage() {
             farmId,
           },
         });
-        toast.success("Đã cập nhật kho sản phẩm.");
+        toast.success(t("productWarehouse.toast.warehouseUpdateSuccess"));
       }
       closeWarehouseDialog();
     } catch (error) {
       setWarehouseFormError(
         error instanceof Error
           ? error.message
-          : "Không thể lưu thông tin kho. Vui lòng thử lại.",
+          : t("productWarehouse.toast.warehouseSaveError"),
       );
     }
   };
@@ -289,7 +290,7 @@ export function ProductWarehousePage() {
     if (!selectedWarehouseId) return;
     try {
       await deleteWarehouseMutation.mutateAsync(selectedWarehouseId);
-      toast.success("Đã xóa kho sản phẩm.");
+      toast.success(t("productWarehouse.toast.warehouseDeleteSuccess"));
       setShowDeleteWarehouseDialog(false);
       setSelectedWarehouseId(undefined);
       setSelectedLocationId(undefined);
@@ -300,7 +301,7 @@ export function ProductWarehousePage() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Không thể xóa kho. Vui lòng kiểm tra ràng buộc dữ liệu.",
+          : t("productWarehouse.toast.warehouseDeleteError"),
       );
     }
   };
@@ -385,9 +386,10 @@ export function ProductWarehousePage() {
   };
 
   return (
-    <div className="min-h-screen acm-main-content pb-20">
-      <div className="product-warehouse-page">
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+    <PageContainer variant="wide">
+      <div className="farmer-product-warehouse-page">
+        <div className="product-warehouse-page">
+        <Card variant="page-header" className="mb-6">
           <CardContent className="px-6 py-4">
             <PageHeader
               className="mb-0"
@@ -399,7 +401,7 @@ export function ProductWarehousePage() {
         </Card>
 
         <div className="product-warehouse-summary-grid">
-          <Card>
+          <Card variant="metric">
             <CardContent className="summary-card">
               <Boxes className="summary-icon" />
               <div>
@@ -410,7 +412,7 @@ export function ProductWarehousePage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card variant="metric">
             <CardContent className="summary-card">
               <PackageCheck className="summary-icon" />
               <div>
@@ -421,7 +423,7 @@ export function ProductWarehousePage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card variant="metric">
             <CardContent className="summary-card">
               <History className="summary-icon" />
               <div>
@@ -436,16 +438,16 @@ export function ProductWarehousePage() {
           </Card>
         </div>
 
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+        <Card variant="content" className="mb-6">
           <CardContent className="px-6 py-4">
             <div className="warehouse-directory-header">
-              <h3>Warehouse Directory</h3>
-              <span>{outputWarehouses.length} warehouse(s)</span>
+              <h3>{t("productWarehouse.directory.title")}</h3>
+              <span>{t("productWarehouse.directory.count", { count: outputWarehouses.length })}</span>
             </div>
 
             {outputWarehouses.length === 0 ? (
               <div className="empty-state small">
-                No output warehouse available. Create a warehouse to start linking harvest lots.
+                {t("productWarehouse.directory.empty")}
               </div>
             ) : (
               <div className="warehouse-directory-grid">
@@ -461,10 +463,14 @@ export function ProductWarehousePage() {
                         setSelectedLocationId(undefined);
                         handleFilterChange();
                       }}
-                    >
+                      >
                       <p className="warehouse-name">{warehouse.name}</p>
-                      <p className="warehouse-meta">Farm: {warehouse.farmName || "-"}</p>
-                      <p className="warehouse-meta">Type: {warehouse.type || "OUTPUT"}</p>
+                      <p className="warehouse-meta">
+                        {t("productWarehouse.directory.farm")}: {warehouse.farmName || "-"}
+                      </p>
+                      <p className="warehouse-meta">
+                        {t("productWarehouse.directory.type")}: {warehouse.type || "OUTPUT"}
+                      </p>
                     </button>
                   );
                 })}
@@ -473,7 +479,7 @@ export function ProductWarehousePage() {
           </CardContent>
         </Card>
 
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+        <Card variant="filter" className="mb-6">
           <CardContent className="px-6 py-4">
             <div className="product-warehouse-filters">
               <div className="control-group">
@@ -510,7 +516,7 @@ export function ProductWarehousePage() {
                   type="button"
                   onClick={openCreateWarehouseDialog}
                 >
-                  Thêm kho sản phẩm
+                  {t("productWarehouse.actions.addWarehouse")}
                 </Button>
                 <Button
                   size="sm"
@@ -519,7 +525,7 @@ export function ProductWarehousePage() {
                   onClick={openEditWarehouseDialog}
                   disabled={!selectedWarehouse}
                 >
-                  Sửa kho
+                  {t("productWarehouse.actions.editWarehouse")}
                 </Button>
                 <Button
                   size="sm"
@@ -528,7 +534,7 @@ export function ProductWarehousePage() {
                   onClick={() => setShowDeleteWarehouseDialog(true)}
                   disabled={!selectedWarehouse}
                 >
-                  Xóa kho
+                  {t("productWarehouse.actions.deleteWarehouse")}
                 </Button>
               </div>
 
@@ -551,7 +557,7 @@ export function ProductWarehousePage() {
                   </option>
                   {(locations ?? []).map((location) => (
                     <option key={location.id} value={location.id}>
-                      {location.label || `Location ${location.id}`}
+                      {location.label || t("productWarehouse.filters.locationFallback", { id: location.id })}
                     </option>
                   ))}
                 </select>
@@ -1033,39 +1039,40 @@ export function ProductWarehousePage() {
             </>
           )}
         </div>
+        </div>
       </div>
 
       <Dialog
         open={warehouseDialogMode !== null}
         onOpenChange={(open) => !open && closeWarehouseDialog()}
       >
-        <DialogContent className="w-[92vw] max-w-[480px]">
+        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
           <DialogHeader>
             <DialogTitle>
               {warehouseDialogMode === "create"
-                ? "Thêm kho sản phẩm"
-                : "Sửa kho sản phẩm"}
+                ? t("productWarehouse.dialog.addWarehouseTitle")
+                : t("productWarehouse.dialog.editWarehouseTitle")}
             </DialogTitle>
           </DialogHeader>
           <div className="dialog-content-grid">
             <p className="dialog-hint">
-              Kho sản phẩm dùng để lưu nông sản/thành phẩm sau thu hoạch.
+              {t("productWarehouse.dialog.warehouseHint")}
             </p>
             {warehouseFormError && (
               <div className="warehouse-form-error">{warehouseFormError}</div>
             )}
 
-            <label htmlFor="warehouse-name">Tên kho</label>
+            <label htmlFor="warehouse-name">{t("productWarehouse.form.warehouseNameLabel")}</label>
             <input
               id="warehouse-name"
               type="text"
               value={warehouseNameInput}
               maxLength={150}
               onChange={(event) => setWarehouseNameInput(event.target.value)}
-              placeholder="Nhập tên kho sản phẩm"
+              placeholder={t("productWarehouse.form.warehouseNamePlaceholder")}
             />
 
-            <label htmlFor="warehouse-farm">Nông trại</label>
+            <label htmlFor="warehouse-farm">{t("productWarehouse.form.farmLabel")}</label>
             <select
               id="warehouse-farm"
               value={warehouseFarmIdInput ?? ""}
@@ -1076,7 +1083,7 @@ export function ProductWarehousePage() {
               }
               disabled={warehouseDialogMode === "edit"}
             >
-              <option value="">Chọn nông trại</option>
+              <option value="">{t("productWarehouse.form.selectFarm")}</option>
               {farmOptions.map((farm) => (
                 <option key={farm.id} value={farm.id}>
                   {farm.name}
@@ -1092,7 +1099,7 @@ export function ProductWarehousePage() {
                 createWarehouseMutation.isPending || updateWarehouseMutation.isPending
               }
             >
-              Hủy
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={submitWarehouseDialog}
@@ -1101,8 +1108,8 @@ export function ProductWarehousePage() {
               }
             >
               {createWarehouseMutation.isPending || updateWarehouseMutation.isPending
-                ? "Đang xử lý..."
-                : "Lưu"}
+                ? t("common.processing")
+                : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1112,18 +1119,16 @@ export function ProductWarehousePage() {
         open={showDeleteWarehouseDialog && !!selectedWarehouse}
         onOpenChange={(open) => !open && setShowDeleteWarehouseDialog(false)}
       >
-        <DialogContent className="w-[92vw] max-w-[480px]">
+        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
           <DialogHeader>
-            <DialogTitle>Xóa kho sản phẩm</DialogTitle>
+            <DialogTitle>{t("productWarehouse.dialog.deleteWarehouseTitle")}</DialogTitle>
           </DialogHeader>
           <div className="dialog-content-grid">
             <p className="dialog-hint">
-              Bạn có chắc chắn muốn xóa kho{" "}
-              <strong>{selectedWarehouse?.name}</strong>?
+              {t("productWarehouse.dialog.deleteWarehouseDescription", { warehouseName: selectedWarehouse?.name })}
             </p>
             <p className="dialog-hint">
-              Kho chỉ được xóa khi chưa có vị trí, giao dịch hoặc lô sản phẩm
-              liên quan.
+              {t("productWarehouse.dialog.deleteWarehouseHint")}
             </p>
           </div>
           <DialogFooter>
@@ -1132,21 +1137,21 @@ export function ProductWarehousePage() {
               onClick={() => setShowDeleteWarehouseDialog(false)}
               disabled={deleteWarehouseMutation.isPending}
             >
-              Hủy
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={confirmDeleteWarehouse}
               disabled={deleteWarehouseMutation.isPending}
             >
-              {deleteWarehouseMutation.isPending ? "Đang xử lý..." : "Xóa kho"}
+              {deleteWarehouseMutation.isPending ? t("common.processing") : t("productWarehouse.actions.deleteWarehouse")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!adjustingLot} onOpenChange={(open) => !open && setAdjustingLot(null)}>
-        <DialogContent className="w-[92vw] max-w-[480px]">
+        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
           <DialogHeader>
             <DialogTitle>{t("productWarehouse.dialog.adjustTitle")}</DialogTitle>
           </DialogHeader>
@@ -1188,7 +1193,7 @@ export function ProductWarehousePage() {
       </Dialog>
 
       <Dialog open={!!stockingOutLot} onOpenChange={(open) => !open && setStockingOutLot(null)}>
-        <DialogContent className="w-[92vw] max-w-[480px]">
+        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
           <DialogHeader>
             <DialogTitle>{t("productWarehouse.dialog.stockOutTitle")}</DialogTitle>
           </DialogHeader>
@@ -1233,9 +1238,10 @@ export function ProductWarehousePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }
 
 export default ProductWarehousePage;
+
 

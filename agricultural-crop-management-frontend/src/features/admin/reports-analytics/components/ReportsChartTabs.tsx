@@ -657,7 +657,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   <Bar
                     dataKey="grossProfit"
                     name={`Gross Profit (${preferences.currency})`}
-                    fill="#2563eb"
+                    fill="#2f8a4d"
                     radius={[6, 6, 0, 0]}
                     maxBarSize={70}
                   />

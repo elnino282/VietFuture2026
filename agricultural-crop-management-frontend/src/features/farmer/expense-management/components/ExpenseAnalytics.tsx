@@ -1,5 +1,7 @@
-import { TrendingUp, PieChart as PieChartIcon, BarChart3, ListTodo } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo } from "react";
+import { TrendingUp, PieChart as PieChartIcon, BarChart3, ListTodo, RefreshCcw } from "lucide-react";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
     PieChart,
     Pie,
@@ -17,13 +19,22 @@ import {
 } from "recharts";
 import { usePreferences, useOptionalSeason } from "@/shared/contexts";
 import { formatMoney, convertToDisplayCurrency } from "@/shared/lib";
-import {
-    useExpenseAnalyticsByCategory,
-    useExpenseAnalyticsByTask,
-    useExpenseAnalyticsByVendor,
-    useExpenseAnalyticsTimeSeries,
-} from "@/entities/expense";
+import { useAllFarmerExpenses, type Expense as ApiExpense } from "@/entities/expense";
 import { CATEGORY_COLORS } from "../constants";
+
+const getExpenseAmount = (expense: ApiExpense) =>
+    expense.amount ?? expense.totalCost ?? ((expense.unitPrice ?? 0) * (expense.quantity ?? 1));
+
+const getCategoryLabel = (expense: ApiExpense) =>
+    expense.category?.trim() || "Uncategorized";
+
+const getMonthLabel = (rawDate: string) => {
+    const date = new Date(`${rawDate}T00:00:00`);
+    if (Number.isNaN(date.getTime())) {
+        return rawDate;
+    }
+    return new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" }).format(date);
+};
 
 export function ExpenseAnalytics() {
     const { preferences } = usePreferences();
@@ -31,40 +42,111 @@ export function ExpenseAnalytics() {
     const seasonId = seasonContext?.selectedSeasonId ?? null;
     const hasSeason = !!seasonId;
 
-    const baseParams = hasSeason ? { seasonId, page: 0, size: 200 } : undefined;
-    const timeSeriesParams = hasSeason ? { seasonId, page: 0, size: 200, granularity: "MONTH" as const } : undefined;
-
-    const { data: categoryData = [] } = useExpenseAnalyticsByCategory(baseParams, { enabled: hasSeason });
-    const { data: taskData = [] } = useExpenseAnalyticsByTask(baseParams, { enabled: hasSeason });
-    const { data: vendorData = [] } = useExpenseAnalyticsByVendor(baseParams, { enabled: hasSeason });
-    const { data: timeSeries = [] } = useExpenseAnalyticsTimeSeries(
-        timeSeriesParams,
+    const {
+        data: expensePage,
+        isLoading,
+        error,
+        refetch,
+    } = useAllFarmerExpenses(
+        hasSeason
+            ? {
+                seasonId,
+                page: 0,
+                size: 500,
+            }
+            : undefined,
         { enabled: hasSeason }
     );
 
+    const expenses = expensePage?.items ?? [];
+
     const formatValue = (value: number) =>
-        formatMoney(convertToDisplayCurrency(value, preferences.currency), preferences.currency, preferences.locale);
+        formatMoney(
+            convertToDisplayCurrency(value, preferences.currency),
+            preferences.currency,
+            preferences.locale
+        );
 
-    const categoryChartData = categoryData.map((item) => ({
-        name: item.category,
-        value: item.totalAmount,
-        color: CATEGORY_COLORS[item.category] || "var(--muted-foreground)",
-    }));
+    const categoryChartData = useMemo(() => {
+        const totals = new Map<string, number>();
+        for (const expense of expenses) {
+            const category = getCategoryLabel(expense);
+            totals.set(category, (totals.get(category) ?? 0) + getExpenseAmount(expense));
+        }
 
-    const vendorChartData = vendorData.map((item) => ({
-        name: item.vendorName ?? "Unassigned",
-        value: item.totalAmount,
-    }));
+        return [...totals.entries()].map(([name, value]) => ({
+            name,
+            value,
+            color: CATEGORY_COLORS[name] || "var(--muted-foreground)",
+        }));
+    }, [expenses]);
 
-    const timeSeriesData = timeSeries.map((item) => ({
-        period: item.label ?? item.periodStart,
-        total: item.totalAmount,
-    }));
+    const vendorChartData = useMemo(() => {
+        const totals = new Map<string, number>();
+        for (const expense of expenses) {
+            const vendor = expense.vendorName?.trim() || "Unassigned";
+            totals.set(vendor, (totals.get(vendor) ?? 0) + getExpenseAmount(expense));
+        }
+
+        return [...totals.entries()]
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 10);
+    }, [expenses]);
+
+    const timeSeriesData = useMemo(() => {
+        const totals = new Map<string, number>();
+        for (const expense of expenses) {
+            const month = getMonthLabel(expense.expenseDate);
+            totals.set(month, (totals.get(month) ?? 0) + getExpenseAmount(expense));
+        }
+
+        return [...totals.entries()].map(([period, total]) => ({ period, total }));
+    }, [expenses]);
+
+    const taskData = useMemo(() => {
+        const totals = new Map<string, number>();
+        for (const expense of expenses) {
+            const task = expense.taskTitle?.trim() || "Unassigned";
+            totals.set(task, (totals.get(task) ?? 0) + getExpenseAmount(expense));
+        }
+        return [...totals.entries()]
+            .map(([taskTitle, totalAmount]) => ({ taskTitle, totalAmount }))
+            .sort((a, b) => b.totalAmount - a.totalAmount);
+    }, [expenses]);
 
     if (!hasSeason) {
         return (
             <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
                 Select a season to view analytics.
+            </div>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
+                Loading analytics...
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive space-y-3">
+                <div>Failed to load analytics: {error.message}</div>
+                <Button variant="outline" size="sm" onClick={() => refetch()}>
+                    <RefreshCcw className="w-4 h-4 mr-2" />
+                    Retry
+                </Button>
+            </div>
+        );
+    }
+
+    if (expenses.length === 0) {
+        return (
+            <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
+                No expenses available yet for analytics.
             </div>
         );
     }
@@ -110,50 +192,44 @@ export function ExpenseAnalytics() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {categoryChartData.length === 0 ? (
-                            <div className="text-sm text-muted-foreground">No category data yet.</div>
-                        ) : (
-                            <>
-                                <ResponsiveContainer width="100%" height={250}>
-                                    <PieChart>
-                                        <Pie
-                                            data={categoryChartData}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={60}
-                                            outerRadius={90}
-                                            paddingAngle={3}
-                                            dataKey="value"
-                                        >
-                                            {categoryChartData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <RechartsTooltip formatter={(value: number) => formatValue(value)} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-
-                                <div className="mt-4 space-y-2">
-                                    {categoryChartData.map((item) => (
-                                        <div
-                                            key={item.name}
-                                            className="flex items-center justify-between text-xs"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div
-                                                    className="w-3 h-3 rounded-full"
-                                                    style={{ backgroundColor: item.color }}
-                                                ></div>
-                                                <span className="text-muted-foreground">{item.name}</span>
-                                            </div>
-                                            <span className="numeric text-foreground">
-                                                {formatValue(item.value)}
-                                            </span>
-                                        </div>
+                        <ResponsiveContainer width="100%" height={250}>
+                            <PieChart>
+                                <Pie
+                                    data={categoryChartData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={90}
+                                    paddingAngle={3}
+                                    dataKey="value"
+                                >
+                                    {categoryChartData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
+                                </Pie>
+                                <RechartsTooltip formatter={(value: number) => formatValue(value)} />
+                            </PieChart>
+                        </ResponsiveContainer>
+
+                        <div className="mt-4 space-y-2">
+                            {categoryChartData.map((item) => (
+                                <div
+                                    key={item.name}
+                                    className="flex items-center justify-between text-xs"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div
+                                            className="w-3 h-3 rounded-full"
+                                            style={{ backgroundColor: item.color }}
+                                        ></div>
+                                        <span className="text-muted-foreground">{item.name}</span>
+                                    </div>
+                                    <span className="numeric text-foreground">
+                                        {formatValue(item.value)}
+                                    </span>
                                 </div>
-                            </>
-                        )}
+                            ))}
+                        </div>
                     </CardContent>
                 </Card>
 
@@ -165,25 +241,21 @@ export function ExpenseAnalytics() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {vendorChartData.length === 0 ? (
-                            <div className="text-sm text-muted-foreground">No vendor data yet.</div>
-                        ) : (
-                            <ResponsiveContainer width="100%" height={280}>
-                                <BarChart data={vendorChartData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                                    <XAxis
-                                        dataKey="name"
-                                        tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                                        angle={-35}
-                                        textAnchor="end"
-                                        height={70}
-                                    />
-                                    <YAxis tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
-                                    <RechartsTooltip formatter={(value: number) => formatValue(value)} />
-                                    <Bar dataKey="value" fill="var(--primary)" name="Total" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        )}
+                        <ResponsiveContainer width="100%" height={280}>
+                            <BarChart data={vendorChartData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                                <XAxis
+                                    dataKey="name"
+                                    tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                                    angle={-35}
+                                    textAnchor="end"
+                                    height={70}
+                                />
+                                <YAxis tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
+                                <RechartsTooltip formatter={(value: number) => formatValue(value)} />
+                                <Bar dataKey="value" fill="var(--primary)" name="Total" />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </CardContent>
                 </Card>
             </div>
@@ -196,18 +268,14 @@ export function ExpenseAnalytics() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {taskData.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No task-linked expenses yet.</div>
-                    ) : (
-                        <div className="space-y-2 text-sm">
-                            {taskData.map((task) => (
-                                <div key={`${task.taskId ?? "none"}-${task.taskTitle}`} className="flex items-center justify-between">
-                                    <span className="text-muted-foreground">{task.taskTitle ?? "Unassigned"}</span>
-                                    <span className="numeric text-foreground">{formatValue(task.totalAmount)}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <div className="space-y-2 text-sm">
+                        {taskData.map((task) => (
+                            <div key={task.taskTitle} className="flex items-center justify-between">
+                                <span className="text-muted-foreground">{task.taskTitle}</span>
+                                <span className="numeric text-foreground">{formatValue(task.totalAmount)}</span>
+                            </div>
+                        ))}
+                    </div>
                 </CardContent>
             </Card>
         </div>

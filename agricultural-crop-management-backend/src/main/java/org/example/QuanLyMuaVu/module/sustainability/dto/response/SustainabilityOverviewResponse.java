@@ -38,6 +38,7 @@ public class SustainabilityOverviewResponse {
     List<DataInputQuality> dataQuality;
     DataQualitySummary dataQualitySummary;
     List<String> missingInputs;
+    List<String> unavailableReasons;
     List<String> notes;
     List<String> recommendations;
     String recommendationSource;

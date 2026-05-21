@@ -54,7 +54,7 @@ export function PerformanceCharts({
                                 <Line
                                     type="monotone"
                                     dataKey="cpu"
-                                    stroke="#2563EB"
+                                    stroke="#3BA55D"
                                     strokeWidth={2}
                                     dot={{ r: 4 }}
                                     name="CPU %"

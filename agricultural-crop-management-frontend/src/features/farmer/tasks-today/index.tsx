@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/shared/ui/card';
 import { useTasksToday } from './hooks/useTasksToday';
 import { HeaderBar } from './components/HeaderBar';
 import { ViewSwitcher } from './components/ViewSwitcher';

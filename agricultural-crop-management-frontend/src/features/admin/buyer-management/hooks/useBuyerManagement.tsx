@@ -5,12 +5,22 @@ import {
     Plus,
     Trash2,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+// eslint-disable-next-line no-restricted-imports -- Admin user management APIs are currently provided from legacy service module.
+import {
+    adminBuyerApi,
+    adminKeys,
+    adminUsersApi,
+    type AdminUser,
+    type AdminUserCreateRequest,
+    type AdminUserStatusUpdate,
+    type AdminUserUpdateRequest,
+} from '@/services/api.admin';
 import { toast } from 'sonner';
 import {
     DEFAULT_ITEMS_PER_PAGE,
     KYC_BADGE_COLORS,
-    PLACEHOLDER_BUYERS,
     ROLE_BADGE_COLORS,
     STATUS_BADGE_COLORS,
 } from '../constants';
@@ -24,7 +34,105 @@ import type {
     KYCStatus,
 } from '../types';
 
+const CSV_REQUIRED_COLUMNS = ['companyname', 'taxid', 'contactname', 'email', 'phone', 'role'] as const;
+const BUYER_STATUS_MAP: Record<AccountStatus, string> = {
+    active: 'ACTIVE',
+    suspended: 'LOCKED',
+    closed: 'INACTIVE',
+};
+
+const API_STATUS_TO_BUYER_STATUS: Record<string, AccountStatus> = {
+    ACTIVE: 'active',
+    LOCKED: 'suspended',
+    INACTIVE: 'closed',
+    PENDING: 'active',
+};
+
+const parseCsvLine = (line: string): string[] => {
+    const values: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i += 1) {
+        const char = line[i];
+        if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                current += '"';
+                i += 1;
+            } else {
+                inQuotes = !inQuotes;
+            }
+            continue;
+        }
+        if (char === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = '';
+            continue;
+        }
+        current += char;
+    }
+
+    values.push(current.trim());
+    return values;
+};
+
+const normalizeText = (value: string) =>
+    value
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '')
+        .replace(/[^a-z0-9_-]/g, '');
+
+const safeUsername = (companyName: string, email: string, fallbackId: string) => {
+    const emailPrefix = email.split('@')[0] ?? '';
+    const seed = normalizeText(emailPrefix || companyName || `buyer${fallbackId}`);
+    const base = seed.length >= 3 ? seed : `${seed}${'buyer'.slice(0, 3 - seed.length)}`;
+    return base.slice(0, 32);
+};
+
+const generateTempPassword = () => `Tmp${Math.random().toString(36).slice(-8)}A1!`;
+
+const mapBuyerRoleToApiRoles = (role: BuyerRole): string[] => {
+    switch (role) {
+        case 'enterprise':
+            return ['BUYER', 'ENTERPRISE'];
+        case 'distributor':
+            return ['BUYER', 'DISTRIBUTOR'];
+        default:
+            return ['BUYER'];
+    }
+};
+
+const mapApiRolesToBuyerRole = (roles: string[] | undefined): BuyerRole => {
+    const upperRoles = (roles ?? []).map((role) => role.toUpperCase());
+    if (upperRoles.includes('DISTRIBUTOR')) return 'distributor';
+    if (upperRoles.includes('ENTERPRISE')) return 'enterprise';
+    return 'buyer';
+};
+
+const mapAdminUserToBuyer = (user: AdminUser): Buyer => {
+    const apiStatus = user.status?.toUpperCase() ?? 'ACTIVE';
+    const accountStatus = API_STATUS_TO_BUYER_STATUS[apiStatus] ?? 'active';
+    const contactName = user.fullName?.trim() || user.username;
+    return {
+        id: String(user.id),
+        companyName: user.username,
+        taxId: '',
+        contactName,
+        email: user.email ?? '',
+        phone: user.phone ?? '',
+        role: mapApiRolesToBuyerRole(user.roles),
+        kycStatus: 'pending',
+        accountStatus,
+        createdAt: '-',
+        address: '',
+        paymentTerms: '',
+    };
+};
+
 export function useBuyerManagement() {
+    const queryClient = useQueryClient();
+
     // State Management
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedBuyers, setSelectedBuyers] = useState<string[]>([]);
@@ -45,6 +153,7 @@ export function useBuyerManagement() {
     // CSV Preview types for type-safe imports
     const [csvPreview, setCsvPreview] = useState<Partial<Buyer>[]>([]);
     const [validationErrors, setValidationErrors] = useState<{ row: number; error: string }[]>([]);
+    const [resetPasswordTargetId, setResetPasswordTargetId] = useState<string | null>(null);
 
     // Filter state
     const [roleFilter, setRoleFilter] = useState<BuyerRole | 'all'>('all');
@@ -64,9 +173,66 @@ export function useBuyerManagement() {
         paymentTerms: '',
     });
 
-    // Buyer data
-    // TODO: Replace with real API data
-    const [buyers, setBuyers] = useState<Buyer[]>(PLACEHOLDER_BUYERS);
+    const buyerListQuery = useQuery({
+        queryKey: adminKeys.buyerList({
+            keyword: searchQuery.trim() || undefined,
+            status: statusFilter === 'all' ? undefined : BUYER_STATUS_MAP[statusFilter],
+            page: currentPage - 1,
+            size: itemsPerPage,
+        }),
+        queryFn: () =>
+            adminBuyerApi.list({
+                keyword: searchQuery.trim() || undefined,
+                status: statusFilter === 'all' ? undefined : BUYER_STATUS_MAP[statusFilter],
+                page: currentPage - 1,
+                size: itemsPerPage,
+            }),
+        staleTime: 30 * 1000,
+    });
+
+    const createBuyerMutation = useMutation({
+        mutationFn: (payload: AdminUserCreateRequest) => adminUsersApi.create(payload),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: adminKeys.buyers });
+            await queryClient.invalidateQueries({ queryKey: adminKeys.users });
+        },
+    });
+
+    const updateBuyerMutation = useMutation({
+        mutationFn: ({ id, payload }: { id: number; payload: AdminUserUpdateRequest }) =>
+            adminUsersApi.update(id, payload),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: adminKeys.buyers });
+            await queryClient.invalidateQueries({ queryKey: adminKeys.users });
+        },
+    });
+
+    const updateBuyerStatusMutation = useMutation({
+        mutationFn: ({ id, payload }: { id: number; payload: AdminUserStatusUpdate }) =>
+            adminUsersApi.updateStatus(id, payload),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: adminKeys.buyers });
+            await queryClient.invalidateQueries({ queryKey: adminKeys.users });
+        },
+    });
+
+    const deleteBuyerMutation = useMutation({
+        mutationFn: (id: number) => adminUsersApi.delete(id),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: adminKeys.buyers });
+            await queryClient.invalidateQueries({ queryKey: adminKeys.users });
+        },
+    });
+
+    const resetPasswordMutation = useMutation({
+        mutationFn: ({ id, password }: { id: number; password: string }) =>
+            adminUsersApi.resetPassword(id, password),
+    });
+
+    const buyers = useMemo(
+        () => (buyerListQuery.data?.items ?? []).map(mapAdminUserToBuyer),
+        [buyerListQuery.data?.items]
+    );
 
     // Filter and sort buyers
     const filteredBuyers = buyers.filter((buyer) => {
@@ -100,15 +266,23 @@ export function useBuyerManagement() {
     });
 
     // Pagination
-    const totalPages = Math.ceil(filteredBuyers.length / itemsPerPage);
-    const paginatedBuyers = filteredBuyers.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    const totalPages = Math.max(1, buyerListQuery.data?.totalPages ?? 1);
+    const totalResults = buyerListQuery.data?.totalElements ?? filteredBuyers.length;
+    const paginatedBuyers = filteredBuyers;
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, roleFilter, kycFilter, statusFilter, itemsPerPage]);
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
 
     // Calculate stats
     const stats: BuyerStats = {
-        total: buyers.length,
+        total: totalResults,
         active: buyers.filter((b) => b.accountStatus === 'active').length,
         pendingKYC: buyers.filter((b) => b.kycStatus === 'pending').length,
         locked: buyers.filter((b) => b.accountStatus === 'suspended' || b.accountStatus === 'closed').length,
@@ -125,10 +299,10 @@ export function useBuyerManagement() {
     };
 
     const handleSelectAll = () => {
-        if (selectedBuyers.length === filteredBuyers.length) {
+        if (selectedBuyers.length === paginatedBuyers.length) {
             setSelectedBuyers([]);
         } else {
-            setSelectedBuyers(filteredBuyers.map((b) => b.id));
+            setSelectedBuyers(paginatedBuyers.map((b) => b.id));
         }
     };
 
@@ -171,76 +345,115 @@ export function useBuyerManagement() {
         setDetailDrawerOpen(true);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        if (
+            formData.taxId.trim().length > 0 ||
+            formData.address.trim().length > 0 ||
+            formData.paymentTerms.trim().length > 0
+        ) {
+            toast.error('Tax ID, address, and payment terms are not supported by the current backend user API.');
+            return;
+        }
+
+        const username = safeUsername(
+            formData.companyName,
+            formData.email,
+            selectedBuyer?.id ?? String(Date.now())
+        );
+
+        const payloadRoles = mapBuyerRoleToApiRoles(formData.role);
+        const payloadStatus = BUYER_STATUS_MAP[formData.accountStatus];
+
         if (selectedBuyer) {
-            // Update existing buyer
-            setBuyers((prev) =>
-                prev.map((b) => (b.id === selectedBuyer.id ? { ...b, ...formData } : b))
-            );
-            toast.success('Buyer updated successfully', {
-                description: `${formData.companyName}'s account has been updated.`,
-            });
+            try {
+                await updateBuyerMutation.mutateAsync({
+                    id: Number(selectedBuyer.id),
+                    payload: {
+                        username,
+                        fullName: formData.contactName.trim() || formData.companyName.trim(),
+                        email: formData.email.trim() || undefined,
+                        phone: formData.phone.trim() || undefined,
+                        roles: payloadRoles,
+                        status: payloadStatus,
+                    },
+                });
+                toast.success('Buyer account updated successfully.');
+            } catch (error) {
+                console.error(error);
+                toast.error('Failed to update buyer account.');
+                return;
+            }
         } else {
-            // Create new buyer
-            const newBuyer: Buyer = {
-                id: String(buyers.length + 1),
-                ...formData,
-                kycStatus: 'pending',
-                createdAt: new Date().toISOString().split('T')[0],
-            };
-            setBuyers((prev) => [...prev, newBuyer]);
-            toast.success('Buyer created successfully', {
-                description: `${formData.companyName}'s account has been created.`,
-            });
+            try {
+                await createBuyerMutation.mutateAsync({
+                    username,
+                    password: generateTempPassword(),
+                    fullName: formData.contactName.trim() || formData.companyName.trim(),
+                    email: formData.email.trim() || undefined,
+                    phone: formData.phone.trim() || undefined,
+                    roles: payloadRoles,
+                });
+                if (payloadStatus !== 'ACTIVE') {
+                    const latest = await adminBuyerApi.list({
+                        keyword: username,
+                        page: 0,
+                        size: 1,
+                    });
+                    const created = latest.items[0];
+                    if (created?.id != null) {
+                        await updateBuyerStatusMutation.mutateAsync({
+                            id: Number(created.id),
+                            payload: { status: payloadStatus },
+                        });
+                    }
+                }
+                toast.success('Buyer account created successfully.');
+            } catch (error) {
+                console.error(error);
+                toast.error('Failed to create buyer account.');
+                return;
+            }
         }
         setDetailDrawerOpen(false);
+        setSelectedBuyer(null);
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         const buyer = buyers.find((b) => b.id === id);
-        setBuyers((prev) => prev.filter((b) => b.id !== id));
-        toast.success('Buyer deleted', {
-            description: `${buyer?.companyName}'s account has been deleted.`,
-        });
-    };
-
-    const handleToggleSuspend = (id: string) => {
-        const buyer = buyers.find((b) => b.id === id);
-        setBuyers((prev) =>
-            prev.map((b) =>
-                b.id === id
-                    ? {
-                        ...b,
-                        accountStatus: b.accountStatus === 'suspended' ? 'active' : ('suspended' as AccountStatus),
-                    }
-                    : b
-            )
-        );
-        toast.success(buyer?.accountStatus === 'suspended' ? 'Account activated' : 'Account suspended', {
-            description: `${buyer?.companyName}'s account has been ${buyer?.accountStatus === 'suspended' ? 'activated' : 'suspended'
-                }.`,
-        });
-    };
-
-    const handleKYCAction = (action: 'verify' | 'reject') => {
-        if (selectedBuyer) {
-            setBuyers((prev) =>
-                prev.map((b) =>
-                    b.id === selectedBuyer.id
-                        ? { ...b, kycStatus: action === 'verify' ? 'verified' : ('rejected' as KYCStatus) }
-                        : b
-                )
-            );
-            toast.success(action === 'verify' ? 'KYC Verified' : 'KYC Rejected', {
-                description: `${selectedBuyer.companyName}'s KYC status has been updated.`,
+        try {
+            await deleteBuyerMutation.mutateAsync(Number(id));
+            toast.success('Buyer account deleted.', {
+                description: buyer ? `${buyer.companyName} has been removed.` : undefined,
             });
-            setSelectedBuyer((prev) =>
-                prev ? { ...prev, kycStatus: action === 'verify' ? 'verified' : 'rejected' } : null
-            );
+            setSelectedBuyers((prev) => prev.filter((buyerId) => buyerId !== id));
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to delete buyer account.');
         }
     };
 
-    const handleBulkAction = (action: string) => {
+    const handleToggleSuspend = async (id: string) => {
+        const buyer = buyers.find((b) => b.id === id);
+        if (!buyer) return;
+
+        const nextStatus: AccountStatus = buyer.accountStatus === 'suspended' ? 'active' : 'suspended';
+        try {
+            await updateBuyerStatusMutation.mutateAsync({
+                id: Number(id),
+                payload: { status: BUYER_STATUS_MAP[nextStatus] },
+            });
+            toast.success(nextStatus === 'active' ? 'Buyer account activated.' : 'Buyer account suspended.');
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to update buyer status.');
+        }
+    };
+
+    const handleKYCAction = (_action: 'verify' | 'reject') => {
+        toast.error('KYC verification API is not available yet.');
+    };
+
+    const handleBulkAction = async (action: string) => {
         if (selectedBuyers.length === 0) {
             toast.error('No buyers selected', {
                 description: 'Please select at least one buyer to perform bulk action.',
@@ -248,90 +461,144 @@ export function useBuyerManagement() {
             return;
         }
 
-        switch (action) {
-            case 'activate':
-                setBuyers((prev) =>
-                    prev.map((b) =>
-                        selectedBuyers.includes(b.id) ? { ...b, accountStatus: 'active' as AccountStatus } : b
+        try {
+            if (action === 'activate' || action === 'suspend') {
+                const targetStatus = action === 'activate' ? 'active' : 'suspended';
+                await Promise.all(
+                    selectedBuyers.map((buyerId) =>
+                        updateBuyerStatusMutation.mutateAsync({
+                            id: Number(buyerId),
+                            payload: { status: BUYER_STATUS_MAP[targetStatus] },
+                        })
                     )
                 );
-                toast.success(`${selectedBuyers.length} buyers activated`);
-                break;
-            case 'suspend':
-                setBuyers((prev) =>
-                    prev.map((b) =>
-                        selectedBuyers.includes(b.id) ? { ...b, accountStatus: 'suspended' as AccountStatus } : b
-                    )
+                toast.success(
+                    action === 'activate'
+                        ? `${selectedBuyers.length} buyers activated.`
+                        : `${selectedBuyers.length} buyers suspended.`
                 );
-                toast.success(`${selectedBuyers.length} buyers suspended`);
-                break;
-            case 'delete':
-                setBuyers((prev) => prev.filter((b) => !selectedBuyers.includes(b.id)));
-                toast.success(`${selectedBuyers.length} buyers deleted`);
-                break;
+            }
+
+            if (action === 'delete') {
+                await Promise.all(
+                    selectedBuyers.map((buyerId) => deleteBuyerMutation.mutateAsync(Number(buyerId)))
+                );
+                toast.success(`${selectedBuyers.length} buyers deleted.`);
+            }
+            setSelectedBuyers([]);
+        } catch (error) {
+            console.error(error);
+            toast.error('Bulk action failed. Please retry.');
         }
-        setSelectedBuyers([]);
     };
 
-    const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleCSVUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            setCsvFile(file);
-            // Mock CSV preview data
-            setCsvPreview([
-                {
-                    companyName: 'ABC Corp',
-                    taxId: 'VAT-111222333',
-                    contactName: 'John Doe',
-                    email: 'john@abc.com',
-                    phone: '+1 555 1234',
-                    role: 'buyer',
-                },
-                {
-                    companyName: 'XYZ Inc',
-                    taxId: 'VAT-444555666',
-                    contactName: 'Jane Smith',
-                    email: 'jane@xyz.com',
-                    phone: '+1 555 5678',
-                    role: 'enterprise',
-                },
-            ]);
-            setValidationErrors([]);
-            setImportStep(2);
+        if (!file) return;
+
+        setCsvFile(file);
+        const content = await file.text();
+        const rows = content
+            .split(/\r?\n/)
+            .map((row) => row.trim())
+            .filter((row) => row.length > 0);
+
+        if (rows.length < 2) {
+            toast.error('CSV file does not contain data rows.');
+            return;
+        }
+
+        const headers = parseCsvLine(rows[0]).map((header) => header.toLowerCase().replace(/\s+/g, ''));
+        const hasRequiredColumns = CSV_REQUIRED_COLUMNS.every((column) => headers.includes(column));
+        if (!hasRequiredColumns) {
+            toast.error('CSV format is invalid. Required columns: companyName, taxId, contactName, email, phone, role.');
+            return;
+        }
+
+        const previewRows: Partial<Buyer>[] = [];
+        const parseErrors: { row: number; error: string }[] = [];
+
+        for (let index = 1; index < rows.length; index += 1) {
+            const values = parseCsvLine(rows[index]);
+            const rowObject: Record<string, string> = {};
+            headers.forEach((header, headerIndex) => {
+                rowObject[header] = values[headerIndex]?.trim() ?? '';
+            });
+
+            const roleValue = rowObject.role?.toLowerCase();
+            if (!roleValue || !['buyer', 'enterprise', 'distributor'].includes(roleValue)) {
+                parseErrors.push({ row: index + 1, error: `Invalid role "${rowObject.role}"` });
+                continue;
+            }
+
+            if (!rowObject.companyname || !rowObject.contactname) {
+                parseErrors.push({ row: index + 1, error: 'companyName and contactName are required' });
+                continue;
+            }
+
+            previewRows.push({
+                companyName: rowObject.companyname,
+                taxId: rowObject.taxid ?? '',
+                contactName: rowObject.contactname,
+                email: rowObject.email ?? '',
+                phone: rowObject.phone ?? '',
+                role: roleValue as BuyerRole,
+            });
+        }
+
+        setValidationErrors(parseErrors);
+        setCsvPreview(previewRows);
+        setImportStep(2);
+        if (parseErrors.length > 0) {
+            toast.warning(`Skipped ${parseErrors.length} invalid row(s).`);
+        }
+        if (previewRows.length === 0) {
+            toast.error('No valid rows found in CSV file.');
         }
     };
 
     const handleImportConfirm = () => {
-        const validEntries = csvPreview.filter(
-            (_, index) => !validationErrors.some((err) => err.row === index + 1)
-        );
-
-        validEntries.forEach((entry, index) => {
-            const newBuyer: Buyer = {
-                id: String(buyers.length + index + 1),
-                companyName: entry.companyName ?? '',
-                taxId: entry.taxId ?? '',
-                contactName: entry.contactName ?? '',
-                email: entry.email ?? '',
-                phone: entry.phone ?? '',
-                role: entry.role ?? 'buyer',
-                kycStatus: 'pending',
-                accountStatus: 'active',
-                createdAt: new Date().toISOString().split('T')[0],
-            };
-            setBuyers((prev) => [...prev, newBuyer]);
-        });
-
-        toast.success('Import completed', {
-            description: `${validEntries.length} buyers imported successfully.`,
-        });
-        setImportWizardOpen(false);
-        setImportStep(1);
-        setCsvFile(null);
+        toast.error('Buyer CSV import endpoint is not available yet.');
     };
 
-    const handleResetPassword = () => {
+    const handleResetPassword = (id: string) => {
+        setResetPasswordTargetId(id);
         setResetPasswordOpen(true);
+    };
+
+    const handleResetPasswordModalOpenChange = (open: boolean) => {
+        setResetPasswordOpen(open);
+        if (!open) {
+            setResetPasswordTargetId(null);
+        }
+    };
+
+    const handleResetPasswordSubmit = async (method: 'email' | 'temp') => {
+        if (!resetPasswordTargetId) return;
+
+        if (method === 'email') {
+            toast.error('Email reset flow is not available. Use temporary password reset.');
+            return;
+        }
+
+        try {
+            const temporaryPassword = generateTempPassword();
+            await resetPasswordMutation.mutateAsync({
+                id: Number(resetPasswordTargetId),
+                password: temporaryPassword,
+            });
+            if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(temporaryPassword);
+            }
+            toast.success('Temporary password generated and applied.', {
+                description: 'Password copied to clipboard.',
+            });
+            setResetPasswordOpen(false);
+            setResetPasswordTargetId(null);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to reset password.');
+        }
     };
 
     // Helper functions for badge colors
@@ -414,12 +681,20 @@ export function useBuyerManagement() {
         handleCSVUpload,
         handleImportConfirm,
         handleResetPassword,
+        handleResetPasswordSubmit,
+        handleResetPasswordModalOpenChange,
 
         // Helper functions
         getRoleBadge,
         getKYCBadge,
         getStatusBadge,
         getAuditIcon,
+
+        // API status
+        isLoading: buyerListQuery.isLoading,
+        isFetching: buyerListQuery.isFetching,
+        error: buyerListQuery.error instanceof Error ? buyerListQuery.error.message : null,
+        totalResults,
     };
 }
 

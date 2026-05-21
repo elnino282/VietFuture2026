@@ -85,7 +85,7 @@ export function IntegrationSettingsSection({
                                             <TestTube2 className="w-4 h-4 mr-2" />
                                             Test Connection
                                         </Button>
-                                        <Button className="bg-[#2563EB] hover:bg-[#1E40AF]">
+                                        <Button>
                                             <Save className="w-4 h-4 mr-2" />
                                             Save
                                         </Button>

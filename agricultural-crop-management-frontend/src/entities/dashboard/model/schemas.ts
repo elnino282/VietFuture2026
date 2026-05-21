@@ -51,13 +51,13 @@ export const KpisSchema = z.object({
 
 // Expenses nested schema
 export const ExpensesSchema = z.object({
-    totalExpense: z.number(),
+    totalExpense: NullableNumericSchema,
 });
 
 // Harvest nested schema
 export const HarvestSchema = z.object({
-    totalQuantityKg: z.number(),
-    totalRevenue: z.number(),
+    totalQuantityKg: NullableNumericSchema,
+    totalRevenue: NullableNumericSchema,
     expectedYieldKg: z.number().nullable(),
     yieldVsPlanPercent: z.number().nullable(),
 });
@@ -77,6 +77,8 @@ export const DashboardOverviewSchema = z.object({
     expenses: ExpensesSchema,
     harvest: HarvestSchema,
     alerts: AlertsSchema,
+    unavailableReasons: z.array(z.string()),
+    missingInputs: z.array(z.string()),
 });
 
 // Today Task Response
@@ -88,6 +90,44 @@ export const TodayTaskSchema = z.object({
     assigneeName: z.string().nullable(),
     dueDate: z.string().nullable(),
     status: z.string(),
+});
+
+export const DashboardDataCompletenessWarningSchema = z.object({
+    warningId: z.string(),
+    title: z.string(),
+    source: z.string(),
+    type: z.string(),
+    status: z.string(),
+    dueDate: z.string().nullable(),
+    actionTarget: z.string(),
+    seasonId: z.number().nullable(),
+    inputCode: z.string(),
+});
+
+export const DashboardIncidentAlertSchema = z.object({
+    id: z.string(),
+    type: z.string(),
+    severity: z.string(),
+    title: z.string(),
+    description: z.string().nullable().optional(),
+    seasonId: z.number().nullable().optional(),
+    plotId: z.number().nullable().optional(),
+    createdAt: z.string().nullable().optional(),
+    dueDate: z.string().nullable().optional(),
+    actionUrl: z.string().nullable().optional(),
+    actionTarget: z.string().nullable().optional(),
+});
+
+export const DashboardRecentActivitySchema = z.object({
+    id: z.string(),
+    type: z.string(),
+    title: z.string(),
+    description: z.string().nullable().optional(),
+    occurredAt: z.string(),
+    actorName: z.string().nullable().optional(),
+    entityType: z.string(),
+    entityId: z.string(),
+    actionUrl: z.string().nullable().optional(),
 });
 
 // Plot Status Response
@@ -111,6 +151,40 @@ export const LowStockAlertSchema = z.object({
     unit: z.string().nullable(),
 });
 
+export const DashboardInventoryAlertItemSchema = z.object({
+    supplyLotId: z.number(),
+    itemName: z.string(),
+    lotCode: z.string().nullable(),
+    warehouseName: z.string().nullable(),
+    locationLabel: z.string().nullable(),
+    quantity: NumericSchema,
+    unit: z.string().nullable(),
+    expiryDate: z.string().nullable(),
+    alertType: z.string(),
+    severity: z.string(),
+    reason: z.string().nullable(),
+    lastMovementAt: z.string().nullable(),
+});
+
+export const DashboardInventoryAlertsSummarySchema = z.object({
+    totalAlerts: z.number().int(),
+    lowStock: z.number().int(),
+    expired: z.number().int(),
+    expiringSoon: z.number().int(),
+    noMovement: z.number().int(),
+    abnormalMovement: z.number().int(),
+});
+
+export const DashboardInventoryAlertsResponseSchema = z.object({
+    asOfDate: z.string(),
+    lowStockThreshold: NullableNumericSchema,
+    expiringSoonDays: z.number().int(),
+    noMovementDays: z.number().int(),
+    thresholdSource: z.string(),
+    summary: DashboardInventoryAlertsSummarySchema,
+    alerts: z.array(DashboardInventoryAlertItemSchema).default([]),
+});
+
 // Page Response for Today Tasks
 export const TodayTasksPageSchema = z.object({
     content: z.array(TodayTaskSchema),
@@ -127,8 +201,8 @@ export const TodayTasksPageSchema = z.object({
 export const SustainabilityScoreSchema = z.object({
     value: NullableNumericSchema,
     label: z.string(),
-    components: z.record(z.string(), NullableNumericSchema).default({}),
-    weights: z.record(z.string(), NullableNumericSchema).default({}),
+    components: z.record(z.string(), NullableNumericSchema),
+    weights: z.record(z.string(), NullableNumericSchema),
 });
 
 export const DashboardFdnMetricsSchema = z.object({
@@ -221,11 +295,12 @@ export const DashboardFdnOverviewSchema = z.object({
     yield: DashboardYieldSummarySchema,
     inputsBreakdown: DashboardInputsBreakdownSchema,
     unit: z.string(),
-    dataQuality: z.array(DashboardDataQualitySchema).default([]),
-    dataQualitySummary: DashboardDataQualitySummarySchema.nullable().default(null),
-    missingInputs: z.array(z.string()).default([]),
-    notes: z.array(z.string()).default([]),
-    recommendations: z.array(z.string()).default([]),
+    dataQuality: z.array(DashboardDataQualitySchema),
+    dataQualitySummary: DashboardDataQualitySummarySchema.nullable(),
+    missingInputs: z.array(z.string()),
+    unavailableReasons: z.array(z.string()),
+    notes: z.array(z.string()),
+    recommendations: z.array(z.string()),
     recommendationSource: z.string(),
     sustainableScoreMetric: DashboardMetricSchema,
     fdnTotalMetric: DashboardMetricSchema,
@@ -235,7 +310,7 @@ export const DashboardFdnOverviewSchema = z.object({
     nOutputMetric: DashboardMetricSchema,
     nSurplusMetric: DashboardMetricSchema,
     estimatedYieldMetric: DashboardMetricSchema,
-    historicalTrend: z.array(DashboardHistoryPointSchema).default([]),
+    historicalTrend: z.array(DashboardHistoryPointSchema),
 });
 
 export const DashboardFieldMapItemSchema = z.object({
@@ -243,14 +318,15 @@ export const DashboardFieldMapItemSchema = z.object({
     fieldName: z.string(),
     farmId: z.number().nullable(),
     farmName: z.string().nullable(),
-    geometry: z.object({
+    boundaryGeoJson: z.object({
         type: z.string(),
         coordinates: z.any(),
-    }).nullable(),
+    }).nullable().optional().default(null),
     center: z.object({
         lat: NumericSchema,
         lng: NumericSchema,
-    }).nullable(),
+    }).nullable().optional().default(null),
+    boundaryIssue: z.string().nullable().optional().default(null),
     cropName: z.string(),
     seasonName: z.string(),
     fdnLevel: z.enum(['low', 'medium', 'high']).default('medium'),
@@ -267,8 +343,20 @@ export const DashboardFieldMapItemSchema = z.object({
     recommendations: z.array(z.string()).default([]),
 });
 
+export const DashboardFieldMapViewportSchema = z.object({
+    center: z.object({
+        lat: NumericSchema,
+        lng: NumericSchema,
+    }),
+    zoom: z.number().int(),
+    source: z.string(),
+});
+
 export const DashboardFieldMapResponseSchema = z.object({
-    items: z.array(DashboardFieldMapItemSchema).default([]),
+    fieldsWithBoundary: z.array(DashboardFieldMapItemSchema).default([]),
+    fieldsMissingBoundary: z.array(DashboardFieldMapItemSchema).default([]),
+    defaultViewport: DashboardFieldMapViewportSchema.nullable().default(null),
+    unavailableReason: z.string().nullable().default(null),
 });
 
 export const DashboardFieldRecommendationSchema = z.object({

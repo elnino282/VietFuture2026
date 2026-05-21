@@ -10,6 +10,7 @@ import {
   type MovementsParams,
   type OnHandParams,
   type OnHandRow,
+  type StockMovementRequest,
   type StockMovement,
   type Warehouse as WarehouseEntity,
 } from "@/entities/inventory";
@@ -23,8 +24,24 @@ import {
   getWeightUnitLabel,
   normalizeWeightUnit,
 } from "@/shared/lib";
-import { Card, CardContent, PageHeader } from "@/shared/ui";
-import { Warehouse as WarehouseIcon } from "lucide-react";
+import {
+  Button,
+  Card,
+  CardContent,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  PageContainer,
+  PageHeader,
+} from "@/shared/ui";
+import {
+  MoreVertical,
+  Pencil,
+  Plus,
+  Trash2,
+  Warehouse as WarehouseIcon,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import "./InventoryPage.css";
@@ -35,6 +52,7 @@ import "./InventoryPage.css";
 
 type TabType = "on-hand" | "movements";
 type WarehouseDialogMode = "create" | "edit";
+type TranslateFn = ReturnType<typeof useI18n>["t"];
 
 const formatNumber = (
   value: number,
@@ -79,6 +97,60 @@ const toRowUnitQuantity = (
   rowUnit: WeightUnit,
   displayUnit: WeightUnit,
 ) => convertWeight(convertWeightToKg(quantity, displayUnit), rowUnit);
+
+const getLotStatusMeta = (
+  status: string | null | undefined,
+  t: TranslateFn,
+): { label: string; className: string } => {
+  const normalized = status?.trim().toUpperCase();
+  switch (normalized) {
+    case "IN_STOCK":
+      return { label: t("inventory.status.inStock"), className: "status-in-stock" };
+    case "LOW_STOCK":
+      return { label: t("inventory.status.lowStock"), className: "status-low-stock" };
+    case "EXPIRED":
+      return { label: t("inventory.status.expired"), className: "status-expired" };
+    case "OUT_OF_STOCK":
+    case "DEPLETED":
+      return { label: t("inventory.status.outOfStock"), className: "status-out-of-stock" };
+    case "HOLD":
+    case "RESERVED":
+    case "PENDING":
+      return { label: t("inventory.status.hold"), className: "status-hold" };
+    default:
+      return {
+        label: status?.trim() || "-",
+        className: "status-neutral",
+      };
+  }
+};
+
+const getMovementTypeMeta = (
+  movementType: string | null | undefined,
+  t: TranslateFn,
+): { label: string; className: string } => {
+  switch (movementType) {
+    case "IN":
+      return { label: t("inventory.types.in"), className: "movement-in" };
+    case "OUT":
+      return { label: t("inventory.types.out"), className: "movement-out" };
+    case "ADJUST":
+      return { label: t("inventory.types.adjust"), className: "movement-adjust" };
+    default:
+      return { label: movementType || "-", className: "" };
+  }
+};
+
+const getLocationDisplayLabel = (
+  locationLabel: string | null | undefined,
+  t: TranslateFn,
+): string => {
+  const normalized = locationLabel?.trim().toLowerCase();
+  if (!normalized || normalized === "any location") {
+    return t("inventory.unassignedLocation");
+  }
+  return locationLabel ?? t("inventory.unassignedLocation");
+};
 
 export function InventoryPage() {
   const { t } = useI18n();
@@ -211,7 +283,7 @@ export function InventoryPage() {
   const handleSubmitWarehouseForm = async () => {
     const trimmedName = warehouseNameInput.trim();
     if (!trimmedName) {
-      setWarehouseFormError("Tên kho là bắt buộc.");
+      setWarehouseFormError(t("inventory.validation.warehouseNameRequired"));
       return;
     }
 
@@ -220,7 +292,7 @@ export function InventoryPage() {
         ? warehouseFarmIdInput
         : selectedWarehouse?.farmId;
     if (!farmId) {
-      setWarehouseFormError("Vui lòng chọn nông trại.");
+      setWarehouseFormError(t("inventory.validation.farmRequired"));
       return;
     }
 
@@ -232,7 +304,7 @@ export function InventoryPage() {
           farmId,
           type: "INPUT",
         });
-        toast.success("Đã tạo kho vật tư.");
+        toast.success(t("inventory.toast.warehouseCreateSuccess"));
       } else if (warehouseDialogMode === "edit" && selectedWarehouse) {
         await updateWarehouseMutation.mutateAsync({
           id: selectedWarehouse.id,
@@ -241,14 +313,14 @@ export function InventoryPage() {
             farmId,
           },
         });
-        toast.success("Đã cập nhật kho vật tư.");
+        toast.success(t("inventory.toast.warehouseUpdateSuccess"));
       }
       closeWarehouseFormModal();
     } catch (error) {
       setWarehouseFormError(
         error instanceof Error
           ? error.message
-          : "Không thể lưu thông tin kho. Vui lòng thử lại.",
+          : t("inventory.toast.warehouseSaveError"),
       );
     }
   };
@@ -257,7 +329,7 @@ export function InventoryPage() {
     if (!selectedWarehouseId) return;
     try {
       await deleteWarehouseMutation.mutateAsync(selectedWarehouseId);
-      toast.success("Đã xóa kho vật tư.");
+      toast.success(t("inventory.toast.warehouseDeleteSuccess"));
       setShowDeleteWarehouseModal(false);
       setSelectedWarehouseId(undefined);
       setSelectedLocationId(undefined);
@@ -266,7 +338,7 @@ export function InventoryPage() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Không thể xóa kho. Vui lòng kiểm tra ràng buộc dữ liệu.",
+          : t("inventory.toast.warehouseDeleteError"),
       );
     }
   };
@@ -303,9 +375,9 @@ export function InventoryPage() {
 
   // ===== RENDER =====
   return (
-    <div className="min-h-screen acm-main-content pb-20">
-      <div className="inventory-page">
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+    <PageContainer variant="wide">
+      <div className="farmer-inventory-page">
+        <Card variant="page-header" className="mb-6">
           <CardContent className="px-6 py-4">
             <PageHeader
               className="mb-0"
@@ -317,7 +389,7 @@ export function InventoryPage() {
         </Card>
 
         {/* ===== CONTROLS ===== */}
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+        <Card variant="filter" className="mb-6">
           <CardContent className="px-6 py-4">
             <div className="inventory-controls flex flex-wrap items-center justify-start gap-4">
               <div className="control-group">
@@ -348,29 +420,35 @@ export function InventoryPage() {
               </div>
 
               <div className="inventory-warehouse-toolbar">
-                <button
+                <Button
                   type="button"
-                  className="btn-adjust"
+                  variant="default"
+                  size="sm"
                   onClick={openCreateWarehouseModal}
                 >
-                  Thêm kho vật tư
-                </button>
-                <button
+                  <Plus className="w-4 h-4" />
+                  {t("inventory.actions.addWarehouse")}
+                </Button>
+                <Button
                   type="button"
-                  className="btn-adjust"
+                  variant="outline"
+                  size="sm"
                   onClick={openEditWarehouseModal}
                   disabled={!selectedWarehouse}
                 >
-                  Sửa kho
-                </button>
-                <button
+                  <Pencil className="w-4 h-4" />
+                  {t("inventory.actions.editWarehouse")}
+                </Button>
+                <Button
                   type="button"
-                  className="btn-out"
+                  variant="destructive"
+                  size="sm"
                   onClick={() => setShowDeleteWarehouseModal(true)}
                   disabled={!selectedWarehouse}
                 >
-                  Xóa kho
-                </button>
+                  <Trash2 className="w-4 h-4" />
+                  {t("inventory.actions.deleteWarehouse")}
+                </Button>
               </div>
 
               <div className="control-group">
@@ -389,7 +467,7 @@ export function InventoryPage() {
                   <option value="">{t("inventory.allLocations")}</option>
                   {locations?.map((loc) => (
                     <option key={loc.id} value={loc.id}>
-                      {loc.label || `Location ${loc.id}`}
+                      {loc.label || t("inventory.locationFallback", { id: loc.id })}
                     </option>
                   ))}
                 </select>
@@ -452,8 +530,17 @@ export function InventoryPage() {
         </Card>
 
         {/* ===== TABS ===== */}
-        <div className="inventory-tabs">
+        <div
+          className="inventory-tabs"
+          role="tablist"
+          aria-label={t("inventory.tabsAriaLabel")}
+        >
           <button
+            type="button"
+            id="inventory-tab-on-hand"
+            role="tab"
+            aria-controls="inventory-tabpanel-on-hand"
+            aria-selected={activeTab === "on-hand"}
             className={`tab ${activeTab === "on-hand" ? "active" : ""}`}
             onClick={() => {
               setActiveTab("on-hand");
@@ -463,6 +550,11 @@ export function InventoryPage() {
             {t("inventory.tabs.onHand")}
           </button>
           <button
+            type="button"
+            id="inventory-tab-movements"
+            role="tab"
+            aria-controls="inventory-tabpanel-movements"
+            aria-selected={activeTab === "movements"}
             className={`tab ${activeTab === "movements" ? "active" : ""}`}
             onClick={() => {
               setActiveTab("movements");
@@ -482,21 +574,33 @@ export function InventoryPage() {
           )}
 
           {selectedWarehouseId && activeTab === "on-hand" && (
-            <OnHandTable
-              data={onHandData?.items || []}
-              loading={loadingOnHand}
-              onStockOut={handleStockOut}
-              onAdjust={handleAdjust}
-              formatDate={formatDate}
-            />
+            <div
+              id="inventory-tabpanel-on-hand"
+              role="tabpanel"
+              aria-labelledby="inventory-tab-on-hand"
+            >
+              <OnHandTable
+                data={onHandData?.items || []}
+                loading={loadingOnHand}
+                onStockOut={handleStockOut}
+                onAdjust={handleAdjust}
+                formatDate={formatDate}
+              />
+            </div>
           )}
 
           {selectedWarehouseId && activeTab === "movements" && (
-            <MovementsTable
-              data={movementsData?.items || []}
-              loading={loadingMovements}
-              formatDateTime={formatDateTime}
-            />
+            <div
+              id="inventory-tabpanel-movements"
+              role="tabpanel"
+              aria-labelledby="inventory-tab-movements"
+            >
+              <MovementsTable
+                data={movementsData?.items || []}
+                loading={loadingMovements}
+                formatDateTime={formatDateTime}
+              />
+            </div>
           )}
 
           {/* Pagination */}
@@ -588,7 +692,7 @@ export function InventoryPage() {
           />
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }
 
@@ -652,22 +756,42 @@ function OnHandTable({
                 <td>{row.supplyItemName || "-"}</td>
                 <td>{display.unitLabel || "-"}</td>
                 <td>{formatDate(row.expiryDate)}</td>
-                <td>{row.locationLabel || "-"}</td>
+                <td>{getLocationDisplayLabel(row.locationLabel, t)}</td>
                 <td className="quantity">{display.formatted}</td>
                 <td>
-                  <span
-                    className={`status-badge ${row.lotStatus?.toLowerCase() || ""}`}
-                  >
-                    {row.lotStatus || "-"}
-                  </span>
+                  {(() => {
+                    const statusMeta = getLotStatusMeta(row.lotStatus, t);
+                    return (
+                      <span className={`status-badge ${statusMeta.className}`}>
+                        {statusMeta.label}
+                      </span>
+                    );
+                  })()}
                 </td>
-                <td className="actions">
-                  <button className="btn-out" onClick={() => onStockOut(row)}>
-                    {t("inventory.actions.stockOut")}
-                  </button>
-                  <button className="btn-adjust" onClick={() => onAdjust(row)}>
-                    {t("inventory.actions.adjust")}
-                  </button>
+                <td className="actions-cell">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="action-btn"
+                        aria-label={t("inventory.actions.menu")}
+                        title={t("inventory.actions.menu")}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => onStockOut(row)}
+                      >
+                        {t("inventory.actions.stockOut")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onAdjust(row)}>
+                        {t("inventory.actions.adjust")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             );
@@ -706,19 +830,6 @@ function MovementsTable({
     return <div className="empty-state">{t("inventory.noMovements")}</div>;
   }
 
-  const getMovementClass = (type: string) => {
-    switch (type) {
-      case "IN":
-        return "movement-in";
-      case "OUT":
-        return "movement-out";
-      case "ADJUST":
-        return "movement-adjust";
-      default:
-        return "";
-    }
-  };
-
   return (
     <div className="table-container">
       <table className="inventory-table">
@@ -743,6 +854,7 @@ function MovementsTable({
               preferences.weightUnit,
               preferences.locale,
             );
+            const movementMeta = getMovementTypeMeta(mv.movementType, t);
             const unitSuffix = display.unitLabel ? ` ${display.unitLabel}` : "";
 
             return (
@@ -750,19 +862,19 @@ function MovementsTable({
                 <td>{formatDateTime(mv.movementDate)}</td>
                 <td>
                   <span
-                    className={`type-badge ${getMovementClass(mv.movementType)}`}
+                    className={`type-badge ${movementMeta.className}`}
                   >
-                    {mv.movementType}
+                    {movementMeta.label}
                   </span>
                 </td>
-                <td className={`quantity ${getMovementClass(mv.movementType)}`}>
-                  {mv.movementType === "OUT" ? "-" : ""}
+                <td className={`quantity ${movementMeta.className}`}>
+                  {movementMeta.className === "movement-out" ? "-" : ""}
                   {display.formatted}
                   {unitSuffix}
                 </td>
                 <td>{mv.batchCode || "-"}</td>
                 <td>{mv.supplyItemName || "-"}</td>
-                <td>{mv.locationLabel || "-"}</td>
+                <td>{getLocationDisplayLabel(mv.locationLabel, t)}</td>
                 <td>{mv.seasonName || "-"}</td>
                 <td>{mv.taskTitle || "-"}</td>
                 <td className="note">{mv.note || "-"}</td>
@@ -782,9 +894,7 @@ function MovementsTable({
 interface StockOutModalProps {
   row: OnHandRow;
   onClose: () => void;
-  onSubmit: (
-    data: import("@/entities/inventory").StockMovementRequest,
-  ) => Promise<void>;
+  onSubmit: (data: StockMovementRequest) => Promise<void>;
   isPending: boolean;
 }
 
@@ -900,10 +1010,11 @@ function StockOutModal({
         </div>
 
         <div className="modal-actions">
-          <button className="btn-cancel" onClick={onClose} disabled={isPending}>
+          <button type="button" className="btn-cancel" onClick={onClose} disabled={isPending}>
             {t("common.cancel")}
           </button>
           <button
+            type="button"
             className="btn-submit"
             onClick={handleSubmit}
             disabled={isPending}
@@ -925,9 +1036,7 @@ function StockOutModal({
 interface AdjustModalProps {
   row: OnHandRow;
   onClose: () => void;
-  onSubmit: (
-    data: import("@/entities/inventory").StockMovementRequest,
-  ) => Promise<void>;
+  onSubmit: (data: StockMovementRequest) => Promise<void>;
   isPending: boolean;
 }
 
@@ -1039,10 +1148,11 @@ function AdjustModal({ row, onClose, onSubmit, isPending }: AdjustModalProps) {
         </div>
 
         <div className="modal-actions">
-          <button className="btn-cancel" onClick={onClose} disabled={isPending}>
+          <button type="button" className="btn-cancel" onClick={onClose} disabled={isPending}>
             {t("common.cancel")}
           </button>
           <button
+            type="button"
             className="btn-submit"
             onClick={handleSubmit}
             disabled={isPending || !note.trim()}
@@ -1080,29 +1190,31 @@ function WarehouseFormModal({
   isPending,
   error,
 }: WarehouseFormModalProps) {
+  const { t } = useI18n();
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(event) => event.stopPropagation()}>
-        <h2>{mode === "create" ? "Thêm kho vật tư" : "Sửa kho vật tư"}</h2>
+        <h2>{mode === "create" ? t("inventory.dialog.addWarehouseTitle") : t("inventory.dialog.editWarehouseTitle")}</h2>
         <p className="modal-subtitle">
-          Kho vật tư chỉ dùng cho vật tư đầu vào (phân bón, thuốc, hạt giống...).
+          {t("inventory.dialog.warehouseHint")}
         </p>
 
         {error && <div className="error-message">{error}</div>}
 
         <div className="form-group">
-          <label>Tên kho</label>
+          <label>{t("inventory.form.warehouseNameLabel")}</label>
           <input
             type="text"
             value={name}
             onChange={(event) => onNameChange(event.target.value)}
-            placeholder="Nhập tên kho vật tư"
+            placeholder={t("inventory.form.warehouseNamePlaceholder")}
             maxLength={150}
           />
         </div>
 
         <div className="form-group">
-          <label>Nông trại</label>
+          <label>{t("inventory.form.farmLabel")}</label>
           <select
             value={farmId ?? ""}
             onChange={(event) =>
@@ -1112,7 +1224,7 @@ function WarehouseFormModal({
             }
             disabled={mode === "edit"}
           >
-            <option value="">Chọn nông trại</option>
+            <option value="">{t("inventory.form.selectFarm")}</option>
             {farms.map((farm) => (
               <option key={farm.id} value={farm.id}>
                 {farm.name}
@@ -1122,11 +1234,11 @@ function WarehouseFormModal({
         </div>
 
         <div className="modal-actions">
-          <button className="btn-cancel" onClick={onClose} disabled={isPending}>
-            Hủy
+          <button type="button" className="btn-cancel" onClick={onClose} disabled={isPending}>
+            {t("common.cancel")}
           </button>
-          <button className="btn-submit" onClick={onSubmit} disabled={isPending}>
-            {isPending ? "Đang xử lý..." : "Lưu"}
+          <button type="button" className="btn-submit" onClick={onSubmit} disabled={isPending}>
+            {isPending ? t("common.processing") : t("common.save")}
           </button>
         </div>
       </div>
@@ -1147,22 +1259,29 @@ function DeleteWarehouseModal({
   onConfirm,
   isPending,
 }: DeleteWarehouseModalProps) {
+  const { t } = useI18n();
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(event) => event.stopPropagation()}>
-        <h2>Xóa kho vật tư</h2>
+        <h2>{t("inventory.dialog.deleteWarehouseTitle")}</h2>
         <p className="modal-subtitle">
-          Bạn có chắc chắn muốn xóa kho <strong>{warehouseName}</strong>?
+          {t("inventory.dialog.deleteWarehouseDescription", { warehouseName })}
         </p>
         <p className="on-hand-info">
-          Kho chỉ được xóa khi chưa có vị trí, giao dịch hoặc dữ liệu tồn kho liên quan.
+          {t("inventory.dialog.deleteWarehouseHint")}
         </p>
         <div className="modal-actions">
-          <button className="btn-cancel" onClick={onClose} disabled={isPending}>
-            Hủy
+          <button type="button" className="btn-cancel" onClick={onClose} disabled={isPending}>
+            {t("common.cancel")}
           </button>
-          <button className="btn-out" onClick={onConfirm} disabled={isPending}>
-            {isPending ? "Đang xử lý..." : "Xóa kho"}
+          <button
+            type="button"
+            className="btn-submit btn-submit-danger"
+            onClick={onConfirm}
+            disabled={isPending}
+          >
+            {isPending ? t("common.processing") : t("inventory.actions.deleteWarehouse")}
           </button>
         </div>
       </div>
@@ -1171,4 +1290,5 @@ function DeleteWarehouseModal({
 }
 
 export default InventoryPage;
+
 

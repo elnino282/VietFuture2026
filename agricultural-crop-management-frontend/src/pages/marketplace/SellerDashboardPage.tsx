@@ -1,4 +1,4 @@
-import {
+﻿import {
   DollarSign,
   Package,
   Plus,
@@ -6,21 +6,27 @@ import {
   Store,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useI18n } from "@/hooks/useI18n";
+import type { MarketplaceStatsUnavailableReason } from "@/shared/api";
 import { AsyncState, Button, Card, CardContent, CardHeader, CardTitle, PageContainer } from "@/shared/ui";
 import { useMarketplaceFarmerDashboard, useMarketplaceFarmerProducts } from "@/features/marketplace/hooks";
 import { SellerMarketplaceTabs } from "@/features/marketplace/layout";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
+
+type Translator = (key: string, optionsOrDefault?: Record<string, unknown> | string) => string;
 
 function MetricCard({
   icon: Icon,
   label,
   value,
   tone,
+  helperText,
 }: {
   icon: typeof DollarSign;
   label: string;
   value: string | number;
   tone: string;
+  helperText?: string;
 }) {
   return (
     <Card className="border-border shadow-sm">
@@ -31,37 +37,75 @@ function MetricCard({
         <div>
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
           <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
+          {helperText ? (
+            <p className="mt-1 text-xs text-muted-foreground">{helperText}</p>
+          ) : null}
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function orderStatusLabel(status: string) {
+function orderStatusLabel(status: string, t: Translator) {
   switch (status) {
     case "PENDING":
-      return "Pending";
+      return t("marketplaceSeller.status.order.pending", "Pending");
     case "CONFIRMED":
-      return "Confirmed";
+      return t("marketplaceSeller.status.order.confirmed", "Confirmed");
     case "PREPARING":
-      return "Preparing";
+      return t("marketplaceSeller.status.order.preparing", "Preparing");
     case "DELIVERING":
-      return "Delivering";
+      return t("marketplaceSeller.status.order.delivering", "Delivering");
     case "COMPLETED":
-      return "Completed";
+      return t("marketplaceSeller.status.order.completed", "Completed");
     case "CANCELLED":
-      return "Cancelled";
+      return t("marketplaceSeller.status.order.cancelled", "Cancelled");
     default:
       return status;
   }
 }
 
+function unavailableReasonLabel(reason: MarketplaceStatsUnavailableReason, t: Translator) {
+  switch (reason) {
+    case "NO_PRODUCTS":
+      return t(
+        "marketplaceSeller.dashboard.unavailableReasons.noProducts",
+        "No products in your marketplace catalog yet.",
+      );
+    case "NO_ORDERS":
+      return t(
+        "marketplaceSeller.dashboard.unavailableReasons.noOrders",
+        "No buyer orders have been created yet.",
+      );
+    case "NO_REVENUE_DATA":
+      return t(
+        "marketplaceSeller.dashboard.unavailableReasons.noRevenueData",
+        "Revenue data is unavailable because there are no orders yet.",
+      );
+    case "NO_COMPLETED_ORDERS":
+      return t(
+        "marketplaceSeller.dashboard.unavailableReasons.noCompletedOrders",
+        "Revenue remains unavailable until at least one order is completed.",
+      );
+    default:
+      return t(
+        "marketplaceSeller.dashboard.unavailableReasons.fallback",
+        "Some dashboard metrics are unavailable.",
+      );
+  }
+}
+
 export function SellerDashboardPage() {
   const navigate = useNavigate();
+  const { t, locale } = useI18n();
   const dashboardQuery = useMarketplaceFarmerDashboard();
   const productsQuery = useMarketplaceFarmerProducts({ page: 0, size: 20, status: "PUBLISHED" });
 
   const dashboard = dashboardQuery.data;
+  const hasProducts = dashboard?.hasProducts ?? false;
+  const hasOrders = dashboard?.hasOrders ?? false;
+  const hasRevenueData = dashboard?.hasRevenueData ?? false;
+  const unavailableReasons = dashboard?.unavailableReasons ?? [];
 
   const topProducts = (productsQuery.data?.items ?? [])
     .slice()
@@ -69,7 +113,7 @@ export function SellerDashboardPage() {
     .slice(0, 5);
 
   return (
-    <PageContainer>
+    <PageContainer variant="wide">
       <div className="space-y-6">
         <SellerMarketplaceTabs />
 
@@ -78,61 +122,123 @@ export function SellerDashboardPage() {
           isEmpty={false}
           error={dashboardQuery.isError ? (dashboardQuery.error as Error) : null}
           onRetry={() => dashboardQuery.refetch()}
-          loadingText="Loading marketplace dashboard..."
+          loadingText={t("marketplaceSeller.dashboard.loading", "Loading marketplace dashboard...")}
         >
-          <Card className="border border-border rounded-xl shadow-sm">
+          <Card variant="page-header">
             <CardContent className="px-6 py-4">
-              {/* Header Row: Title + Actions */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                {/* Title Section */}
                 <div className="flex-shrink-0">
                   <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
-                    <Store className="w-6 h-6 text-emerald-600" />
-                    Manage products
+                    <Store className="w-6 h-6 text-primary" />
+                    {t("marketplaceSeller.products.title", "Manage products")}
                   </h1>
                   <p className="text-sm text-muted-foreground mt-1">
-                    List, moderate, and manage stock for your marketplace products.
+                    {t(
+                      "marketplaceSeller.products.subtitle",
+                      "List, moderate, and manage stock for your marketplace products.",
+                    )}
                   </p>
                 </div>
 
-                {/* Primary Action */}
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <Button
                     className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm acm-button-shadow"
                     onClick={() => navigate("/farmer/marketplace-products/new")}
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add product
+                    {t("marketplaceSeller.products.addProduct", "Add product")}
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {!hasProducts ? (
+            <Card className="border-dashed border-border">
+              <CardContent className="space-y-4 p-8 text-center">
+                <h2 className="text-xl font-semibold text-foreground">
+                  {t("marketplaceSeller.dashboard.emptyProducts.title", "No marketplace product yet")}
+                </h2>
+                <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
+                  {t(
+                    "marketplaceSeller.dashboard.emptyProducts.description",
+                    "Add your first product listing to unlock order and revenue metrics on this dashboard.",
+                  )}
+                </p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <Button onClick={() => navigate("/farmer/marketplace-products/new")}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t("marketplaceSeller.dashboard.emptyProducts.actions.createFirst", "Create first product")}
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link to="/farmer/marketplace-products">
+                      {t("marketplaceSeller.dashboard.emptyProducts.actions.goToListings", "Go to listings")}
+                    </Link>
+                  </Button>
+                </div>
+                {unavailableReasons.length > 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    {unavailableReasons.map((reason) => unavailableReasonLabel(reason, t)).join(" ")}
+                  </p>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {hasProducts && !hasOrders ? (
+            <Card className="border-dashed border-border">
+              <CardContent className="space-y-3 p-8 text-center">
+                <h2 className="text-xl font-semibold text-foreground">
+                  {t("marketplaceSeller.dashboard.noOrders.title", "Products are live, but no orders yet")}
+                </h2>
+                <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
+                  {t(
+                    "marketplaceSeller.dashboard.noOrders.description",
+                    "Keep listings updated and in stock. Buyer orders will appear here as soon as they are placed.",
+                  )}
+                </p>
+                {unavailableReasons.length > 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    {unavailableReasons.map((reason) => unavailableReasonLabel(reason, t)).join(" ")}
+                  </p>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : null}
+
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
             <MetricCard
               icon={DollarSign}
-              label="Revenue"
-              value={formatVnd(dashboard?.totalRevenue ?? 0)}
+              label={t("marketplaceSeller.dashboard.metrics.revenue", "Revenue")}
+              value={
+                hasRevenueData && dashboard?.totalRevenue != null
+                  ? formatVnd(dashboard.totalRevenue, locale)
+                  : "--"
+              }
+              helperText={
+                hasRevenueData
+                  ? undefined
+                  : t("marketplaceSeller.dashboard.metrics.revenueEmpty", "No completed orders yet.")
+              }
               tone="bg-primary/10 text-primary"
             />
             <MetricCard
               icon={ShoppingBag}
-              label="Pending orders"
-              value={dashboard?.pendingOrders ?? 0}
-              tone="bg-blue-100 text-blue-600"
+              label={t("marketplaceSeller.dashboard.metrics.pendingOrders", "Pending orders")}
+              value={dashboard?.pendingOrders ?? "--"}
+              tone="bg-secondary/15 text-secondary"
             />
             <MetricCard
               icon={Package}
-              label="Published products"
-              value={dashboard?.publishedProducts ?? 0}
-              tone="bg-purple-100 text-purple-600"
+              label={t("marketplaceSeller.dashboard.metrics.publishedProducts", "Published products")}
+              value={dashboard?.publishedProducts ?? "--"}
+              tone="bg-accent/20 text-accent"
             />
             <MetricCard
               icon={Store}
-              label="Pending review"
-              value={dashboard?.pendingReviewProducts ?? 0}
-              tone="bg-orange-100 text-orange-600"
+              label={t("marketplaceSeller.dashboard.metrics.pendingReview", "Pending review")}
+              value={dashboard?.pendingReviewProducts ?? "--"}
+              tone="bg-muted text-foreground"
             />
           </div>
 
@@ -140,9 +246,9 @@ export function SellerDashboardPage() {
             <Card className="overflow-hidden border-border shadow-sm">
               <CardHeader className="border-b border-border/50">
                 <div className="flex items-center justify-between gap-3">
-                  <CardTitle>Recent orders</CardTitle>
+                  <CardTitle>{t("marketplaceSeller.dashboard.recentOrders.title", "Recent orders")}</CardTitle>
                   <Link to="/farmer/marketplace-orders" className="text-sm font-medium text-primary hover:underline">
-                    See all
+                    {t("marketplaceSeller.dashboard.recentOrders.seeAll", "See all")}
                   </Link>
                 </div>
               </CardHeader>
@@ -157,18 +263,27 @@ export function SellerDashboardPage() {
                       <div>
                         <p className="font-semibold text-foreground">{order.orderCode}</p>
                         <p className="text-sm text-muted-foreground">
-                          {order.items.length} items • {formatDateTime(order.createdAt)}
+                          {t("marketplaceSeller.dashboard.recentOrders.itemCount", {
+                            count: order.items.length,
+                            defaultValue: "{{count}} items",
+                          })}{" "}
+                          - {formatDateTime(order.createdAt, locale)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-primary">{formatVnd(order.totalAmount)}</p>
-                        <p className="text-sm text-muted-foreground">{orderStatusLabel(order.status)}</p>
+                        <p className="font-semibold text-primary">{formatVnd(order.totalAmount, locale)}</p>
+                        <p className="text-sm text-muted-foreground">{orderStatusLabel(order.status, t)}</p>
                       </div>
                     </Link>
                   ))
                 ) : (
                   <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-                    No buyer orders yet.
+                    {hasProducts
+                      ? t("marketplaceSeller.dashboard.recentOrders.emptyWithProducts", "No buyer orders yet.")
+                      : t(
+                          "marketplaceSeller.dashboard.recentOrders.emptyNoProducts",
+                          "Buyer orders will appear after your first product is listed.",
+                        )}
                   </div>
                 )}
               </CardContent>
@@ -177,9 +292,9 @@ export function SellerDashboardPage() {
             <Card className="overflow-hidden border-border shadow-sm">
               <CardHeader className="border-b border-border/50">
                 <div className="flex items-center justify-between gap-3">
-                  <CardTitle>Top products</CardTitle>
+                  <CardTitle>{t("marketplaceSeller.dashboard.topProducts.title", "Top products")}</CardTitle>
                   <Link to="/farmer/marketplace-products" className="text-sm font-medium text-primary hover:underline">
-                    Manage products
+                    {t("marketplaceSeller.dashboard.topProducts.manageProducts", "Manage products")}
                   </Link>
                 </div>
               </CardHeader>
@@ -197,10 +312,14 @@ export function SellerDashboardPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-medium text-foreground">{product.name}</p>
-                        <p className="text-sm text-muted-foreground">{formatVnd(product.price)} / {product.unit}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatVnd(product.price, locale)} / {product.unit}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Available</p>
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          {t("marketplaceSeller.table.available", "Available")}
+                        </p>
                         <p className="font-semibold text-primary">
                           {product.availableQuantity} {product.unit}
                         </p>
@@ -209,7 +328,9 @@ export function SellerDashboardPage() {
                   ))
                 ) : (
                   <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-                    No published products yet.
+                    {hasProducts
+                      ? t("marketplaceSeller.dashboard.topProducts.emptyWithProducts", "No published products yet.")
+                      : t("marketplaceSeller.dashboard.topProducts.emptyNoProducts", "No products available yet.")}
                   </div>
                 )}
               </CardContent>

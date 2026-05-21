@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Store } from "lucide-react";
 import { useAuth } from "@/features/auth";
+import { useI18n } from "@/hooks/useI18n";
 import { Button } from "@/shared/ui";
 
 /**
@@ -19,18 +20,28 @@ import { Button } from "@/shared/ui";
  */
 
 function resolveLinkProps(role: string | undefined): {
-  label: string;
+  labelKey: string;
+  fallback: string;
   icon: React.ReactNode;
 } {
   if (role === "farmer") {
-    return { label: "View your store", icon: <Store size={14} /> };
+    return {
+      labelKey: "dashboardHeader.viewYourStore",
+      fallback: "View your store",
+      icon: <Store size={14} />,
+    };
   }
-  return { label: "Back to Shop", icon: <ArrowLeft size={14} /> };
+  return {
+    labelKey: "dashboardHeader.backToShop",
+    fallback: "Back to Shop",
+    icon: <ArrowLeft size={14} />,
+  };
 }
 
 export function DashboardHeader() {
+  const { t } = useI18n();
   const { user } = useAuth();
-  const { label, icon } = resolveLinkProps(user?.role);
+  const { labelKey, fallback, icon } = resolveLinkProps(user?.role);
 
   return (
     <Link to="/marketplace">
@@ -40,7 +51,7 @@ export function DashboardHeader() {
         className="gap-1.5 text-white/80 hover:text-white hover:bg-white/10"
       >
         {icon}
-        {label}
+        {t(labelKey, fallback)}
       </Button>
     </Link>
   );

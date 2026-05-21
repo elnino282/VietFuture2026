@@ -1,30 +1,20 @@
-import { useMemo, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useMemo } from "react";
+import { MessageSquare } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { ChatConversation } from "../model/types";
+import { ChatContactSearch } from "./ChatContactSearch";
+import { ChatConversationItem } from "./ChatConversationItem";
 
 type ChatConversationListProps = {
   currentUid: string | null;
   conversations: ChatConversation[];
   selectedConversationId: string | null;
   onSelectConversation: (conversationId: string) => void;
-  onStartConversation: (peerUserId: string) => Promise<void>;
+  onStartConversation: (peerUserId: number) => Promise<void>;
   isLoading: boolean;
   isStartingConversation: boolean;
   error: string | null;
 };
-
-function formatTime(value: Date | null): string {
-  if (!value) {
-    return "";
-  }
-  return value.toLocaleString();
-}
-
-function peerLabel(uid: string): string {
-  return uid.startsWith("u_") ? `User ${uid.slice(2)}` : uid;
-}
 
 export function ChatConversationList({
   currentUid,
@@ -36,20 +26,7 @@ export function ChatConversationList({
   isStartingConversation,
   error,
 }: ChatConversationListProps) {
-  const [peerInput, setPeerInput] = useState("");
-
-  const currentUserIdLabel = useMemo(() => {
-    if (!currentUid) {
-      return null;
-    }
-
-    if (!currentUid.startsWith("u_")) {
-      return currentUid;
-    }
-
-    return `#${currentUid.slice(2)}`;
-  }, [currentUid]);
-
+  const { t } = useTranslation();
   const sortedConversations = useMemo(
     () =>
       [...conversations].sort((left, right) => {
@@ -60,98 +37,95 @@ export function ChatConversationList({
     [conversations]
   );
 
-  const handleStartConversation = async () => {
-    const trimmedPeerInput = peerInput.trim();
-    if (!trimmedPeerInput || isStartingConversation) {
-      return;
-    }
-
-    try {
-      await onStartConversation(trimmedPeerInput);
-      setPeerInput("");
-    } catch {
-      // Error state is surfaced by useConversations and rendered in this panel.
-    }
-  };
-
   return (
     <aside
-      className="border border-[#D8E0CC] rounded-md bg-white h-full flex flex-col"
+      className="chat-sidebar-panel chat-panel-card flex h-full flex-col overflow-hidden rounded-2xl"
       data-chat-panel="conversation-list"
       data-chat-conversations-count={String(conversations.length)}
+      aria-label={t("chat.messages.listAria", { defaultValue: "Messages" })}
     >
-      <div className="p-3 border-b border-[#E8EEDC] space-y-2">
-        <p className="text-sm font-semibold text-[#2E3A27]">Direct conversations</p>
-        {currentUserIdLabel ? (
-          <p className="text-xs text-slate-500">Your user ID: {currentUserIdLabel}</p>
-        ) : null}
-        <div className="flex gap-2">
-          <Input
-            placeholder="Enter internal user ID (example: 2 or #2)"
-            value={peerInput}
-            onChange={(event) => setPeerInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                void handleStartConversation();
-              }
-            }}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!peerInput.trim() || isStartingConversation}
-            onClick={() => {
-              void handleStartConversation();
-            }}
-          >
-            Start
-          </Button>
+      <div className="chat-sidebar-header shrink-0 space-y-3 border-b p-4">
+        <div className="flex items-center gap-2.5">
+          <div className="chat-sidebar-header__icon flex h-8 w-8 items-center justify-center rounded-lg">
+            <MessageSquare className="h-4.5 w-4.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="chat-text-strong text-sm font-semibold leading-tight">
+              {t("chat.messages.title", { defaultValue: "Messages" })}
+            </h2>
+          </div>
+          {conversations.length > 0 ? (
+            <span
+              className="chat-count-badge rounded-full px-2 py-0.5 text-[10px] font-medium tabular-nums"
+              aria-label={t("chat.messages.countAria", {
+                defaultValue: "{{count}} conversations",
+                count: conversations.length,
+              })}
+            >
+              {conversations.length}
+            </span>
+          ) : null}
         </div>
-        {error ? <p className="text-xs text-red-600">{error}</p> : null}
+
+        <ChatContactSearch
+          currentUid={currentUid}
+          conversations={conversations}
+          onStartConversation={onStartConversation}
+          onOpenExistingConversation={onSelectConversation}
+          isStartingConversation={isStartingConversation}
+        />
+
+        {error ? (
+          <div className="rounded-lg border border-red-100 bg-red-50 px-2 py-1.5">
+            <p className="text-xs text-red-600">{error}</p>
+          </div>
+        ) : null}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="chat-sidebar-list flex-1 overflow-y-auto">
         {isLoading ? (
-          <p className="px-3 py-4 text-sm text-slate-500">Loading conversations...</p>
+          <div className="space-y-1 p-2">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-3">
+                <div className="h-11 w-11 animate-pulse rounded-full bg-slate-100" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 w-3/5 animate-pulse rounded bg-slate-100" />
+                  <div className="h-3 w-4/5 animate-pulse rounded bg-slate-50" />
+                  <div className="h-2.5 w-2/5 animate-pulse rounded bg-slate-50" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : null}
 
         {!isLoading && sortedConversations.length === 0 ? (
-          <p className="px-3 py-4 text-sm text-slate-500">
-            No conversation yet. Enter a user ID to start direct chat.
-          </p>
+          <div className="px-6 py-12 text-center">
+            <div className="chat-empty-orb mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <MessageSquare className="h-7 w-7" />
+            </div>
+            <p className="chat-text-strong mb-1 text-sm font-medium">
+              {t("chat.messages.noConversations", { defaultValue: "No conversations yet" })}
+            </p>
+            <p className="text-xs leading-relaxed text-slate-500">
+              {t("chat.messages.searchToStart", {
+                defaultValue: "Search for a contact above to start chatting.",
+              })}
+            </p>
+          </div>
         ) : null}
 
-        {sortedConversations.map((conversation) => {
-          const isSelected = selectedConversationId === conversation.id;
-          return (
-            <button
-              key={conversation.id}
-              type="button"
-              data-conversation-id={conversation.id}
-              data-selected={isSelected ? "true" : "false"}
-              className={`w-full text-left border-b border-[#EFF4E7] px-3 py-3 transition ${
-                isSelected ? "bg-[#EAF4D7]" : "hover:bg-[#F7FAF1]"
-              }`}
-              onClick={() => onSelectConversation(conversation.id)}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="font-medium text-sm text-[#2E3A27]">
-                  {peerLabel(conversation.peerUid)}
-                </p>
-                {conversation.unreadCount > 0 ? (
-                  <Badge variant="secondary">{conversation.unreadCount}</Badge>
-                ) : null}
-              </div>
-              <p className="text-xs text-slate-500 line-clamp-1 mt-1">
-                {conversation.lastMessageText || "No messages yet"}
-              </p>
-              <p className="text-[11px] text-slate-400 mt-1">
-                {formatTime(conversation.lastMessageAt)}
-              </p>
-            </button>
-          );
-        })}
+        {sortedConversations.length > 0 ? (
+          <div className="space-y-0.5 p-1.5">
+            {sortedConversations.map((conversation) => (
+              <ChatConversationItem
+                key={conversation.id}
+                conversation={conversation}
+                isSelected={selectedConversationId === conversation.id}
+                onSelect={() => onSelectConversation(conversation.id)}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
     </aside>
   );

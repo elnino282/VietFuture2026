@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { BarChart3, PieChart as PieChartIcon } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
     BarChart,
     Bar,

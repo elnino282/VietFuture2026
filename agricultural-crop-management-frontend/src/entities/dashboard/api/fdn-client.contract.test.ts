@@ -36,6 +36,7 @@ describe('dashboardFdnApi contract', () => {
     expect(result.fdn.status).toBe('estimated');
     expect(result.inputsBreakdown.controlSupplyN).toBeNull();
     expect(result.fdnMineralMetric.status).toBe('measured');
+    expect(result.unavailableReasons).toContain('NO_HARVEST');
   });
 
   it('parses field metrics contract from drill-down endpoint', async () => {
@@ -73,7 +74,7 @@ describe('dashboardFdnApi contract', () => {
     expect(result.recommendationSource).toBe('product_rule_config_v1');
   });
 
-  it('parses field map contract with metadata and missing geometry fallback data', async () => {
+  it('parses field map contract with separated boundary/missing-boundary lists', async () => {
     httpMocks.get.mockResolvedValueOnce({ data: fieldMapFixture });
 
     const result = await dashboardFdnApi.getFieldMap({ seasonId: 33, alertLevel: 'all' });
@@ -86,8 +87,10 @@ describe('dashboardFdnApi contract', () => {
         alertLevel: 'all',
       },
     });
-    expect(result.items[0].geometry).toBeNull();
-    expect(result.items[0].calculationMode).toBe('hybrid_estimated');
-    expect(result.items[0].missingInputs[0]).toBe('MINERAL_FERTILIZER');
+    expect(result.fieldsWithBoundary).toHaveLength(0);
+    expect(result.fieldsMissingBoundary[0].boundaryGeoJson).toBeNull();
+    expect(result.fieldsMissingBoundary[0].calculationMode).toBe('hybrid_estimated');
+    expect(result.fieldsMissingBoundary[0].missingInputs[0]).toBe('MINERAL_FERTILIZER');
+    expect(result.defaultViewport?.source).toBe('FARM_LOCATION');
   });
 });

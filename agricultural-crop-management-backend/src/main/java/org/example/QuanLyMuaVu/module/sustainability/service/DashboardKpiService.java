@@ -58,7 +58,7 @@ public class DashboardKpiService {
      * Build expenses summary for a season.
      */
     public DashboardOverviewResponse.Expenses buildExpenses(org.example.QuanLyMuaVu.module.season.entity.Season season) {
-        BigDecimal totalExpense = BigDecimal.ZERO;
+        BigDecimal totalExpense = null;
         if (season != null) {
             totalExpense = expenseQueryPort.sumTotalCostBySeasonId(season.getId());
         }
@@ -71,12 +71,12 @@ public class DashboardKpiService {
             org.example.QuanLyMuaVu.module.season.entity.Season season) {
         if (season == null || season.getId() == null) {
             return DashboardOverviewResponse.TaskStatusSummary.builder()
-                    .totalTasks(0)
-                    .pendingTasks(0)
-                    .inProgressTasks(0)
-                    .completedTasks(0)
-                    .overdueTasks(0)
-                    .cancelledTasks(0)
+                    .totalTasks(null)
+                    .pendingTasks(null)
+                    .inProgressTasks(null)
+                    .completedTasks(null)
+                    .overdueTasks(null)
+                    .cancelledTasks(null)
                     .byStatus(new LinkedHashMap<>())
                     .build();
         }
@@ -107,8 +107,8 @@ public class DashboardKpiService {
     public DashboardOverviewResponse.Harvest buildHarvest(org.example.QuanLyMuaVu.module.season.entity.Season season) {
         if (season == null) {
             return DashboardOverviewResponse.Harvest.builder()
-                    .totalQuantityKg(BigDecimal.ZERO)
-                    .totalRevenue(BigDecimal.ZERO)
+                    .totalQuantityKg(null)
+                    .totalRevenue(null)
                     .build();
         }
 

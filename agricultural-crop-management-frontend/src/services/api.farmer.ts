@@ -65,6 +65,7 @@ const SeasonCostOptimizationSuggestionRequestSchema = z
     question: z.string().min(1).max(2000).optional(),
     additionalNote: z.string().min(1).max(4000).optional(),
     includeInventory: z.boolean().optional(),
+    locale: z.string().min(2).max(32).optional(),
   })
   .optional();
 
@@ -123,23 +124,31 @@ export const farmerReportsApi = {
   },
 
   getCostOptimizationSummary: async (
-    seasonId: number
+    seasonId: number,
+    locale?: string
   ): Promise<SeasonCostOptimizationSummary> => {
     const response = await httpClient.get(
-      `/api/v1/seasons/${seasonId}/cost-optimization/summary`
+      `/api/v1/seasons/${seasonId}/cost-optimization/summary`,
+      {
+        headers: locale ? { "Accept-Language": locale } : undefined,
+      }
     );
     return parseApiResponse(response.data, SeasonCostOptimizationSummarySchema);
   },
 
   getCostOptimizationAiSuggestion: async (
     seasonId: number,
-    request?: SeasonCostOptimizationSuggestionRequest
+    request?: SeasonCostOptimizationSuggestionRequest,
+    locale?: string
   ): Promise<SeasonCostOptimizationAiSuggestion> => {
     const validatedPayload =
       SeasonCostOptimizationSuggestionRequestSchema.parse(request) ?? {};
     const response = await httpClient.post(
       `/api/v1/seasons/${seasonId}/cost-optimization/ai-suggestion`,
-      validatedPayload
+      validatedPayload,
+      {
+        headers: locale ? { "Accept-Language": locale } : undefined,
+      }
     );
     return parseApiResponse(
       response.data,

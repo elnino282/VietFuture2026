@@ -1,4 +1,4 @@
-﻿import { ClipboardCheck, Loader2, Plus, Save, X } from "lucide-react";
+import { ClipboardCheck, Loader2, Plus, Save, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -6,19 +6,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/shared/ui/dialog";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
+} from "@/shared/ui/select";
+import { Textarea } from "@/shared/ui/textarea";
+import { Separator } from "@/shared/ui/separator";
 import type { HarvestFormData, HarvestGrade } from "../types";
 import { GRADE_OPTIONS } from "../constants";
 import { useSeasons } from "@/entities/season";
@@ -95,7 +95,10 @@ export function AddBatchDialog({
   );
   const hasOutputWarehouse = warehouseCount > 0 || warehouseOptions.length > 0;
   const isFormDisabled = isWriteLocked || isSubmitting;
-  const canSubmit = !isFormDisabled && hasOutputWarehouse;
+  const selectedSeasonId = seasonId
+    ?? (Number.isFinite(Number(formData.season)) ? Number(formData.season) : undefined);
+  const hasValidSeason = !!selectedSeasonId && selectedSeasonId > 0;
+  const canSubmit = !isFormDisabled && hasOutputWarehouse && hasValidSeason;
 
   const locationOptions = useMemo(
     () =>
@@ -139,8 +142,7 @@ export function AddBatchDialog({
     return Array.from(lotSet).sort((a, b) => a.localeCompare(b));
   }, [formData.productName, lotsData]);
 
-  const contextSeasonId = seasonId
-    ?? (Number.isFinite(Number(formData.season)) ? Number(formData.season) : undefined);
+  const contextSeasonId = selectedSeasonId;
   const stockContextQuery = useHarvestStockContext(contextSeasonId, {
     warehouseId: hasWarehouse ? selectedWarehouseId : undefined,
     productName: formData.productName.trim() || undefined,
@@ -177,11 +179,16 @@ export function AddBatchDialog({
               No output warehouse found. Create an output warehouse first to link harvest with inventory.
             </div>
           )}
+          {!hasValidSeason && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              Select a valid season before saving a harvest batch.
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="batchId" className="text-foreground">
-                Batch ID <span className="text-destructive">*</span>
+                Batch ID
               </Label>
               <Input
                 id="batchId"
@@ -248,7 +255,7 @@ export function AddBatchDialog({
 
             <div className="space-y-2">
               <Label htmlFor="moisture" className="text-foreground">
-                Moisture % <span className="text-destructive">*</span>
+                Moisture %
               </Label>
               <Input
                 id="moisture"

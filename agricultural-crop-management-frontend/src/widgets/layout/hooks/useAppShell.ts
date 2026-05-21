@@ -4,14 +4,12 @@ import {
     type Notification as FarmerNotification,
 } from '@/entities/notification';
 import { useTheme } from '@/hooks/useTheme';
-import { changeLanguage, getCurrentLocale, getLanguageCode } from '@/i18n';
+import i18n, { changeLanguage, getCurrentLocale, getLanguageCode } from '@/i18n';
 import { adminAlertApi, type AdminAlert } from '@/services/api.admin';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { portalConfig } from '../lib/config';
 import type { AppShellProps, Language, Notification, PortalConfig } from '../model/types';
-
-const LANGUAGE_STORAGE_KEY = 'acm_language';
 
 const getStoredLanguage = (): Language => {
     if (typeof window === 'undefined') {
@@ -37,6 +35,7 @@ export function useAppShell(props: AppShellProps) {
         onAiDrawerChange,
         aiDrawerExternalOpen,
     } = props;
+    const currentLocale = getCurrentLocale();
 
     // UI State
     const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
@@ -89,9 +88,9 @@ export function useAppShell(props: AppShellProps) {
     });
 
     const formatNotificationTime = (value: string | null | undefined) => {
-        if (!value) return 'Just now';
+        if (!value) return i18n.t('notifications.justNow');
         try {
-            return new Date(value).toLocaleString();
+            return new Date(value).toLocaleString(currentLocale);
         } catch {
             return value;
         }
@@ -117,23 +116,23 @@ export function useAppShell(props: AppShellProps) {
         return (farmerNotificationsQuery.data ?? []).map((item: FarmerNotification) => ({
             id: item.id,
             type: 'warning',
-            title: item.title || 'Notification',
-            message: item.message || 'No message provided.',
+            title: item.title || i18n.t('common.notification'),
+            message: item.message || i18n.t('common.noMessage'),
             time: formatNotificationTime(item.createdAt),
             read: Boolean(item.readAt),
         }));
-    }, [farmerNotificationsQuery.data]);
+    }, [farmerNotificationsQuery.data, i18n.language, currentLocale]);
 
     const adminNotifications = useMemo<Notification[]>(() => {
         return (adminAlertsQuery.data?.items ?? []).map((alert: AdminAlert) => ({
             id: alert.id,
             type: resolveAdminNotificationType(alert.type),
-            title: alert.title || 'System alert',
-            message: alert.message || 'No details available.',
+            title: alert.title || i18n.t('common.notification'),
+            message: alert.message || i18n.t('common.noMessage'),
             time: formatNotificationTime(alert.createdAt),
             read: alert.status ? alert.status !== 'NEW' : true,
         }));
-    }, [adminAlertsQuery.data]);
+    }, [adminAlertsQuery.data, i18n.language, currentLocale]);
 
     const notifications =
         portalType === 'FARMER'

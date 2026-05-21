@@ -1,16 +1,23 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { DashboardHistoryPoint } from '@/entities/dashboard';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Skeleton } from '@/shared/ui/skeleton';
+import type { DashboardFdnOverview } from '@/entities/dashboard';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useTranslation } from 'react-i18next';
 import { hasNumericValue } from '../lib/metrics';
+import {
+  buildUnavailableActionLinks,
+  getUnavailableReasons,
+  unavailableReasonLabel,
+} from '../lib/unavailable';
 
 interface FdnHistoryChartProps {
-  history: DashboardHistoryPoint[];
+  overview: DashboardFdnOverview | null;
   isLoading: boolean;
+  errorMessage?: string | null;
 }
 
-export function FdnHistoryChart({ history, isLoading }: FdnHistoryChartProps) {
+export function FdnHistoryChart({ overview, isLoading, errorMessage }: FdnHistoryChartProps) {
   const { t } = useTranslation();
 
   if (isLoading) {
@@ -28,6 +35,36 @@ export function FdnHistoryChart({ history, isLoading }: FdnHistoryChartProps) {
     );
   }
 
+  if (!overview) {
+    return (
+      <Card className="border-border acm-card-elevated">
+        <CardHeader>
+          <CardTitle>
+            {t('dashboard.fdn.historyTitle', { defaultValue: 'Historical Trends' })}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border border-dashed border-border p-4 space-y-2">
+            <p className="text-base font-medium">
+              {t('dashboard.fdn.unavailableTitle', {
+                defaultValue: 'FDN dashboard metrics are unavailable',
+              })}
+            </p>
+            <p className="acm-body-text text-muted-foreground">
+              {errorMessage
+                ?? t('dashboard.fdn.unavailableHint', {
+                  defaultValue: 'The dashboard is missing context or required records for this panel.',
+                })}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const history = overview.historicalTrend ?? [];
+  const unavailableReasons = getUnavailableReasons(overview);
+  const unavailableActions = buildUnavailableActionLinks(overview, unavailableReasons, t);
   const chartData = history
     .filter((point) =>
       hasNumericValue(point.fdnTotal) || hasNumericValue(point.nue) || hasNumericValue(point.yield)
@@ -39,7 +76,9 @@ export function FdnHistoryChart({ history, isLoading }: FdnHistoryChartProps) {
       yield: hasNumericValue(point.yield) ? point.yield : null,
     }));
 
-  if (!chartData.length) {
+  const hasEnoughTrendPoints = chartData.length >= 2;
+  if (!hasEnoughTrendPoints) {
+    const showUnavailableReason = unavailableReasons.length > 0;
     return (
       <Card className="border-border acm-card-elevated">
         <CardHeader>
@@ -50,16 +89,41 @@ export function FdnHistoryChart({ history, isLoading }: FdnHistoryChartProps) {
         <CardContent>
           <div className="rounded-md border border-dashed border-border p-4 space-y-2">
             <p className="text-base font-medium">
-              {t('dashboard.fdn.noHistory', {
-                defaultValue: 'No historical season metrics available.',
-              })}
+              {showUnavailableReason
+                ? t('dashboard.fdn.unavailableTitle', {
+                  defaultValue: 'FDN dashboard metrics are unavailable',
+                })
+                : t('dashboard.fdn.noHistory', {
+                  defaultValue: 'No historical season metrics available.',
+                })}
             </p>
             <p className="acm-body-text text-muted-foreground">
-              {t('dashboard.fdn.noHistoryHint', {
-                defaultValue:
-                  'Complete additional seasons and keep nutrient + harvest records to unlock trend analysis.',
-              })}
+              {showUnavailableReason
+                ? t('dashboard.fdn.unavailableHint', {
+                  defaultValue:
+                    'Complete additional seasons, harvest records and nitrogen inputs to unlock trend analysis.',
+                })
+                : t('dashboard.fdn.noHistoryHint', {
+                  defaultValue:
+                    'Complete additional seasons and keep nutrient + harvest records to unlock trend analysis.',
+                })}
             </p>
+            {showUnavailableReason && (
+              <ul className="space-y-1 acm-body-text text-muted-foreground">
+                {unavailableReasons.map((reason) => (
+                  <li key={reason}>- {unavailableReasonLabel(reason, t)}</li>
+                ))}
+              </ul>
+            )}
+            {showUnavailableReason && unavailableActions.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {unavailableActions.map((action) => (
+                  <Button key={action.key} asChild size="sm" variant="outline">
+                    <a href={action.href}>{action.label}</a>
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

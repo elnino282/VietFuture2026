@@ -18,6 +18,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface StockMovementRepository extends JpaRepository<StockMovement, Integer> {
 
+        interface LotMovementSummaryProjection {
+                Integer getLotId();
+
+                Long getMovementCount();
+
+                LocalDateTime getLatestMovementDate();
+        }
+
         boolean existsByWarehouse_Id(Integer warehouseId);
 
         boolean existsBySupplyLot_Id(Integer supplyLotId);
@@ -80,6 +88,16 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, In
                         """)
         List<StockMovement> findBySupplyLotIdOrderByMovementDateDesc(@Param("lotId") Integer lotId);
 
+        @Query("""
+                        select m.supplyLot.id as lotId,
+                               count(m.id) as movementCount,
+                               max(m.movementDate) as latestMovementDate
+                        from StockMovement m
+                        where m.supplyLot.id in :lotIds
+                        group by m.supplyLot.id
+                        """)
+        List<LotMovementSummaryProjection> summarizeBySupplyLotIds(@Param("lotIds") List<Integer> lotIds);
+
         /**
          * Find all movements for a warehouse (simpler version)
          */
@@ -93,4 +111,15 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, In
                         order by m.movementDate desc, m.id desc
                         """)
         List<StockMovement> findAllBySeasonIdWithLotAndItem(@Param("seasonId") Integer seasonId);
+
+        @Query("""
+                        select m from StockMovement m
+                        left join fetch m.supplyLot lot
+                        left join fetch lot.supplyItem item
+                        left join fetch m.warehouse w
+                        left join fetch m.location loc
+                        where w.farm.user.id = :ownerId
+                        order by m.movementDate desc, m.id desc
+                        """)
+        List<StockMovement> findRecentByOwnerId(@Param("ownerId") Long ownerId, Pageable pageable);
 }

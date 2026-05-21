@@ -1,6 +1,8 @@
 package org.example.QuanLyMuaVu.module.marketplace.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
 public record MarketplaceAdminStatsResponse(
         Long totalProducts,
@@ -11,5 +13,11 @@ public record MarketplaceAdminStatsResponse(
         Long activeOrders,
         Long completedOrders,
         Long cancelledOrders,
-        BigDecimal totalRevenue) {
+        Long pendingPaymentVerificationOrders,
+        BigDecimal totalRevenue,
+        boolean hasProducts,
+        boolean hasOrders,
+        boolean hasRevenueData,
+        LocalDateTime lastOrderAt,
+        List<String> unavailableReasons) {
 }

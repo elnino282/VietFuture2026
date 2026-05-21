@@ -10,6 +10,9 @@ import {
     ExpenseTaskAnalyticsSchema,
     ExpenseVendorAnalyticsSchema,
     ExpenseTimeSeriesSchema,
+    ExpenseCostInsightsSummarySchema,
+    ExpenseCostAiSuggestionSchema,
+    ExpenseCostSuggestionRequestSchema,
 } from '../model/schemas';
 import type {
     ExpenseListParams,
@@ -21,7 +24,24 @@ import type {
     ExpenseTaskAnalytics,
     ExpenseVendorAnalytics,
     ExpenseTimeSeries,
+    ExpenseCostInsightsSummary,
+    ExpenseCostAiSuggestion,
+    ExpenseCostSuggestionRequest,
 } from '../model/types';
+
+const normalizeExpenseListParams = (params?: ExpenseListParams) => {
+    const validatedParams = params ? ExpenseListParamsSchema.parse(params) : undefined;
+    if (!validatedParams) {
+        return undefined;
+    }
+
+    const { fromDate, toDate, ...rest } = validatedParams;
+    return {
+        ...rest,
+        from: fromDate,
+        to: toDate,
+    };
+};
 
 export const expenseApi = {
     /**
@@ -29,8 +49,8 @@ export const expenseApi = {
      * GET /api/v1/expenses (with optional seasonId, q, from, to filters)
      */
     listAll: async (params?: ExpenseListParams): Promise<PageResponse<Expense>> => {
-        const validatedParams = params ? ExpenseListParamsSchema.parse(params) : undefined;
-        const response = await httpClient.get('/api/v1/expenses', { params: validatedParams });
+        const normalizedParams = normalizeExpenseListParams(params);
+        const response = await httpClient.get('/api/v1/expenses', { params: normalizedParams });
         return parsePageResponse(response.data, ExpenseSchema);
     },
 
@@ -39,8 +59,8 @@ export const expenseApi = {
      * GET /api/v1/seasons/{seasonId}/expenses
      */
     listBySeason: async (seasonId: number, params?: ExpenseListParams): Promise<PageResponse<Expense>> => {
-        const validatedParams = params ? ExpenseListParamsSchema.parse(params) : undefined;
-        const response = await httpClient.get(`/api/v1/seasons/${seasonId}/expenses`, { params: validatedParams });
+        const normalizedParams = normalizeExpenseListParams(params);
+        const response = await httpClient.get(`/api/v1/seasons/${seasonId}/expenses`, { params: normalizedParams });
         return parsePageResponse(response.data, ExpenseSchema);
     },
 
@@ -71,37 +91,37 @@ export const expenseApi = {
     },
 
     analyticsByCategory: async (params?: ExpenseListParams): Promise<ExpenseCategoryAnalytics[]> => {
-        const validatedParams = params ? ExpenseListParamsSchema.parse(params) : undefined;
-        const response = await httpClient.get('/api/v1/expenses/analytics/by-category', { params: validatedParams });
+        const normalizedParams = normalizeExpenseListParams(params);
+        const response = await httpClient.get('/api/v1/expenses/analytics/by-category', { params: normalizedParams });
         return parseApiResponse(response.data, ExpenseCategoryAnalyticsSchema.array());
     },
 
     analyticsByTask: async (params?: ExpenseListParams): Promise<ExpenseTaskAnalytics[]> => {
-        const validatedParams = params ? ExpenseListParamsSchema.parse(params) : undefined;
-        const response = await httpClient.get('/api/v1/expenses/analytics/by-task', { params: validatedParams });
+        const normalizedParams = normalizeExpenseListParams(params);
+        const response = await httpClient.get('/api/v1/expenses/analytics/by-task', { params: normalizedParams });
         return parseApiResponse(response.data, ExpenseTaskAnalyticsSchema.array());
     },
 
     analyticsByVendor: async (params?: ExpenseListParams): Promise<ExpenseVendorAnalytics[]> => {
-        const validatedParams = params ? ExpenseListParamsSchema.parse(params) : undefined;
-        const response = await httpClient.get('/api/v1/expenses/analytics/by-vendor', { params: validatedParams });
+        const normalizedParams = normalizeExpenseListParams(params);
+        const response = await httpClient.get('/api/v1/expenses/analytics/by-vendor', { params: normalizedParams });
         return parseApiResponse(response.data, ExpenseVendorAnalyticsSchema.array());
     },
 
     analyticsTimeSeries: async (
         params?: ExpenseListParams & { granularity?: 'DAY' | 'WEEK' | 'MONTH' }
     ): Promise<ExpenseTimeSeries[]> => {
-        const validatedParams = params ? ExpenseListParamsSchema.parse(params) : undefined;
+        const normalizedParams = normalizeExpenseListParams(params);
         const response = await httpClient.get('/api/v1/expenses/analytics/timeseries', {
-            params: { ...validatedParams, granularity: params?.granularity },
+            params: { ...normalizedParams, granularity: params?.granularity },
         });
         return parseApiResponse(response.data, ExpenseTimeSeriesSchema.array());
     },
 
     exportCsv: async (params?: ExpenseListParams): Promise<Blob> => {
-        const validatedParams = params ? ExpenseListParamsSchema.parse(params) : undefined;
+        const normalizedParams = normalizeExpenseListParams(params);
         const response = await httpClient.get('/api/v1/expenses/export', {
-            params: validatedParams,
+            params: normalizedParams,
             responseType: 'blob',
         });
         return response.data as Blob;
@@ -114,5 +134,22 @@ export const expenseApi = {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return parseApiResponse(response.data, ExpenseSchema);
+    },
+
+    getCostInsightsSummary: async (seasonId: number): Promise<ExpenseCostInsightsSummary> => {
+        const response = await httpClient.get(`/api/v1/seasons/${seasonId}/cost-optimization/summary`);
+        return parseApiResponse(response.data, ExpenseCostInsightsSummarySchema);
+    },
+
+    getCostAiSuggestion: async (
+        seasonId: number,
+        request?: ExpenseCostSuggestionRequest
+    ): Promise<ExpenseCostAiSuggestion> => {
+        const payload = ExpenseCostSuggestionRequestSchema.parse(request) ?? {};
+        const response = await httpClient.post(
+            `/api/v1/seasons/${seasonId}/cost-optimization/ai-suggestion`,
+            payload
+        );
+        return parseApiResponse(response.data, ExpenseCostAiSuggestionSchema);
     },
 };

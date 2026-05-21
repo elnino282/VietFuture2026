@@ -21,6 +21,7 @@ export type MarketplaceOrderStatus =
   | "COMPLETED"
   | "CANCELLED"
   | "REJECTED"
+  // Legacy compatibility aliases (old fixtures / migrated records).
   | "PENDING"
   | "DELIVERING";
 
@@ -367,13 +368,24 @@ export type MarketplaceUpdatePaymentVerificationRequest = {
   verificationNote?: string;
 };
 
+export type MarketplaceStatsUnavailableReason =
+  | "NO_PRODUCTS"
+  | "NO_ORDERS"
+  | "NO_REVENUE_DATA"
+  | "NO_COMPLETED_ORDERS";
+
 export type MarketplaceFarmerDashboard = {
   totalProducts: number;
   pendingReviewProducts: number;
   publishedProducts: number;
   lowStockProducts: number;
   pendingOrders: number;
-  totalRevenue: number;
+  totalRevenue: number | null;
+  hasProducts: boolean;
+  hasOrders: boolean;
+  hasRevenueData: boolean;
+  lastOrderAt: string | null;
+  unavailableReasons: MarketplaceStatsUnavailableReason[];
   recentOrders: MarketplaceOrder[];
 };
 
@@ -386,7 +398,13 @@ export type MarketplaceAdminStats = {
   activeOrders: number;
   completedOrders: number;
   cancelledOrders: number;
-  totalRevenue: number;
+  pendingPaymentVerificationOrders: number;
+  totalRevenue: number | null;
+  hasProducts: boolean;
+  hasOrders: boolean;
+  hasRevenueData: boolean;
+  lastOrderAt: string | null;
+  unavailableReasons: MarketplaceStatsUnavailableReason[];
 };
 
 export type MarketplaceProductPage = MarketplacePage<MarketplaceProductSummary>;

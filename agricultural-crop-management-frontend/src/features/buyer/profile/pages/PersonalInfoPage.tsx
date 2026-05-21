@@ -1,30 +1,56 @@
 import { useState } from 'react';
 import { useAuth } from '@/features/auth';
-import { Button, Card, CardContent, CardHeader, Input, Label, Dialog } from '@/shared/ui';
-import { PersonalInfoForm } from '../components/PersonalInfoForm';
+import { useProfileMe, useProfileUpdate } from '@/entities/user';
+import { Button, Card, CardContent, CardHeader, Dialog, Input, Label } from '@/shared/ui';
+import axios from 'axios';
 import { toast } from 'sonner';
+import { PersonalInfoForm } from '../components/PersonalInfoForm';
+
+type PersonalInfoFormData = {
+  name: string;
+  phone: string;
+};
+
+function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const apiMessage = (error.response?.data as { message?: string } | undefined)?.message;
+    if (apiMessage) {
+      return apiMessage;
+    }
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return 'Có lỗi xảy ra khi cập nhật thông tin';
+}
 
 export function PersonalInfoPage() {
   const { user } = useAuth();
+  const profileQuery = useProfileMe();
+  const updateProfile = useProfileUpdate();
   const [isEditing, setIsEditing] = useState(false);
 
   const userData = {
-    name: user?.profile?.fullName || user?.username || '',
-    email: user?.email || user?.profile?.email || '',
-    phone: user?.profile?.phone || '',
+    name: profileQuery.data?.fullName || user?.profile?.fullName || user?.username || '',
+    email: profileQuery.data?.email || user?.email || user?.profile?.email || '',
+    phone: profileQuery.data?.phone || user?.profile?.phone || '',
   };
 
-  const handleSave = async (data: { name: string; phone: string }) => {
+  const handleSave = async (data: PersonalInfoFormData) => {
     try {
-      // TODO: Implement profile update API call
-      // await updateProfile(data);
-      console.log('Saving profile:', data);
+      await updateProfile.mutateAsync({
+        fullName: data.name,
+        phone: data.phone,
+      });
+
       toast.success('Cập nhật thông tin thành công');
       setIsEditing(false);
     } catch (error) {
-      console.error('Profile update failed:', error);
-      toast.error('Có lỗi xảy ra khi cập nhật thông tin');
-      // Dialog stays open so user can retry
+      const message = getErrorMessage(error);
+      toast.error(message);
+      throw new Error(message);
     }
   };
 
@@ -33,7 +59,11 @@ export function PersonalInfoPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <h2 className="text-xl font-bold">Thông tin cá nhân</h2>
-          <Button variant="outline" onClick={() => setIsEditing(true)}>
+          <Button
+            variant="outline"
+            onClick={() => setIsEditing(true)}
+            disabled={updateProfile.isPending}
+          >
             Chỉnh sửa
           </Button>
         </CardHeader>

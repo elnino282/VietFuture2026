@@ -39,6 +39,7 @@
     "status": "Trạng thái",
     "name": "Tên",
     "description": "Mô tả",
+    "priorityHigh": "Cao",
     "type": "Loại",
     "date": "Ngày",
     "from": "Từ",
@@ -69,7 +70,11 @@
     "error": {
       "title": "Đã xảy ra lỗi",
       "description": "Có lỗi không mong muốn. Vui lòng thử lại."
-    }
+    },
+    "loadingPageTransition": "Đang chuyển trang",
+    "details": "Chi tiết",
+    "signedOut": "Đăng xuất thành công",
+    "markRead": "Đánh dấu đã đọc"
   },
   "nav": {
     "dashboard": "Trang chủ",
@@ -78,6 +83,7 @@
     "seasons": "Mùa vụ",
     "tasks": "Công việc",
     "fieldLogs": "Nhật ký đồng ruộng",
+    "disease": "Theo dõi dịch bệnh",
     "expenses": "Chi phí",
     "harvest": "Thu hoạch",
     "suppliersSupplies": "Nhà cung cấp & Vật tư",
@@ -92,13 +98,18 @@
     "usersRoles": "Người dùng & Vai trò",
     "cropsVarieties": "Cây trồng & Giống",
     "reports": "Báo cáo",
-    "marketplace": "Chợ nông sản",
+    "marketplace": "Workspace bán hàng",
     "orders": "Đơn hàng",
     "traceability": "Truy xuất nguồn gốc",
     "progress": "Tiến độ",
     "payroll": "Bảng lương",
     "settings": "Cài đặt",
-    "collapse": "Thu gọn"
+    "collapse": "Thu gọn",
+    "nutrientInputs": "Nhập dinh dưỡng",
+    "irrigationWaterAnalysis": "Tưới tiêu & Phân tích nước",
+    "soilTests": "Xét nghiệm đất",
+    "home": "Trang chủ",
+    "toggleSidebar": "Thu gọn/mở rộng điều hướng"
   },
   "userMenu": {
     "profile": "Hồ sơ",
@@ -117,6 +128,39 @@
     "farmer": "Cổng Nông dân",
     "buyer": "Cổng Người mua",
     "employee": "Cổng Nhân công"
+  },
+  "dashboardHeader": {
+    "viewYourStore": "Xem cửa hàng của bạn",
+    "backToShop": "Quay lại chợ"
+  },
+  "farmerPortal": {
+    "views": {
+      "dashboard": { "title": "Trang chủ", "breadcrumb": "Trang chủ" },
+      "search": { "title": "Tìm kiếm", "breadcrumb": "Tìm kiếm" },
+      "farms": { "title": "Nông trại & Thửa đất", "breadcrumb": "Nông trại & Thửa đất" },
+      "plots": { "title": "Quản lý thửa đất", "breadcrumb": "Quản lý thửa đất" },
+      "seasons": { "title": "Mùa vụ", "breadcrumb": "Mùa vụ" },
+      "tasks": { "title": "Không gian công việc", "breadcrumb": "Không gian công việc" },
+      "fieldLogs": { "title": "Nhật ký đồng ruộng", "breadcrumb": "Nhật ký đồng ruộng" },
+      "expenses": { "title": "Chi phí", "breadcrumb": "Chi phí" },
+      "harvest": { "title": "Thu hoạch", "breadcrumb": "Thu hoạch" },
+      "nutrientInputs": { "title": "Dinh dưỡng", "breadcrumb": "Dinh dưỡng" },
+      "suppliersSupplies": { "title": "Nhà cung cấp & Vật tư", "breadcrumb": "Nhà cung cấp & Vật tư" },
+      "laborManagement": { "title": "Quản lý nhân công", "breadcrumb": "Quản lý nhân công" },
+      "inventory": { "title": "Kho vật tư", "breadcrumb": "Kho vật tư" },
+      "productWarehouse": { "title": "Kho sản phẩm", "breadcrumb": "Kho sản phẩm" },
+      "marketplaceWorkspace": { "title": "Không gian sàn thương mại", "breadcrumb": "Sàn thương mại" },
+      "marketplaceDashboard": { "title": "Tổng quan sàn thương mại", "breadcrumb": "Tổng quan sàn thương mại" },
+      "marketplaceProducts": { "title": "Sản phẩm sàn thương mại", "breadcrumb": "Sản phẩm sàn thương mại" },
+      "marketplaceOrders": { "title": "Đơn hàng sàn thương mại", "breadcrumb": "Đơn hàng sàn thương mại" },
+      "documents": { "title": "Tài liệu", "breadcrumb": "Tài liệu" },
+      "incidents": { "title": "Sự cố", "breadcrumb": "Sự cố" },
+      "aiAssistant": { "title": "Trợ lý AI", "breadcrumb": "Trợ lý AI" },
+      "crops": { "title": "Quản lý cây trồng", "breadcrumb": "Quản lý cây trồng" },
+      "reports": { "title": "Báo cáo", "breadcrumb": "Báo cáo" },
+      "profile": { "title": "Hồ sơ", "breadcrumb": "Hồ sơ" },
+      "settings": { "title": "Tùy chọn", "breadcrumb": "Tùy chọn" }
+    }
   },
   "header": {
     "aiAssistant": "Trợ lý AI",
@@ -372,6 +416,19 @@
       "subtitle": "Các mặt hàng cần bổ sung",
       "orderButton": "Đặt hàng"
     },
+    "inventoryAlerts": {
+      "title": "Cảnh báo tồn kho",
+      "empty": "No inventory alerts",
+      "quantity": "Số lượng",
+      "expiryDate": "Hạn dùng",
+      "reason": "Lý do",
+      "summary": {
+        "expired": "Đã hết hạn",
+        "expiringSoon": "Sắp hết hạn",
+        "lowStock": "Tồn thấp",
+        "noMovement": "Không biến động"
+      }
+    },
     "fdn": {
       "selectSeason": "Chọn mùa vụ",
       "weatherSummary": "Tóm tắt thời tiết",
@@ -389,6 +446,22 @@
       "notAvailable": "Không có",
       "metricMissing": "Chưa đủ dữ liệu",
       "metricUnavailable": "Không khả dụng",
+      "unavailableTitle": "Bảng FDN hiện chưa khả dụng",
+      "unavailableHint": "Bổ sung bối cảnh mùa vụ, dữ liệu thu hoạch và dữ liệu đầu vào đạm để mở khóa chỉ số.",
+      "unavailableReason": {
+        "NO_ACTIVE_SEASON": "Không có mùa vụ đang hoạt động cho ngữ cảnh dashboard hiện tại.",
+        "NO_HARVEST": "Chưa có bản ghi thu hoạch cho mùa vụ được chọn.",
+        "MISSING_NITROGEN_INPUT": "Thiếu dữ liệu đầu vào đạm (phân vô cơ/hữu cơ).",
+        "MISSING_PLOT_AREA": "Thiếu diện tích thửa nên không thể tính chỉ số theo ha.",
+        "INSUFFICIENT_HISTORY": "Chưa đủ số mùa vụ để xây dựng xu hướng lịch sử."
+      },
+      "cta": {
+        "createSeason": "Đến trang Mùa vụ",
+        "addHarvest": "Thêm bản ghi thu hoạch",
+        "addNutrientInput": "Thêm dữ liệu đầu vào đạm",
+        "addIrrigationAnalysis": "Thêm phân tích nước tưới",
+        "addSoilTest": "Thêm kết quả xét nghiệm đất"
+      },
       "metricStatus": {
         "measured": "Đo thực tế",
         "estimated": "Ước tính",
@@ -403,6 +476,13 @@
       "calculationMode": "Chế độ tính",
       "confidence": "Độ tin cậy",
       "assistantTitle": "Hành động đề xuất",
+      "assistantInputAction": {
+        "fertilizer": "Ghi nhận đầu vào đạm từ phân vô cơ/hữu cơ trong workspace mùa vụ.",
+        "irrigation": "Thêm bản ghi phân tích nước tưới để đo đạm từ nước tưới.",
+        "soil": "Bổ sung dữ liệu xét nghiệm đất để mở khóa đạm tồn dư trong đất.",
+        "fixation": "Bổ sung dữ liệu cố định đạm sinh học cho mùa vụ hiện tại.",
+        "generic": "Hoàn thiện dữ liệu đầu vào đạm còn thiếu trong workspace mùa vụ."
+      },
       "recommendationSource": "Nguồn rule gợi ý",
       "lowConfidenceNotice": "Độ tin cậy dữ liệu thấp, ưu tiên xác minh thêm dữ liệu trước khi giảm mạnh lượng phân bón.",
       "dataQuality": "Chất lượng dữ liệu",
@@ -443,6 +523,8 @@
       "upcomingTasksTitle": "Công việc sắp tới",
       "noTodayTasks": "Không có công việc hôm nay.",
       "noUpcomingTasks": "Không có công việc sắp tới.",
+      "dataCompletenessTitle": "Thiếu dữ liệu bắt buộc",
+      "noDataCompletenessWarnings": "Không có cảnh báo thiếu dữ liệu.",
       "map": {
         "title": "Bản đồ bền vững theo thửa",
         "farmFallback": "Nông trại {{id}}",
@@ -473,6 +555,37 @@
         "fallbackHint": "Bạn vẫn có thể xem danh sách thửa và bổ sung ranh giới tại trang quản lý nông trại.",
         "manageFieldsCta": "Đến trang Nông trại & Thửa",
         "listFallbackTitle": "Danh sách thửa thay thế"
+      }
+    },
+    "incidentAlerts": {
+      "title": "Cảnh báo sự cố & rủi ro",
+      "empty": "Không có cảnh báo sự cố, quá hạn hoặc rủi ro bền vững.",
+      "type": {
+        "highSeverityIncident": "Sự cố mức nghiêm trọng cao",
+        "openIncident": "Sự cố đang mở",
+        "overdueTask": "Công việc quá hạn",
+        "sustainabilityWarning": "Cảnh báo bền vững",
+        "seasonRisk": "Rủi ro mùa vụ"
+      },
+      "severity": {
+        "critical": "Nghiêm trọng",
+        "high": "Cao",
+        "medium": "Trung bình",
+        "low": "Thấp"
+      },
+      "meta": {
+        "created": "Tạo lúc: {{value}}",
+        "due": "Hạn: {{value}}",
+        "plot": "Thửa #{{plotId}}"
+      }
+    },
+    "recentActivityTimeline": {
+      "title": "Hoạt động gần đây",
+      "subtitle": "Các thao tác và cập nhật mới nhất trên nông trại của bạn",
+      "loading": "Đang tải hoạt động gần đây...",
+      "empty": "Chưa có hoạt động nào.",
+      "actions": {
+        "open": "Mở"
       }
     }
   },
@@ -560,6 +673,447 @@
       "cancelConfirm": "Hủy mùa vụ"
     }
   },
+  "seasonWorkspace": {
+    "subtitle": "Không gian làm việc mùa vụ",
+    "fallbackSeasonName": "Mùa vụ #{{id}}",
+    "invalidSeason": "Mùa vụ không hợp lệ.",
+    "backToSeasons": "Quay lại danh sách mùa vụ",
+    "lockedReason": "Mùa vụ đã khóa. Không thể ghi mới hoặc cập nhật dữ liệu workspace.",
+    "processingMessage": "Đang xử lý dữ liệu mùa vụ...",
+    "employeeFallback": "Nhân công #{{id}}",
+    "status": {
+      "planned": "Lên kế hoạch",
+      "active": "Đang canh tác",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy",
+      "archived": "Lưu trữ",
+      "unknown": "Không xác định"
+    },
+    "harvestWorkflow": {
+      "completed": "Đã thu hoạch xong",
+      "inProgress": "Đang thu hoạch",
+      "notStarted": "Chưa thu hoạch"
+    },
+    "actions": {
+      "addTask": "Thêm công việc",
+      "recordExpense": "Ghi chi phí",
+      "createFieldLog": "Tạo nhật ký",
+      "recordHarvest": "Thu hoạch",
+      "interimReport": "Xem báo cáo tạm tính",
+      "finalReport": "Xem báo cáo tổng kết mùa vụ"
+    },
+    "details": {
+      "crop": "Cây trồng",
+      "plot": "Lô đất",
+      "duration": "Thời gian mùa vụ",
+      "upcomingTask": "Công việc sắp tới",
+      "noUpcomingTask": "Không có công việc sắp tới"
+    },
+    "metrics": {
+      "pending": "Sắp làm",
+      "inProgress": "Đang làm",
+      "overdue": "Trễ hạn",
+      "completed": "Hoàn thành",
+      "expenses": "Chi phí",
+      "logs": "Nhật ký",
+      "harvestBatches": "Đợt thu hoạch",
+      "harvestedYield": "Sản lượng thu"
+    },
+    "harvestProgress": {
+      "title": "Tiến độ thu hoạch (ước tính theo sản lượng)",
+      "summary": "Đã thu: {{harvestedKg}} kg",
+      "summaryWithTarget": "Đã thu: {{harvestedKg}} kg / Mục tiêu: {{targetKg}} kg"
+    },
+    "units": {
+      "kg": "kg"
+    },
+    "validation": {
+      "logDateAfterStart": "Ngày ghi phải sau hoặc bằng ngày bắt đầu mùa vụ ({{date}})",
+      "logDateBeforeEnd": "Ngày ghi phải trước hoặc bằng ngày kết thúc mùa vụ ({{date}})"
+    },
+    "toast": {
+      "createTaskSuccess": "Đã tạo công việc",
+      "createTaskError": "Không thể tạo công việc",
+      "noOutputWarehouse": "Không có kho đầu ra. Hãy tạo kho trước khi ghi nhận thu hoạch."
+    }
+  },
+  "seasonWorkspaceOverview": {
+    "openModule": "Mở module",
+    "modules": {
+      "tasks": {
+        "title": "Không gian công việc",
+        "description": "Theo dõi công việc theo trạng thái: chờ xử lý, đang làm, trễ hạn và hoàn thành."
+      },
+      "expenses": {
+        "title": "Chi phí",
+        "description": "Ghi nhận chi phí vận hành gắn với mùa vụ và công việc đang hoạt động."
+      },
+      "fieldLogs": {
+        "title": "Nhật ký đồng ruộng",
+        "description": "Ghi lại hoạt động đồng ruộng theo ngày để theo dõi nhanh hằng ngày."
+      },
+      "disease": {
+        "title": "Theo dõi dịch bệnh",
+        "description": "Theo dõi lịch sử bệnh, mức độ nghiêm trọng và tiến trình điều trị theo mùa vụ."
+      },
+      "harvest": {
+        "title": "Thu hoạch",
+        "description": "Ghi nhận các đợt thu hoạch và theo dõi tiến độ thu hoạch của mùa vụ."
+      },
+      "labor": {
+        "title": "Quản lý nhân công",
+        "description": "Phân công nhân lực, theo dõi tiến độ và quản lý lương trong mùa vụ này."
+      },
+      "nutrient": {
+        "title": "Nhập dinh dưỡng",
+        "description": "Nhập dữ liệu dinh dưỡng cho nguồn khoáng và hữu cơ."
+      },
+      "irrigation": {
+        "title": "Phân tích tưới tiêu",
+        "description": "Nhập dữ liệu phân tích nước tưới cho các chỉ số NO3/NH4/Tổng N."
+      },
+      "soil": {
+        "title": "Xét nghiệm đất",
+        "description": "Nhập kết quả xét nghiệm đất (SOM, nitrate, ammonium, khoáng N)."
+      },
+      "reports": {
+        "title": "Báo cáo",
+        "description": "Xem báo cáo tạm thời/tổng kết và gợi ý tối ưu chi phí có hỗ trợ AI."
+      }
+    }
+  },
+  "seasonNutrientWorkspace": {
+    "title": "Nhập liệu nutrient inputs",
+    "loadingSeason": "Đang tải thông tin mùa vụ...",
+    "meta": {
+      "season": "Mùa vụ",
+      "plot": "Thửa đất",
+      "crop": "Cây trồng"
+    },
+    "alerts": {
+      "missingPlotTitle": "Thiếu liên kết thửa đất",
+      "missingPlotDescription": "Mùa vụ này chưa có `plotId`, chưa thể submit nutrient input.",
+      "writeLockedTitle": "Mùa vụ đã khóa",
+      "writeLockedDescription": "Mùa vụ đã khóa. Không thể ghi mới nutrient input."
+    },
+    "form": {
+      "inputSource": "Loại input",
+      "inputSourcePlaceholder": "Chọn loại input",
+      "sourceType": "Nguồn dữ liệu",
+      "sourceTypePlaceholder": "Chọn nguồn dữ liệu",
+      "value": "Giá trị N",
+      "valuePlaceholder": "Ví dụ: 24.5",
+      "unit": "Đơn vị",
+      "unitPlaceholder": "Chọn đơn vị",
+      "recordedAt": "Ngày ghi nhận",
+      "sourceDocument": "Tài liệu tham chiếu",
+      "sourceDocumentPlaceholder": "Ví dụ: lab-report-2026-03-11.pdf",
+      "note": "Ghi chú",
+      "notePlaceholder": "Mô tả thêm về nguồn hoặc điều kiện đo...",
+      "sourceTypeOptions": {
+        "userEntered": "Người dùng nhập",
+        "labMeasured": "Đo kiểm phòng lab",
+        "externalReference": "Tham chiếu bên ngoài"
+      },
+      "inputSourceOptions": {
+        "mineral": "Phân bón vô cơ (mineral)",
+        "organic": "Phân hữu cơ / manure"
+      },
+      "unitOptions": {
+        "kgN": "kg N / mùa vụ",
+        "kgNPerHa": "kg N / ha"
+      }
+    },
+    "actions": {
+      "save": "Lưu nutrient input",
+      "saveAndOpenDashboard": "Lưu và mở Dashboard"
+    },
+    "list": {
+      "title": "Danh sách nutrient inputs của mùa vụ",
+      "loading": "Đang tải dữ liệu nutrient inputs...",
+      "empty": "Chưa có bản ghi nutrient input nào cho mùa vụ này.",
+      "headers": {
+        "date": "Ngày",
+        "inputType": "Loại input",
+        "value": "Giá trị",
+        "source": "Nguồn dữ liệu",
+        "status": "Trạng thái"
+      }
+    },
+    "validation": {
+      "valueRequired": "Giá trị đạm là bắt buộc",
+      "nonNegative": "Giá trị phải lớn hơn hoặc bằng 0",
+      "recordedAtRequired": "Ngày ghi nhận là bắt buộc",
+      "plotRequired": "Mùa vụ chưa gắn với thửa đất hợp lệ, chưa thể ghi nhận nutrient input."
+    },
+    "toast": {
+      "createSuccess": "Đã lưu dữ liệu nutrient input",
+      "createError": "Không thể lưu nutrient input"
+    }
+  },
+  "seasonIrrigationWorkspace": {
+    "title": "Irrigation Water Analysis",
+    "loadingSeason": "Đang tải thông tin mùa vụ...",
+    "meta": {
+      "season": "Mùa vụ",
+      "plot": "Thửa đất",
+      "crop": "Cây trồng"
+    },
+    "alerts": {
+      "missingPlotTitle": "Thiếu liên kết thửa đất",
+      "missingPlotDescription": "Mùa vụ này chưa có `plotId`, chưa thể submit irrigation water analysis.",
+      "writeLockedTitle": "Mùa vụ đã khóa",
+      "writeLockedDescription": "Mùa vụ đã khóa. Không thể ghi mới irrigation water analysis."
+    },
+    "form": {
+      "sampleDate": "Ngày lấy mẫu",
+      "sourceType": "Nguồn dữ liệu",
+      "sourceTypePlaceholder": "Chọn nguồn dữ liệu",
+      "nitrate": "Nitrate (mg N/L)",
+      "nitratePlaceholder": "Ví dụ: 4.2",
+      "ammonium": "Ammonium (mg N/L)",
+      "ammoniumPlaceholder": "Ví dụ: 1.8",
+      "totalN": "Total N (mg N/L)",
+      "totalNPlaceholder": "Nếu có total N thì ưu tiên sử dụng",
+      "volume": "Thể tích tưới (m3)",
+      "volumePlaceholder": "Ví dụ: 500",
+      "sourceDocument": "Tài liệu tham chiếu",
+      "sourceDocumentPlaceholder": "Ví dụ: water-lab-report.pdf",
+      "labReference": "Lab reference",
+      "labReferencePlaceholder": "LAB-IRR-101",
+      "note": "Ghi chú",
+      "notePlaceholder": "Mô tả bổ sung điều kiện lấy mẫu...",
+      "sourceTypeOptions": {
+        "userEntered": "Người dùng nhập",
+        "labMeasured": "Đo phòng lab",
+        "externalReference": "Tham chiếu bên ngoài"
+      }
+    },
+    "actions": {
+      "save": "Lưu irrigation analysis",
+      "saveAndOpenDashboard": "Lưu và mở Dashboard"
+    },
+    "list": {
+      "title": "Danh sách irrigation water analyses",
+      "loading": "Đang tải danh sách irrigation analyses...",
+      "empty": "Chưa có bản ghi irrigation water analysis cho mùa vụ này.",
+      "headers": {
+        "date": "Ngày",
+        "effectiveN": "Effective N (mg/L)",
+        "volume": "Volume (m3)",
+        "nContribution": "N contribution (kg)",
+        "source": "Nguồn",
+        "status": "Trạng thái"
+      }
+    },
+    "validation": {
+      "sampleDateRequired": "Ngày lấy mẫu là bắt buộc",
+      "volumeRequired": "Thể tích tưới là bắt buộc",
+      "nonNegative": "Giá trị phải >= 0",
+      "nitrogenRequired": "Cần nhập total N hoặc nitrate/ammonium",
+      "plotRequired": "Mùa vụ chưa gắn plot hợp lệ, chưa thể submit."
+    },
+    "toast": {
+      "createSuccess": "Đã lưu irrigation water analysis",
+      "createError": "Không thể lưu irrigation water analysis"
+    }
+  },
+  "seasonSoilWorkspace": {
+    "title": "Soil Test",
+    "loadingSeason": "Đang tải thông tin mùa vụ...",
+    "meta": {
+      "season": "Mùa vụ",
+      "plot": "Thửa đất",
+      "crop": "Cây trồng"
+    },
+    "alerts": {
+      "missingPlotTitle": "Thiếu liên kết thửa đất",
+      "missingPlotDescription": "Mùa vụ này chưa có plotId, chưa thể submit soil test.",
+      "writeLockedTitle": "Mùa vụ đã khóa",
+      "writeLockedDescription": "Mùa vụ đã khóa. Không thể ghi mới soil test."
+    },
+    "form": {
+      "sampleDate": "Ngày lấy mẫu",
+      "sourceType": "Nguồn dữ liệu",
+      "sourceTypePlaceholder": "Chọn nguồn dữ liệu",
+      "mineralN": "Mineral N (kg N/ha)",
+      "mineralNPlaceholder": "Ví dụ: 12.5",
+      "soilOrganicMatter": "Soil organic matter (%)",
+      "soilOrganicMatterPlaceholder": "Ví dụ: 2.1",
+      "nitrate": "Nitrate (mg/kg)",
+      "nitratePlaceholder": "Ví dụ: 11.2",
+      "ammonium": "Ammonium (mg/kg)",
+      "ammoniumPlaceholder": "Ví dụ: 1.8",
+      "sourceDocument": "Tài liệu tham chiếu",
+      "sourceDocumentPlaceholder": "Ví dụ: soil-lab-report.pdf",
+      "labReference": "Lab reference",
+      "labReferencePlaceholder": "LAB-SOIL-21",
+      "note": "Ghi chú",
+      "notePlaceholder": "Mô tả bổ sung về mẫu đất...",
+      "sourceTypeOptions": {
+        "userEntered": "Người dùng nhập",
+        "labMeasured": "Đo phòng lab",
+        "externalReference": "Tham chiếu bên ngoài"
+      }
+    },
+    "actions": {
+      "save": "Lưu soil test",
+      "saveAndOpenDashboard": "Lưu và mở Dashboard"
+    },
+    "list": {
+      "title": "Danh sách soil tests",
+      "loading": "Đang tải danh sách soil tests...",
+      "empty": "Chưa có bản ghi soil test cho mùa vụ này.",
+      "headers": {
+        "date": "Ngày",
+        "mineralN": "Mineral N (kg/ha)",
+        "soilOrganicMatter": "SOM (%)",
+        "nContribution": "N contribution (kg)",
+        "source": "Nguồn",
+        "status": "Trạng thái"
+      }
+    },
+    "validation": {
+      "sampleDateRequired": "Ngày lấy mẫu là bắt buộc",
+      "mineralNRequired": "Mineral N là bắt buộc",
+      "nonNegative": "Giá trị phải >= 0",
+      "plotRequired": "Mùa vụ chưa gắn plot hợp lệ, chưa thể submit."
+    },
+    "toast": {
+      "createSuccess": "Đã lưu soil test",
+      "createError": "Không thể lưu soil test"
+    }
+  },
+  "seasonReportsWorkspace": {
+    "loading": "Đang tải dữ liệu báo cáo...",
+    "notFound": "Không tìm thấy mùa vụ.",
+    "interimLockedMessage": "Báo cáo tạm tính sẽ mở khi đã có sản lượng thực tế ghi nhận. Hiện tại tiến độ là {{progress}}%.",
+    "harvestProgress": "Tiến độ thu hoạch: {{progress}}%",
+    "finalDescription": "Dữ liệu mùa vụ đã đạt mốc 100%. Bạn có thể xem báo cáo tổng kết và đối chiếu chỉ tiêu cuối vụ.",
+    "interimDescription": "Dữ liệu đang được cập nhật theo tiến độ thu hoạch. Các chỉ số tài chính và năng suất có thể thay đổi.",
+    "badges": {
+      "final": "Báo cáo tổng kết",
+      "interim": "Báo cáo tạm tính"
+    },
+    "actions": {
+      "goToHarvest": "Đi tới Thu hoạch",
+      "backToWorkspace": "Về tổng quan workspace"
+    }
+  },
+  "laborWorkspace": {
+    "title": "Quản lý Nhân công",
+    "currentSeasonLabel": "Mùa vụ hiện tại: {{season}}",
+    "selectSeasonToStart": "Chọn mùa vụ để bắt đầu",
+    "selectSeasonPlaceholder": "Chọn mùa vụ...",
+    "loadingSeasons": "Đang tải danh sách mùa vụ...",
+    "emptySeasonsTitle": "Chưa có mùa vụ nào",
+    "emptySeasonsDescription": "Vui lòng tạo một mùa vụ trước khi quản lý nhân công.",
+    "lockedSeasonBanner": "Mùa vụ hiện tại đã khóa. Chỉ được xem kế hoạch và dữ liệu nhân công, không thể thêm/xóa/phân công/chạy lương.",
+    "tabs": {
+      "employees": "Danh sách nhân công",
+      "assignment": "Phân công & tiến độ",
+      "payroll": "Bảng lương"
+    },
+    "sections": {
+      "addEmployees": {
+        "title": "Thêm nhân công vào mùa vụ"
+      },
+      "seasonEmployees": {
+        "title": "Nhân công trong mùa vụ",
+        "loading": "Đang tải danh sách nhân công...",
+        "empty": "Chưa có nhân công trong mùa vụ này."
+      },
+      "assignment": {
+        "title": "Phân công công việc",
+        "loading": "Đang tải công việc...",
+        "empty": "Chưa có công việc trong mùa vụ này."
+      },
+      "progress": {
+        "title": "Theo dõi tiến độ nhân công",
+        "loading": "Đang tải dữ liệu tiến độ...",
+        "empty": "Chưa có báo cáo tiến độ nào."
+      },
+      "payroll": {
+        "title": "Tính lương tự động",
+        "loading": "Đang tải bảng lương...",
+        "empty": "Chưa có dữ liệu bảng lương."
+      }
+    },
+    "fields": {
+      "availableEmployees": "Nhân công khả dụng",
+      "selectEmployeePlaceholder": "Chọn nhân công",
+      "wagePerTaskVnd": "Đơn giá / task (VND)",
+      "wagePerTaskPlaceholder": "Ví dụ: 150000"
+    },
+    "bulk": {
+      "description": "Chọn nhiều nhân công từ danh mục để gán vào mùa vụ.",
+      "selectAll": "Chọn tất cả",
+      "clearSelection": "Bỏ chọn",
+      "emptyAvailableEmployees": "Không còn nhân công nào trong danh mục có thể thêm."
+    },
+    "actions": {
+      "addEmployee": "Thêm nhân công",
+      "bulkAddEmployees": "Thêm nhân công hàng loạt",
+      "assignTask": "Gán việc",
+      "recalculatePayroll": "Tính lại bảng lương"
+    },
+    "table": {
+      "employee": "Nhân công",
+      "email": "Email",
+      "wagePerTask": "Đơn giá / task",
+      "status": "Trạng thái",
+      "actions": "Thao tác"
+    },
+    "status": {
+      "active": "Đang hoạt động",
+      "inactive": "Tạm khóa"
+    },
+    "assignmentTable": {
+      "task": "Công việc",
+      "status": "Trạng thái",
+      "currentAssignee": "Đang giao cho",
+      "newAssignee": "Phân công mới",
+      "actions": "Thao tác"
+    },
+    "progressTable": {
+      "employee": "Nhân công",
+      "task": "Công việc",
+      "progress": "Tiến độ",
+      "note": "Ghi chú",
+      "time": "Thời gian"
+    },
+    "payrollTable": {
+      "employee": "Nhân công",
+      "period": "Kỳ lương",
+      "completedTasks": "Task hoàn thành",
+      "wagePerTask": "Đơn giá / task",
+      "totalAmount": "Tổng lương",
+      "updatedAt": "Cập nhật"
+    },
+    "toast": {
+      "addEmployeeSuccess": "Đã thêm nhân công vào mùa vụ",
+      "addEmployeeError": "Không thể thêm nhân công",
+      "bulkAddEmployeeSuccess": "Đã thêm {{count}} nhân công vào mùa vụ",
+      "bulkAddEmployeeError": "Không thể thêm nhân công hàng loạt",
+      "removeEmployeeSuccess": "Đã xóa nhân công khỏi mùa vụ",
+      "removeEmployeeError": "Không thể xóa nhân công",
+      "assignTaskSuccess": "Đã phân công công việc",
+      "assignTaskError": "Không thể phân công công việc",
+      "recalculatePayrollSuccess": "Đã tính lại bảng lương",
+      "recalculatePayrollError": "Không thể tính lại bảng lương"
+    },
+    "validation": {
+      "seasonLockedUpdate": "Mùa vụ đã khóa, không thể cập nhật nhân công.",
+      "selectEmployee": "Vui lòng chọn nhân công",
+      "invalidWagePerTask": "Đơn giá theo task không hợp lệ",
+      "selectAtLeastOneEmployee": "Vui lòng chọn ít nhất một nhân công.",
+      "seasonLockedAssign": "Mùa vụ đã khóa, không thể phân công thêm.",
+      "selectEmployeeForAssignment": "Vui lòng chọn nhân công để phân công",
+      "seasonLockedDelete": "Mùa vụ đã khóa, không thể xóa nhân công."
+    },
+    "userFallback": "User #{{id}}",
+    "taskFallback": "Task #{{id}}"
+  },
   "tasks": {
     "title": "Công việc",
     "pageTitle": "Công việc",
@@ -597,11 +1151,13 @@
       "title": "Tiêu đề",
       "season": "Mùa vụ",
       "plot": "Thửa đất",
+      "cropPlot": "Cây trồng / Lô đất",
       "type": "Loại",
       "assignee": "Người thực hiện",
       "plannedDate": "Ngày dự kiến",
       "dueDate": "Hạn chót",
       "status": "Trạng thái",
+      "attachments": "Đính kèm",
       "actions": "Thao tác"
     },
     "noSeason": "Không có mùa vụ",
@@ -680,6 +1236,7 @@
       "onHand": "Tồn kho",
       "movements": "Lịch sử giao dịch"
     },
+    "tabsAriaLabel": "Tab quản lý kho vật tư",
     "selectWarehouse": "Vui lòng chọn kho để xem tồn kho",
     "noStock": "Không tìm thấy tồn kho cho kho này",
     "loadingMovements": "Đang tải lịch sử giao dịch...",
@@ -707,13 +1264,20 @@
       "noteRequired": "Ghi chú bắt buộc cho điều chỉnh",
       "adjustNotZero": "Số lượng điều chỉnh không thể bằng 0",
       "negativeOnHand": "Điều chỉnh này sẽ tạo tồn kho âm",
-      "adjustFailed": "Không thể ghi nhận điều chỉnh"
+      "adjustFailed": "Không thể ghi nhận điều chỉnh",
+      "warehouseNameRequired": "Tên kho là bắt buộc.",
+      "farmRequired": "Vui lòng chọn nông trại."
     },
     "toast": {
       "createSuccess": "Đã tạo bản ghi kho",
       "updateSuccess": "Đã cập nhật bản ghi kho",
       "deleteSuccess": "Đã xóa bản ghi kho",
-      "error": "Đã xảy ra lỗi"
+      "error": "Đã xảy ra lỗi",
+      "warehouseCreateSuccess": "Đã tạo kho vật tư thành công.",
+      "warehouseUpdateSuccess": "Đã cập nhật kho vật tư thành công.",
+      "warehouseSaveError": "Không thể lưu thông tin kho. Vui lòng thử lại.",
+      "warehouseDeleteSuccess": "Đã xóa kho vật tư thành công.",
+      "warehouseDeleteError": "Không thể xóa kho. Vui lòng kiểm tra ràng buộc dữ liệu."
     },
     "table": {
       "item": "Tên vật tư",
@@ -728,8 +1292,19 @@
       "status": "Trạng thái"
     },
     "actions": {
+      "menu": "Mở menu thao tác",
       "stockOut": "Xuất kho",
-      "adjust": "Điều chỉnh"
+      "adjust": "Điều chỉnh",
+      "addWarehouse": "Thêm kho",
+      "editWarehouse": "Sửa kho",
+      "deleteWarehouse": "Xóa kho"
+    },
+    "status": {
+      "inStock": "Còn hàng",
+      "lowStock": "Sắp hết",
+      "expired": "Hết hạn",
+      "outOfStock": "Hết hàng",
+      "hold": "Tạm giữ"
     },
     "movementsTable": {
       "date": "Ngày giờ",
@@ -741,6 +1316,22 @@
       "season": "Mùa vụ",
       "task": "Công việc",
       "note": "Ghi chú"
+    },
+    "locationFallback": "Vị trí {{id}}",
+    "unassignedLocation": "Chưa phân vị trí",
+    "dialog": {
+      "addWarehouseTitle": "Thêm kho vật tư",
+      "editWarehouseTitle": "Sửa kho vật tư",
+      "warehouseHint": "Kho vật tư chỉ dùng cho vật tư đầu vào (phân bón, thuốc, hạt giống...).",
+      "deleteWarehouseTitle": "Xóa kho vật tư",
+      "deleteWarehouseDescription": "Bạn có chắc chắn muốn xóa kho {{warehouseName}}?",
+      "deleteWarehouseHint": "Kho chỉ được xóa khi chưa có vị trí, giao dịch hoặc dữ liệu tồn kho liên quan."
+    },
+    "form": {
+      "warehouseNameLabel": "Tên kho",
+      "warehouseNamePlaceholder": "Nhập tên kho vật tư",
+      "farmLabel": "Nông trại",
+      "selectFarm": "Chọn nông trại"
     }
   },
   "productWarehouse": {
@@ -767,7 +1358,8 @@
       "status": "Trạng thái",
       "allStatuses": "Tất cả trạng thái",
       "search": "Tìm kiếm",
-      "searchPlaceholder": "Tìm theo mã lô hoặc tên sản phẩm"
+      "searchPlaceholder": "Tìm theo mã lô hoặc tên sản phẩm",
+      "locationFallback": "Vị trí {{id}}"
     },
     "tabs": {
       "onHand": "Tồn kho",
@@ -802,7 +1394,10 @@
     "actions": {
       "viewTraceability": "Xem truy xuất",
       "adjust": "Điều chỉnh tồn",
-      "stockOut": "Xuất kho"
+      "stockOut": "Xuất kho",
+      "addWarehouse": "Thêm kho",
+      "editWarehouse": "Sửa kho",
+      "deleteWarehouse": "Xóa kho"
     },
     "traceability": {
       "season": "Mùa vụ",
@@ -826,17 +1421,30 @@
       "stockOutQuantityPlaceholder": "Nhập số lượng",
       "stockOutNote": "Ghi chú",
       "stockOutNotePlaceholder": "Ghi chú xuất kho (tùy chọn)",
-      "stockOutConfirm": "Xác nhận xuất kho"
+      "stockOutConfirm": "Xác nhận xuất kho",
+      "addWarehouseTitle": "Thêm kho sản phẩm",
+      "editWarehouseTitle": "Sửa kho sản phẩm",
+      "warehouseHint": "Kho sản phẩm dùng để lưu nông sản/thành phẩm sau thu hoạch.",
+      "deleteWarehouseTitle": "Xóa kho sản phẩm",
+      "deleteWarehouseDescription": "Bạn có chắc chắn muốn xóa kho {{warehouseName}}?",
+      "deleteWarehouseHint": "Kho chỉ được xóa khi chưa có vị trí, giao dịch hoặc lô sản phẩm liên quan."
     },
     "validation": {
       "adjustNotZero": "Số lượng điều chỉnh không được bằng 0",
       "adjustNoteRequired": "Cần nhập lý do điều chỉnh",
-      "stockOutPositive": "Số lượng xuất phải lớn hơn 0"
+      "stockOutPositive": "Số lượng xuất phải lớn hơn 0",
+      "warehouseNameRequired": "Tên kho là bắt buộc.",
+      "farmRequired": "Vui lòng chọn nông trại."
     },
     "toast": {
       "adjustSuccess": "Đã điều chỉnh tồn kho thành công",
       "stockOutSuccess": "Đã ghi nhận xuất kho thành công",
-      "error": "Đã xảy ra lỗi"
+      "error": "Đã xảy ra lỗi",
+      "warehouseCreateSuccess": "Đã tạo kho sản phẩm thành công.",
+      "warehouseUpdateSuccess": "Đã cập nhật kho sản phẩm thành công.",
+      "warehouseSaveError": "Không thể lưu thông tin kho. Vui lòng thử lại.",
+      "warehouseDeleteSuccess": "Đã xóa kho sản phẩm thành công.",
+      "warehouseDeleteError": "Không thể xóa kho. Vui lòng kiểm tra ràng buộc dữ liệu."
     },
     "loadingLots": "Đang tải danh sách lô sản phẩm...",
     "loadingTransactions": "Đang tải lịch sử giao dịch...",
@@ -846,7 +1454,20 @@
     "emptyTraceability": "Hãy chọn một lô sản phẩm để xem truy xuất.",
     "errorLots": "Không thể tải danh sách lô sản phẩm.",
     "errorTransactions": "Không thể tải lịch sử giao dịch.",
-    "errorTraceability": "Không thể tải thông tin truy xuất."
+    "errorTraceability": "Không thể tải thông tin truy xuất.",
+    "directory": {
+      "title": "Danh sách kho",
+      "count": "{{count}} kho",
+      "empty": "Chưa có kho đầu ra. Hãy tạo kho để bắt đầu liên kết lô thu hoạch.",
+      "farm": "Nông trại",
+      "type": "Loại"
+    },
+    "form": {
+      "warehouseNameLabel": "Tên kho",
+      "warehouseNamePlaceholder": "Nhập tên kho sản phẩm",
+      "farmLabel": "Nông trại",
+      "selectFarm": "Chọn nông trại"
+    }
   },
   "fieldLogs": {
     "title": "Nhật ký đồng ruộng",
@@ -904,7 +1525,208 @@
     "validation": {
       "dateAfterStart": "Ngày ghi phải sau ngày bắt đầu mùa vụ",
       "dateBeforeEnd": "Ngày ghi phải trước ngày kết thúc mùa vụ",
-      "fillRequired": "Vui lòng điền tất cả các trường bắt buộc"
+      "fillRequired": "Vui lòng điền tất cả các trường bắt buộc",
+      "seasonLocked": "Mùa vụ đã khóa. Không thể tạo hoặc chỉnh sửa nhật ký đồng ruộng."
+    },
+    "currentSeason": "Mùa vụ:"
+  },
+  "diseaseTracking": {
+    "title": "Theo dõi dịch bệnh",
+    "subtitle": "Quản lý lịch sử bệnh và quá trình điều trị trong mùa vụ.",
+    "actions": {
+      "addRecord": "Thêm hồ sơ bệnh",
+      "addTreatment": "Thêm điều trị",
+      "addTimelineItem": "Thêm",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "hideDetails": "Ẩn chi tiết",
+      "viewDetails": "Xem chi tiết",
+      "refresh": "Làm mới",
+      "cancel": "Hủy",
+      "create": "Tạo mới",
+      "update": "Cập nhật"
+    },
+    "season": {
+      "label": "Mùa vụ:",
+      "invalid": "Mùa vụ không hợp lệ.",
+      "writeLocked": "Mùa vụ đã khóa. Không thể tạo, sửa hoặc xóa bệnh án."
+    },
+    "summary": {
+      "totalRecords": "Tổng hồ sơ",
+      "newDetected": "Mới phát hiện",
+      "underTreatment": "Đang điều trị",
+      "resolvedClosed": "Đã ổn định / đóng"
+    },
+    "filters": {
+      "searchPlaceholder": "Tìm theo tên bệnh/triệu chứng...",
+      "statusPlaceholder": "Trạng thái",
+      "severityPlaceholder": "Mức độ",
+      "allStatuses": "Tất cả trạng thái",
+      "allSeverities": "Tất cả mức độ"
+    },
+    "statusOptions": {
+      "OPEN": "Mới phát hiện",
+      "UNDER_TREATMENT": "Đang điều trị",
+      "MONITORING": "Đang theo dõi",
+      "RESOLVED": "Đã ổn định",
+      "CLOSED": "Đóng hồ sơ"
+    },
+    "severityOptions": {
+      "LOW": "Thấp",
+      "MEDIUM": "Trung bình",
+      "HIGH": "Cao",
+      "CRITICAL": "Nghiêm trọng"
+    },
+    "effectivenessOptions": {
+      "UNKNOWN": "Chưa đánh giá",
+      "POOR": "Kém",
+      "FAIR": "Trung bình",
+      "GOOD": "Tốt",
+      "EXCELLENT": "Rất tốt"
+    },
+    "list": {
+      "loadingRecords": "Đang tải hồ sơ bệnh...",
+      "emptyTitle": "Chưa có hồ sơ bệnh nào trong mùa vụ",
+      "emptyDescription": "Bắt đầu bằng cách thêm hồ sơ bệnh đầu tiên để theo dõi quá trình xử lý."
+    },
+    "recordCard": {
+      "detectedAt": "Phát hiện",
+      "affectedPlantCount": "Số cây ảnh hưởng",
+      "affectedArea": "Diện tích ảnh hưởng",
+      "treatmentCount": "Lần điều trị"
+    },
+    "detail": {
+      "loading": "Đang tải chi tiết bệnh và lịch sử điều trị...",
+      "reporter": "Người ghi nhận",
+      "totalTreatmentCost": "Tổng chi phí điều trị",
+      "latestTreatment": "Lần điều trị gần nhất",
+      "evidenceUrl": "URL bằng chứng",
+      "caseNotes": "Ghi chú ca bệnh",
+      "ai": {
+        "title": "Gợi ý xử lý bằng AI",
+        "description": "AI chỉ hỗ trợ quyết định tham khảo. Không tạo treatment tự động.",
+        "generate": "Gợi ý xử lý bằng AI",
+        "additionalNoteLabel": "Ghi chú bổ sung (tùy chọn)",
+        "additionalNotePlaceholder": "Ví dụ: Đã phun thuốc 1 lần trước đó, tình hình chưa cải thiện...",
+        "includeInventoryLabel": "Bao gồm ngữ cảnh tồn kho",
+        "includeInventoryDescription": "Bật để AI chỉ đề xuất vật tư trong danh mục tồn kho nội bộ.",
+        "includeInventoryAriaLabel": "Bao gồm ngữ cảnh tồn kho",
+        "generateErrorPrefix": "Không thể tạo gợi ý AI:",
+        "generatedAt": "Tạo lúc",
+        "disclaimer": "Gợi ý chỉ mang tính tham khảo, không thay thế tư vấn chuyên gia."
+      },
+      "timeline": {
+        "title": "Timeline điều trị",
+        "empty": "Chưa có lịch sử điều trị.",
+        "effectiveness": "Hiệu quả",
+        "material": "Vật tư",
+        "quantity": "Số lượng",
+        "cost": "Chi phí",
+        "dosageNote": "Ghi chú liều dùng"
+      }
+    },
+    "dialogs": {
+      "record": {
+        "createTitle": "Tạo hồ sơ bệnh mới",
+        "editTitle": "Cập nhật hồ sơ bệnh",
+        "description": "Ghi nhận thông tin phát hiện bệnh để theo dõi xử lý trong mùa vụ."
+      },
+      "treatment": {
+        "createTitle": "Thêm lịch sử điều trị",
+        "editTitle": "Cập nhật điều trị",
+        "description": "Ghi nhận vật tư sử dụng, liều lượng, chi phí và kết quả điều trị."
+      },
+      "deleteRecord": {
+        "title": "Xóa hồ sơ bệnh",
+        "description": "Bạn chắc chắn muốn xóa hồ sơ bệnh này? Hành động này không thể phục hồi."
+      },
+      "deleteTreatment": {
+        "title": "Xóa lịch sử điều trị",
+        "description": "Bạn chắc chắn muốn xóa mục điều trị này? Dữ liệu sẽ bị xóa vĩnh viễn."
+      }
+    },
+    "form": {
+      "record": {
+        "diseaseName": "Tên bệnh",
+        "diseaseNamePlaceholder": "Ví dụ: Đạo ôn lá",
+        "symptoms": "Triệu chứng",
+        "symptomsPlaceholder": "Mô tả triệu chứng quan sát được...",
+        "severity": "Mức độ",
+        "status": "Trạng thái",
+        "detectedAt": "Thời điểm phát hiện",
+        "affectedPlantCount": "Số cây bị ảnh hưởng",
+        "affectedPlantCountPlaceholder": "Ví dụ: 120",
+        "affectedAreaPercent": "Tỷ lệ diện tích ảnh hưởng (%)",
+        "affectedAreaPercentPlaceholder": "Ví dụ: 35",
+        "evidenceUrl": "URL bằng chứng",
+        "notes": "Ghi chú",
+        "notesPlaceholder": "Thông tin bổ sung cho ca bệnh..."
+      },
+      "treatment": {
+        "treatedAt": "Ngày điều trị",
+        "method": "Phương pháp",
+        "methodPlaceholder": "Phun, cắt tỉa, xử lý sinh học...",
+        "supplyItem": "Vật tư",
+        "selectSupplyItem": "Chọn vật tư",
+        "supplyLot": "Lô vật tư",
+        "selectSupplyLot": "Chọn lô vật tư",
+        "selectSupplyItemFirst": "Chọn vật tư trước",
+        "noneOption": "Không chọn",
+        "lotFallback": "Lô #{{id}}",
+        "quantityUsed": "Số lượng sử dụng",
+        "quantityUsedPlaceholder": "Ví dụ: 2.5",
+        "unit": "Đơn vị",
+        "unitPlaceholder": "ml, g, chai...",
+        "costAmountVnd": "Chi phí (VND)",
+        "costAmountPlaceholder": "Ví dụ: 150000",
+        "effectiveness": "Hiệu quả",
+        "dosageNote": "Ghi chú liều dùng",
+        "dosageNotePlaceholder": "Chi tiết liều dùng / cách dùng...",
+        "resultNote": "Ghi chú kết quả",
+        "resultNotePlaceholder": "Kết quả sau điều trị..."
+      }
+    },
+    "errors": {
+      "sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+      "permissionDenied": "Bạn không có quyền truy cập hoặc sửa dữ liệu mùa vụ/bệnh này.",
+      "invalidData": "Dữ liệu không hợp lệ. Vui lòng kiểm tra thông tin và thử lại.",
+      "loadRecordsFail": "Không thể tải danh sách hồ sơ bệnh.",
+      "loadDetailFail": "Không thể tải chi tiết bệnh án. Vui lòng thử lại.",
+      "createRecordFail": "Không thể tạo hồ sơ bệnh.",
+      "updateRecordFail": "Không thể cập nhật hồ sơ bệnh.",
+      "deleteRecordFail": "Không thể xóa hồ sơ bệnh.",
+      "createTreatmentFail": "Không thể thêm lịch sử điều trị.",
+      "updateTreatmentFail": "Không thể cập nhật lịch sử điều trị.",
+      "deleteTreatmentFail": "Không thể xóa lịch sử điều trị.",
+      "aiSuggestionFail": "Không thể tạo gợi ý AI lúc này."
+    },
+    "validation": {
+      "diseaseNameRequired": "Tên bệnh bắt buộc.",
+      "detectedAtRequired": "Thời điểm phát hiện bắt buộc.",
+      "detectedAtInvalid": "Thời điểm phát hiện không hợp lệ.",
+      "affectedPlantCountInvalid": "Số cây bị ảnh hưởng phải là số nguyên >= 0.",
+      "affectedAreaInvalid": "Tỷ lệ diện tích ảnh hưởng phải là số >= 0.",
+      "additionalNoteTooLong": "Ghi chú bổ sung tối đa 4000 ký tự.",
+      "recordNotFoundForTreatment": "Không tìm thấy hồ sơ bệnh để cập nhật điều trị.",
+      "treatedAtRequired": "Ngày điều trị bắt buộc.",
+      "methodRequired": "Phương pháp điều trị bắt buộc.",
+      "treatedAtInvalid": "Ngày điều trị không hợp lệ.",
+      "quantityUsedInvalid": "Số lượng sử dụng phải là số >= 0.",
+      "costAmountInvalid": "Chi phí điều trị phải là số >= 0.",
+      "nonNegativeIntegerHint": "Vui lòng nhập số nguyên >= 0.",
+      "nonNegativeNumberHint": "Vui lòng nhập số >= 0."
+    },
+    "toast": {
+      "recordCreated": "Đã tạo hồ sơ bệnh.",
+      "recordUpdated": "Đã cập nhật hồ sơ bệnh.",
+      "recordDeleted": "Đã xóa hồ sơ bệnh.",
+      "treatmentCreated": "Đã thêm lịch sử điều trị.",
+      "treatmentUpdated": "Đã cập nhật lịch sử điều trị.",
+      "treatmentDeleted": "Đã xóa lịch sử điều trị."
+    },
+    "overlay": {
+      "processingAriaLabel": "Đang xử lý dữ liệu dịch bệnh",
+      "processingText": "Đang xử lý dữ liệu dịch bệnh..."
     }
   },
   "incidents": {
@@ -967,7 +1789,11 @@
       "createTitle": "Báo cáo sự cố",
       "editTitle": "Chỉnh sửa sự cố",
       "deleteTitle": "Xóa sự cố",
-      "deleteDescription": "Bạn có chắc chắn muốn xóa sự cố này? Hành động này không thể hoàn tác."
+      "deleteDescription": "Bạn có chắc chắn muốn xóa sự cố này? Hành động này không thể hoàn tác.",
+      "editDescription": "Cập nhật chi tiết sự cố",
+      "createDescription": "Điền thông tin để báo cáo sự cố mới",
+      "resolveTitle": "Giải quyết sự cố",
+      "resolveDescription": "Nhập ghi chú xử lý để đóng sự cố này"
     },
     "validation": {
       "selectSeason": "Vui lòng chọn mùa vụ",
@@ -982,8 +1808,15 @@
       "severity": "Mức độ",
       "description": "Mô tả",
       "deadline": "Hạn chót",
-      "resolutionNote": "Ghi chú xử lý"
-    }
+      "resolutionNote": "Ghi chú xử lý",
+      "descriptionPlaceholder": "Mô tả sự cố...",
+      "deadlineOptional": "Hạn chót (Tùy chọn)",
+      "resolutionPlaceholder": "Mô tả cách sự cố đã được xử lý..."
+    },
+    "pagination": {
+      "summary": "Trang {{page}} / {{totalPages}} (tổng {{total}})"
+    },
+    "resolve": "Giải quyết"
   },
   "farms": {
     "title": "Nông trại & Thửa đất",
@@ -1089,9 +1922,9 @@
       "active": "Hoạt động",
       "inactive": "Không hoạt động",
       "all": "Tất cả",
-      "restrictedOnly": "Ch? v?t t? h?n ch?",
-      "allItems": "T?t c? v?t t?",
-      "allSuppliers": "T?t c? nh? cung c?p"
+      "restrictedOnly": "Chỉ vật tư hạn chế",
+      "allItems": "Tất cả vật tư",
+      "allSuppliers": "Tất cả nhà cung cấp"
     },
     "lots": {
       "searchPlaceholder": "Tìm theo tên lô, vật tư hoặc nhà cung cấp..."
@@ -1102,8 +1935,8 @@
       "invalidPhone": "Số điện thoại không hợp lệ",
       "invalidQuantity": "Số lượng phải lớn hơn 0",
       "invalidPrice": "Giá phải lớn hơn 0",
-      "confirmRestricted": "Vui l?ng x?c nh?n vi?c x? l? v?t t? h?n ch?",
-      "confirmExpiry": "Vui l?ng x?c nh?n ng?y h?t h?n trong qu? kh?"
+      "confirmRestricted": "Vui lòng xác nhận việc xử lý vật tư hạn chế",
+      "confirmExpiry": "Vui lòng xác nhận ngày hết hạn trong quá khứ"
     },
     "toast": {
       "createSuccess": "Đã tạo thành công",
@@ -1122,7 +1955,15 @@
       "editTitle": "Sửa nhà cung cấp",
       "addDescription": "Nhập thông tin để thêm nhà cung cấp mới",
       "editDescription": "Cập nhật thông tin nhà cung cấp",
-      "addButton": "Thêm nhà cung cấp"
+      "addButton": "Thêm nhà cung cấp",
+      "name": "Tên",
+      "namePlaceholder": "Tên nhà cung cấp",
+      "licenseNo": "Số giấy phép",
+      "licenseNoPlaceholder": "Số giấy phép (tùy chọn)",
+      "phone": "Điện thoại",
+      "phonePlaceholder": "Số điện thoại liên hệ (tùy chọn)",
+      "email": "Email",
+      "emailPlaceholder": "Email liên hệ (tùy chọn)"
     },
     "delete": {
       "title": "Xóa nhà cung cấp",
@@ -1132,6 +1973,77 @@
       "nameRequired": "Tên nhà cung cấp là bắt buộc",
       "saveFailed": "Lưu nhà cung cấp thất bại",
       "deleteFailed": "Xóa nhà cung cấp thất bại"
+    },
+    "pagination": {
+      "summary": "Trang {{page}} / {{totalPages}}"
+    },
+    "table": {
+      "name": "Tên",
+      "licenseNo": "Số giấy phép",
+      "phone": "Điện thoại",
+      "email": "Email",
+      "actions": "Thao tác"
+    },
+    "actions": {
+      "menu": "Thao tác",
+      "edit": "Sửa",
+      "delete": "Xóa"
+    },
+    "itemsTable": {
+      "name": "Tên",
+      "activeIngredient": "Hoạt chất",
+      "unit": "Đơn vị",
+      "restricted": "Hạn chế",
+      "restrictedBadge": "Hạn chế",
+      "normalBadge": "Bình thường"
+    },
+    "lotsTable": {
+      "batchCode": "Mã lô",
+      "item": "Vật tư",
+      "supplier": "Nhà cung cấp",
+      "expiryDate": "Hạn sử dụng",
+      "status": "Trạng thái",
+      "expiringSoon": "Sắp hết hạn"
+    },
+    "stockIn": {
+      "title": "Nhập kho",
+      "errors": {
+        "recordFailed": "Không thể ghi nhận nhập kho"
+      },
+      "steps": {
+        "warehouse": "Kho",
+        "supplierItem": "Nhà cung cấp & Vật tư",
+        "batchInfo": "Thông tin lô"
+      },
+      "form": {
+        "warehouse": "Kho",
+        "selectWarehouse": "Chọn kho...",
+        "locationOptional": "Vị trí (Tùy chọn)",
+        "anyLocation": "Bất kỳ vị trí nào",
+        "locationFallback": "Vị trí {{id}}",
+        "supplier": "Nhà cung cấp",
+        "selectSupplier": "Chọn nhà cung cấp...",
+        "supplyItem": "Vật tư",
+        "selectItem": "Chọn vật tư...",
+        "restrictedTag": "⚠️ HẠN CHẾ",
+        "restrictedTitle": "⚠️ Vật tư hạn chế",
+        "restrictedDescription": "Vật tư này yêu cầu quyền xử lý đặc biệt.",
+        "restrictedConfirm": "Tôi xác nhận có quyền xử lý vật tư hạn chế",
+        "batchCode": "Mã lô",
+        "batchCodePlaceholder": "VD: NPK-2025-01",
+        "expiryDate": "Hạn sử dụng",
+        "pastExpiryTitle": "⚠️ Ngày hết hạn đã qua",
+        "pastExpiryConfirm": "Tôi xác nhận ngày hết hạn là chính xác",
+        "quantity": "Số lượng",
+        "quantityPlaceholder": "Nhập số lượng",
+        "noteOptional": "Ghi chú (Tùy chọn)",
+        "notePlaceholder": "Ghi chú bổ sung..."
+      },
+      "actions": {
+        "back": "Quay lại",
+        "next": "Tiếp theo",
+        "confirm": "Xác nhận nhập kho"
+      }
     }
   },
   "crops": {
@@ -1156,6 +2068,32 @@
       "all": "Tất cả",
       "byCategory": "Theo danh mục",
       "bySeason": "Theo mùa vụ"
+    },
+    "filters": {
+      "selectSeason": "Chọn mùa vụ",
+      "noSeasons": "Chưa có mùa vụ",
+      "allSeasons": "Tất cả mùa vụ",
+      "demoSeasonRice2025": "Mùa lúa 2025",
+      "demoSeasonCorn2025": "Mùa bắp 2025",
+      "demoSeasonWheat2025": "Mùa lúa mì 2025",
+      "allCategories": "Tất cả danh mục",
+      "allStatuses": "Tất cả trạng thái"
+    },
+    "categories": {
+      "fertilizer": "Phân bón",
+      "seeds": "Giống cây",
+      "labor": "Nhân công",
+      "equipment": "Thiết bị",
+      "pesticide": "Thuốc BVTV",
+      "transportation": "Vận chuyển",
+      "utilities": "Tiện ích",
+      "maintenance": "Bảo trì",
+      "other": "Khác"
+    },
+    "status": {
+      "paid": "Đã thanh toán",
+      "pending": "Chờ thanh toán",
+      "unpaid": "Chưa thanh toán"
     },
     "toast": {
       "createSuccess": "Đã tạo chi phí",
@@ -1197,6 +2135,30 @@
       "expenses": "Chi phí",
       "documents": "Tài liệu",
       "users": "Người dùng"
+    },
+    "global": {
+      "title": "Tìm kiếm toàn cục",
+      "placeholder": "Tìm thửa đất, mùa vụ, công việc, tài liệu...",
+      "loading": "Đang tải",
+      "error": "Tìm kiếm thất bại. Vui lòng thử lại.",
+      "minChars": "Nhập ít nhất 2 ký tự để tìm kiếm.",
+      "noResults": "Không tìm thấy kết quả.",
+      "quickLinks": {
+        "title": "Liên kết nhanh",
+        "admin": {
+          "inventoryRisks": "Rủi ro tồn kho",
+          "incidents": "Sự cố",
+          "alertsCenter": "Trung tâm cảnh báo",
+          "farmsPlots": "Nông trại & Thửa đất",
+          "documents": "Tài liệu"
+        },
+        "farmer": {
+          "tasksWorkspace": "Không gian công việc",
+          "expenses": "Chi phí",
+          "documents": "Tài liệu",
+          "inventory": "Kho vật tư"
+        }
+      }
     }
   },
   "seasonPicker": {
@@ -1232,7 +2194,7 @@
     },
     "alerts": {
       "title": "Trung tâm cảnh báo",
-      "subtitle": "Tổng hợp rủi ro và thông báo cho nông dân.",
+      "subtitle": "Tổng hợp rủi kho và thông báo cho nông dân.",
       "refreshRisks": "Làm mới rủi ro",
       "days": "ngày",
       "types": {
@@ -1455,127 +2417,286 @@
     }
   },
   "marketplaceSeller": {
-    "tabs": {
-      "overview": "Tổng quan",
-      "products": "Sản phẩm",
-      "orders": "Đơn hàng"
+    "common": {
+      "brand": "Cổng bán hàng",
+      "backToProducts": "Quay lại sản phẩm",
+      "tryAgain": "Thử lại"
     },
-    "dashboard": {
-      "title": "Bảng điều khiển người bán",
-      "subtitle": "Theo dõi hiệu suất gian hàng và hoạt động đơn hàng trên chợ nông sản.",
-      "loading": "Đang tải bảng điều khiển người bán...",
-      "error": "Không thể tải bảng điều khiển người bán.",
-      "manageProducts": "Quản lý sản phẩm",
-      "metrics": {
-        "revenue": "Doanh thu",
-        "newOrders": "Đơn mới",
-        "products": "Sản phẩm",
-        "views": "Lượt xem"
-      },
-      "recentOrdersTitle": "Đơn hàng gần đây",
-      "recentOrdersEmpty": "Chưa có đơn hàng gần đây.",
-      "viewOrder": "Xem đơn",
-      "lowStockTitle": "Sản phẩm sắp hết hàng",
-      "lowStockHint": "Các sản phẩm cần bổ sung tồn kho sớm.",
-      "lowStockEmpty": "Không có sản phẩm nào sắp hết hàng.",
-      "stock": "Tồn kho",
-      "itemsLabel": "sản phẩm",
-      "viewAll": "Xem tất cả"
+    "tabs": {
+      "brand": "WORKSPACE BÁN HÀNG",
+      "title": "Không gian sàn thương mại",
+      "ariaLabel": "Tab người bán sàn thương mại",
+      "items": {
+        "overview": {
+          "label": "Tổng quan",
+          "description": "Tóm tắt cửa hàng"
+        },
+        "products": {
+          "label": "Sản phẩm",
+          "description": "Danh sách và tồn kho"
+        },
+        "orders": {
+          "label": "Đơn hàng",
+          "description": "Đơn mua từ khách"
+        }
+      }
     },
     "products": {
       "title": "Quản lý sản phẩm",
-      "subtitle": "Quản lý danh mục và cập nhật trạng thái hiển thị sản phẩm.",
-      "newProduct": "Thêm sản phẩm",
-      "filters": "Bộ lọc",
-      "searchPlaceholder": "Tìm theo tên sản phẩm hoặc nông trại...",
+      "subtitle": "Đăng bán, kiểm duyệt và quản lý tồn kho sản phẩm trên sàn.",
+      "addProduct": "Thêm sản phẩm",
+      "searchPlaceholder": "Tìm kiếm sản phẩm...",
       "loading": "Đang tải sản phẩm...",
-      "error": "Không thể tải danh sách sản phẩm.",
-      "empty": "Không tìm thấy sản phẩm.",
-      "noFarm": "Chưa liên kết nông trại",
-      "table": {
-        "product": "Sản phẩm",
-        "category": "Danh mục",
-        "price": "Giá",
-        "stock": "Tồn kho",
-        "status": "Trạng thái",
-        "actions": "Thao tác",
-        "available": "Có sẵn"
+      "emptyFiltered": "Không tìm thấy sản phẩm phù hợp với bộ lọc.",
+      "loadError": "Không thể tải danh sách sản phẩm."
+    },
+    "filters": {
+      "allStatuses": "Tất cả trạng thái"
+    },
+    "status": {
+      "draft": "Nháp",
+      "pendingReview": "Chờ duyệt",
+      "published": "Đã duyệt",
+      "hidden": "Bị từ chối / Ẩn",
+      "order": {
+        "pending": "Chờ xử lý",
+        "confirmed": "Đã xác nhận",
+        "preparing": "Đang chuẩn bị",
+        "delivering": "Đang giao",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy"
+      }
+    },
+    "table": {
+      "product": "Sản phẩm",
+      "category": "Danh mục",
+      "price": "Giá",
+      "stock": "Tồn kho",
+      "status": "Trạng thái",
+      "updated": "Cập nhật",
+      "actions": "Thao tác",
+      "adminReason": "Lý do từ quản trị",
+      "available": "Khả dụng"
+    },
+    "dashboard": {
+      "loading": "Đang tải bảng điều khiển sàn thương mại...",
+      "unavailableReasons": {
+        "noProducts": "Chưa có sản phẩm nào trong danh mục sàn thương mại của bạn.",
+        "noOrders": "Chưa có đơn mua nào được tạo.",
+        "noRevenueData": "Chưa có dữ liệu doanh thu vì chưa phát sinh đơn hàng.",
+        "noCompletedOrders": "Doanh thu chỉ hiển thị khi có ít nhất một đơn hoàn tất.",
+        "fallback": "Một số chỉ số trên bảng điều khiển hiện chưa khả dụng."
       },
-      "actions": {
-        "view": "Xem",
-        "edit": "Sửa",
-        "hide": "Ẩn",
-        "show": "Hiện",
-        "delete": "Xóa"
+      "emptyProducts": {
+        "title": "Chưa có sản phẩm trên sàn",
+        "description": "Hãy thêm sản phẩm đầu tiên để mở khóa chỉ số đơn hàng và doanh thu trên bảng điều khiển này.",
+        "actions": {
+          "createFirst": "Tạo sản phẩm đầu tiên",
+          "goToListings": "Đi tới danh sách"
+        }
       },
-      "deleteDialog": {
-        "title": "Ẩn sản phẩm này?",
-        "description": "Sản phẩm sẽ bị ẩn với người mua và bạn có thể đăng lại sau.",
-        "confirm": "Ẩn sản phẩm"
+      "noOrders": {
+        "title": "Sản phẩm đã lên sàn nhưng chưa có đơn hàng",
+        "description": "Hãy giữ danh sách cập nhật và đủ tồn kho. Đơn mua sẽ xuất hiện tại đây ngay khi được đặt."
       },
-      "statusFilter": {
-        "all": "Tất cả",
-        "draft": "Nháp",
-        "pendingReview": "Chờ duyệt",
-        "published": "Đang bán",
-        "hidden": "Đã ẩn"
+      "metrics": {
+        "revenue": "Doanh thu",
+        "revenueEmpty": "Chưa có đơn hoàn tất.",
+        "pendingOrders": "Đơn chờ xử lý",
+        "publishedProducts": "Sản phẩm đã duyệt",
+        "pendingReview": "Chờ duyệt"
+      },
+      "recentOrders": {
+        "title": "Đơn hàng gần đây",
+        "seeAll": "Xem tất cả",
+        "itemCount": "{{count}} sản phẩm",
+        "emptyWithProducts": "Chưa có đơn mua nào.",
+        "emptyNoProducts": "Đơn mua sẽ xuất hiện sau khi bạn đăng sản phẩm đầu tiên."
+      },
+      "topProducts": {
+        "title": "Sản phẩm nổi bật",
+        "manageProducts": "Quản lý sản phẩm",
+        "emptyWithProducts": "Chưa có sản phẩm đã duyệt.",
+        "emptyNoProducts": "Hiện chưa có sản phẩm."
       }
     },
     "orders": {
       "title": "Quản lý đơn hàng",
-      "subtitle": "Theo dõi và cập nhật tiến trình xử lý đơn hàng.",
-      "statusFilter": "Lọc trạng thái",
-      "loading": "Đang tải đơn hàng...",
-      "error": "Không thể tải danh sách đơn hàng.",
-      "empty": "Không tìm thấy đơn hàng.",
+      "subtitle": "Theo dõi đơn mua, kiểm soát chuyển trạng thái và mở chi tiết đơn để xử lý.",
+      "error": "Không thể tải danh sách đơn hàng người bán.",
+      "empty": "Không có đơn nào khớp với bộ lọc hiện tại.",
+      "filters": {
+        "all": "Tất cả",
+        "ariaLabel": "Bộ lọc trạng thái đơn hàng"
+      },
       "table": {
         "orderCode": "Mã đơn",
         "orderDate": "Ngày đặt",
         "customer": "Khách hàng",
-        "totalAmount": "Tổng tiền",
+        "total": "Tổng tiền",
         "status": "Trạng thái",
-        "actions": "Thao tác"
-      },
-      "detail": "Chi tiết"
+        "actions": "Thao tác",
+        "detail": "Chi tiết",
+        "buyerFallback": "Người mua #{{id}}"
+      }
     },
     "orderDetail": {
-      "backToOrders": "Quay lại danh sách đơn",
-      "title": "Đơn hàng {{orderCode}}",
       "loading": "Đang tải chi tiết đơn hàng...",
-      "error": "Không thể tải chi tiết đơn hàng.",
-      "shippingInfo": "Thông tin giao hàng",
-      "recipient": "Người nhận",
-      "phone": "Điện thoại",
-      "address": "Địa chỉ",
-      "paymentMethod": "Phương thức thanh toán",
-      "totalAmount": "Tổng thanh toán",
-      "orderItems": "Sản phẩm trong đơn",
-      "quantity": "Số lượng",
-      "orderSummary": "Tóm tắt đơn hàng",
-      "subtotal": "Tạm tính",
-      "shippingFee": "Phí vận chuyển",
-      "updateStatus": "Cập nhật trạng thái",
-      "setStatus": "Chuyển sang {{status}}",
-      "itemQuantity": "SL: {{quantity}}"
+      "error": "Không thể tải chi tiết đơn hàng người bán.",
+      "backToOrders": "Quay lại đơn hàng",
+      "itemsTitle": "Sản phẩm trong đơn",
+      "customerInfo": "Thông tin khách hàng",
+      "paymentShipping": "Thanh toán và vận chuyển",
+      "verificationPrefix": "Xác minh",
+      "shippingStatus": "Trạng thái vận chuyển",
+      "notePrefix": "Ghi chú",
+      "summary": {
+        "subtotal": "Tạm tính",
+        "shippingFee": "Phí vận chuyển",
+        "total": "Tổng cộng"
+      },
+      "paymentMethod": {
+        "cod": "Thanh toán khi nhận hàng",
+        "bankTransfer": "Chuyển khoản ngân hàng"
+      },
+      "verificationStatus": {
+        "notRequired": "Không yêu cầu",
+        "awaitingProof": "Chờ biên lai",
+        "submitted": "Đã nộp",
+        "verified": "Đã xác minh",
+        "rejected": "Bị từ chối"
+      }
     },
-    "status": {
-      "product": {
-        "DRAFT": "Nháp",
-        "PENDING_REVIEW": "Chờ duyệt",
-        "PUBLISHED": "Đang bán",
-        "HIDDEN": "Đã ẩn"
+    "productDetail": {
+      "title": "Chi tiết sản phẩm",
+      "loading": "Đang tải chi tiết sản phẩm...",
+      "updatedLabel": "Tin đăng #{{id}} - Cập nhật {{date}}",
+      "noImage": "Không có hình ảnh",
+      "notLinked": "Chưa liên kết",
+      "traceableYes": "Có",
+      "traceableNo": "Không",
+      "descriptionFallback": "Chưa có mô tả sản phẩm.",
+      "notFound": {
+        "title": "Không tìm thấy sản phẩm",
+        "description": "Sản phẩm này không tồn tại hoặc không khả dụng trong tài khoản người bán của bạn."
       },
-      "order": {
-        "PENDING": "Chờ xác nhận",
-        "CONFIRMED": "Đã xác nhận",
-        "PREPARING": "Đang chuẩn bị",
-        "DELIVERING": "Đang giao",
-        "COMPLETED": "Hoàn thành",
-        "CANCELLED": "Đã hủy"
+      "sections": {
+        "listingInfo": "Thông tin tin đăng",
+        "traceability": "Truy xuất nguồn gốc thu hoạch",
+        "description": "Mô tả"
       },
-      "payment": {
-        "COD": "Thanh toán khi nhận hàng",
-        "BANK_TRANSFER": "Chuyển khoản"
+      "fields": {
+        "category": "Danh mục",
+        "price": "Giá",
+        "listedQuantity": "Số lượng đăng bán",
+        "availableQuantity": "Số lượng khả dụng",
+        "farmer": "Nông dân",
+        "region": "Khu vực",
+        "farm": "Nông trại",
+        "season": "Mùa vụ",
+        "lot": "Lô",
+        "traceable": "Truy xuất"
+      },
+      "actions": {
+        "editListing": "Chỉnh sửa tin đăng",
+        "updating": "Đang cập nhật...",
+        "submitForReview": "Gửi duyệt",
+        "moveToDraft": "Chuyển về nháp",
+        "hideProduct": "Ẩn sản phẩm",
+        "resubmitReview": "Gửi duyệt lại",
+        "updateStatus": "Cập nhật trạng thái"
+      }
+    },
+    "productForm": {
+      "loading": "Đang tải quy trình bán hàng theo lô thu hoạch...",
+      "notFound": "Không tìm thấy sản phẩm này trong tài khoản của bạn.",
+      "maxAllowed": "Tối đa: {{quantity}} {{unit}}",
+      "harvestLotFallback": "Lô thu hoạch",
+      "lotsLinkedNotice": "{{count}} lô thu hoạch đã liên kết với tin đăng khác và được loại khỏi danh sách này.",
+      "adminReasonPrefix": "Lý do từ quản trị",
+      "header": {
+        "editTitle": "Chỉnh sửa tin đăng sàn thương mại",
+        "createTitle": "Tạo tin đăng sàn thương mại",
+        "subtitle": "Tạo tin đăng từ lô thu hoạch với đầy đủ truy xuất nguồn gốc và kiểm soát tồn kho."
+      },
+      "sections": {
+        "basicInfo": "Thông tin cơ bản",
+        "descriptions": "Mô tả",
+        "harvestSource": "Nguồn thu hoạch",
+        "preview": "Xem trước tin đăng"
+      },
+      "fields": {
+        "name": "Tên tin đăng",
+        "category": "Danh mục",
+        "price": "Giá",
+        "quantityToSell": "Số lượng bán",
+        "imageUrl": "URL ảnh chính",
+        "shortDescription": "Mô tả ngắn",
+        "fullDescription": "Mô tả đầy đủ",
+        "farm": "Nông trại",
+        "season": "Mùa vụ",
+        "harvestLot": "Lô thu hoạch"
+      },
+      "placeholders": {
+        "name": "Ví dụ: Gạo jasmine cao cấp từ lô thu hoạch 2026",
+        "category": "Lúa gạo, rau củ, trái cây...",
+        "shortDescription": "Mô tả ngắn để người mua xem nhanh",
+        "fullDescription": "Thêm ghi chú đóng gói, chất lượng thu hoạch, vận chuyển hoặc hướng dẫn bảo quản",
+        "selectFarm": "Chọn nông trại",
+        "selectSeason": "Chọn mùa vụ",
+        "selectLot": "Chọn lô thu hoạch",
+        "pickFarmFirst": "Chọn nông trại trước"
+      },
+      "lotInfo": {
+        "lotCode": "Mã lô",
+        "farm": "Nông trại",
+        "season": "Mùa vụ",
+        "availableQuantity": "Số lượng khả dụng",
+        "harvested": "Ngày thu hoạch",
+        "unknown": "Không rõ",
+        "na": "N/A"
+      },
+      "selectLotFirst": {
+        "title": "Hãy chọn lô thu hoạch trước.",
+        "description": "Nông trại, mùa vụ, truy xuất và giới hạn số lượng đều lấy theo lô này."
+      },
+      "preview": {
+        "title": "Xem trước tin đăng",
+        "imageFallback": "Xem trước hình ảnh sản phẩm",
+        "untitled": "Tin đăng chưa có tên",
+        "shortDescriptionFallback": "Xem trước mô tả ngắn",
+        "price": "Giá",
+        "quantityToSell": "Số lượng bán",
+        "traceability": "Truy xuất nguồn gốc",
+        "traceabilityEnabled": "Đã bật theo lô thu hoạch",
+        "traceabilityWaiting": "Đang chờ chọn lô"
+      },
+      "validation": {
+        "selectLot": "Hãy chọn lô thu hoạch trước khi lưu tin đăng.",
+        "pricePositive": "Giá phải lớn hơn 0.",
+        "quantityPositive": "Số lượng bán phải lớn hơn 0.",
+        "quantityExceed": "Số lượng bán không được vượt quá {{quantity}} {{unit}} của lô thu hoạch đã chọn."
+      },
+      "errors": {
+        "save": "Không thể lưu sản phẩm.",
+        "updateStatus": "Không thể cập nhật trạng thái sản phẩm.",
+        "loadEdit": "Không thể tải chi tiết sản phẩm hoặc tùy chọn lô thu hoạch.",
+        "loadCreate": "Không thể tải các tùy chọn bán hàng theo lô thu hoạch."
+      },
+      "actions": {
+        "saving": "Đang lưu...",
+        "saveChanges": "Lưu thay đổi",
+        "createDraft": "Tạo bản nháp",
+        "updating": "Đang cập nhật...",
+        "submitForReview": "Gửi duyệt",
+        "moveToDraft": "Chuyển về nháp",
+        "hideProduct": "Ẩn sản phẩm",
+        "resubmitReview": "Gửi duyệt lại",
+        "updateStatus": "Cập nhật trạng thái"
+      },
+      "noLots": {
+        "title": "Bạn chưa có lô thu hoạch nào còn số lượng để bán.",
+        "description": "Hãy hoàn tất nhập kho thu hoạch trước, sau đó quay lại đây để tạo tin đăng trên sàn."
       }
     }
   },
@@ -1748,6 +2869,48 @@
       "emptyDesc": "Bạn chưa đặt đơn hàng nào trên sàn.",
       "startShopping": "Bắt đầu mua sắm →",
       "group": "Nhóm đơn",
+      "statusGroup": {
+        "payment": "Thanh toán",
+        "review": "Xác minh",
+        "processing": "Xử lý",
+        "shipping": "Vận chuyển",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã đóng",
+        "unknown": "Không xác định"
+      },
+      "status": {
+        "PENDING_PAYMENT": "Chờ thanh toán",
+        "PAYMENT_SUBMITTED": "Đã gửi biên lai",
+        "PAYMENT_VERIFIED": "Đã xác minh thanh toán",
+        "CONFIRMED": "Đã xác nhận",
+        "PREPARING": "Đang chuẩn bị",
+        "SHIPPED": "Đang giao",
+        "DELIVERED": "Đã giao",
+        "COMPLETED": "Hoàn tất",
+        "REJECTED": "Bị từ chối",
+        "CANCELLED": "Đã hủy",
+        "PENDING": "Chờ thanh toán",
+        "DELIVERING": "Đang giao",
+        "unknown": "Trạng thái không xác định ({{status}})"
+      },
+      "payment": "Thanh toán",
+      "paymentMethod": {
+        "COD": "Thanh toán khi nhận hàng",
+        "BANK_TRANSFER": "Chuyển khoản"
+      },
+      "paymentVerificationStatus": {
+        "NOT_REQUIRED": "Không yêu cầu",
+        "AWAITING_PROOF": "Chờ biên lai",
+        "SUBMITTED": "Đã nộp",
+        "VERIFIED": "Đã xác minh",
+        "REJECTED": "Bị từ chối",
+        "unknown": "Xác minh không xác định ({{status}})"
+      },
+      "orderCode": "Mã đơn",
+      "orderDate": "Đặt ngày",
+      "quantity": "Số lượng",
+      "otherItems": "+{{count}} sản phẩm khác",
+      "totalWithCount": "Tổng tiền ({{count}} sản phẩm)",
       "eligibleForCancellation": "Có thể hủy đơn",
       "cannotCancel": "Không thể hủy lúc này",
       "orderDetail": "Chi tiết đơn",
@@ -1784,35 +2947,275 @@
       "reviewed": "Đã đánh giá"
     }
   },
-  "marketplaceSeller": {
-    "products": {
-      "title": "Quản lý sản phẩm",
-      "subtitle": "Đăng bán, kiểm duyệt và quản lý tồn kho sản phẩm trên sàn.",
-      "addProduct": "Thêm sản phẩm",
-      "searchPlaceholder": "Tìm kiếm sản phẩm...",
-      "loading": "Đang tải sản phẩm...",
-      "emptyFiltered": "Không tìm thấy sản phẩm phù hợp với bộ lọc.",
-      "loadError": "Không thể tải danh sách sản phẩm."
+  "reports": {
+    "sidebar": {
+      "title": "Báo cáo",
+      "subtitle": "Phân tích",
+      "sections": {
+        "yield": "Năng suất & Sản lượng",
+        "cost": "Phân tích chi phí",
+        "performance": "Hiệu suất công việc",
+        "pesticide": "Thuốc BVTV & Tuân thủ"
+      }
     },
-    "filters": {
-      "allStatuses": "Tất cả trạng thái"
+    "header": {
+      "defaultTitle": "Tổng quan báo cáo",
+      "defaultSubtitle": "Theo dõi năng suất, chi phí và tuân thủ",
+      "progress": "Tiến độ: {{percent}}%",
+      "filterButton": "Bộ lọc",
+      "exportButton": "Xuất báo cáo",
+      "titleFinal": "Báo cáo tổng kết mùa vụ",
+      "subtitleFinal": "Bộ số liệu đã được chốt theo mùa vụ hoàn tất.",
+      "titleInterim": "Báo cáo tạm tính",
+      "subtitleInterim": "Dữ liệu được cập nhật theo tiến độ thu hoạch, các chỉ số có thể thay đổi."
+    },
+    "kpi": {
+      "totalYield": "Tổng sản lượng",
+      "totalCost": "Tổng chi phí",
+      "onTimeTasks": "Công việc đúng hạn",
+      "netProfit": "Lợi nhuận ròng",
+      "thisSeason": "mùa vụ này",
+      "completedOnTime": "hoàn thành đúng hạn"
+    },
+    "tabs": {
+      "yield": "Sản lượng",
+      "cost": "Chi phí",
+      "tasks": "Công việc",
+      "pesticide": "Thuốc BVTV"
+    },
+    "error": {
+      "loadFailed": "Không thể tải dữ liệu báo cáo. Vui lòng thử lại."
+    },
+    "loading": "Đang tải dữ liệu báo cáo...",
+    "yield": {
+      "title": "Năng suất & Sản lượng",
+      "subtitle": "Theo dõi hiệu suất sản lượng theo mùa vụ, cây trồng và thửa đất",
+      "viewOptions": {
+        "season": "Theo mùa vụ",
+        "crop": "Theo cây trồng",
+        "plot": "Theo thửa đất"
+      }
+    },
+    "cost": {
+      "title": "Tối ưu chi phí",
+      "subtitle": "Sức khỏe ngân sách mùa vụ, phân bổ chi phí và hướng dẫn tham khảo AI.",
+      "loading": "Đang tải tóm tắt tối ưu chi phí...",
+      "errorPrefix": "Không thể tải tóm tắt tối ưu chi phí:",
+      "retryButton": "Thử lại",
+      "seasonalBudget": "Ngân sách mùa vụ",
+      "totalExpense": "Tổng chi phí",
+      "remainingBudget": "Ngân sách còn lại",
+      "costPerExpectedYield": "Chi phí trên sản lượng dự kiến",
+      "actual": "Thực tế:",
+      "topCostCategories": "Danh mục chi phí lớn nhất",
+      "noCategoryData": "Chưa có dữ liệu chi phí theo danh mục cho mùa vụ này.",
+      "categoryHeader": "Danh mục",
+      "amountHeader": "Số tiền",
+      "percentOfTotal": "% tổng",
+      "uncategorized": "CHƯA PHÂN LOẠI",
+      "noTopCategories": "Chưa có danh mục chi phí.",
+      "warnings": "Cảnh báo",
+      "noWarnings": "Không có quy tắc cảnh báo nào được kích hoạt cho mùa vụ này.",
+      "aiTitle": "Gợi ý tối ưu chi phí từ AI",
+      "aiAnalyzing": "Đang phân tích chi phí...",
+      "aiAnalyzeButton": "Phân tích tối ưu chi phí bằng AI",
+      "generatedAt": "Tạo lúc: {{time}}",
+      "aiPlaceholder": "Gợi ý từ AI sẽ xuất hiện tại đây sau khi phân tích. Chỉ dùng để tham khảo.",
+      "disclaimer": "Tuyên bố miễn trừ:",
+      "fallbackDisclaimer": "Gợi ý từ AI chỉ mang tính tham khảo. Không tự động áp dụng thay đổi chi phí, ngân sách hoặc kho.",
+      "selectSeasonForAi": "Vui lòng chọn mùa vụ trước khi phân tích AI.",
+      "seasonRequired": "Cần chọn mùa vụ để phân tích AI."
+    },
+    "performance": {
+      "title": "Hiệu suất công việc",
+      "subtitle": "Theo dõi xu hướng hoàn thành và trạng thái công việc",
+      "onTimeTasks": "Công việc đúng hạn",
+      "taskStatusBreakdown": "Phân tích trạng thái công việc",
+      "month": "Tháng",
+      "onTime": "Đúng hạn",
+      "late": "Muộn",
+      "overdue": "Trễ hạn",
+      "total": "Tổng",
+      "noData": "Chưa có dữ liệu hiệu suất công việc cho mùa vụ này."
+    },
+    "pesticide": {
+      "title": "Thuốc BVTV & Tuân thủ",
+      "subtitle": "Theo dõi tuân thủ PHI và sử dụng hóa chất",
+      "recordsNeedReview": "{{count}} bản ghi cần xem xét",
+      "record": "Bản ghi",
+      "chemicalNotes": "Hóa chất / Ghi chú",
+      "quantity": "Số lượng",
+      "phiDays": "PHI (ngày)",
+      "daysRemaining": "Số ngày còn lại",
+      "status": "Trạng thái",
+      "noRecords": "Không tìm thấy bản ghi phun thuốc cho mùa vụ này.",
+      "complianceReminder": "Nhắc nhở tuân thủ",
+      "complianceDescription": "Phải tuân thủ PHI (Khoảng thời gian cách ly trước thu hoạch) trước khi thu hoạch. Các lô được đánh dấu đỏ đã vi phạm thời gian PHI và cần xem xét trước khi bán.",
+      "statusSafe": "An toàn",
+      "statusApproaching": "Sắp đến hạn",
+      "statusViolated": "Vi phạm",
+      "statusReview": "Cần dữ liệu"
+    },
+    "filter": {
+      "title": "Lọc báo cáo",
+      "plotSelector": "Chọn thửa đất",
+      "selectPlots": "Chọn thửa đất",
+      "allPlots": "Tất cả thửa đất",
+      "cropType": "Loại cây trồng",
+      "season": "Mùa vụ",
+      "allSeasons": "Tất cả mùa vụ",
+      "timeRange": "Khoảng thời gian",
+      "includeClosedSeasons": "Bao gồm mùa vụ đã đóng",
+      "clear": "Xóa bộ lọc",
+      "apply": "Áp dụng"
+    },
+    "export": {
+      "title": "Xuất báo cáo",
+      "description": "Chọn định dạng và tùy chọn xuất",
+      "fileType": "Loại tệp",
+      "includeCharts": "Bao gồm biểu đồ",
+      "includeNotes": "Bao gồm ghi chú",
+      "cancel": "Hủy",
+      "generating": "Đang tạo...",
+      "generate": "Tạo báo cáo"
+    },
+    "toast": {
+      "exportSuccess": "Xuất báo cáo thành công",
+      "exportDescription": "Báo cáo {{format}} đã được tạo.",
+      "filtersApplied": "Đã áp dụng bộ lọc",
+      "filtersAppliedDescription": "Dữ liệu báo cáo đã được cập nhật theo bộ lọc của bạn.",
+      "filtersCleared": "Đã xóa bộ lọc",
+      "filtersClearedDescription": "Tất cả bộ lọc đã được đặt lại giá trị mặc định."
+    },
+    "apiErrors": {
+      "sessionExpired": "Phiên đã hết hạn. Vui lòng đăng nhập lại.",
+      "noPermission": "Bạn không có quyền truy cập báo cáo mùa vụ này.",
+      "invalidRequest": "Dữ liệu yêu cầu không hợp lệ. Vui lòng kiểm tra và thử lại.",
+      "costOptimizationFailed": "Không thể tải tóm tắt tối ưu chi phí.",
+      "aiAnalysisFailed": "Không thể phân tích chi phí lúc này."
+    }
+  },
+  "weatherWidget": {
+    "compact": {
+      "temperatureUnit": "Độ C",
+      "locationFallback": "Chưa có vị trí",
+      "placeholder": {
+        "default": "Nhấn để xem thời tiết",
+        "loading": "Đang tải thời tiết...",
+        "locationRequired": "Cập nhật vị trí nông trại",
+        "unavailable": "Dịch vụ thời tiết tạm thời không khả dụng",
+        "error": "Không thể tải dữ liệu thời tiết"
+      }
+    },
+    "detailed": {
+      "notLoaded": "Chưa tải",
+      "actions": {
+        "updateFarmLocation": "Cập nhật vị trí nông trại"
+      },
+      "state": {
+        "locationRequired": {
+          "title": "Cần vị trí nông trại",
+          "description": "Vui lòng cập nhật vĩ độ và kinh độ trong cài đặt nông trại để xem thời tiết."
+        },
+        "unavailable": {
+          "title": "Dịch vụ thời tiết không khả dụng",
+          "description": "Dữ liệu thời tiết tạm thời không khả dụng. Vui lòng thử lại."
+        },
+        "error": {
+          "title": "Tải thời tiết thất bại",
+          "description": "Vui lòng làm mới và thử lại."
+        },
+        "empty": {
+          "title": "Chưa có dữ liệu thời tiết",
+          "description": "Làm mới để tải dữ liệu thời tiết mới nhất cho nông trại."
+        }
+      }
+    }
+  },
+  "chat": {
+    "pageAria": "Trò chuyện",
+    "messages": {
+      "title": "Tin nhắn",
+      "listAria": "Tin nhắn",
+      "countAria": "{{count}} cuộc trò chuyện",
+      "noConversations": "Chưa có cuộc trò chuyện",
+      "searchToStart": "Tìm liên hệ phía trên để bắt đầu trò chuyện.",
+      "noMessagesYet": "Chưa có tin nhắn",
+      "unreadCount": "{{count}} tin nhắn chưa đọc"
+    },
+    "search": {
+      "placeholder": "Tìm theo nông trại, tên, địa chỉ hoặc ID...",
+      "ariaLabel": "Tìm liên hệ trò chuyện",
+      "clear": "Xóa tìm kiếm",
+      "searching": "Đang tìm...",
+      "contactsFound": "Tìm thấy {{count}} liên hệ",
+      "contactsFound_plural": "Tìm thấy {{count}} liên hệ",
+      "noResultsTitle": "Không có kết quả",
+      "noMatch": "Không có liên hệ phù hợp.",
+      "tryDifferent": "Thử tên nông trại, người đại diện hoặc ID khác.",
+      "confirmContact": "Xác nhận liên hệ"
+    },
+    "contact": {
+      "idLabel": "ID: #{{id}}",
+      "noFarmProfile": "Chưa có hồ sơ nông trại",
+      "noAddress": "Chưa có địa chỉ"
+    },
+    "actions": {
+      "backToMessages": "Quay lại danh sách tin nhắn",
+      "openConversation": "Mở cuộc trò chuyện",
+      "openConversationWith": "Mở cuộc trò chuyện với {{name}}",
+      "startConversationWith": "Bắt đầu trò chuyện với {{name}}"
+    },
+    "composer": {
+      "selectConversationPlaceholder": "Chọn một cuộc trò chuyện để nhập tin nhắn...",
+      "messageTargetPlaceholder": "Nhắn cho {{target}}...",
+      "messagePlaceholder": "Nhập tin nhắn...",
+      "messageInputAria": "Ô nhập tin nhắn",
+      "sendAria": "Gửi tin nhắn"
+    },
+    "empty": {
+      "selectConversationTitle": "Chọn một cuộc trò chuyện",
+      "selectConversationDescription": "Chọn cuộc trò chuyện gần đây bên trái hoặc tìm theo nông trại, người đại diện, địa chỉ hoặc ID để bắt đầu cuộc trò chuyện mới.",
+      "searchContactsTitle": "Tìm liên hệ",
+      "searchContactsDescription": "Tìm nông trại, người mua hoặc người đại diện theo tên, địa chỉ hoặc ID.",
+      "verifyIdentityTitle": "Xác minh danh tính",
+      "verifyIdentityDescription": "Xác nhận nông trại và người đại diện trước khi nhắn tin.",
+      "startMessagingTitle": "Bắt đầu nhắn tin",
+      "startMessagingDescription": "Trao đổi đơn hàng, giá, giao hàng hoặc công việc nông trại an toàn.",
+      "recentConversationsHint": "Các cuộc trò chuyện gần đây sẽ hiển thị ở bảng bên trái.",
+      "noMessagesTitle": "Chưa có tin nhắn",
+      "noMessagesDescription": "Gửi tin nhắn đầu tiên bên dưới để bắt đầu cuộc trò chuyện."
+    },
+    "identity": {
+      "title": "Chi tiết liên hệ",
+      "selectConversationHint": "Chọn một cuộc trò chuyện để xem nông trại, người đại diện, vai trò, địa chỉ và ID nội bộ.",
+      "whyThisMatters": "Vì sao cần thông tin này",
+      "verifyIdentity": "Xác minh danh tính trước khi trao đổi đơn hàng, giá, giao hàng hoặc công việc nông trại.",
+      "notProvided": "Chưa được cung cấp",
+      "contactInformation": "Thông tin liên hệ",
+      "farm": "Nông trại",
+      "representative": "Người đại diện",
+      "address": "Địa chỉ",
+      "role": "Vai trò",
+      "internalId": "ID nội bộ",
+      "conversationContext": "Ngữ cảnh cuộc trò chuyện",
+      "contextDescription": "Chi tiết liên hệ giúp xác minh danh tính trước khi trao đổi đơn hàng, giá, giao hàng hoặc công việc nông trại."
+    },
+    "realtime": {
+      "typing": "{{name}} đang nhập..."
+    },
+    "receipts": {
+      "sent": "Đã gửi",
+      "read": "Đã đọc"
+    },
+    "thread": {
+      "loadingMessages": "Đang tải tin nhắn..."
     },
     "status": {
-      "draft": "Nháp",
-      "pendingReview": "Chờ duyệt",
-      "published": "Đã duyệt",
-      "hidden": "Bị từ chối / Ẩn"
-    },
-    "table": {
-      "product": "Sản phẩm",
-      "category": "Danh mục",
-      "price": "Giá",
-      "stock": "Tồn kho",
-      "status": "Trạng thái",
-      "updated": "Cập nhật",
-      "actions": "Thao tác",
-      "adminReason": "Lý do từ quản trị",
-      "available": "Khả dụng"
+      "unavailableTitle": "Chat chưa khả dụng",
+      "initializing": "Đang khởi tạo chat...",
+      "connectionFailedTitle": "Kết nối thất bại",
+      "retryConnection": "Thử kết nối lại"
     }
   }
 }

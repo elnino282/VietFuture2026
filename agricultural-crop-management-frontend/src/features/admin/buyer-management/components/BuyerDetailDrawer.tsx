@@ -12,14 +12,11 @@ import {
     Building2,
     CheckCircle,
     Download,
-    Eye,
-    FileText,
     Filter,
-    Upload,
+    Info,
     XCircle,
 } from 'lucide-react';
-import { PLACEHOLDER_AUDIT_LOGS, PLACEHOLDER_KYC_DOCUMENTS } from '../constants';
-import type { AccountStatus, AuditLog, Buyer, BuyerFormData, BuyerRole, KYCStatus } from '../types';
+import type { AccountStatus, Buyer, BuyerFormData, BuyerRole, KYCStatus } from '../types';
 
 interface BuyerDetailDrawerProps {
     open: boolean;
@@ -33,7 +30,7 @@ interface BuyerDetailDrawerProps {
     onKYCVerify: () => void;
     onKYCReject: () => void;
     getKYCBadge: (status: KYCStatus) => string;
-    getAuditIcon: (type: AuditLog['type']) => React.ReactNode;
+    kycActionsSupported?: boolean;
 }
 
 export function BuyerDetailDrawer({
@@ -48,7 +45,7 @@ export function BuyerDetailDrawer({
     onKYCVerify,
     onKYCReject,
     getKYCBadge,
-    getAuditIcon,
+    kycActionsSupported = false,
 }: BuyerDetailDrawerProps) {
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -197,7 +194,7 @@ export function BuyerDetailDrawer({
                             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
                                 Cancel
                             </Button>
-                            <Button className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF]" onClick={onSave}>
+                            <Button className="flex-1" onClick={onSave}>
                                 {buyer ? 'Update Buyer' : 'Create Buyer'}
                             </Button>
                         </div>
@@ -223,48 +220,15 @@ export function BuyerDetailDrawer({
                                 <div>
                                     <div className="flex items-center justify-between mb-4">
                                         <h4>KYC Documents</h4>
-                                        <Button variant="outline" size="sm">
-                                            <Upload className="w-4 h-4 mr-2" />
-                                            Upload
-                                        </Button>
                                     </div>
-                                    <div className="space-y-3">
-                                        {PLACEHOLDER_KYC_DOCUMENTS.map((doc) => (
-                                            <div
-                                                key={doc.id}
-                                                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
-                                            >
-                                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                                                        <FileText className="w-5 h-5 text-blue-600" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium truncate">{doc.type}</p>
-                                                        <p className="text-xs text-muted-foreground">{doc.filename}</p>
-                                                        <p className="text-xs text-muted-foreground mt-1">
-                                                            Uploaded: {doc.uploadedAt}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2 shrink-0">
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className={
-                                                            doc.status === 'approved'
-                                                                ? 'bg-emerald-100 text-emerald-700'
-                                                                : doc.status === 'rejected'
-                                                                    ? 'bg-red-100 text-red-700'
-                                                                    : 'bg-amber-100 text-amber-700'
-                                                        }
-                                                    >
-                                                        {doc.status}
-                                                    </Badge>
-                                                    <Button variant="ghost" size="icon">
-                                                        <Eye className="w-4 h-4" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
+                                    <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+                                        <div className="flex items-center gap-2 text-foreground mb-2">
+                                            <Info className="w-4 h-4" />
+                                            KYC backend integration is not available yet.
+                                        </div>
+                                        <p>
+                                            This tab is read-only for now. Verification/rejection actions are disabled until a dedicated KYC API is provided.
+                                        </p>
                                     </div>
                                 </div>
 
@@ -275,7 +239,7 @@ export function BuyerDetailDrawer({
                                         variant="outline"
                                         className="flex-1 text-red-600 hover:text-red-700"
                                         onClick={onKYCReject}
-                                        disabled={buyer.kycStatus === 'rejected'}
+                                        disabled={!kycActionsSupported || buyer.kycStatus === 'rejected'}
                                     >
                                         <XCircle className="w-4 h-4 mr-2" />
                                         Reject KYC
@@ -283,7 +247,7 @@ export function BuyerDetailDrawer({
                                     <Button
                                         className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                                         onClick={onKYCVerify}
-                                        disabled={buyer.kycStatus === 'verified'}
+                                        disabled={!kycActionsSupported || buyer.kycStatus === 'verified'}
                                     >
                                         <CheckCircle className="w-4 h-4 mr-2" />
                                         Verify KYC
@@ -352,7 +316,7 @@ export function BuyerDetailDrawer({
                                     <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
                                         Cancel
                                     </Button>
-                                    <Button className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF]">
+                                    <Button className="flex-1" disabled>
                                         Save Permissions
                                     </Button>
                                 </div>
@@ -375,26 +339,9 @@ export function BuyerDetailDrawer({
                                 </div>
 
                                 <div className="space-y-3">
-                                    {PLACEHOLDER_AUDIT_LOGS.map((log) => (
-                                        <div
-                                            key={log.id}
-                                            className="flex gap-3 p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
-                                        >
-                                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                                                {getAuditIcon(log.type)}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-start justify-between gap-2 mb-1">
-                                                    <h4 className="font-medium text-sm">{log.action}</h4>
-                                                    <span className="text-xs text-muted-foreground shrink-0">
-                                                        {log.timestamp}
-                                                    </span>
-                                                </div>
-                                                <p className="text-sm text-muted-foreground mb-1">{log.details}</p>
-                                                <p className="text-xs text-muted-foreground">By: {log.user}</p>
-                                            </div>
-                                        </div>
-                                    ))}
+                                    <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+                                        Audit history endpoint is not available for buyer management yet.
+                                    </div>
                                 </div>
                             </>
                         )}

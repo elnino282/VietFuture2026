@@ -16,6 +16,7 @@ import org.example.QuanLyMuaVu.module.season.port.TaskQueryPort;
 import org.example.QuanLyMuaVu.module.season.repository.DashboardTaskViewRepository;
 import org.example.QuanLyMuaVu.module.season.repository.TaskRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +55,25 @@ public class TaskQueryService implements TaskQueryPort {
             return List.of();
         }
         return dashboardTaskViewRepository.findUpcomingTasks(userId, seasonId, today, untilDate, excludedStatuses);
+    }
+
+    @Override
+    public List<DashboardTaskView> findOverdueTasksByUser(
+            Long userId,
+            Integer seasonId,
+            LocalDate today,
+            List<TaskStatus> excludedStatuses,
+            int limit) {
+        if (userId == null || today == null || excludedStatuses == null) {
+            return List.of();
+        }
+        int safeLimit = Math.max(limit, 1);
+        return dashboardTaskViewRepository.findOverdueTasks(
+                userId,
+                seasonId,
+                today,
+                excludedStatuses,
+                PageRequest.of(0, safeLimit));
     }
 
     @Override

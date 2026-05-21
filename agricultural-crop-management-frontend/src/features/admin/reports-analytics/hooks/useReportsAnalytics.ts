@@ -6,7 +6,6 @@ import type { DateRange, UserActivityFilter, KPIData } from '../types';
 import {
     USER_ACTIVITY_DATA,
     SYSTEM_ALERTS,
-    SYSTEM_HEALTH,
 } from '../constants';
 import {
     adminReportsApi,
@@ -211,9 +210,9 @@ export const useReportsAnalytics = () => {
                 change: 12.5,
                 trend: 'up' as const,
                 icon: Users,
-                color: '#2563EB',
-                bgColor: 'bg-blue-50',
-                textColor: 'text-blue-600',
+                color: '#3BA55D',
+                bgColor: 'bg-emerald-50',
+                textColor: 'text-emerald-600',
                 subtitle: 'DAU/WAU',
                 trendData: [65, 72, 68, 75, 82, 78, 85],
             },
@@ -344,7 +343,6 @@ export const useReportsAnalytics = () => {
         expensesData,
         metricsData,
         systemAlerts: SYSTEM_ALERTS,
-        systemHealth: SYSTEM_HEALTH,
         filteredUserActivityData,
 
         // Loading states

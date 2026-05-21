@@ -1,21 +1,15 @@
 import { Filter } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/shared/ui/sheet";
+import { Button } from "@/shared/ui/button";
+import { Label } from "@/shared/ui/label";
+import { Switch } from "@/shared/ui/switch";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/shared/ui/select";
+import { useI18n } from "@/hooks/useI18n";
 import type { FilterState } from "../types";
 import {
-    PLOT_OPTIONS,
-    CROP_TYPE_OPTIONS,
-    SEASON_OPTIONS,
-    TIME_RANGE_OPTIONS,
+    PLOT_OPTIONS, CROP_TYPE_OPTIONS, SEASON_OPTIONS, TIME_RANGE_OPTIONS,
 } from "../constants";
 
 interface FilterDrawerProps {
@@ -28,13 +22,10 @@ interface FilterDrawerProps {
 }
 
 export function FilterDrawer({
-    isOpen,
-    onOpenChange,
-    filters,
-    onFiltersChange,
-    onApplyFilters,
-    onClearFilters,
+    isOpen, onOpenChange, filters, onFiltersChange, onApplyFilters, onClearFilters,
 }: FilterDrawerProps) {
+    const { t } = useI18n();
+
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
             <SheetContent
@@ -44,32 +35,26 @@ export function FilterDrawer({
                 <SheetHeader>
                     <SheetTitle className="flex items-center gap-2 text-foreground">
                         <Filter className="w-5 h-5 text-primary" />
-                        Filter Reports
+                        {t("reports.filter.title")}
                     </SheetTitle>
                 </SheetHeader>
 
                 <div className="mt-6 space-y-6">
                     <div className="space-y-2">
                         <Label htmlFor="plot-filter" className="text-foreground">
-                            Plot Selector
+                            {t("reports.filter.plotSelector")}
                         </Label>
                         <Select
                             value={filters.plots[0] ?? "all"}
                             onValueChange={(value: string) =>
-                                onFiltersChange({
-                                    ...filters,
-                                    plots: value === "all" ? [] : [value],
-                                })
+                                onFiltersChange({ ...filters, plots: value === "all" ? [] : [value] })
                             }
                         >
-                            <SelectTrigger
-                                id="plot-filter"
-                                className="rounded-xl border-border"
-                            >
-                                <SelectValue placeholder="Select plots" />
+                            <SelectTrigger id="plot-filter" className="rounded-xl border-border">
+                                <SelectValue placeholder={t("reports.filter.selectPlots")} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Plots</SelectItem>
+                                <SelectItem value="all">{t("reports.filter.allPlots")}</SelectItem>
                                 {PLOT_OPTIONS.map((option) => (
                                     <SelectItem key={option.value} value={option.value}>
                                         {option.label}
@@ -81,7 +66,7 @@ export function FilterDrawer({
 
                     <div className="space-y-2">
                         <Label htmlFor="crop-filter" className="text-foreground">
-                            Crop Type
+                            {t("reports.filter.cropType")}
                         </Label>
                         <Select
                             value={filters.cropType}
@@ -89,10 +74,7 @@ export function FilterDrawer({
                                 onFiltersChange({ ...filters, cropType: value })
                             }
                         >
-                            <SelectTrigger
-                                id="crop-filter"
-                                className="rounded-xl border-border"
-                            >
+                            <SelectTrigger id="crop-filter" className="rounded-xl border-border">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -107,7 +89,7 @@ export function FilterDrawer({
 
                     <div className="space-y-2">
                         <Label htmlFor="season-filter" className="text-foreground">
-                            Season
+                            {t("reports.filter.season")}
                         </Label>
                         <Select
                             value={filters.season}
@@ -115,14 +97,11 @@ export function FilterDrawer({
                                 onFiltersChange({ ...filters, season: value })
                             }
                         >
-                            <SelectTrigger
-                                id="season-filter"
-                                className="rounded-xl border-border"
-                            >
+                            <SelectTrigger id="season-filter" className="rounded-xl border-border">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Seasons</SelectItem>
+                                <SelectItem value="all">{t("reports.filter.allSeasons")}</SelectItem>
                                 {SEASON_OPTIONS.map((option) => (
                                     <SelectItem key={option.value} value={option.value}>
                                         {option.label}
@@ -134,7 +113,7 @@ export function FilterDrawer({
 
                     <div className="space-y-2">
                         <Label htmlFor="time-filter" className="text-foreground">
-                            Time Range
+                            {t("reports.filter.timeRange")}
                         </Label>
                         <Select
                             value={filters.timeRange}
@@ -142,10 +121,7 @@ export function FilterDrawer({
                                 onFiltersChange({ ...filters, timeRange: value })
                             }
                         >
-                            <SelectTrigger
-                                id="time-filter"
-                                className="rounded-xl border-border"
-                            >
+                            <SelectTrigger id="time-filter" className="rounded-xl border-border">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -160,7 +136,7 @@ export function FilterDrawer({
 
                     <div className="flex items-center justify-between">
                         <Label htmlFor="closed-seasons" className="text-foreground">
-                            Include Closed Seasons
+                            {t("reports.filter.includeClosedSeasons")}
                         </Label>
                         <Switch
                             id="closed-seasons"
@@ -173,24 +149,14 @@ export function FilterDrawer({
                 </div>
 
                 <div className="mt-8 flex gap-3">
-                    <Button
-                        variant="outline"
-                        className="flex-1 rounded-xl border-border"
-                        onClick={onClearFilters}
-                    >
-                        Clear
+                    <Button variant="outline" className="flex-1 rounded-xl border-border" onClick={onClearFilters}>
+                        {t("reports.filter.clear")}
                     </Button>
-                    <Button
-                        className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl"
-                        onClick={onApplyFilters}
-                    >
-                        Apply
+                    <Button className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl" onClick={onApplyFilters}>
+                        {t("reports.filter.apply")}
                     </Button>
                 </div>
             </SheetContent>
         </Sheet>
     );
 }
-
-
-

@@ -1,5 +1,7 @@
 package org.example.QuanLyMuaVu.DTO.Common;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -28,6 +30,17 @@ public class ApiResponse<T> {
      * Actual data payload.
      */
     private T result;
+
+    /**
+     * Canonical payload field for dashboard/data contracts.
+     * Kept in sync with {@link #result} for backward compatibility.
+     */
+    private T data;
+
+    /**
+     * UTC timestamp indicating when the response was generated.
+     */
+    private String generatedAt;
 
     public int getStatus() {
         return status;
@@ -59,6 +72,24 @@ public class ApiResponse<T> {
 
     public void setResult(T result) {
         this.result = result;
+        this.data = result;
+    }
+
+    public T getData() {
+        return data;
+    }
+
+    public void setData(T data) {
+        this.data = data;
+        this.result = data;
+    }
+
+    public String getGeneratedAt() {
+        return generatedAt;
+    }
+
+    public void setGeneratedAt(String generatedAt) {
+        this.generatedAt = generatedAt;
     }
 
     /**
@@ -76,6 +107,7 @@ public class ApiResponse<T> {
         response.setStatus(HttpStatus.OK.value());
         response.setCode("SUCCESS");
         response.setMessage(message);
+        response.setGeneratedAt(OffsetDateTime.now(ZoneOffset.UTC).toString());
         response.setResult(result);
         return response;
     }
@@ -88,6 +120,7 @@ public class ApiResponse<T> {
         response.setStatus(status.value());
         response.setCode(code);
         response.setMessage(message);
+        response.setGeneratedAt(OffsetDateTime.now(ZoneOffset.UTC).toString());
         response.setResult(null);
         return response;
     }

@@ -55,7 +55,7 @@ export function PageHeader({
                     <Download className="w-4 h-4 mr-2" />
                     Export Logs
                 </Button>
-                <Button className="bg-[#2563EB] hover:bg-[#1E40AF]" onClick={() => setIncidentModalOpen(true)}>
+                <Button onClick={() => setIncidentModalOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Create Incident
                 </Button>

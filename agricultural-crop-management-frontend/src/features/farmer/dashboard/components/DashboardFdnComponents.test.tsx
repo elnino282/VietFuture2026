@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { DashboardFdnOverview, DashboardFieldMapItem } from '@/entities/dashboard';
@@ -13,6 +13,10 @@ vi.mock('react-i18next', () => ({
     t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key,
   }),
 }));
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 function metric(
   status: 'measured' | 'estimated' | 'missing' | 'unavailable',
@@ -95,6 +99,7 @@ function overviewFixture(overrides?: Partial<DashboardFdnOverview>): DashboardFd
       summary: 'Overall confidence 72%; 1 measured, 3 estimated/mixed, 1 missing inputs.',
     },
     missingInputs: ['CONTROL_SUPPLY'],
+    unavailableReasons: ['NO_HARVEST'],
     notes: ['Sample note'],
     recommendations: ['Backend recommendation'],
     recommendationSource: 'product_rule_config_v1',
@@ -140,6 +145,25 @@ describe('Dashboard FDN components', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('FdnAssistantPanel suggests actions from backend missingInputs when recommendations are empty', () => {
+    const overview = overviewFixture({
+      recommendations: [],
+      missingInputs: ['IRRIGATION_WATER', 'MINERAL_FERTILIZER'],
+      unavailableReasons: ['MISSING_NITROGEN_INPUT'],
+      fdnTotalMetric: metric('unavailable', null),
+      sustainableScoreMetric: metric('unavailable', null),
+    });
+
+    render(<FdnAssistantPanel overview={overview} isLoading={false} />);
+
+    expect(
+      screen.getByText('Add irrigation water analysis records so irrigation N can be measured.')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Record mineral/organic fertilizer nitrogen inputs in the season workspace.')
+    ).toBeInTheDocument();
+  });
+
   it('NitrogenInputBreakdown shows empty state when inputs are not available', () => {
     const overview = overviewFixture({
       inputsBreakdown: {
@@ -160,6 +184,7 @@ describe('Dashboard FDN components', () => {
         unavailableInputCount: 0,
         summary: 'Low confidence',
       },
+      unavailableReasons: [],
     });
 
     render(<NitrogenInputBreakdown overview={overview} isLoading={false} />);
@@ -170,20 +195,39 @@ describe('Dashboard FDN components', () => {
   });
 
   it('FdnHistoryChart shows useful empty state when history is empty', () => {
-    render(<FdnHistoryChart history={[]} isLoading={false} />);
+    const overview = overviewFixture({
+      unavailableReasons: [],
+      historicalTrend: [],
+    });
+    render(<FdnHistoryChart overview={overview} isLoading={false} />);
 
     expect(screen.getByText('No historical season metrics available.')).toBeInTheDocument();
   });
 
-  it('FieldSustainabilityMap falls back to list mode when map key/geometry is unavailable', async () => {
+  it('FdnHistoryChart renders unavailable reasons and CTA when history is unavailable', () => {
+    const overview = overviewFixture({
+      unavailableReasons: ['NO_HARVEST', 'INSUFFICIENT_HISTORY'],
+      historicalTrend: [],
+    });
+
+    render(<FdnHistoryChart overview={overview} isLoading={false} />);
+
+    expect(screen.getByText('FDN dashboard metrics are unavailable')).toBeInTheDocument();
+    expect(screen.getByText('Add harvest record')).toBeInTheDocument();
+  });
+
+  it('FieldSustainabilityMap shows missing-boundary list when no field has valid boundary', async () => {
+    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key');
+
     const items: DashboardFieldMapItem[] = [
       {
         fieldId: 1,
         fieldName: 'Field A',
         farmId: 7,
         farmName: 'Farm 7',
-        geometry: null,
+        boundaryGeoJson: null,
         center: null,
+        boundaryIssue: 'MISSING_BOUNDARY_GEOJSON',
         cropName: 'Rice',
         seasonName: 'Season 33',
         fdnLevel: 'high',
@@ -212,12 +256,20 @@ describe('Dashboard FDN components', () => {
 
     render(
       <MemoryRouter>
-        <FieldSustainabilityMap items={items} isLoading={false} />
+        <FieldSustainabilityMap
+          mapData={{
+            fieldsWithBoundary: [],
+            fieldsMissingBoundary: items,
+            defaultViewport: null,
+            unavailableReason: 'MISSING_BOUNDARY_AND_FARM_LOCATION',
+          }}
+          isLoading={false}
+        />
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('Map is currently unavailable')).toBeInTheDocument();
-    expect(screen.getByText('Field list fallback')).toBeInTheDocument();
+    expect(await screen.findByText('Fields require boundary update')).toBeInTheDocument();
+    expect(screen.getByText('Fields missing boundary GeoJSON')).toBeInTheDocument();
     expect(screen.getByText('Go to Farms & Plots')).toBeInTheDocument();
   });
 });

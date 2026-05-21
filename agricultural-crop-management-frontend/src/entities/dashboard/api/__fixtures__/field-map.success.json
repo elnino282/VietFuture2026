@@ -3,14 +3,16 @@
   "code": "SUCCESS",
   "message": "OK",
   "result": {
-    "items": [
+    "fieldsWithBoundary": [],
+    "fieldsMissingBoundary": [
       {
         "fieldId": 22,
         "fieldName": "Field A",
         "farmId": 7,
         "farmName": "Farm 7",
-        "geometry": null,
+        "boundaryGeoJson": null,
         "center": null,
+        "boundaryIssue": "MISSING_BOUNDARY_GEOJSON",
         "cropName": "Lua",
         "seasonName": "Mua 33",
         "fdnLevel": "high",
@@ -39,6 +41,15 @@
           "Collect measured fertilizer records first."
         ]
       }
-    ]
+    ],
+    "defaultViewport": {
+      "center": {
+        "lat": 16.054321,
+        "lng": 108.223456
+      },
+      "zoom": 12,
+      "source": "FARM_LOCATION"
+    },
+    "unavailableReason": null
   }
 }

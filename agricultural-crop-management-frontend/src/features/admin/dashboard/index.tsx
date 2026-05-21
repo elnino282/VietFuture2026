@@ -5,6 +5,7 @@ import { useAdminDashboard } from './hooks/useAdminDashboard';
 import { DashboardSkeleton } from './components/DashboardSkeleton';
 import { RiskySeasonsTable } from './components/RiskySeasonsTable';
 import { InventoryHealthCards } from './components/InventoryHealthCards';
+import { PendingApprovals } from './components/PendingApprovals';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { cn } from '@/shared/lib';
 import { useI18n } from '@/hooks/useI18n';
@@ -37,6 +38,11 @@ export function AdminDashboard() {
     kpiMetrics,
     charts,
     risks,
+    riskDataCoverage,
+    riskDataLimited,
+    pendingApprovals,
+    pendingApprovalsLoading,
+    pendingApprovalsError,
     refetch,
   } = useAdminDashboard();
 
@@ -94,7 +100,7 @@ export function AdminDashboard() {
             <RefreshCw className={cn('h-4 w-4 mr-2', isFetching && 'animate-spin')} />
             {t('common.refresh')}
           </Button>
-          <Button className="w-full sm:w-auto bg-[#2563EB] hover:bg-[#1E40AF]">
+          <Button className="w-full sm:w-auto">
             <BarChart3 className="w-4 h-4 mr-2" />
             {t('admin.dashboard.exportReport')}
           </Button>
@@ -194,8 +200,21 @@ export function AdminDashboard() {
       </div>
 
       {/* Risky Seasons & Inventory Health */}
+      <PendingApprovals
+        items={pendingApprovals}
+        isLoading={pendingApprovalsLoading}
+        error={pendingApprovalsError}
+        onRetry={() => void refetch()}
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RiskySeasonsTable seasons={risks} />
+        <RiskySeasonsTable
+          seasons={risks}
+          isLoading={isLoading}
+          error={isError ? (error as Error) : null}
+          riskDataLimited={riskDataLimited}
+          dataCoverage={riskDataCoverage}
+        />
         <InventoryHealthCards />
       </div>
     </div>

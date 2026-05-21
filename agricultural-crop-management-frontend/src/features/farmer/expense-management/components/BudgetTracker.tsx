@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Progress } from "@/shared/ui/progress";
+import { Button } from "@/shared/ui/button";
 import { DollarSign, TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import { formatMoney, convertToDisplayCurrency } from "@/shared/lib";
 import { usePreferences } from "@/shared/contexts";

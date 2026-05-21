@@ -1,5 +1,5 @@
 import { CheckCircle2, Clock, Moon, AlertTriangle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 import type { PlotStatus } from "../types";
 
 interface PlotStatusChipProps {

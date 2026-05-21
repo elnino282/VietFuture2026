@@ -10,16 +10,20 @@ export interface QCMetrics {
 export interface HarvestBatch {
     id: string;
     batchId: string;
+    seasonId?: number;
+    seasonName?: string;
     date: string;
     createdAt?: string | null;
     quantity: number;
-    grade: HarvestGrade;
-    moisture: number;
+    unitPrice?: number | null;
+    revenue?: number | null;
+    grade?: HarvestGrade | null;
+    moisture?: number | null;
     linkedSale?: string;
-    status: HarvestStatus;
-    season: string;
-    plot: string;
-    crop: string;
+    status?: HarvestStatus | null;
+    season?: string;
+    plot?: string;
+    crop?: string;
     notes?: string;
     qcMetrics?: QCMetrics;
     photo?: string;

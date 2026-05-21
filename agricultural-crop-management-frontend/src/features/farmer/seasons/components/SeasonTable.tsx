@@ -1,7 +1,7 @@
 import { MoreVertical, Edit, Copy, Play, CheckCircle2, Ban, Archive, Trash2, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Checkbox } from '@/shared/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -9,17 +9,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/shared/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Progress } from '@/components/ui/progress';
+} from '@/shared/ui/dropdown-menu';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
+import { Progress } from '@/shared/ui/progress';
 import { Season, SeasonStatus } from '../types';
 
 interface SeasonTableProps {

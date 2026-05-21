@@ -11,8 +11,8 @@ import org.example.QuanLyMuaVu.Enums.UserStatus;
 import org.example.QuanLyMuaVu.Exception.AppException;
 import org.example.QuanLyMuaVu.Exception.ErrorCode;
 import org.example.QuanLyMuaVu.module.farm.port.FarmQueryPort;
+import org.example.QuanLyMuaVu.module.identity.dto.request.ChangePasswordRequest;
 import org.example.QuanLyMuaVu.module.identity.dto.request.FarmerCreationRequest;
-import org.example.QuanLyMuaVu.module.identity.dto.request.FarmerUpdateRequest;
 import org.example.QuanLyMuaVu.module.identity.dto.request.ResetPasswordRequest;
 import org.example.QuanLyMuaVu.module.identity.dto.request.SignUpRequest;
 import org.example.QuanLyMuaVu.module.identity.dto.request.UserProfileUpdateRequest;
@@ -149,14 +149,30 @@ public class UserService {
         return farmerMapper.toFarmerResponse(userRepository.save(user));
     }
 
-    public FarmerResponse changeMyPassword(FarmerUpdateRequest request) {
+    public FarmerResponse changeMyPassword(ChangePasswordRequest request) {
         User user = resolveCurrentUser();
 
-        if (request.getPassword() == null || request.getPassword().length() < 8) {
+        if (request.getCurrentPassword() == null || request.getCurrentPassword().isBlank()) {
+            throw new AppException(ErrorCode.PASSWORD_BLANK);
+        }
+
+        if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
+            throw new AppException(ErrorCode.PASSWORD_BLANK);
+        }
+
+        if (request.getNewPassword().length() < 8) {
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
 
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new AppException(ErrorCode.PASSWORD_NOT_SET);
+        }
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.CURRENT_PASSWORD_INCORRECT);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         return farmerMapper.toFarmerResponse(userRepository.save(user));
     }
 

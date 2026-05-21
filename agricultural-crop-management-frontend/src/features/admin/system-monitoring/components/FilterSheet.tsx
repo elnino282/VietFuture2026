@@ -100,10 +100,7 @@ export function FilterSheet({
                         >
                             Clear All
                         </Button>
-                        <Button
-                            className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF]"
-                            onClick={() => setFilterOpen(false)}
-                        >
+                        <Button className="flex-1" onClick={() => setFilterOpen(false)}>
                             Apply Filters
                         </Button>
                     </div>

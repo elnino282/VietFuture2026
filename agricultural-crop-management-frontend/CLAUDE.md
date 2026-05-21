@@ -50,7 +50,7 @@ The codebase follows **Feature-Sliced Design** with strict layer hierarchy:
 
 ```
 src/
-├── app/          # Application initialization, routing, global store
+├── app/          # Application initialization and routing
 ├── pages/        # DEPRECATED - being migrated to features/
 ├── widgets/      # Complex UI blocks composed of features/entities
 ├── features/     # User-facing features (auth, marketplace, farmer portal, etc.)
@@ -85,7 +85,7 @@ src/
 - Role types: `admin`, `farmer`, `buyer`, `employee` (lowercase canonical form)
 
 **2. State Management**
-- **Zustand** for global auth state (`src/app/store/authStore.ts`)
+- **React Context** for auth/session state (`src/features/auth/context/AuthContext.tsx`)
 - **TanStack Query** for server state (entities layer)
 - **React Context** for feature-scoped state (e.g., `SeasonContext`)
 
@@ -225,7 +225,7 @@ VITE_API_PROXY_TARGET=http://localhost:8080  # Backend API URL
 - **Framework:** React 18 + TypeScript
 - **Build:** Vite 6
 - **Routing:** React Router 6
-- **State:** Zustand + TanStack Query
+- **State:** React Context + TanStack Query
 - **UI:** Radix UI + Tailwind CSS
 - **Forms:** React Hook Form + Zod
 - **i18n:** i18next + react-i18next

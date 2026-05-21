@@ -1,61 +1,145 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AlertCircle, Clock3 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { PendingApproval } from '../types';
-import { getPriorityBadge } from '../constants';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/shared/lib';
+import type { AdminDashboardPendingApproval } from '../hooks/useAdminDashboard';
 
-interface PendingApprovalsProps {
-  approvals: PendingApproval[];
-  onReview: (approvalId: number) => void;
+type PendingApprovalsProps = {
+  items: AdminDashboardPendingApproval[];
+  isLoading: boolean;
+  error: Error | null;
+  onRetry: () => void;
+};
+
+const severityClasses: Record<string, string> = {
+  CRITICAL: 'bg-red-100 text-red-700 border-red-300',
+  HIGH: 'bg-orange-100 text-orange-700 border-orange-300',
+  MEDIUM: 'bg-amber-100 text-amber-700 border-amber-300',
+  LOW: 'bg-emerald-100 text-emerald-700 border-emerald-300',
+};
+
+function resolveSeverityTag(input?: string | null): string {
+  const normalized = input?.trim().toUpperCase();
+  if (normalized && severityClasses[normalized]) {
+    return normalized;
+  }
+  return 'LOW';
 }
 
-/**
- * PendingApprovals Component
- * 
- * Displays a list of pending approval items requiring admin attention.
- * Each item shows type, requester, priority badge, and a review action button.
- */
-export const PendingApprovals = ({ approvals, onReview }: PendingApprovalsProps) => {
+function formatSubmittedAt(value?: string | null): string {
+  if (!value) {
+    return 'Time not available';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return 'Time not available';
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+}
+
+export function PendingApprovals({
+  items,
+  isLoading,
+  error,
+  onRetry,
+}: PendingApprovalsProps) {
+  const navigate = useNavigate();
+  const sortedItems = useMemo(
+    () => [...items].sort((a, b) => (a.submittedAt || '').localeCompare(b.submittedAt || '')),
+    [items],
+  );
+
   return (
-    <Card>
+    <Card className="border-0 shadow-sm">
       <CardHeader>
-        <CardTitle>Pending Approvals</CardTitle>
-        <CardDescription>Items requiring your attention</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {approvals.map((approval) => (
-            <div
-              key={approval.id}
-              className="flex items-center justify-between p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm truncate">{approval.type}</p>
-                  <Badge variant={getPriorityBadge(approval.priority) as any} className="text-xs">
-                    {approval.priority}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  {approval.requester}
-                </p>
-              </div>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="ml-3"
-                onClick={() => onReview(approval.id)}
-              >
-                Review
-              </Button>
-            </div>
-          ))}
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-lg">Pending approvals</CardTitle>
+            <CardDescription>
+              Real admin actions waiting for review
+            </CardDescription>
+          </div>
+          <Badge variant="outline">{items.length}</Badge>
         </div>
-        <Button variant="ghost" className="w-full mt-4">
-          View All Approvals
-        </Button>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {isLoading && (
+          <div className="space-y-3">
+            {[...Array(4)].map((_, index) => (
+              <Skeleton key={index} className="h-[72px] w-full rounded-xl" />
+            ))}
+          </div>
+        )}
+
+        {!isLoading && error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Failed to load pending approvals</AlertTitle>
+            <AlertDescription className="mt-2 flex items-center justify-between gap-3">
+              <span>{error.message || 'Please try again.'}</span>
+              <Button variant="outline" size="sm" onClick={onRetry}>
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {!isLoading && !error && sortedItems.length === 0 && (
+          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+            No pending approvals right now.
+          </div>
+        )}
+
+        {!isLoading && !error && sortedItems.length > 0 && (
+          <div className="space-y-2">
+            {sortedItems.map((item) => {
+              const severity = resolveSeverityTag(item.severity || item.priority);
+              return (
+                <div
+                  key={`${item.type}-${item.id}`}
+                  className="rounded-xl border border-border p-3 sm:p-4"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 space-y-1">
+                      <p className="font-medium leading-tight">{item.title}</p>
+                      {item.subtitle ? (
+                        <p className="text-sm text-muted-foreground">{item.subtitle}</p>
+                      ) : null}
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock3 className="h-3.5 w-3.5" />
+                        <span>{formatSubmittedAt(item.submittedAt)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={cn('border', severityClasses[severity])}>{severity}</Badge>
+                      {item.actionUrl ? (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            if (item.actionUrl) {
+                              navigate(item.actionUrl);
+                            }
+                          }}
+                        >
+                          Review
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
-};
-
+}

@@ -1,5 +1,12 @@
 export type FdnAlertLevel = 'low' | 'medium' | 'high';
 export type DashboardMetricStatus = 'measured' | 'estimated' | 'missing' | 'unavailable';
+export type DashboardUnavailableReason =
+  | 'NO_ACTIVE_SEASON'
+  | 'NO_HARVEST'
+  | 'MISSING_NITROGEN_INPUT'
+  | 'MISSING_PLOT_AREA'
+  | 'INSUFFICIENT_HISTORY'
+  | string;
 
 export interface DashboardSustainabilityScore {
   value: number | null;
@@ -99,6 +106,7 @@ export interface DashboardFdnOverview {
   dataQuality: DashboardDataQuality[];
   dataQualitySummary: DashboardDataQualitySummary | null;
   missingInputs: string[];
+  unavailableReasons: DashboardUnavailableReason[];
   notes: string[];
   recommendations: string[];
   recommendationSource: string;
@@ -145,8 +153,9 @@ export interface DashboardFieldMapItem {
   fieldName: string;
   farmId: number | null;
   farmName: string | null;
-  geometry: DashboardGeoJsonGeometry | null;
+  boundaryGeoJson: DashboardGeoJsonGeometry | null;
   center: { lat: number; lng: number } | null;
+  boundaryIssue: string | null;
   cropName: string;
   seasonName: string;
   fdnLevel: FdnAlertLevel;
@@ -163,8 +172,22 @@ export interface DashboardFieldMapItem {
   recommendations: string[];
 }
 
+export type DashboardFieldMapUnavailableReason =
+  | 'MISSING_BOUNDARY_AND_FARM_LOCATION'
+  | 'NO_FIELDS_FOR_FILTERS'
+  | string;
+
+export interface DashboardFieldMapViewport {
+  center: { lat: number; lng: number };
+  zoom: number;
+  source: 'PLOT_BOUNDARY' | 'FARM_LOCATION' | string;
+}
+
 export interface DashboardFieldMapResponse {
-  items: DashboardFieldMapItem[];
+  fieldsWithBoundary: DashboardFieldMapItem[];
+  fieldsMissingBoundary: DashboardFieldMapItem[];
+  defaultViewport: DashboardFieldMapViewport | null;
+  unavailableReason: DashboardFieldMapUnavailableReason | null;
 }
 
 export interface DashboardFieldMapParams {

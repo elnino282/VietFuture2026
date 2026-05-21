@@ -4,7 +4,8 @@ import {
   subscribeConversations,
   toFirebaseChatUid,
 } from "../api/firestoreChatRepository";
-import type { ChatConversation } from "../model/types";
+import { searchChatContacts } from "../api/chatContactApi";
+import type { ChatContactProfile, ChatConversation } from "../model/types";
 
 type UseConversationsResult = {
   conversations: ChatConversation[];
@@ -12,7 +13,7 @@ type UseConversationsResult = {
   hasLoadedConversations: boolean;
   error: string | null;
   isStartingConversation: boolean;
-  startDirectConversation: (peerUserId: string) => Promise<string>;
+  startDirectConversation: (peerUserId: number) => Promise<string>;
 };
 
 function getErrorMessage(error: unknown): string {
@@ -33,6 +34,7 @@ export function useConversations(
   currentRole: string | null
 ): UseConversationsResult {
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [peerProfileByUserId, setPeerProfileByUserId] = useState<Record<number, ChatContactProfile>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoadedConversations, setHasLoadedConversations] = useState(false);
   const [isStartingConversation, setIsStartingConversation] = useState(false);
@@ -41,6 +43,7 @@ export function useConversations(
   useEffect(() => {
     if (!currentUid) {
       setConversations([]);
+      setPeerProfileByUserId({});
       setIsLoading(false);
       setHasLoadedConversations(false);
       setError(null);
@@ -69,8 +72,55 @@ export function useConversations(
     };
   }, [currentUid]);
 
+  useEffect(() => {
+    if (!currentUid || conversations.length === 0) {
+      return;
+    }
+
+    const unresolvedPeerIds = [...new Set(
+      conversations
+        .map((conversation) => conversation.peerUserId)
+        .filter((peerUserId): peerUserId is number =>
+          typeof peerUserId === "number" &&
+          peerUserId > 0 &&
+          !(peerUserId in peerProfileByUserId)
+        )
+    )];
+
+    if (unresolvedPeerIds.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void searchChatContacts({
+      userIds: unresolvedPeerIds,
+      limit: unresolvedPeerIds.length,
+    })
+      .then((profiles) => {
+        if (cancelled || profiles.length === 0) {
+          return;
+        }
+
+        setPeerProfileByUserId((prev) => {
+          const next = { ...prev };
+          profiles.forEach((profile) => {
+            next[profile.userId] = profile;
+          });
+          return next;
+        });
+      })
+      .catch(() => {
+        // Conversation list still works without profile enrichment.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [conversations, currentUid, peerProfileByUserId]);
+
   const startDirectConversation = useCallback(
-    async (peerUserId: string) => {
+    async (peerUserId: number) => {
       if (!currentUid) {
         throw new Error("Chat is not ready yet.");
       }
@@ -81,7 +131,7 @@ export function useConversations(
         const conversationId = await ensureDirectConversation({
           currentUid,
           currentRole,
-          peerUid: toFirebaseChatUid(peerUserId),
+          peerUid: toFirebaseChatUid(String(peerUserId)),
         });
         return conversationId;
       } catch (startError) {
@@ -95,9 +145,21 @@ export function useConversations(
     [currentRole, currentUid]
   );
 
+  const enrichedConversations = useMemo(
+    () =>
+      conversations.map((conversation) => ({
+        ...conversation,
+        peerProfile:
+          conversation.peerUserId && peerProfileByUserId[conversation.peerUserId]
+            ? peerProfileByUserId[conversation.peerUserId]
+            : null,
+      })),
+    [conversations, peerProfileByUserId]
+  );
+
   return useMemo(
     () => ({
-      conversations,
+      conversations: enrichedConversations,
       isLoading,
       hasLoadedConversations,
       error,
@@ -105,7 +167,7 @@ export function useConversations(
       startDirectConversation,
     }),
     [
-      conversations,
+      enrichedConversations,
       error,
       hasLoadedConversations,
       isLoading,

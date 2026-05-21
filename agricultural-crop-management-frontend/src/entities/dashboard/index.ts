@@ -20,8 +20,12 @@ export {
     useDashboardOverview,
     useTodayTasks,
     useUpcomingTasks,
+    useDataCompletenessWarnings,
+    useIncidentAlerts,
+    useRecentActivities,
     usePlotStatus,
     useLowStock,
+    useInventoryAlerts,
 } from './api/hooks';
 
 export {

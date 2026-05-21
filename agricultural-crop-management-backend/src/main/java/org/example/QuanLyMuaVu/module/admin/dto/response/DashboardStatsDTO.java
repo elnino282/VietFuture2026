@@ -16,7 +16,9 @@ public class DashboardStatsDTO {
     private List<UserStatusCount> userStatusCounts;
     private List<SeasonStatusCount> seasonStatusCounts;
     private List<RiskySeason> riskySeasons;
+    private DataCoverage dataCoverage;
     private List<InventoryHealth> inventoryHealth;
+    private List<String> unavailableReasons;
 
     @Data
     @Builder
@@ -68,7 +70,26 @@ public class DashboardStatsDTO {
         private String status;
         private Long incidentCount;
         private Long overdueTaskCount;
+        private Long highFdnRiskCount;
+        private Long inventoryRiskCount;
+        private List<RiskBasis> riskBasis;
         private Long riskScore;
+    }
+
+    public enum RiskBasis {
+        OPEN_INCIDENTS,
+        OVERDUE_TASKS,
+        HIGH_FDN_RISK,
+        INVENTORY_RISK
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DataCoverage {
+        private boolean incidentDataAvailable;
+        private boolean taskDataAvailable;
     }
 
     @Data

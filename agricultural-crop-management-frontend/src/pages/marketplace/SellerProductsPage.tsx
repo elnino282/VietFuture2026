@@ -8,6 +8,12 @@ import {
   Card,
   CardContent,
   Input,
+  PageContainer,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Table,
   TableBody,
   TableCell,
@@ -111,17 +117,17 @@ export function SellerProductsPage() {
   const products = productsQuery.data?.items ?? [];
 
   return (
-    <div className="max-w-[1800px] mx-auto px-6 pt-6 space-y-6">
+    <PageContainer variant="wide" className="space-y-6">
       <SellerMarketplaceTabs />
 
-      <Card className="border border-border rounded-xl shadow-sm">
+      <Card variant="page-header">
         <CardContent className="px-6 py-4">
           {/* Header Row: Title + Actions */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {/* Title Section */}
             <div className="flex-shrink-0">
               <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
-                <Package className="w-6 h-6 text-emerald-600" />
+                <Package className="w-6 h-6 text-primary" />
                 {t("marketplaceSeller.products.title")}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
@@ -132,7 +138,7 @@ export function SellerProductsPage() {
             {/* Primary Action */}
             <div className="flex items-center gap-3 flex-shrink-0">
               <Link to="/farmer/marketplace-products/new">
-                <Button className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm acm-button-shadow">
+                <Button className="acm-rounded-sm acm-button-shadow">
                   <Plus className="w-4 h-4 mr-2" />
                   {t("marketplaceSeller.products.addProduct")}
                 </Button>
@@ -142,7 +148,8 @@ export function SellerProductsPage() {
         </CardContent>
       </Card>
 
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <Card variant="filter" className="rounded-2xl">
+        <CardContent className="p-4">
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -154,21 +161,23 @@ export function SellerProductsPage() {
               onChange={(event) => setSearch(event.target.value)}
             />
           </div>
-          <select
-            className="h-11 rounded-xl border border-border bg-card px-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
-            value={status}
-            onChange={(event) => setStatus(event.target.value as "ALL" | MarketplaceProductStatus)}
-          >
-            <option value="ALL">{t("marketplaceSeller.filters.allStatuses")}</option>
-            <option value="DRAFT">{t("marketplaceSeller.status.draft")}</option>
-            <option value="PENDING_REVIEW">{t("marketplaceSeller.status.pendingReview")}</option>
-            <option value="PUBLISHED">{t("marketplaceSeller.status.published")}</option>
-            <option value="HIDDEN">{t("marketplaceSeller.status.hidden")}</option>
-          </select>
+          <Select value={status} onValueChange={(value) => setStatus(value as "ALL" | MarketplaceProductStatus)}>
+            <SelectTrigger className="h-11 min-w-[220px] rounded-xl border-border">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">{t("marketplaceSeller.filters.allStatuses")}</SelectItem>
+              <SelectItem value="DRAFT">{t("marketplaceSeller.status.draft")}</SelectItem>
+              <SelectItem value="PENDING_REVIEW">{t("marketplaceSeller.status.pendingReview")}</SelectItem>
+              <SelectItem value="PUBLISHED">{t("marketplaceSeller.status.published")}</SelectItem>
+              <SelectItem value="HIDDEN">{t("marketplaceSeller.status.hidden")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <Card variant="content" className="overflow-hidden rounded-2xl">
         <Table>
           <TableHeader>
             <TableRow>
@@ -250,7 +259,7 @@ export function SellerProductsPage() {
             ) : null}
           </TableBody>
         </Table>
-      </div>
-    </div>
+      </Card>
+    </PageContainer>
   );
 }

@@ -1,15 +1,15 @@
 ﻿import { useState } from 'react';
 import { Edit, Trash2, Check, MoreVertical, MapPin, Clock, Paperclip } from 'lucide-react';
 import { useDrag } from 'react-dnd';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/shared/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +19,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@/shared/ui/alert-dialog';
 import { useI18n } from '@/hooks/useI18n';
 import type { Task } from '../types';
 import { TASK_TYPES } from '../constants';
@@ -31,7 +31,7 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onDelete, disableMutations = false }: TaskCardProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
@@ -72,11 +72,11 @@ export function TaskCard({ task, onDelete, disableMutations = false }: TaskCardP
           <DropdownMenuContent align="end" className="acm-rounded-sm">
             <DropdownMenuItem className="cursor-pointer" disabled={disableMutations}>
               <Edit className="w-4 h-4 mr-2" />
-              Chỉnh sửa
+              {t('common.edit')}
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" disabled={disableMutations}>
               <Check className="w-4 h-4 mr-2" />
-              Hoàn thành
+              {t('tasks.actions.complete')}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-destructive"
@@ -125,7 +125,7 @@ export function TaskCard({ task, onDelete, disableMutations = false }: TaskCardP
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Clock className="w-3 h-3" />
-          <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+          <span>{new Date(task.dueDate).toLocaleDateString(locale)}</span>
           {task.attachments > 0 && (
             <>
               <span>•</span>
@@ -145,7 +145,7 @@ export function TaskCard({ task, onDelete, disableMutations = false }: TaskCardP
           </Avatar>
           {task.priority === 'high' && (
             <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-xs px-1.5 py-0">
-              Cao
+              {t('common.priorityHigh', 'High')}
             </Badge>
           )}
         </div>

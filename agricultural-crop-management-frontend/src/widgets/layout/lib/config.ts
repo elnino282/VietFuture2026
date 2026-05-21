@@ -12,7 +12,7 @@ import type { PortalType, PortalConfig } from '../model/types';
 export const portalConfig: Record<PortalType, PortalConfig> = {
     ADMIN: {
         name: 'Admin Portal',
-        color: '#4263EB',
+        color: '#3BA55D',
         icon: Shield,
         emoji: '🔐',
         navigation: [
@@ -45,7 +45,6 @@ export const portalConfig: Record<PortalType, PortalConfig> = {
             { id: 'inventory', label: 'Supply Warehouse', icon: Warehouse },
             { id: 'product-warehouse', label: 'Product Warehouse', icon: Package },
             { id: 'documents', label: 'Documents', icon: FileText },
-            { id: 'reports', label: 'Reports', icon: FileText },
             { id: 'ai-assistant', label: 'AI Assistant', icon: Sprout },
             { id: 'chat', label: 'Chat', icon: MessageSquare },
             { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -96,5 +95,3 @@ export const SEARCH_DEBOUNCE_DELAY = 300;
  * Search Minimum Length
  */
 export const SEARCH_MIN_LENGTH = 2;
-
-

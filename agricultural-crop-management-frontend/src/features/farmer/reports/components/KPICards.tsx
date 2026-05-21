@@ -1,7 +1,8 @@
-﻿import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { usePreferences } from "@/shared/contexts";
 import { convertToDisplayCurrency, formatMoney, formatWeight } from "@/shared/lib";
 import { CheckCircle2, DollarSign, TrendingDown, TrendingUp, Wheat } from "lucide-react";
+import { useI18n } from "@/hooks/useI18n";
 
 export interface KPICardsProps {
   totalCost?: number;
@@ -17,6 +18,7 @@ export function KPICards({
   onTimeTasksPercent,
 }: KPICardsProps) {
   const { preferences } = usePreferences();
+  const { t } = useI18n();
   const noData = "--";
 
   const totalYieldLabel =
@@ -26,14 +28,14 @@ export function KPICards({
 
   const kpis = [
     {
-      title: "Total Yield",
+      title: t("reports.kpi.totalYield"),
       value: totalYieldLabel,
-      unit: "this season",
+      unit: t("reports.kpi.thisSeason"),
       trend: { value: noData, isPositive: true },
       icon: Wheat,
     },
     {
-      title: "Total Cost",
+      title: t("reports.kpi.totalCost"),
       value:
         typeof totalCost === "number"
           ? formatMoney(
@@ -42,22 +44,22 @@ export function KPICards({
               preferences.locale
             )
           : noData,
-      unit: "this season",
+      unit: t("reports.kpi.thisSeason"),
       trend: { value: noData, isPositive: false },
       icon: DollarSign,
     },
     {
-      title: "On-time Tasks",
+      title: t("reports.kpi.onTimeTasks"),
       value:
         typeof onTimeTasksPercent === "number"
           ? `${onTimeTasksPercent}%`
           : noData,
-      unit: "completed on time",
+      unit: t("reports.kpi.completedOnTime"),
       trend: { value: noData, isPositive: true },
       icon: CheckCircle2,
     },
     {
-      title: "Net Profit",
+      title: t("reports.kpi.netProfit"),
       value:
         typeof netProfit === "number"
           ? formatMoney(
@@ -66,7 +68,7 @@ export function KPICards({
               preferences.locale
             )
           : noData,
-      unit: "this season",
+      unit: t("reports.kpi.thisSeason"),
       trend: {
         value: noData,
         isPositive: typeof netProfit === "number" ? netProfit >= 0 : true,

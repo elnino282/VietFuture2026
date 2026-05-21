@@ -1,10 +1,11 @@
 import { AlertCircle, BarChart3, Wheat } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent } from "@/shared/ui/card";
 import { useAllFarmerHarvests } from "@/entities/harvest";
 import { useSeasonById } from "@/entities/season";
 import { Reports } from "@/features/farmer/reports";
+import { useI18n } from "@/hooks/useI18n";
 
 const computeHarvestProgressPercent = (
   expectedYieldKg: number,
@@ -26,6 +27,7 @@ const computeHarvestProgressPercent = (
 export function SeasonReportsWorkspace() {
   const { seasonId } = useParams();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const seasonIdNumber = Number(seasonId);
   const hasValidSeasonId = Number.isFinite(seasonIdNumber) && seasonIdNumber > 0;
 
@@ -49,10 +51,10 @@ export function SeasonReportsWorkspace() {
           <CardContent className="p-6 space-y-2">
             <div className="flex items-center gap-2 text-destructive">
               <AlertCircle className="w-4 h-4" />
-              <p className="text-sm">Mùa vụ không hợp lệ.</p>
+              <p className="text-sm">{t("seasonWorkspace.invalidSeason")}</p>
             </div>
             <Button variant="outline" onClick={() => navigate("/farmer/seasons")}>
-              Quay lại danh sách mùa vụ
+              {t("seasonWorkspace.backToSeasons")}
             </Button>
           </CardContent>
         </Card>
@@ -64,7 +66,9 @@ export function SeasonReportsWorkspace() {
     return (
       <div className="p-6">
         <Card>
-          <CardContent className="p-6 text-sm text-muted-foreground">Đang tải dữ liệu báo cáo...</CardContent>
+          <CardContent className="p-6 text-sm text-muted-foreground">
+            {t("seasonReportsWorkspace.loading")}
+          </CardContent>
         </Card>
       </div>
     );
@@ -75,7 +79,7 @@ export function SeasonReportsWorkspace() {
       <div className="p-6">
         <Card className="border border-destructive/20 bg-destructive/5">
           <CardContent className="p-6">
-            <p className="text-sm text-destructive">Không tìm thấy mùa vụ.</p>
+            <p className="text-sm text-destructive">{t("seasonReportsWorkspace.notFound")}</p>
           </CardContent>
         </Card>
       </div>
@@ -97,8 +101,8 @@ export function SeasonReportsWorkspace() {
   const hasInterimData = (season.actualYieldKg ?? 0) > 0 || totalHarvestedKg > 0;
   const reportMode = isFinalReport ? "final" : "interim";
   const reportButtonLabel = isFinalReport
-    ? "Xem báo cáo tổng kết mùa vụ"
-    : "Xem báo cáo tạm tính";
+    ? t("seasonWorkspace.actions.finalReport")
+    : t("seasonWorkspace.actions.interimReport");
 
   if (!hasInterimData && !isFinalReport) {
     return (
@@ -108,8 +112,7 @@ export function SeasonReportsWorkspace() {
             <div className="flex items-center gap-2 text-amber-700">
               <Wheat className="w-5 h-5" />
               <p className="text-sm">
-                Báo cáo tạm tính sẽ mở khi đã có sản lượng thực tế ghi nhận. Hiện tại tiến độ là{" "}
-                <span className="font-semibold">{harvestProgressPercent}%</span>.
+                {t("seasonReportsWorkspace.interimLockedMessage", { progress: harvestProgressPercent })}
               </p>
             </div>
             <div className="flex gap-2">
@@ -117,11 +120,11 @@ export function SeasonReportsWorkspace() {
                 variant="outline"
                 onClick={() => navigate(`/farmer/seasons/${seasonIdNumber}/workspace/harvest`)}
               >
-                Đi tới Thu hoạch
+                {t("seasonReportsWorkspace.actions.goToHarvest")}
               </Button>
               <Button onClick={() => navigate(`/farmer/seasons/${seasonIdNumber}/workspace`)}>
                 <BarChart3 className="w-4 h-4 mr-2" />
-                Về tổng quan workspace
+                {t("seasonReportsWorkspace.actions.backToWorkspace")}
               </Button>
             </div>
           </CardContent>
@@ -139,14 +142,18 @@ export function SeasonReportsWorkspace() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="inline-flex items-center rounded-full border border-current/30 px-2 py-0.5 text-xs font-semibold">
-                  {isFinalReport ? "Báo cáo tổng kết" : "Báo cáo tạm tính"}
+                  {isFinalReport
+                    ? t("seasonReportsWorkspace.badges.final")
+                    : t("seasonReportsWorkspace.badges.interim")}
                 </span>
-                <span className="text-xs font-medium opacity-90">Tiến độ thu hoạch: {harvestProgressPercent}%</span>
+                <span className="text-xs font-medium opacity-90">
+                  {t("seasonReportsWorkspace.harvestProgress", { progress: harvestProgressPercent })}
+                </span>
               </div>
               <p className="text-sm">
                 {isFinalReport
-                  ? "Dữ liệu mùa vụ đã đạt mốc 100%. Bạn có thể xem báo cáo tổng kết và đối chiếu chỉ tiêu cuối vụ."
-                  : "Dữ liệu đang được cập nhật theo tiến độ thu hoạch. Các chỉ số tài chính và năng suất có thể thay đổi."}
+                  ? t("seasonReportsWorkspace.finalDescription")
+                  : t("seasonReportsWorkspace.interimDescription")}
               </p>
             </div>
           </div>
@@ -160,7 +167,7 @@ export function SeasonReportsWorkspace() {
                 variant="outline"
                 onClick={() => navigate(`/farmer/seasons/${seasonIdNumber}/workspace/harvest`)}
               >
-                Đi tới Thu hoạch
+                {t("seasonReportsWorkspace.actions.goToHarvest")}
               </Button>
             )}
           </div>

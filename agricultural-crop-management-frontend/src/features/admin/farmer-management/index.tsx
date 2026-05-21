@@ -1,5 +1,6 @@
 import { Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
 import { useFarmerManagement } from './hooks/useFarmerManagement';
 import { FarmerFilters } from './components/FarmerFilters';
 import { BulkActionToolbar } from './components/BulkActionToolbar';
@@ -11,6 +12,8 @@ import { AuditHistoryDrawer } from './components/AuditHistoryDrawer';
 import { ImportCSVWizard } from './components/ImportCSVWizard';
 
 export function FarmerManagement() {
+    const [resetTargetFarmerId, setResetTargetFarmerId] = useState<string | null>(null);
+
     const {
         // State
         farmers,
@@ -34,6 +37,7 @@ export function FarmerManagement() {
         csvPreview,
         validationErrors,
         totalPages,
+        totalFarmers,
 
         // Setters
         setSearchQuery,
@@ -63,7 +67,17 @@ export function FarmerManagement() {
         handleImportConfirm,
         handleResetPassword,
         clearFilters,
+
+        // API status
+        isLoading,
+        error,
     } = useFarmerManagement();
+
+    useEffect(() => {
+        if (!resetPasswordOpen) {
+            setResetTargetFarmerId(null);
+        }
+    }, [resetPasswordOpen]);
 
     return (
         <div className="p-6 max-w-[1600px] mx-auto space-y-6">
@@ -80,7 +94,7 @@ export function FarmerManagement() {
                         <Upload className="w-4 h-4 mr-2" />
                         Import CSV
                     </Button>
-                    <Button className="bg-[#2563EB] hover:bg-[#1E40AF]" onClick={handleCreate}>
+                    <Button onClick={handleCreate}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Farmer
                     </Button>
@@ -109,6 +123,16 @@ export function FarmerManagement() {
             />
 
             {/* Farmer Table */}
+            {isLoading && (
+                <div className="rounded-lg border p-3 text-sm text-muted-foreground">
+                    Loading farmers...
+                </div>
+            )}
+            {error && (
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                    {error}
+                </div>
+            )}
             <FarmerTable
                 farmers={farmers}
                 selectedFarmers={selectedFarmers}
@@ -121,7 +145,10 @@ export function FarmerManagement() {
                 onEdit={handleEdit}
                 onLock={handleLock}
                 onDelete={handleDelete}
-                onResetPassword={() => setResetPasswordOpen(true)}
+                onResetPassword={(id) => {
+                    setResetTargetFarmerId(id);
+                    setResetPasswordOpen(true);
+                }}
                 onViewHistory={() => setHistoryOpen(true)}
             />
 
@@ -130,7 +157,7 @@ export function FarmerManagement() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 itemsPerPage={itemsPerPage}
-                totalItems={filteredFarmers.length}
+                totalItems={totalFarmers}
                 onPageChange={setCurrentPage}
                 onItemsPerPageChange={setItemsPerPage}
             />
@@ -147,8 +174,16 @@ export function FarmerManagement() {
 
             <ResetPasswordModal
                 open={resetPasswordOpen}
-                onOpenChange={setResetPasswordOpen}
-                onResetPassword={handleResetPassword}
+                onOpenChange={(open) => {
+                    setResetPasswordOpen(open);
+                    if (!open) {
+                        setResetTargetFarmerId(null);
+                    }
+                }}
+                onResetPassword={(method) => {
+                    if (!resetTargetFarmerId) return;
+                    handleResetPassword(resetTargetFarmerId, method);
+                }}
             />
 
             <AuditHistoryDrawer
@@ -165,6 +200,8 @@ export function FarmerManagement() {
                 validationErrors={validationErrors}
                 onFileUpload={handleCSVUpload}
                 onImportConfirm={handleImportConfirm}
+                canImport={false}
+                importUnsupportedMessage="Farmer import API is not available yet."
             />
         </div>
     );

@@ -1,5 +1,6 @@
 import { AI_FloatButton } from "@/features/shared/aiButton/AI_FloatButton";
 import { AppShell } from "@/features/shared/layout";
+import i18n from "@/i18n";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -76,10 +77,15 @@ export function FarmerPortalWithShell() {
     >
       <FarmerPortalContent />
       {isRouteTransitionLoading && (
-        <div className="acm-page-loading-overlay" role="status" aria-live="polite" aria-label="Đang chuyển trang">
+        <div
+          className="acm-page-loading-overlay"
+          role="status"
+          aria-live="polite"
+          aria-label={i18n.t("common.loadingPageTransition")}
+        >
           <div className="acm-page-loading-card acm-body-text">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <span>Đang chuyển trang...</span>
+            <span>{i18n.t("common.loadingPageTransition")}...</span>
           </div>
         </div>
       )}

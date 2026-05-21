@@ -3,6 +3,7 @@ package org.example.QuanLyMuaVu.module.inventory.port;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.example.QuanLyMuaVu.module.inventory.entity.InventoryBalance;
 import org.example.QuanLyMuaVu.module.inventory.entity.StockMovement;
@@ -33,4 +34,6 @@ public interface InventoryQueryPort {
     List<InventoryBalance> findInventoryBalancesBySupplyLotId(Integer lotId);
 
     List<StockMovement> findStockMovementsBySupplyLotId(Integer lotId);
+
+    Map<Integer, InventoryLotMovementSummaryView> findMovementSummaryBySupplyLotIds(List<Integer> lotIds);
 }

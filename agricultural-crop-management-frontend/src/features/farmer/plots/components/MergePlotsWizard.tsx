@@ -1,6 +1,6 @@
 import { GitMerge, ChevronRight, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -8,12 +8,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+} from "@/shared/ui/dialog";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Label } from "@/shared/ui/label";
+import { Input } from "@/shared/ui/input";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import { Separator } from "@/shared/ui/separator";
 import { toast } from "sonner";
 import { PlotStatusChip } from "./PlotStatusChip";
 import { Plot, PlotStatus } from "../types";

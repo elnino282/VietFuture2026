@@ -11,6 +11,8 @@ import { CalendarView } from './components/CalendarView';
 import { CreateTaskDialog } from './components/CreateTaskDialog';
 import { ReassignDialog } from './components/ReassignDialog';
 import { BulkActionToolbar } from './components/BulkActionToolbar';
+import { DueDateDialog } from './components/DueDateDialog';
+import { PageContainer } from '@/shared/ui';
 
 export function TaskWorkspace() {
   const [searchParams] = useSearchParams();
@@ -31,6 +33,8 @@ export function TaskWorkspace() {
     setCreateTaskOpen,
     reassignOpen,
     setReassignOpen,
+    dueDateOpen,
+    setDueDateOpen,
     filteredTasks,
     uniqueAssignees,
     uniquePlots,
@@ -41,6 +45,7 @@ export function TaskWorkspace() {
     handleSelectAll,
     handleSelectTask,
     handleReassign,
+    handleBulkDueDateChange,
     handleCreateTask,
     seasonId,
     isSeasonWriteLocked,
@@ -63,8 +68,8 @@ export function TaskWorkspace() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen acm-main-content pb-20">
-        <div className="max-w-[1800px] mx-auto p-6 space-y-6">
+      <PageContainer variant="wide" className="pb-20">
+        <div className="space-y-6">
           <TaskHeader
             viewMode={viewMode}
             onViewModeChange={setViewMode}
@@ -116,7 +121,7 @@ export function TaskWorkspace() {
             selectedCount={selectedTasks.length}
             onComplete={handleBulkComplete}
             onReassign={() => setReassignOpen(true)}
-            onChangeDueDate={() => {}}
+            onChangeDueDate={() => setDueDateOpen(true)}
             onClose={() => setSelectedTasks([])}
           />
         )}
@@ -138,11 +143,20 @@ export function TaskWorkspace() {
           onOpenChange={setReassignOpen}
           selectedCount={selectedTasks.length}
           onReassign={handleReassign}
-          uniqueAssignees={uniqueAssignees}
+          assigneeOptions={assigneeOptions}
           disabled={isSeasonWriteLocked}
           disabledReason={seasonWriteLockReason}
         />
-      </div>
+
+        <DueDateDialog
+          open={dueDateOpen}
+          onOpenChange={setDueDateOpen}
+          selectedCount={selectedTasks.length}
+          onChangeDueDate={handleBulkDueDateChange}
+          disabled={isSeasonWriteLocked}
+          disabledReason={seasonWriteLockReason}
+        />
+      </PageContainer>
     </DndProvider>
   );
 }

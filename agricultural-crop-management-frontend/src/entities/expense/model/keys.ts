@@ -3,6 +3,7 @@ import type { ExpenseListParams } from './types';
 export const expenseKeys = {
     all: ['expense'] as const,
     lists: () => [...expenseKeys.all, 'list'] as const,
+    listAllBase: () => [...expenseKeys.lists(), 'all'] as const,
     listAll: (params?: ExpenseListParams) =>
         [...expenseKeys.lists(), 'all', params] as const,
     listBySeason: (seasonId: number, params?: ExpenseListParams) =>
@@ -19,4 +20,7 @@ export const expenseKeys = {
         [...expenseKeys.analytics(), 'byVendor', params] as const,
     analyticsTimeSeries: (params?: ExpenseListParams & { granularity?: 'DAY' | 'WEEK' | 'MONTH' }) =>
         [...expenseKeys.analytics(), 'timeSeries', params] as const,
+    costInsights: () => [...expenseKeys.all, 'costInsights'] as const,
+    costInsightsSummary: (seasonId: number) =>
+        [...expenseKeys.costInsights(), 'summary', seasonId] as const,
 };

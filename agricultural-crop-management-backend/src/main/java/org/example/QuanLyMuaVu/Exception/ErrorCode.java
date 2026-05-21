@@ -30,6 +30,8 @@ public enum ErrorCode {
         USERNAME_BLANK("ERR_USERNAME_BLANK", "Username must not be blank", HttpStatus.BAD_REQUEST),
         PASSWORD_BLANK("ERR_PASSWORD_BLANK", "Password must not be blank", HttpStatus.BAD_REQUEST),
         PASSWORD_INVALID("ERR_PASSWORD_INVALID", "Password must be at least 8 characters", HttpStatus.BAD_REQUEST),
+        CURRENT_PASSWORD_INCORRECT("ERR_CURRENT_PASSWORD_INCORRECT", "Current password is incorrect", HttpStatus.BAD_REQUEST),
+        PASSWORD_NOT_SET("ERR_PASSWORD_NOT_SET", "Local password is not set for this account", HttpStatus.BAD_REQUEST),
         PASSWORD_MISMATCH("ERR_PASSWORD_MISMATCH", "Password confirmation does not match", HttpStatus.BAD_REQUEST),
         PASSWORD_RESET_TOKEN_INVALID("ERR_PASSWORD_RESET_TOKEN_INVALID",
                         "Reset token is invalid or expired", HttpStatus.BAD_REQUEST),
@@ -68,6 +70,8 @@ public enum ErrorCode {
                         HttpStatus.BAD_REQUEST),
         PLOT_HAS_ACTIVE_SEASONS("ERR_PLOT_HAS_ACTIVE_SEASONS",
                         "Cannot delete plot because it has active or planned seasons", HttpStatus.BAD_REQUEST),
+        PLOT_HAS_ACTIVE_TASKS("ERR_PLOT_HAS_ACTIVE_TASKS",
+                        "Cannot delete plot because it has pending, in-progress or overdue tasks", HttpStatus.BAD_REQUEST),
         FARM_INACTIVE("ERR_FARM_INACTIVE", "Farm must be active to create plots or seasons", HttpStatus.BAD_REQUEST),
 
         // Crop / Season errors

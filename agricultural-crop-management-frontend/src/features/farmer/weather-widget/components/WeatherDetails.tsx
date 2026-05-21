@@ -6,13 +6,13 @@ import {
     Eye,
     Compass,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import type { WeatherData } from "../types";
 
 interface WeatherDetailsProps {

@@ -1,5 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { useI18n } from "@/hooks/useI18n";
 import {
   ArrowRight,
   BarChart3,
@@ -17,71 +18,72 @@ import { useNavigate, useParams } from "react-router-dom";
 
 const MODULE_CARDS = [
   {
-    title: "Task Workspace",
-    description: "Track tasks by status: pending, in progress, overdue, and done.",
+    titleKey: "seasonWorkspaceOverview.modules.tasks.title",
+    descriptionKey: "seasonWorkspaceOverview.modules.tasks.description",
     icon: ClipboardList,
     path: "tasks",
   },
   {
-    title: "Expenses",
-    description: "Log operational costs linked to the active season and tasks.",
+    titleKey: "seasonWorkspaceOverview.modules.expenses.title",
+    descriptionKey: "seasonWorkspaceOverview.modules.expenses.description",
     icon: DollarSign,
     path: "expenses",
   },
   {
-    title: "Field Logs",
-    description: "Capture field activities by date for quick daily review.",
+    titleKey: "seasonWorkspaceOverview.modules.fieldLogs.title",
+    descriptionKey: "seasonWorkspaceOverview.modules.fieldLogs.description",
     icon: FileText,
     path: "field-logs",
   },
   {
-    title: "Disease Tracking",
-    description: "Track disease history, severity, and treatment timeline by season.",
+    titleKey: "seasonWorkspaceOverview.modules.disease.title",
+    descriptionKey: "seasonWorkspaceOverview.modules.disease.description",
     icon: Bug,
     path: "disease",
   },
   {
-    title: "Harvest",
-    description: "Record harvest batches and monitor season harvest progress.",
+    titleKey: "seasonWorkspaceOverview.modules.harvest.title",
+    descriptionKey: "seasonWorkspaceOverview.modules.harvest.description",
     icon: Wheat,
     path: "harvest",
   },
   {
-    title: "Labor Management",
-    description: "Assign workers, track progress, and manage payroll in this season.",
+    titleKey: "seasonWorkspaceOverview.modules.labor.title",
+    descriptionKey: "seasonWorkspaceOverview.modules.labor.description",
     icon: Users,
     path: "labor-management",
   },
   {
-    title: "Nutrient Inputs",
-    description: "Input nutrient data for mineral and organic sources.",
+    titleKey: "seasonWorkspaceOverview.modules.nutrient.title",
+    descriptionKey: "seasonWorkspaceOverview.modules.nutrient.description",
     icon: Beaker,
     path: "nutrient-inputs",
   },
   {
-    title: "Irrigation Analysis",
-    description: "Input irrigation water analysis for NO3/NH4/Total N metrics.",
+    titleKey: "seasonWorkspaceOverview.modules.irrigation.title",
+    descriptionKey: "seasonWorkspaceOverview.modules.irrigation.description",
     icon: Droplets,
     path: "irrigation-water-analyses",
   },
   {
-    title: "Soil Tests",
-    description: "Input soil test values (SOM, nitrate, ammonium, mineral N).",
+    titleKey: "seasonWorkspaceOverview.modules.soil.title",
+    descriptionKey: "seasonWorkspaceOverview.modules.soil.description",
     icon: TestTubeDiagonal,
     path: "soil-tests",
   },
   {
-    title: "Reports",
-    description: "View interim/final reports and AI-assisted cost optimization insights.",
+    titleKey: "seasonWorkspaceOverview.modules.reports.title",
+    descriptionKey: "seasonWorkspaceOverview.modules.reports.description",
     icon: BarChart3,
     path: "reports",
   },
 ] as const;
 
 export function SeasonWorkspaceOverview() {
+  const { t } = useI18n();
   const { seasonId } = useParams();
   const navigate = useNavigate();
-  const seasonIdNumber = Number(seasonId);
+  const seasonIdSegment = seasonId ?? "";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -92,17 +94,17 @@ export function SeasonWorkspaceOverview() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-foreground flex items-center gap-2">
                   <Icon className="w-5 h-5 text-primary" />
-                  {module.title}
+                  {t(module.titleKey)}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="acm-body-text text-muted-foreground min-h-[66px]">{module.description}</p>
+                <p className="acm-body-text text-muted-foreground min-h-[66px]">{t(module.descriptionKey)}</p>
                 <Button
                   className="w-full rounded-xl acm-hover-surface acm-body-text"
                   variant="outline"
-                  onClick={() => navigate(`/farmer/seasons/${seasonIdNumber}/workspace/${module.path}`)}
+                  onClick={() => navigate(`/farmer/seasons/${seasonIdSegment}/workspace/${module.path}`)}
                 >
-                Open module
+                {t("seasonWorkspaceOverview.openModule")}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>

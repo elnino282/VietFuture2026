@@ -1,13 +1,37 @@
 import { useMemo } from 'react';
 import {
+  useDataCompletenessWarnings,
   useDashboardFdnOverview,
   useDashboardFieldMap,
+  useIncidentAlerts,
+  useInventoryAlerts,
+  useRecentActivities,
   useTodayTasks,
   useUpcomingTasks,
 } from '@/entities/dashboard';
-import type { DashboardFdnOverview, DashboardFieldMapItem } from '@/entities/dashboard';
+import type {
+  DashboardDataCompletenessWarning,
+  DashboardIncidentAlert,
+  DashboardInventoryAlertItem,
+  DashboardInventoryAlertsSummary,
+  DashboardFdnOverview,
+  DashboardFieldMapResponse,
+  DashboardRecentActivity,
+} from '@/entities/dashboard';
 import { useSeason } from '@/shared/contexts';
-import type { DashboardTaskItem } from '../types';
+import type {
+  DashboardDataCompletenessWarningItem,
+  RecentActivityItem,
+  DashboardTaskItem,
+} from '../types';
+
+function toDateLabel(dueDate?: string | null, fallback = 'N/A'): string {
+  const due = dueDate ? new Date(`${dueDate}T00:00:00`) : null;
+  if (!due || Number.isNaN(due.getTime())) {
+    return fallback;
+  }
+  return due.toLocaleDateString();
+}
 
 function toTaskItem(task: {
   taskId: number;
@@ -17,41 +41,44 @@ function toTaskItem(task: {
   status: string;
 }): DashboardTaskItem {
   const fallback = 'N/A';
-  const due = task.dueDate ? new Date(`${task.dueDate}T00:00:00`) : null;
-  const dueLabel = due && !Number.isNaN(due.getTime())
-    ? due.toLocaleDateString()
-    : fallback;
   return {
     id: String(task.taskId),
     title: task.title,
     plotName: task.plotName ?? fallback,
     status: task.status,
-    dueDateLabel: dueLabel,
+    dueDateLabel: toDateLabel(task.dueDate, fallback),
     done: task.status === 'DONE',
   };
 }
 
-function toSourceLabel(source: string): string {
-  const normalized = source.toLowerCase();
-  if (normalized === 'mineral_fertilizer') return 'ghi nhận phân bón vô cơ';
-  if (normalized === 'organic_fertilizer') return 'ghi nhận phân bón hữu cơ';
-  if (normalized === 'biological_fixation') return 'cập nhật cố định đạm sinh học';
-  if (normalized === 'irrigation_water') return 'đo đạm trong nước tưới';
-  if (normalized === 'atmospheric_deposition') return 'xác minh lắng đọng khí quyển';
-  if (normalized === 'seed_import') return 'cập nhật nguồn đạm từ hạt giống';
-  if (normalized === 'soil_legacy') return 'đánh giá tồn dư đạm trong đất';
-  if (normalized === 'control_supply') return 'nhập dữ liệu kiểm soát đạm';
-  return source;
+function toDataCompletenessWarningItem(
+  warning: DashboardDataCompletenessWarning
+): DashboardDataCompletenessWarningItem {
+  return {
+    id: warning.warningId,
+    title: warning.title,
+    source: warning.source,
+    type: warning.type,
+    status: warning.status,
+    dueDateLabel: toDateLabel(warning.dueDate, 'Action required'),
+    actionTarget: warning.actionTarget,
+    inputCode: warning.inputCode,
+  };
 }
 
-function toDataCompletionTaskItem(source: string): DashboardTaskItem {
+function toRecentActivityItem(
+  activity: DashboardRecentActivity
+): RecentActivityItem {
   return {
-    id: `data-${source}`,
-    title: `Bổ sung dữ liệu: ${toSourceLabel(source)}`,
-    plotName: 'Dashboard',
-    status: 'DATA_REQUIRED',
-    dueDateLabel: 'Cần cập nhật',
-    done: false,
+    id: activity.id,
+    type: activity.type,
+    title: activity.title,
+    description: activity.description ?? '',
+    occurredAt: activity.occurredAt,
+    actorName: activity.actorName ?? null,
+    entityType: activity.entityType,
+    entityId: activity.entityId,
+    actionUrl: activity.actionUrl ?? null,
   };
 }
 
@@ -60,17 +87,28 @@ export interface UseFarmerDashboardReturn {
   setSelectedSeason: (season: string) => void;
   seasonOptions: { value: string; label: string }[];
   overview: DashboardFdnOverview | null;
-  fieldMapItems: DashboardFieldMapItem[];
+  fieldMap: DashboardFieldMapResponse | null;
+  mapLoading: boolean;
   todayTasks: DashboardTaskItem[];
   upcomingTasks: DashboardTaskItem[];
+  dataCompletenessWarnings: DashboardDataCompletenessWarningItem[];
+  incidentAlerts: DashboardIncidentAlert[];
+  recentActivities: RecentActivityItem[];
+  inventoryAlerts: DashboardInventoryAlertItem[];
+  inventoryAlertsSummary: DashboardInventoryAlertsSummary | null;
   isCriticalLoading: boolean;
   isDataLoading: boolean;
+  overviewLoading: boolean;
   hasNoSeasons: boolean;
   seasonsError: Error | null;
   overviewError: Error | null;
   mapError: Error | null;
   todayTasksError: Error | null;
   upcomingTasksError: Error | null;
+  dataCompletenessWarningsError: Error | null;
+  incidentAlertsError: Error | null;
+  recentActivitiesError: Error | null;
+  inventoryAlertsError: Error | null;
 }
 
 export const useFarmerDashboard = (): UseFarmerDashboardReturn => {
@@ -140,6 +178,42 @@ export const useFarmerDashboard = (): UseFarmerDashboardReturn => {
     { enabled: hasInitialized }
   );
 
+  const {
+    data: dataCompletenessWarningsData,
+    isLoading: dataCompletenessWarningsLoading,
+    error: dataCompletenessWarningsError,
+  } = useDataCompletenessWarnings(
+    { seasonId: hasSeason ? selectedSeasonId! : undefined },
+    { enabled: hasInitialized }
+  );
+
+  const {
+    data: incidentAlertsData,
+    isLoading: incidentAlertsLoading,
+    error: incidentAlertsError,
+  } = useIncidentAlerts(
+    { seasonId: hasSeason ? selectedSeasonId! : undefined },
+    { enabled: hasInitialized }
+  );
+
+  const {
+    data: recentActivitiesData,
+    isLoading: recentActivitiesLoading,
+    error: recentActivitiesError,
+  } = useRecentActivities(
+    { limit: 10 },
+    { enabled: hasInitialized }
+  );
+
+  const {
+    data: inventoryAlertsData,
+    isLoading: inventoryAlertsLoading,
+    error: inventoryAlertsError,
+  } = useInventoryAlerts(
+    { limit: 20 },
+    { enabled: hasInitialized }
+  );
+
   const todayTasks = useMemo(
     () => (todayTasksData?.content ?? []).map(toTaskItem),
     [todayTasksData]
@@ -153,22 +227,32 @@ export const useFarmerDashboard = (): UseFarmerDashboardReturn => {
     [upcomingTasksData]
   );
 
-  const dataCompletionTasks = useMemo(
+  const dataCompletenessWarnings = useMemo(
     () =>
-      (overviewData?.missingInputs ?? [])
-        .slice(0, 3)
-        .map(toDataCompletionTaskItem),
-    [overviewData?.missingInputs]
+      (dataCompletenessWarningsData ?? []).map(
+        toDataCompletenessWarningItem
+      ),
+    [dataCompletenessWarningsData]
   );
 
-  const mergedUpcomingTasks = useMemo(
-    () => [...upcomingTasks, ...dataCompletionTasks],
-    [upcomingTasks, dataCompletionTasks]
+  const recentActivities = useMemo(
+    () =>
+      [...(recentActivitiesData ?? [])]
+        .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
+        .map(toRecentActivityItem),
+    [recentActivitiesData]
   );
 
   const isCriticalLoading = !hasInitialized || seasonsLoading;
   const isDataLoading =
-    overviewLoading || mapLoading || todayTasksLoading || upcomingTasksLoading;
+    overviewLoading
+    || mapLoading
+    || todayTasksLoading
+    || upcomingTasksLoading
+    || dataCompletenessWarningsLoading
+    || incidentAlertsLoading
+    || recentActivitiesLoading
+    || inventoryAlertsLoading;
   const hasNoSeasons =
     hasInitialized && !seasonsLoading && seasonOptions.length === 0;
 
@@ -177,16 +261,27 @@ export const useFarmerDashboard = (): UseFarmerDashboardReturn => {
     setSelectedSeason,
     seasonOptions,
     overview: overviewData ?? null,
-    fieldMapItems: mapData?.items ?? [],
+    fieldMap: mapData ?? null,
+    mapLoading,
     todayTasks,
-    upcomingTasks: mergedUpcomingTasks,
+    upcomingTasks,
+    dataCompletenessWarnings,
+    incidentAlerts: incidentAlertsData ?? [],
+    recentActivities,
+    inventoryAlerts: inventoryAlertsData?.alerts ?? [],
+    inventoryAlertsSummary: inventoryAlertsData?.summary ?? null,
     isCriticalLoading,
     isDataLoading,
+    overviewLoading,
     hasNoSeasons,
     seasonsError: seasonsError ?? null,
     overviewError: overviewError ?? null,
     mapError: mapError ?? null,
     todayTasksError: todayTasksError ?? null,
     upcomingTasksError: upcomingTasksError ?? null,
+    dataCompletenessWarningsError: dataCompletenessWarningsError ?? null,
+    incidentAlertsError: incidentAlertsError ?? null,
+    recentActivitiesError: recentActivitiesError ?? null,
+    inventoryAlertsError: inventoryAlertsError ?? null,
   };
 };

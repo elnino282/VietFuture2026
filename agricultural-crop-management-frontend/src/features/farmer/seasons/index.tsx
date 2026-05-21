@@ -10,7 +10,7 @@ import { CancelSeasonDialog } from './components/CancelSeasonDialog';
 import { NewSeasonDialog } from './components/NewSeasonDialog';
 import { EditSeasonDialog } from './components/EditSeasonDialog';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button, PageContainer } from '@/shared/ui';
 import { useSeason } from '@/shared/contexts';
 
 export function SeasonManagement() {
@@ -131,19 +131,19 @@ export function SeasonManagement() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen acm-main-content pb-20 flex items-center justify-center">
+      <PageContainer variant="wide" className="flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-secondary" />
           <p className="text-foreground/70">Loading seasons...</p>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen acm-main-content pb-20 flex items-center justify-center">
+      <PageContainer variant="wide" className="flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 max-w-md text-center">
           <AlertCircle className="w-12 h-12 text-destructive" />
           <h2 className="text-xl font-semibold text-foreground">Failed to Load Seasons</h2>
@@ -152,12 +152,12 @@ export function SeasonManagement() {
             Try Again
           </Button>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="min-h-screen acm-main-content pb-20">
+    <PageContainer variant="wide">
       {viewMode === 'list' ? (
         <SeasonListView
           paginatedSeasons={paginatedSeasons}
@@ -257,7 +257,7 @@ export function SeasonManagement() {
         onSubmit={confirmEditSeason}
         isSubmitting={isUpdating}
       />
-    </div>
+    </PageContainer>
   );
 }
 

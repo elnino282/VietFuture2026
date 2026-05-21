@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "appName": "ACM Platform",
     "loading": "Loading...",
@@ -39,6 +39,7 @@
     "status": "Status",
     "name": "Name",
     "description": "Description",
+    "priorityHigh": "High",
     "type": "Type",
     "date": "Date",
     "from": "From",
@@ -69,7 +70,11 @@
     "error": {
       "title": "Something went wrong",
       "description": "An unexpected error occurred. Please try again."
-    }
+    },
+    "loadingPageTransition": "Switching page",
+    "details": "Details",
+    "signedOut": "Signed out successfully",
+    "markRead": "Mark read"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -78,6 +83,7 @@
     "seasons": "Seasons",
     "tasks": "Tasks Workspace",
     "fieldLogs": "Field Logs",
+    "disease": "Disease Tracking",
     "expenses": "Expenses",
     "harvest": "Harvest",
     "suppliersSupplies": "Suppliers & Supplies",
@@ -99,7 +105,12 @@
     "progress": "Progress",
     "payroll": "Payroll",
     "settings": "Settings",
-    "collapse": "Collapse"
+    "collapse": "Collapse",
+    "nutrientInputs": "Nutrient Inputs",
+    "irrigationWaterAnalysis": "Irrigation & Water Analysis",
+    "soilTests": "Soil Tests",
+    "home": "Home",
+    "toggleSidebar": "Toggle navigation"
   },
   "userMenu": {
     "profile": "Profile",
@@ -118,6 +129,39 @@
     "farmer": "Farmer Portal",
     "buyer": "Buyer Portal",
     "employee": "Employee Portal"
+  },
+  "dashboardHeader": {
+    "viewYourStore": "View your store",
+    "backToShop": "Back to Shop"
+  },
+  "farmerPortal": {
+    "views": {
+      "dashboard": { "title": "Dashboard", "breadcrumb": "Dashboard" },
+      "search": { "title": "Search", "breadcrumb": "Search" },
+      "farms": { "title": "Farms & Plots", "breadcrumb": "Farms & Plots" },
+      "plots": { "title": "Plot Management", "breadcrumb": "Plot Management" },
+      "seasons": { "title": "Seasons", "breadcrumb": "Seasons" },
+      "tasks": { "title": "Tasks Workspace", "breadcrumb": "Tasks Workspace" },
+      "fieldLogs": { "title": "Field Logs", "breadcrumb": "Field Logs" },
+      "expenses": { "title": "Expenses", "breadcrumb": "Expenses" },
+      "harvest": { "title": "Harvest", "breadcrumb": "Harvest" },
+      "nutrientInputs": { "title": "Nutrient Inputs", "breadcrumb": "Nutrient Inputs" },
+      "suppliersSupplies": { "title": "Suppliers & Supplies", "breadcrumb": "Suppliers & Supplies" },
+      "laborManagement": { "title": "Labor Management", "breadcrumb": "Labor Management" },
+      "inventory": { "title": "Supply Warehouse", "breadcrumb": "Supply Warehouse" },
+      "productWarehouse": { "title": "Product Warehouse", "breadcrumb": "Product Warehouse" },
+      "marketplaceWorkspace": { "title": "Marketplace Workspace", "breadcrumb": "Marketplace" },
+      "marketplaceDashboard": { "title": "Marketplace Dashboard", "breadcrumb": "Marketplace Dashboard" },
+      "marketplaceProducts": { "title": "Marketplace Products", "breadcrumb": "Marketplace Products" },
+      "marketplaceOrders": { "title": "Marketplace Orders", "breadcrumb": "Marketplace Orders" },
+      "documents": { "title": "Documents", "breadcrumb": "Documents" },
+      "incidents": { "title": "Incidents", "breadcrumb": "Incidents" },
+      "aiAssistant": { "title": "AI Assistant", "breadcrumb": "AI Assistant" },
+      "crops": { "title": "Crop Management", "breadcrumb": "Crop Management" },
+      "reports": { "title": "Reports", "breadcrumb": "Reports" },
+      "profile": { "title": "Profile", "breadcrumb": "Profile" },
+      "settings": { "title": "Preferences", "breadcrumb": "Preferences" }
+    }
   },
   "header": {
     "aiAssistant": "AI Assistant",
@@ -373,6 +417,50 @@
       "subtitle": "Items below minimum level",
       "orderButton": "Order Supplies"
     },
+    "inventoryAlerts": {
+      "title": "Inventory Alerts",
+      "empty": "No inventory alerts",
+      "quantity": "Quantity",
+      "expiryDate": "Expiry",
+      "reason": "Reason",
+      "summary": {
+        "expired": "Expired",
+        "expiringSoon": "Expiring Soon",
+        "lowStock": "Low Stock",
+        "noMovement": "No Movement"
+      }
+    },
+    "incidentAlerts": {
+      "title": "Incident & Risk Alerts",
+      "empty": "No incident, overdue task, or sustainability risk alerts.",
+      "type": {
+        "highSeverityIncident": "High Severity Incident",
+        "openIncident": "Open Incident",
+        "overdueTask": "Overdue Task",
+        "sustainabilityWarning": "Sustainability Warning",
+        "seasonRisk": "Season Risk"
+      },
+      "severity": {
+        "critical": "Critical",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "meta": {
+        "created": "Created: {{value}}",
+        "due": "Due: {{value}}",
+        "plot": "Plot #{{plotId}}"
+      }
+    },
+    "recentActivityTimeline": {
+      "title": "Recent Activity",
+      "subtitle": "Latest actions and updates across your farm",
+      "loading": "Loading recent activities...",
+      "empty": "No recent activity yet.",
+      "actions": {
+        "open": "Open"
+      }
+    },
     "fdn": {
       "selectSeason": "Select season",
       "weatherSummary": "Weather summary",
@@ -390,6 +478,22 @@
       "notAvailable": "N/A",
       "metricMissing": "Insufficient data",
       "metricUnavailable": "Unavailable",
+      "unavailableTitle": "FDN dashboard metrics are unavailable",
+      "unavailableHint": "Complete season context, harvest records, and nitrogen input data to unlock these indicators.",
+      "unavailableReason": {
+        "NO_ACTIVE_SEASON": "No active season is available for the current dashboard context.",
+        "NO_HARVEST": "No harvest record is available yet for the selected season.",
+        "MISSING_NITROGEN_INPUT": "Nitrogen input records are missing (mineral/organic fertilizer).",
+        "MISSING_PLOT_AREA": "Plot area is missing, so per-hectare indicators cannot be computed.",
+        "INSUFFICIENT_HISTORY": "There is not enough season history to build a trend chart yet."
+      },
+      "cta": {
+        "createSeason": "Go to Seasons",
+        "addHarvest": "Add harvest record",
+        "addNutrientInput": "Add nutrient inputs",
+        "addIrrigationAnalysis": "Add irrigation analysis",
+        "addSoilTest": "Add soil test"
+      },
       "metricStatus": {
         "measured": "Measured",
         "estimated": "Estimated",
@@ -404,6 +508,13 @@
       "calculationMode": "Calculation mode",
       "confidence": "Confidence",
       "assistantTitle": "Recommended Next Actions",
+      "assistantInputAction": {
+        "fertilizer": "Record mineral/organic fertilizer nitrogen inputs in the season workspace.",
+        "irrigation": "Add irrigation water analysis records so irrigation N can be measured.",
+        "soil": "Add soil test records to unlock soil legacy nitrogen contribution.",
+        "fixation": "Record biological fixation inputs for the current season.",
+        "generic": "Complete missing nitrogen input records from the season workspace."
+      },
       "recommendationSource": "Recommendation source",
       "lowConfidenceNotice": "Data confidence is low, prioritize data verification before strong fertilizer adjustments.",
       "dataQuality": "Data Quality",
@@ -474,6 +585,43 @@
         "fallbackHint": "You can still review field sustainability in list view and add missing boundaries from farm management.",
         "manageFieldsCta": "Go to Farms & Plots",
         "listFallbackTitle": "Field list fallback"
+      }
+    }
+  },
+  "weatherWidget": {
+    "compact": {
+      "temperatureUnit": "degC",
+      "locationFallback": "Unknown location",
+      "placeholder": {
+        "default": "Click to view weather",
+        "loading": "Loading weather...",
+        "locationRequired": "Update farm location",
+        "unavailable": "Weather unavailable",
+        "error": "Unable to load weather"
+      }
+    },
+    "detailed": {
+      "notLoaded": "Not loaded",
+      "actions": {
+        "updateFarmLocation": "Update Farm Location"
+      },
+      "state": {
+        "locationRequired": {
+          "title": "Farm location is required",
+          "description": "Please update latitude and longitude in your farm settings to view weather."
+        },
+        "unavailable": {
+          "title": "Weather service unavailable",
+          "description": "Weather data is temporarily unavailable. Please try again."
+        },
+        "error": {
+          "title": "Failed to load weather",
+          "description": "Please refresh and try again."
+        },
+        "empty": {
+          "title": "No weather data",
+          "description": "Refresh to load latest weather for your farm."
+        }
       }
     }
   },
@@ -561,6 +709,447 @@
       "cancelConfirm": "Cancel Season"
     }
   },
+  "seasonWorkspace": {
+    "subtitle": "Season workspace",
+    "fallbackSeasonName": "Season #{{id}}",
+    "invalidSeason": "Invalid season.",
+    "backToSeasons": "Back to seasons list",
+    "lockedReason": "This season is locked. New records or workspace updates are disabled.",
+    "processingMessage": "Processing season workspace data...",
+    "employeeFallback": "Employee #{{id}}",
+    "status": {
+      "planned": "Planned",
+      "active": "In cultivation",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "archived": "Archived",
+      "unknown": "Unknown"
+    },
+    "harvestWorkflow": {
+      "completed": "Harvest completed",
+      "inProgress": "Harvest in progress",
+      "notStarted": "Harvest not started"
+    },
+    "actions": {
+      "addTask": "Add task",
+      "recordExpense": "Record expense",
+      "createFieldLog": "Create field log",
+      "recordHarvest": "Record harvest",
+      "interimReport": "View interim report",
+      "finalReport": "View final season report"
+    },
+    "details": {
+      "crop": "Crop",
+      "plot": "Plot",
+      "duration": "Season duration",
+      "upcomingTask": "Upcoming task",
+      "noUpcomingTask": "No upcoming task"
+    },
+    "metrics": {
+      "pending": "Pending",
+      "inProgress": "In progress",
+      "overdue": "Overdue",
+      "completed": "Completed",
+      "expenses": "Expenses",
+      "logs": "Logs",
+      "harvestBatches": "Harvest batches",
+      "harvestedYield": "Harvested yield"
+    },
+    "harvestProgress": {
+      "title": "Harvest progress (estimated by yield)",
+      "summary": "Harvested: {{harvestedKg}} kg",
+      "summaryWithTarget": "Harvested: {{harvestedKg}} kg / Target: {{targetKg}} kg"
+    },
+    "units": {
+      "kg": "kg"
+    },
+    "validation": {
+      "logDateAfterStart": "Log date must be on or after season start date ({{date}})",
+      "logDateBeforeEnd": "Log date must be on or before season end date ({{date}})"
+    },
+    "toast": {
+      "createTaskSuccess": "Task created successfully",
+      "createTaskError": "Failed to create task",
+      "noOutputWarehouse": "No output warehouse found. Create one before recording harvest."
+    }
+  },
+  "seasonWorkspaceOverview": {
+    "openModule": "Open module",
+    "modules": {
+      "tasks": {
+        "title": "Task Workspace",
+        "description": "Track tasks by status: pending, in progress, overdue, and done."
+      },
+      "expenses": {
+        "title": "Expenses",
+        "description": "Log operational costs linked to the active season and tasks."
+      },
+      "fieldLogs": {
+        "title": "Field Logs",
+        "description": "Capture field activities by date for quick daily review."
+      },
+      "disease": {
+        "title": "Disease Tracking",
+        "description": "Track disease history, severity, and treatment timeline by season."
+      },
+      "harvest": {
+        "title": "Harvest",
+        "description": "Record harvest batches and monitor season harvest progress."
+      },
+      "labor": {
+        "title": "Labor Management",
+        "description": "Assign workers, track progress, and manage payroll in this season."
+      },
+      "nutrient": {
+        "title": "Nutrient Inputs",
+        "description": "Input nutrient data for mineral and organic sources."
+      },
+      "irrigation": {
+        "title": "Irrigation Analysis",
+        "description": "Input irrigation water analysis for NO3/NH4/Total N metrics."
+      },
+      "soil": {
+        "title": "Soil Tests",
+        "description": "Input soil test values (SOM, nitrate, ammonium, mineral N)."
+      },
+      "reports": {
+        "title": "Reports",
+        "description": "View interim/final reports and AI-assisted cost optimization insights."
+      }
+    }
+  },
+  "seasonNutrientWorkspace": {
+    "title": "Nutrient Inputs",
+    "loadingSeason": "Loading season information...",
+    "meta": {
+      "season": "Season",
+      "plot": "Plot",
+      "crop": "Crop"
+    },
+    "alerts": {
+      "missingPlotTitle": "Missing plot link",
+      "missingPlotDescription": "This season does not have `plotId` yet, so nutrient input cannot be submitted.",
+      "writeLockedTitle": "Season locked",
+      "writeLockedDescription": "Season is locked. Cannot create new nutrient input."
+    },
+    "form": {
+      "inputSource": "Input type",
+      "inputSourcePlaceholder": "Select input type",
+      "sourceType": "Data source",
+      "sourceTypePlaceholder": "Select data source",
+      "value": "N value",
+      "valuePlaceholder": "Example: 24.5",
+      "unit": "Unit",
+      "unitPlaceholder": "Select unit",
+      "recordedAt": "Recorded date",
+      "sourceDocument": "Reference document",
+      "sourceDocumentPlaceholder": "Example: lab-report-2026-03-11.pdf",
+      "note": "Note",
+      "notePlaceholder": "Additional details about source or measurement condition...",
+      "sourceTypeOptions": {
+        "userEntered": "User entered",
+        "labMeasured": "Lab measured",
+        "externalReference": "External reference"
+      },
+      "inputSourceOptions": {
+        "mineral": "Mineral fertilizer",
+        "organic": "Organic fertilizer / manure"
+      },
+      "unitOptions": {
+        "kgN": "kg N / season",
+        "kgNPerHa": "kg N / ha"
+      }
+    },
+    "actions": {
+      "save": "Save nutrient input",
+      "saveAndOpenDashboard": "Save and open Dashboard"
+    },
+    "list": {
+      "title": "Season nutrient inputs",
+      "loading": "Loading nutrient input data...",
+      "empty": "No nutrient input records for this season yet.",
+      "headers": {
+        "date": "Date",
+        "inputType": "Input type",
+        "value": "Value",
+        "source": "Data source",
+        "status": "Status"
+      }
+    },
+    "validation": {
+      "valueRequired": "Nitrogen value is required",
+      "nonNegative": "Value must be greater than or equal to 0",
+      "recordedAtRequired": "Recorded date is required",
+      "plotRequired": "Season is not linked to a valid plot yet, cannot record nutrient input."
+    },
+    "toast": {
+      "createSuccess": "Nutrient input saved",
+      "createError": "Unable to save nutrient input"
+    }
+  },
+  "seasonIrrigationWorkspace": {
+    "title": "Irrigation Water Analysis",
+    "loadingSeason": "Loading season information...",
+    "meta": {
+      "season": "Season",
+      "plot": "Plot",
+      "crop": "Crop"
+    },
+    "alerts": {
+      "missingPlotTitle": "Missing plot link",
+      "missingPlotDescription": "This season does not have `plotId` yet, so irrigation water analysis cannot be submitted.",
+      "writeLockedTitle": "Season locked",
+      "writeLockedDescription": "Season is locked. Cannot create new irrigation water analysis."
+    },
+    "form": {
+      "sampleDate": "Sample date",
+      "sourceType": "Data source",
+      "sourceTypePlaceholder": "Select data source",
+      "nitrate": "Nitrate (mg N/L)",
+      "nitratePlaceholder": "Example: 4.2",
+      "ammonium": "Ammonium (mg N/L)",
+      "ammoniumPlaceholder": "Example: 1.8",
+      "totalN": "Total N (mg N/L)",
+      "totalNPlaceholder": "If total N is available, it will be prioritized",
+      "volume": "Irrigation volume (m3)",
+      "volumePlaceholder": "Example: 500",
+      "sourceDocument": "Reference document",
+      "sourceDocumentPlaceholder": "Example: water-lab-report.pdf",
+      "labReference": "Lab reference",
+      "labReferencePlaceholder": "LAB-IRR-101",
+      "note": "Note",
+      "notePlaceholder": "Additional context about sampling condition...",
+      "sourceTypeOptions": {
+        "userEntered": "User entered",
+        "labMeasured": "Lab measured",
+        "externalReference": "External reference"
+      }
+    },
+    "actions": {
+      "save": "Save irrigation analysis",
+      "saveAndOpenDashboard": "Save and open Dashboard"
+    },
+    "list": {
+      "title": "Irrigation water analyses",
+      "loading": "Loading irrigation analyses...",
+      "empty": "No irrigation water analysis records for this season yet.",
+      "headers": {
+        "date": "Date",
+        "effectiveN": "Effective N (mg/L)",
+        "volume": "Volume (m3)",
+        "nContribution": "N contribution (kg)",
+        "source": "Source",
+        "status": "Status"
+      }
+    },
+    "validation": {
+      "sampleDateRequired": "Sample date is required",
+      "volumeRequired": "Irrigation volume is required",
+      "nonNegative": "Value must be greater than or equal to 0",
+      "nitrogenRequired": "Please provide total N or nitrate/ammonium",
+      "plotRequired": "Season is not linked to a valid plot yet, cannot submit irrigation water analysis."
+    },
+    "toast": {
+      "createSuccess": "Irrigation water analysis saved",
+      "createError": "Unable to save irrigation water analysis"
+    }
+  },
+  "seasonSoilWorkspace": {
+    "title": "Soil Test",
+    "loadingSeason": "Loading season information...",
+    "meta": {
+      "season": "Season",
+      "plot": "Plot",
+      "crop": "Crop"
+    },
+    "alerts": {
+      "missingPlotTitle": "Missing plot link",
+      "missingPlotDescription": "This season does not have `plotId` yet, so soil test cannot be submitted.",
+      "writeLockedTitle": "Season locked",
+      "writeLockedDescription": "Season is locked. Cannot create new soil test."
+    },
+    "form": {
+      "sampleDate": "Sample date",
+      "sourceType": "Data source",
+      "sourceTypePlaceholder": "Select data source",
+      "mineralN": "Mineral N (kg N/ha)",
+      "mineralNPlaceholder": "Example: 12.5",
+      "soilOrganicMatter": "Soil organic matter (%)",
+      "soilOrganicMatterPlaceholder": "Example: 2.1",
+      "nitrate": "Nitrate (mg/kg)",
+      "nitratePlaceholder": "Example: 11.2",
+      "ammonium": "Ammonium (mg/kg)",
+      "ammoniumPlaceholder": "Example: 1.8",
+      "sourceDocument": "Reference document",
+      "sourceDocumentPlaceholder": "Example: soil-lab-report.pdf",
+      "labReference": "Lab reference",
+      "labReferencePlaceholder": "LAB-SOIL-21",
+      "note": "Note",
+      "notePlaceholder": "Additional description about this soil sample...",
+      "sourceTypeOptions": {
+        "userEntered": "User entered",
+        "labMeasured": "Lab measured",
+        "externalReference": "External reference"
+      }
+    },
+    "actions": {
+      "save": "Save soil test",
+      "saveAndOpenDashboard": "Save and open Dashboard"
+    },
+    "list": {
+      "title": "Soil tests",
+      "loading": "Loading soil tests...",
+      "empty": "No soil test records for this season yet.",
+      "headers": {
+        "date": "Date",
+        "mineralN": "Mineral N (kg/ha)",
+        "soilOrganicMatter": "SOM (%)",
+        "nContribution": "N contribution (kg)",
+        "source": "Source",
+        "status": "Status"
+      }
+    },
+    "validation": {
+      "sampleDateRequired": "Sample date is required",
+      "mineralNRequired": "Mineral N is required",
+      "nonNegative": "Value must be greater than or equal to 0",
+      "plotRequired": "Season is not linked to a valid plot yet, cannot submit soil test."
+    },
+    "toast": {
+      "createSuccess": "Soil test saved",
+      "createError": "Unable to save soil test"
+    }
+  },
+  "seasonReportsWorkspace": {
+    "loading": "Loading report data...",
+    "notFound": "Season not found.",
+    "interimLockedMessage": "Interim report will open after actual harvest data is recorded. Current progress: {{progress}}%.",
+    "harvestProgress": "Harvest progress: {{progress}}%",
+    "finalDescription": "Season data has reached 100%. You can review final report and compare end-of-season indicators.",
+    "interimDescription": "Data is still updating with harvest progress. Financial and yield indicators may change.",
+    "badges": {
+      "final": "Final report",
+      "interim": "Interim report"
+    },
+    "actions": {
+      "goToHarvest": "Go to Harvest",
+      "backToWorkspace": "Back to workspace overview"
+    }
+  },
+  "laborWorkspace": {
+    "title": "Labor Management",
+    "currentSeasonLabel": "Current season: {{season}}",
+    "selectSeasonToStart": "Select a season to begin",
+    "selectSeasonPlaceholder": "Select season...",
+    "loadingSeasons": "Loading seasons...",
+    "emptySeasonsTitle": "No seasons available",
+    "emptySeasonsDescription": "Please create a season before managing labor.",
+    "lockedSeasonBanner": "Current season is locked. You can only view labor plans and data; add/remove/assign/payroll actions are disabled.",
+    "tabs": {
+      "employees": "Employee list",
+      "assignment": "Assignment & progress",
+      "payroll": "Payroll"
+    },
+    "sections": {
+      "addEmployees": {
+        "title": "Add employees to season"
+      },
+      "seasonEmployees": {
+        "title": "Employees in season",
+        "loading": "Loading employees...",
+        "empty": "No employees in this season."
+      },
+      "assignment": {
+        "title": "Task assignment",
+        "loading": "Loading tasks...",
+        "empty": "No tasks in this season."
+      },
+      "progress": {
+        "title": "Employee progress tracking",
+        "loading": "Loading progress data...",
+        "empty": "No progress reports yet."
+      },
+      "payroll": {
+        "title": "Automated payroll",
+        "loading": "Loading payroll...",
+        "empty": "No payroll data."
+      }
+    },
+    "fields": {
+      "availableEmployees": "Available employees",
+      "selectEmployeePlaceholder": "Select employee",
+      "wagePerTaskVnd": "Wage / task (VND)",
+      "wagePerTaskPlaceholder": "Example: 150000"
+    },
+    "bulk": {
+      "description": "Select multiple employees from directory to assign into this season.",
+      "selectAll": "Select all",
+      "clearSelection": "Clear",
+      "emptyAvailableEmployees": "No available employee left to add."
+    },
+    "actions": {
+      "addEmployee": "Add employee",
+      "bulkAddEmployees": "Bulk add employees",
+      "assignTask": "Assign task",
+      "recalculatePayroll": "Recalculate payroll"
+    },
+    "table": {
+      "employee": "Employee",
+      "email": "Email",
+      "wagePerTask": "Wage / task",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "assignmentTable": {
+      "task": "Task",
+      "status": "Status",
+      "currentAssignee": "Current assignee",
+      "newAssignee": "New assignee",
+      "actions": "Actions"
+    },
+    "progressTable": {
+      "employee": "Employee",
+      "task": "Task",
+      "progress": "Progress",
+      "note": "Note",
+      "time": "Time"
+    },
+    "payrollTable": {
+      "employee": "Employee",
+      "period": "Payroll period",
+      "completedTasks": "Completed tasks",
+      "wagePerTask": "Wage / task",
+      "totalAmount": "Total pay",
+      "updatedAt": "Updated at"
+    },
+    "toast": {
+      "addEmployeeSuccess": "Employee added to season",
+      "addEmployeeError": "Failed to add employee",
+      "bulkAddEmployeeSuccess": "Added {{count}} employee(s) to season",
+      "bulkAddEmployeeError": "Failed to bulk add employees",
+      "removeEmployeeSuccess": "Employee removed from season",
+      "removeEmployeeError": "Failed to remove employee",
+      "assignTaskSuccess": "Task assigned successfully",
+      "assignTaskError": "Failed to assign task",
+      "recalculatePayrollSuccess": "Payroll recalculated",
+      "recalculatePayrollError": "Failed to recalculate payroll"
+    },
+    "validation": {
+      "seasonLockedUpdate": "Season is locked. Cannot update employees.",
+      "selectEmployee": "Please select an employee",
+      "invalidWagePerTask": "Invalid wage per task",
+      "selectAtLeastOneEmployee": "Please select at least one employee.",
+      "seasonLockedAssign": "Season is locked. Cannot assign more tasks.",
+      "selectEmployeeForAssignment": "Please select an employee to assign",
+      "seasonLockedDelete": "Season is locked. Cannot remove employee."
+    },
+    "userFallback": "User #{{id}}",
+    "taskFallback": "Task #{{id}}"
+  },
   "tasks": {
     "title": "Tasks",
     "pageTitle": "Tasks",
@@ -598,11 +1187,13 @@
       "title": "Title",
       "season": "Season",
       "plot": "Plot",
+      "cropPlot": "Crop / Plot",
       "type": "Type",
       "assignee": "Assignee",
       "plannedDate": "Planned Date",
       "dueDate": "Due Date",
       "status": "Status",
+      "attachments": "Attachments",
       "actions": "Actions"
     },
     "noSeason": "No Season",
@@ -681,6 +1272,7 @@
       "onHand": "On-hand Stock",
       "movements": "Movement History"
     },
+    "tabsAriaLabel": "Supply inventory tabs",
     "selectWarehouse": "Please select a warehouse to view inventory",
     "noStock": "No on-hand stock found for this warehouse",
     "loadingMovements": "Loading movement history...",
@@ -708,13 +1300,20 @@
       "noteRequired": "Note is required for ADJUST movements",
       "adjustNotZero": "Adjustment quantity cannot be zero",
       "negativeOnHand": "Adjustment would result in negative on-hand",
-      "adjustFailed": "Failed to record adjustment"
+      "adjustFailed": "Failed to record adjustment",
+      "warehouseNameRequired": "Warehouse name is required.",
+      "farmRequired": "Please select a farm."
     },
     "toast": {
       "createSuccess": "Inventory entry created",
       "updateSuccess": "Inventory entry updated",
       "deleteSuccess": "Inventory entry deleted",
-      "error": "An error occurred"
+      "error": "An error occurred",
+      "warehouseCreateSuccess": "Supply warehouse created successfully.",
+      "warehouseUpdateSuccess": "Supply warehouse updated successfully.",
+      "warehouseSaveError": "Failed to save warehouse information. Please try again.",
+      "warehouseDeleteSuccess": "Supply warehouse deleted successfully.",
+      "warehouseDeleteError": "Failed to delete warehouse. Please check related dependencies."
     },
     "table": {
       "item": "Item",
@@ -729,8 +1328,19 @@
       "status": "Status"
     },
     "actions": {
+      "menu": "Open actions menu",
       "stockOut": "Stock OUT",
-      "adjust": "Adjust"
+      "adjust": "Adjust",
+      "addWarehouse": "Add Warehouse",
+      "editWarehouse": "Edit Warehouse",
+      "deleteWarehouse": "Delete Warehouse"
+    },
+    "status": {
+      "inStock": "In stock",
+      "lowStock": "Low stock",
+      "expired": "Expired",
+      "outOfStock": "Out of stock",
+      "hold": "On hold"
     },
     "movementsTable": {
       "date": "Date",
@@ -742,6 +1352,22 @@
       "season": "Season",
       "task": "Task",
       "note": "Note"
+    },
+    "locationFallback": "Location {{id}}",
+    "unassignedLocation": "Unassigned location",
+    "dialog": {
+      "addWarehouseTitle": "Add Supply Warehouse",
+      "editWarehouseTitle": "Edit Supply Warehouse",
+      "warehouseHint": "Supply warehouses are for input materials (fertilizers, pesticides, seeds, etc.).",
+      "deleteWarehouseTitle": "Delete Supply Warehouse",
+      "deleteWarehouseDescription": "Are you sure you want to delete warehouse {{warehouseName}}?",
+      "deleteWarehouseHint": "This warehouse can only be deleted when there are no related locations, movements, or on-hand records."
+    },
+    "form": {
+      "warehouseNameLabel": "Warehouse Name",
+      "warehouseNamePlaceholder": "Enter supply warehouse name",
+      "farmLabel": "Farm",
+      "selectFarm": "Select farm"
     }
   },
   "productWarehouse": {
@@ -768,7 +1394,8 @@
       "status": "Status",
       "allStatuses": "All Statuses",
       "search": "Search",
-      "searchPlaceholder": "Search by lot code or product name"
+      "searchPlaceholder": "Search by lot code or product name",
+      "locationFallback": "Location {{id}}"
     },
     "tabs": {
       "onHand": "On-hand Stock",
@@ -803,7 +1430,10 @@
     "actions": {
       "viewTraceability": "View Traceability",
       "adjust": "Adjust Stock",
-      "stockOut": "Stock Out"
+      "stockOut": "Stock Out",
+      "addWarehouse": "Add Warehouse",
+      "editWarehouse": "Edit Warehouse",
+      "deleteWarehouse": "Delete Warehouse"
     },
     "traceability": {
       "season": "Season",
@@ -827,17 +1457,30 @@
       "stockOutQuantityPlaceholder": "Enter quantity",
       "stockOutNote": "Note",
       "stockOutNotePlaceholder": "Optional stock-out note",
-      "stockOutConfirm": "Confirm Stock Out"
+      "stockOutConfirm": "Confirm Stock Out",
+      "addWarehouseTitle": "Add Product Warehouse",
+      "editWarehouseTitle": "Edit Product Warehouse",
+      "warehouseHint": "Product warehouses are used to store harvested products and finished goods.",
+      "deleteWarehouseTitle": "Delete Product Warehouse",
+      "deleteWarehouseDescription": "Are you sure you want to delete warehouse {{warehouseName}}?",
+      "deleteWarehouseHint": "This warehouse can only be deleted when there are no related locations, movements, or lots."
     },
     "validation": {
       "adjustNotZero": "Adjustment quantity cannot be zero",
       "adjustNoteRequired": "Reason is required for adjustment",
-      "stockOutPositive": "Stock-out quantity must be greater than 0"
+      "stockOutPositive": "Stock-out quantity must be greater than 0",
+      "warehouseNameRequired": "Warehouse name is required.",
+      "farmRequired": "Please select a farm."
     },
     "toast": {
       "adjustSuccess": "Stock adjusted successfully",
       "stockOutSuccess": "Stock-out recorded successfully",
-      "error": "An error occurred"
+      "error": "An error occurred",
+      "warehouseCreateSuccess": "Product warehouse created successfully.",
+      "warehouseUpdateSuccess": "Product warehouse updated successfully.",
+      "warehouseSaveError": "Failed to save warehouse information. Please try again.",
+      "warehouseDeleteSuccess": "Product warehouse deleted successfully.",
+      "warehouseDeleteError": "Failed to delete warehouse. Please check related dependencies."
     },
     "loadingLots": "Loading product lots...",
     "loadingTransactions": "Loading transaction history...",
@@ -847,7 +1490,20 @@
     "emptyTraceability": "Select a product lot to view traceability.",
     "errorLots": "Failed to load product lots.",
     "errorTransactions": "Failed to load transaction history.",
-    "errorTraceability": "Failed to load traceability data."
+    "errorTraceability": "Failed to load traceability data.",
+    "directory": {
+      "title": "Warehouse Directory",
+      "count": "{{count}} warehouse(s)",
+      "empty": "No output warehouse available. Create a warehouse to start linking harvest lots.",
+      "farm": "Farm",
+      "type": "Type"
+    },
+    "form": {
+      "warehouseNameLabel": "Warehouse Name",
+      "warehouseNamePlaceholder": "Enter product warehouse name",
+      "farmLabel": "Farm",
+      "selectFarm": "Select farm"
+    }
   },
   "fieldLogs": {
     "title": "Field Logs",
@@ -896,7 +1552,8 @@
     "validation": {
       "dateAfterStart": "Log date must be on or after season start date",
       "dateBeforeEnd": "Log date must be on or before season end date",
-      "fillRequired": "Please fill in required fields"
+      "fillRequired": "Please fill in required fields",
+      "seasonLocked": "Season is locked. Field log write actions are disabled."
     },
     "toast": {
       "createSuccess": "Field log created successfully",
@@ -906,6 +1563,206 @@
       "deleteSuccess": "Field log deleted successfully",
       "deleteError": "Failed to delete field log",
       "error": "An error occurred"
+    },
+    "currentSeason": "Season:"
+  },
+  "diseaseTracking": {
+    "title": "Disease Tracking",
+    "subtitle": "Manage disease history and treatment progress during the season.",
+    "actions": {
+      "addRecord": "Add disease record",
+      "addTreatment": "Add treatment",
+      "addTimelineItem": "Add",
+      "edit": "Edit",
+      "delete": "Delete",
+      "hideDetails": "Hide details",
+      "viewDetails": "View details",
+      "refresh": "Refresh",
+      "cancel": "Cancel",
+      "create": "Create",
+      "update": "Update"
+    },
+    "season": {
+      "label": "Season:",
+      "invalid": "Invalid season.",
+      "writeLocked": "Season is locked. Cannot create, edit, or delete disease records."
+    },
+    "summary": {
+      "totalRecords": "Total records",
+      "newDetected": "Newly detected",
+      "underTreatment": "Under treatment",
+      "resolvedClosed": "Stabilized / closed"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by disease name/symptoms...",
+      "statusPlaceholder": "Status",
+      "severityPlaceholder": "Severity",
+      "allStatuses": "All statuses",
+      "allSeverities": "All severities"
+    },
+    "statusOptions": {
+      "OPEN": "Newly detected",
+      "UNDER_TREATMENT": "Under treatment",
+      "MONITORING": "Monitoring",
+      "RESOLVED": "Stabilized",
+      "CLOSED": "Closed record"
+    },
+    "severityOptions": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "CRITICAL": "Critical"
+    },
+    "effectivenessOptions": {
+      "UNKNOWN": "Not evaluated",
+      "POOR": "Poor",
+      "FAIR": "Fair",
+      "GOOD": "Good",
+      "EXCELLENT": "Excellent"
+    },
+    "list": {
+      "loadingRecords": "Loading disease records...",
+      "emptyTitle": "No disease records in this season yet",
+      "emptyDescription": "Start by adding the first disease record to track treatment progress."
+    },
+    "recordCard": {
+      "detectedAt": "Detected",
+      "affectedPlantCount": "Affected plants",
+      "affectedArea": "Affected area",
+      "treatmentCount": "Treatment rounds"
+    },
+    "detail": {
+      "loading": "Loading disease details and treatment history...",
+      "reporter": "Reported by",
+      "totalTreatmentCost": "Total treatment cost",
+      "latestTreatment": "Latest treatment",
+      "evidenceUrl": "Evidence URL",
+      "caseNotes": "Case notes",
+      "ai": {
+        "title": "AI treatment suggestion",
+        "description": "AI only provides reference guidance. It does not create treatments automatically.",
+        "generate": "Generate AI suggestion",
+        "additionalNoteLabel": "Additional note (optional)",
+        "additionalNotePlaceholder": "Example: Sprayed once before, condition has not improved yet...",
+        "includeInventoryLabel": "Include inventory context",
+        "includeInventoryDescription": "Enable to limit AI recommendations to items available in your internal inventory list.",
+        "includeInventoryAriaLabel": "Include inventory context",
+        "generateErrorPrefix": "Unable to generate AI suggestion:",
+        "generatedAt": "Generated at",
+        "disclaimer": "Suggestions are for reference only and do not replace expert consultation."
+      },
+      "timeline": {
+        "title": "Treatment timeline",
+        "empty": "No treatment history yet.",
+        "effectiveness": "Effectiveness",
+        "material": "Material",
+        "quantity": "Quantity",
+        "cost": "Cost",
+        "dosageNote": "Dosage note"
+      }
+    },
+    "dialogs": {
+      "record": {
+        "createTitle": "Create new disease record",
+        "editTitle": "Update disease record",
+        "description": "Capture detection details to track handling throughout the season."
+      },
+      "treatment": {
+        "createTitle": "Add treatment history",
+        "editTitle": "Update treatment",
+        "description": "Record materials used, dosage, cost, and treatment outcomes."
+      },
+      "deleteRecord": {
+        "title": "Delete disease record",
+        "description": "Are you sure you want to delete this disease record? This action cannot be undone."
+      },
+      "deleteTreatment": {
+        "title": "Delete treatment history",
+        "description": "Are you sure you want to delete this treatment entry? The data will be permanently removed."
+      }
+    },
+    "form": {
+      "record": {
+        "diseaseName": "Disease name",
+        "diseaseNamePlaceholder": "Example: Rice blast",
+        "symptoms": "Symptoms",
+        "symptomsPlaceholder": "Describe observed symptoms...",
+        "severity": "Severity",
+        "status": "Status",
+        "detectedAt": "Detected time",
+        "affectedPlantCount": "Affected plant count",
+        "affectedPlantCountPlaceholder": "Example: 120",
+        "affectedAreaPercent": "Affected area ratio (%)",
+        "affectedAreaPercentPlaceholder": "Example: 35",
+        "evidenceUrl": "Evidence URL",
+        "notes": "Notes",
+        "notesPlaceholder": "Additional case details..."
+      },
+      "treatment": {
+        "treatedAt": "Treatment date",
+        "method": "Method",
+        "methodPlaceholder": "Spraying, pruning, biological treatment...",
+        "supplyItem": "Supply item",
+        "selectSupplyItem": "Select supply item",
+        "supplyLot": "Supply lot",
+        "selectSupplyLot": "Select supply lot",
+        "selectSupplyItemFirst": "Select supply item first",
+        "noneOption": "None",
+        "lotFallback": "Lot #{{id}}",
+        "quantityUsed": "Quantity used",
+        "quantityUsedPlaceholder": "Example: 2.5",
+        "unit": "Unit",
+        "unitPlaceholder": "ml, g, bottle...",
+        "costAmountVnd": "Cost amount (VND)",
+        "costAmountPlaceholder": "Example: 150000",
+        "effectiveness": "Effectiveness",
+        "dosageNote": "Dosage note",
+        "dosageNotePlaceholder": "Dosage and usage details...",
+        "resultNote": "Result note",
+        "resultNotePlaceholder": "Outcome after treatment..."
+      }
+    },
+    "errors": {
+      "sessionExpired": "Session expired. Please sign in again.",
+      "permissionDenied": "You do not have permission to access or modify this season/disease data.",
+      "invalidData": "Invalid data. Please review your inputs and try again.",
+      "loadRecordsFail": "Unable to load disease records.",
+      "loadDetailFail": "Unable to load disease record details. Please try again.",
+      "createRecordFail": "Unable to create disease record.",
+      "updateRecordFail": "Unable to update disease record.",
+      "deleteRecordFail": "Unable to delete disease record.",
+      "createTreatmentFail": "Unable to add treatment history.",
+      "updateTreatmentFail": "Unable to update treatment history.",
+      "deleteTreatmentFail": "Unable to delete treatment history.",
+      "aiSuggestionFail": "Unable to generate AI suggestion right now."
+    },
+    "validation": {
+      "diseaseNameRequired": "Disease name is required.",
+      "detectedAtRequired": "Detected time is required.",
+      "detectedAtInvalid": "Detected time is invalid.",
+      "affectedPlantCountInvalid": "Affected plant count must be an integer >= 0.",
+      "affectedAreaInvalid": "Affected area ratio must be a number >= 0.",
+      "additionalNoteTooLong": "Additional note must not exceed 4000 characters.",
+      "recordNotFoundForTreatment": "Disease record not found for treatment update.",
+      "treatedAtRequired": "Treatment date is required.",
+      "methodRequired": "Treatment method is required.",
+      "treatedAtInvalid": "Treatment date is invalid.",
+      "quantityUsedInvalid": "Quantity used must be a number >= 0.",
+      "costAmountInvalid": "Treatment cost must be a number >= 0.",
+      "nonNegativeIntegerHint": "Please enter an integer >= 0.",
+      "nonNegativeNumberHint": "Please enter a number >= 0."
+    },
+    "toast": {
+      "recordCreated": "Disease record created.",
+      "recordUpdated": "Disease record updated.",
+      "recordDeleted": "Disease record deleted.",
+      "treatmentCreated": "Treatment history added.",
+      "treatmentUpdated": "Treatment history updated.",
+      "treatmentDeleted": "Treatment history deleted."
+    },
+    "overlay": {
+      "processingAriaLabel": "Processing disease data",
+      "processingText": "Processing disease data..."
     }
   },
   "incidents": {
@@ -968,7 +1825,11 @@
       "createTitle": "Report Incident",
       "editTitle": "Edit Incident",
       "deleteTitle": "Delete Incident",
-      "deleteDescription": "Are you sure you want to delete this incident? This action cannot be undone."
+      "deleteDescription": "Are you sure you want to delete this incident? This action cannot be undone.",
+      "editDescription": "Update incident details",
+      "createDescription": "Fill in the details to report a new incident",
+      "resolveTitle": "Resolve Incident",
+      "resolveDescription": "Provide a resolution note to close this incident"
     },
     "validation": {
       "selectSeason": "Please select a season first",
@@ -983,8 +1844,15 @@
       "severity": "Severity",
       "description": "Description",
       "deadline": "Deadline",
-      "resolutionNote": "Resolution Note"
-    }
+      "resolutionNote": "Resolution Note",
+      "descriptionPlaceholder": "Describe the incident...",
+      "deadlineOptional": "Deadline (Optional)",
+      "resolutionPlaceholder": "Describe how the incident was resolved..."
+    },
+    "pagination": {
+      "summary": "Page {{page}} of {{totalPages}} ({{total}} total)"
+    },
+    "resolve": "Resolve"
   },
   "farms": {
     "title": "Farms & Plots",
@@ -1123,7 +1991,15 @@
       "editTitle": "Edit Supplier",
       "addDescription": "Enter supplier details to add a new supplier",
       "editDescription": "Update supplier information",
-      "addButton": "Add Supplier"
+      "addButton": "Add Supplier",
+      "name": "Name",
+      "namePlaceholder": "Supplier name",
+      "licenseNo": "License No",
+      "licenseNoPlaceholder": "License number (optional)",
+      "phone": "Phone",
+      "phonePlaceholder": "Contact phone (optional)",
+      "email": "Email",
+      "emailPlaceholder": "Contact email (optional)"
     },
     "delete": {
       "title": "Delete Supplier",
@@ -1133,6 +2009,77 @@
       "nameRequired": "Supplier name is required",
       "saveFailed": "Failed to save supplier",
       "deleteFailed": "Failed to delete supplier"
+    },
+    "pagination": {
+      "summary": "Page {{page}} of {{totalPages}}"
+    },
+    "table": {
+      "name": "Name",
+      "licenseNo": "License No",
+      "phone": "Phone",
+      "email": "Email",
+      "actions": "Actions"
+    },
+    "actions": {
+      "menu": "Actions",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "itemsTable": {
+      "name": "Name",
+      "activeIngredient": "Active Ingredient",
+      "unit": "Unit",
+      "restricted": "Restricted",
+      "restrictedBadge": "Restricted",
+      "normalBadge": "Normal"
+    },
+    "lotsTable": {
+      "batchCode": "Batch Code",
+      "item": "Item",
+      "supplier": "Supplier",
+      "expiryDate": "Expiry Date",
+      "status": "Status",
+      "expiringSoon": "Soon"
+    },
+    "stockIn": {
+      "title": "Stock IN",
+      "errors": {
+        "recordFailed": "Failed to record Stock IN"
+      },
+      "steps": {
+        "warehouse": "Warehouse",
+        "supplierItem": "Supplier & Item",
+        "batchInfo": "Batch Info"
+      },
+      "form": {
+        "warehouse": "Warehouse",
+        "selectWarehouse": "Select warehouse...",
+        "locationOptional": "Location (Optional)",
+        "anyLocation": "Any location",
+        "locationFallback": "Location {{id}}",
+        "supplier": "Supplier",
+        "selectSupplier": "Select supplier...",
+        "supplyItem": "Supply Item",
+        "selectItem": "Select item...",
+        "restrictedTag": "?? RESTRICTED",
+        "restrictedTitle": "?? Restricted Supply",
+        "restrictedDescription": "This item requires special handling authorization.",
+        "restrictedConfirm": "I confirm I'm authorized to handle restricted supplies",
+        "batchCode": "Batch Code",
+        "batchCodePlaceholder": "e.g., NPK-2025-01",
+        "expiryDate": "Expiry Date",
+        "pastExpiryTitle": "?? Past expiry date",
+        "pastExpiryConfirm": "I confirm the expiry date is correct",
+        "quantity": "Quantity",
+        "quantityPlaceholder": "Enter quantity",
+        "noteOptional": "Note (Optional)",
+        "notePlaceholder": "Additional notes..."
+      },
+      "actions": {
+        "back": "Back",
+        "next": "Next",
+        "confirm": "Confirm Stock IN"
+      }
     }
   },
   "crops": {
@@ -1157,6 +2104,32 @@
       "all": "All",
       "byCategory": "By Category",
       "bySeason": "By Season"
+    },
+    "filters": {
+      "selectSeason": "Select season",
+      "noSeasons": "No seasons",
+      "allSeasons": "All seasons",
+      "demoSeasonRice2025": "Rice Season 2025",
+      "demoSeasonCorn2025": "Corn Season 2025",
+      "demoSeasonWheat2025": "Wheat Season 2025",
+      "allCategories": "All categories",
+      "allStatuses": "All statuses"
+    },
+    "categories": {
+      "fertilizer": "Fertilizer",
+      "seeds": "Seeds",
+      "labor": "Labor",
+      "equipment": "Equipment",
+      "pesticide": "Pesticide",
+      "transportation": "Transportation",
+      "utilities": "Utilities",
+      "maintenance": "Maintenance",
+      "other": "Other"
+    },
+    "status": {
+      "paid": "Paid",
+      "pending": "Pending",
+      "unpaid": "Unpaid"
     },
     "toast": {
       "createSuccess": "Expense created successfully",
@@ -1198,6 +2171,30 @@
       "expenses": "Expenses",
       "documents": "Documents",
       "users": "Users"
+    },
+    "global": {
+      "title": "Global search",
+      "placeholder": "Search plots, seasons, tasks, docs...",
+      "loading": "Loading",
+      "error": "Search failed. Please try again.",
+      "minChars": "Type at least 2 characters to search.",
+      "noResults": "No results found.",
+      "quickLinks": {
+        "title": "Quick links",
+        "admin": {
+          "inventoryRisks": "Inventory Risks",
+          "incidents": "Incidents",
+          "alertsCenter": "Alerts Center",
+          "farmsPlots": "Farms & Plots",
+          "documents": "Documents"
+        },
+        "farmer": {
+          "tasksWorkspace": "Tasks Workspace",
+          "expenses": "Expenses",
+          "documents": "Documents",
+          "inventory": "Inventory"
+        }
+      }
     }
   },
   "seasonPicker": {
@@ -1456,127 +2453,286 @@
     }
   },
   "marketplaceSeller": {
-    "tabs": {
-      "overview": "Overview",
-      "products": "Products",
-      "orders": "Orders"
+    "common": {
+      "brand": "Seller Portal",
+      "backToProducts": "Back to products",
+      "tryAgain": "Try again"
     },
-    "dashboard": {
-      "title": "Seller dashboard",
-      "subtitle": "Track performance and order activity in your marketplace booth.",
-      "loading": "Loading seller dashboard...",
-      "error": "Failed to load seller dashboard.",
-      "manageProducts": "Manage products",
-      "metrics": {
-        "revenue": "Revenue",
-        "newOrders": "New orders",
-        "products": "Products",
-        "views": "Views"
-      },
-      "recentOrdersTitle": "Recent orders",
-      "recentOrdersEmpty": "No recent orders yet.",
-      "viewOrder": "View order",
-      "lowStockTitle": "Low stock products",
-      "lowStockHint": "Products that need restocking soon.",
-      "lowStockEmpty": "No low-stock products found.",
-      "stock": "Stock",
-      "itemsLabel": "items",
-      "viewAll": "View all"
+    "tabs": {
+      "brand": "Seller",
+      "title": "Marketplace workspace",
+      "ariaLabel": "Marketplace seller tabs",
+      "items": {
+        "overview": {
+          "label": "Overview",
+          "description": "Store summary"
+        },
+        "products": {
+          "label": "Products",
+          "description": "Listings and stock"
+        },
+        "orders": {
+          "label": "Orders",
+          "description": "Buyer orders"
+        }
+      }
     },
     "products": {
-      "title": "Products management",
-      "subtitle": "Manage your catalog and update product visibility.",
-      "newProduct": "New product",
-      "filters": "Filters",
-      "searchPlaceholder": "Search by product or farm...",
+      "title": "Manage products",
+      "subtitle": "List, moderate, and manage stock for your marketplace products.",
+      "addProduct": "Add product",
+      "searchPlaceholder": "Search your listings...",
       "loading": "Loading products...",
-      "error": "Failed to load products.",
-      "empty": "No product found.",
-      "noFarm": "No farm linked",
-      "table": {
-        "product": "Product",
-        "category": "Category",
-        "price": "Price",
-        "stock": "Stock",
-        "status": "Status",
-        "actions": "Actions",
-        "available": "Available"
+      "emptyFiltered": "No products matched your current filters.",
+      "loadError": "Failed to load seller products."
+    },
+    "filters": {
+      "allStatuses": "All statuses"
+    },
+    "status": {
+      "draft": "Draft",
+      "pendingReview": "Pending approval",
+      "published": "Approved",
+      "hidden": "Rejected / Hidden",
+      "order": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "preparing": "Preparing",
+        "delivering": "Delivering",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "table": {
+      "product": "Product",
+      "category": "Category",
+      "price": "Price",
+      "stock": "Stock",
+      "status": "Status",
+      "updated": "Updated",
+      "actions": "Actions",
+      "adminReason": "Admin reason",
+      "available": "Available"
+    },
+    "dashboard": {
+      "loading": "Loading marketplace dashboard...",
+      "unavailableReasons": {
+        "noProducts": "No products in your marketplace catalog yet.",
+        "noOrders": "No buyer orders have been created yet.",
+        "noRevenueData": "Revenue data is unavailable because there are no orders yet.",
+        "noCompletedOrders": "Revenue remains unavailable until at least one order is completed.",
+        "fallback": "Some dashboard metrics are unavailable."
       },
-      "actions": {
-        "view": "View",
-        "edit": "Edit",
-        "hide": "Hide",
-        "show": "Show",
-        "delete": "Delete"
+      "emptyProducts": {
+        "title": "No marketplace product yet",
+        "description": "Add your first product listing to unlock order and revenue metrics on this dashboard.",
+        "actions": {
+          "createFirst": "Create first product",
+          "goToListings": "Go to listings"
+        }
       },
-      "deleteDialog": {
-        "title": "Hide this product?",
-        "description": "The product will be hidden from buyers and can be published again later.",
-        "confirm": "Hide product"
+      "noOrders": {
+        "title": "Products are live, but no orders yet",
+        "description": "Keep listings updated and in stock. Buyer orders will appear here as soon as they are placed."
       },
-      "statusFilter": {
-        "all": "All",
-        "draft": "Draft",
-        "pendingReview": "Pending review",
-        "published": "Published",
-        "hidden": "Hidden"
+      "metrics": {
+        "revenue": "Revenue",
+        "revenueEmpty": "No completed orders yet.",
+        "pendingOrders": "Pending orders",
+        "publishedProducts": "Published products",
+        "pendingReview": "Pending review"
+      },
+      "recentOrders": {
+        "title": "Recent orders",
+        "seeAll": "See all",
+        "itemCount": "{{count}} items",
+        "emptyWithProducts": "No buyer orders yet.",
+        "emptyNoProducts": "Buyer orders will appear after your first product is listed."
+      },
+      "topProducts": {
+        "title": "Top products",
+        "manageProducts": "Manage products",
+        "emptyWithProducts": "No published products yet.",
+        "emptyNoProducts": "No products available yet."
       }
     },
     "orders": {
-      "title": "Orders management",
-      "subtitle": "Track and update order fulfillment status.",
-      "statusFilter": "Status filter",
-      "loading": "Loading orders...",
-      "error": "Failed to load orders.",
-      "empty": "No order found.",
+      "title": "Manage orders",
+      "subtitle": "Track buyer orders, monitor status transitions, and open order details for fulfillment.",
+      "error": "Failed to load seller orders.",
+      "empty": "No orders matched the current filter.",
+      "filters": {
+        "all": "All",
+        "ariaLabel": "Order status filters"
+      },
       "table": {
         "orderCode": "Order code",
         "orderDate": "Order date",
         "customer": "Customer",
-        "totalAmount": "Total amount",
+        "total": "Total",
         "status": "Status",
-        "actions": "Actions"
-      },
-      "detail": "Detail"
+        "actions": "Actions",
+        "detail": "Detail",
+        "buyerFallback": "Buyer #{{id}}"
+      }
     },
     "orderDetail": {
-      "backToOrders": "Back to orders",
-      "title": "Order {{orderCode}}",
       "loading": "Loading order detail...",
-      "error": "Failed to load order detail.",
-      "shippingInfo": "Shipping information",
-      "recipient": "Recipient",
-      "phone": "Phone",
-      "address": "Address",
-      "paymentMethod": "Payment method",
-      "totalAmount": "Total amount",
-      "orderItems": "Order items",
-      "quantity": "Quantity",
-      "orderSummary": "Order summary",
-      "subtotal": "Subtotal",
-      "shippingFee": "Shipping fee",
-      "updateStatus": "Update status",
-      "setStatus": "Set {{status}}",
-      "itemQuantity": "Qty: {{quantity}}"
+      "error": "Failed to load seller order detail.",
+      "backToOrders": "Back to orders",
+      "itemsTitle": "Order items",
+      "customerInfo": "Customer information",
+      "paymentShipping": "Payment and shipping",
+      "verificationPrefix": "Verification",
+      "shippingStatus": "Shipping status",
+      "notePrefix": "Note",
+      "summary": {
+        "subtotal": "Subtotal",
+        "shippingFee": "Shipping fee",
+        "total": "Total"
+      },
+      "paymentMethod": {
+        "cod": "Cash on delivery",
+        "bankTransfer": "Bank transfer"
+      },
+      "verificationStatus": {
+        "notRequired": "Not required",
+        "awaitingProof": "Awaiting proof",
+        "submitted": "Submitted",
+        "verified": "Verified",
+        "rejected": "Rejected"
+      }
     },
-    "status": {
-      "product": {
-        "DRAFT": "Draft",
-        "PENDING_REVIEW": "Pending review",
-        "PUBLISHED": "Published",
-        "HIDDEN": "Hidden"
+    "productDetail": {
+      "title": "Product detail",
+      "loading": "Loading product detail...",
+      "updatedLabel": "Listing #{{id}} - Updated {{date}}",
+      "noImage": "No image available",
+      "notLinked": "Not linked",
+      "traceableYes": "Yes",
+      "traceableNo": "No",
+      "descriptionFallback": "No product description provided yet.",
+      "notFound": {
+        "title": "Product not found",
+        "description": "This product does not exist or is not available in your seller account."
       },
-      "order": {
-        "PENDING": "Pending",
-        "CONFIRMED": "Confirmed",
-        "PREPARING": "Preparing",
-        "DELIVERING": "Delivering",
-        "COMPLETED": "Completed",
-        "CANCELLED": "Cancelled"
+      "sections": {
+        "listingInfo": "Listing information",
+        "traceability": "Harvest traceability",
+        "description": "Description"
       },
-      "payment": {
-        "COD": "Cash on delivery",
-        "BANK_TRANSFER": "Bank transfer"
+      "fields": {
+        "category": "Category",
+        "price": "Price",
+        "listedQuantity": "Listed quantity",
+        "availableQuantity": "Available quantity",
+        "farmer": "Farmer",
+        "region": "Region",
+        "farm": "Farm",
+        "season": "Season",
+        "lot": "Lot",
+        "traceable": "Traceable"
+      },
+      "actions": {
+        "editListing": "Edit listing",
+        "updating": "Updating...",
+        "submitForReview": "Submit for review",
+        "moveToDraft": "Move back to draft",
+        "hideProduct": "Hide product",
+        "resubmitReview": "Resubmit for review",
+        "updateStatus": "Update status"
+      }
+    },
+    "productForm": {
+      "loading": "Loading harvest-based seller workflow...",
+      "notFound": "This product could not be found for your account.",
+      "maxAllowed": "Max allowed: {{quantity}} {{unit}}",
+      "harvestLotFallback": "Harvested lot",
+      "lotsLinkedNotice": "{{count}} harvested lots are already linked to other marketplace listings and excluded here.",
+      "adminReasonPrefix": "Admin reason",
+      "header": {
+        "editTitle": "Edit marketplace listing",
+        "createTitle": "Create marketplace listing",
+        "subtitle": "Create a marketplace listing from harvested lots with full traceability and stock controls."
+      },
+      "sections": {
+        "basicInfo": "Basic information",
+        "descriptions": "Descriptions",
+        "harvestSource": "Harvest source",
+        "preview": "Listing preview"
+      },
+      "fields": {
+        "name": "Listing name",
+        "category": "Category",
+        "price": "Price",
+        "quantityToSell": "Quantity to sell",
+        "imageUrl": "Main image URL",
+        "shortDescription": "Short description",
+        "fullDescription": "Full description",
+        "farm": "Farm",
+        "season": "Season",
+        "harvestLot": "Harvested lot"
+      },
+      "placeholders": {
+        "name": "Example: Premium jasmine rice from harvest lot 2026",
+        "category": "Grain, vegetable, fruit...",
+        "shortDescription": "A short summary buyers can scan quickly",
+        "fullDescription": "Add packaging notes, harvest quality, shipping notes, or handling instructions",
+        "selectFarm": "Choose your farm",
+        "selectSeason": "Choose a season",
+        "selectLot": "Choose a harvested lot",
+        "pickFarmFirst": "Pick a farm first"
+      },
+      "lotInfo": {
+        "lotCode": "Lot code",
+        "farm": "Farm",
+        "season": "Season",
+        "availableQuantity": "Available quantity",
+        "harvested": "Harvested",
+        "unknown": "Unknown",
+        "na": "N/A"
+      },
+      "selectLotFirst": {
+        "title": "Select a harvested lot first.",
+        "description": "Farm, season, traceability, and quantity limits are driven by that lot."
+      },
+      "preview": {
+        "title": "Listing preview",
+        "imageFallback": "Product image preview",
+        "untitled": "Untitled listing",
+        "shortDescriptionFallback": "Short description preview",
+        "price": "Price",
+        "quantityToSell": "Quantity to sell",
+        "traceability": "Traceability",
+        "traceabilityEnabled": "Enabled from harvest lot",
+        "traceabilityWaiting": "Waiting for lot"
+      },
+      "validation": {
+        "selectLot": "Choose a harvested lot before saving the listing.",
+        "pricePositive": "Price must be greater than 0.",
+        "quantityPositive": "Quantity to sell must be greater than 0.",
+        "quantityExceed": "Quantity to sell cannot exceed {{quantity}} {{unit}} from the selected harvested lot."
+      },
+      "errors": {
+        "save": "Failed to save product.",
+        "updateStatus": "Failed to update product status.",
+        "loadEdit": "Failed to load the product detail or harvest options.",
+        "loadCreate": "Failed to load your harvest-based selling options."
+      },
+      "actions": {
+        "saving": "Saving...",
+        "saveChanges": "Save changes",
+        "createDraft": "Create draft",
+        "updating": "Updating...",
+        "submitForReview": "Submit for review",
+        "moveToDraft": "Move back to draft",
+        "hideProduct": "Hide product",
+        "resubmitReview": "Resubmit for review",
+        "updateStatus": "Update status"
+      },
+      "noLots": {
+        "title": "You do not have any harvested lots with remaining quantity ready to sell yet.",
+        "description": "Finish harvest intake first, then come back here to turn a harvested lot into a marketplace listing."
       }
     }
   },
@@ -1749,6 +2905,48 @@
       "emptyDesc": "You have not created a marketplace order.",
       "startShopping": "Start shopping →",
       "group": "Group",
+      "statusGroup": {
+        "payment": "Payment",
+        "review": "Review",
+        "processing": "Processing",
+        "shipping": "Shipping",
+        "completed": "Completed",
+        "cancelled": "Closed",
+        "unknown": "Unknown"
+      },
+      "status": {
+        "PENDING_PAYMENT": "Pending payment",
+        "PAYMENT_SUBMITTED": "Payment submitted",
+        "PAYMENT_VERIFIED": "Payment verified",
+        "CONFIRMED": "Confirmed",
+        "PREPARING": "Preparing",
+        "SHIPPED": "Shipped",
+        "DELIVERED": "Delivered",
+        "COMPLETED": "Completed",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled",
+        "PENDING": "Pending payment",
+        "DELIVERING": "Shipped",
+        "unknown": "Unknown status ({{status}})"
+      },
+      "payment": "Payment",
+      "paymentMethod": {
+        "COD": "Cash on delivery",
+        "BANK_TRANSFER": "Bank transfer"
+      },
+      "paymentVerificationStatus": {
+        "NOT_REQUIRED": "Not required",
+        "AWAITING_PROOF": "Awaiting proof",
+        "SUBMITTED": "Submitted",
+        "VERIFIED": "Verified",
+        "REJECTED": "Rejected",
+        "unknown": "Unknown verification ({{status}})"
+      },
+      "orderCode": "Order code",
+      "orderDate": "Order date",
+      "quantity": "Quantity",
+      "otherItems": "+{{count}} more item(s)",
+      "totalWithCount": "Total ({{count}} items)",
       "eligibleForCancellation": "Eligible for cancellation",
       "cannotCancel": "Cannot be cancelled now",
       "orderDetail": "Order detail",
@@ -1785,35 +2983,238 @@
       "reviewed": "Reviewed"
     }
   },
-  "marketplaceSeller": {
-    "products": {
-      "title": "Manage products",
-      "subtitle": "List, moderate, and manage stock for your marketplace products.",
-      "addProduct": "Add product",
-      "searchPlaceholder": "Search your listings...",
-      "loading": "Loading products...",
-      "emptyFiltered": "No products matched your current filters.",
-      "loadError": "Failed to load seller products."
+  "reports": {
+    "sidebar": {
+      "title": "Reports",
+      "subtitle": "Analytics",
+      "sections": {
+        "yield": "Yield & Productivity",
+        "cost": "Cost Analysis",
+        "performance": "Task Performance",
+        "pesticide": "Pesticide & Compliance"
+      }
     },
-    "filters": {
-      "allStatuses": "All statuses"
+    "header": {
+      "defaultTitle": "Reports Overview",
+      "defaultSubtitle": "Track productivity, costs, and compliance",
+      "progress": "Progress: {{percent}}%",
+      "filterButton": "Filter",
+      "exportButton": "Export",
+      "titleFinal": "Season summary report",
+      "subtitleFinal": "Metrics are finalized for the completed season.",
+      "titleInterim": "Interim report",
+      "subtitleInterim": "Data is updated as harvest progresses, metrics may change."
+    },
+    "kpi": {
+      "totalYield": "Total Yield",
+      "totalCost": "Total Cost",
+      "onTimeTasks": "On-time Tasks",
+      "netProfit": "Net Profit",
+      "thisSeason": "this season",
+      "completedOnTime": "completed on time"
+    },
+    "tabs": {
+      "yield": "Yield",
+      "cost": "Cost",
+      "tasks": "Tasks",
+      "pesticide": "Pesticide"
+    },
+    "error": {
+      "loadFailed": "Failed to load report data. Please try again."
+    },
+    "loading": "Loading report data...",
+    "yield": {
+      "title": "Yield & Productivity",
+      "subtitle": "Track yield performance across seasons, crops, and plots",
+      "viewOptions": {
+        "season": "By Season",
+        "crop": "By Crop",
+        "plot": "By Plot"
+      }
+    },
+    "cost": {
+      "title": "Cost Optimization",
+      "subtitle": "Seasonal budget health, cost concentration, and AI reference guidance.",
+      "loading": "Loading cost optimization summary...",
+      "errorPrefix": "Failed to load cost optimization summary:",
+      "retryButton": "Retry",
+      "seasonalBudget": "Seasonal Budget",
+      "totalExpense": "Total Expense",
+      "remainingBudget": "Remaining Budget",
+      "costPerExpectedYield": "Cost per Expected Yield",
+      "actual": "Actual:",
+      "topCostCategories": "Top cost categories",
+      "noCategoryData": "No category cost data available for this season.",
+      "categoryHeader": "Category",
+      "amountHeader": "Amount",
+      "percentOfTotal": "% of total",
+      "uncategorized": "UNCATEGORIZED",
+      "noTopCategories": "No top categories available.",
+      "warnings": "Warnings",
+      "noWarnings": "No warning rules were triggered for this season.",
+      "aiTitle": "AI cost optimization suggestion",
+      "aiAnalyzing": "Analyzing costs...",
+      "aiAnalyzeButton": "Analyze cost optimization with AI",
+      "generatedAt": "Generated at: {{time}}",
+      "aiPlaceholder": "AI suggestions appear here after analysis. Use them as reference only.",
+      "disclaimer": "Disclaimer:",
+      "fallbackDisclaimer": "AI suggestions are for reference only. Do not auto-apply expense, budget, or inventory changes.",
+      "selectSeasonForAi": "Select a season before AI analysis.",
+      "seasonRequired": "Season is required for AI analysis."
+    },
+    "performance": {
+      "title": "Task Performance",
+      "subtitle": "Monitor task completion trends and status",
+      "onTimeTasks": "On-time tasks",
+      "taskStatusBreakdown": "Task Status Breakdown",
+      "month": "Month",
+      "onTime": "On-time",
+      "late": "Late",
+      "overdue": "Overdue",
+      "total": "Total",
+      "noData": "No task performance data for this season."
+    },
+    "pesticide": {
+      "title": "Pesticide & Compliance",
+      "subtitle": "Track PHI compliance and chemical usage",
+      "recordsNeedReview": "{{count}} records need review",
+      "record": "Record",
+      "chemicalNotes": "Chemical / Notes",
+      "quantity": "Quantity",
+      "phiDays": "PHI (days)",
+      "daysRemaining": "Days Remaining",
+      "status": "Status",
+      "noRecords": "No spray records found for this season.",
+      "complianceReminder": "Compliance Reminder",
+      "complianceDescription": "PHI (Pre-Harvest Interval) must be observed before harvesting. Lots marked in red have violated the PHI period and require review before sale.",
+      "statusSafe": "Safe",
+      "statusApproaching": "Approaching",
+      "statusViolated": "Violated",
+      "statusReview": "Needs data"
+    },
+    "filter": {
+      "title": "Filter Reports",
+      "plotSelector": "Plot Selector",
+      "selectPlots": "Select plots",
+      "allPlots": "All Plots",
+      "cropType": "Crop Type",
+      "season": "Season",
+      "allSeasons": "All Seasons",
+      "timeRange": "Time Range",
+      "includeClosedSeasons": "Include Closed Seasons",
+      "clear": "Clear",
+      "apply": "Apply"
+    },
+    "export": {
+      "title": "Export Report",
+      "description": "Choose your export format and options",
+      "fileType": "File Type",
+      "includeCharts": "Include Charts",
+      "includeNotes": "Include Notes",
+      "cancel": "Cancel",
+      "generating": "Generating...",
+      "generate": "Generate"
+    },
+    "toast": {
+      "exportSuccess": "Report Exported Successfully",
+      "exportDescription": "Your {{format}} report has been generated.",
+      "filtersApplied": "Filters Applied",
+      "filtersAppliedDescription": "Report data has been updated based on your filters.",
+      "filtersCleared": "Filters Cleared",
+      "filtersClearedDescription": "All filters have been reset to default values."
+    },
+    "apiErrors": {
+      "sessionExpired": "Session expired. Please sign in again.",
+      "noPermission": "You do not have permission to access this season report.",
+      "invalidRequest": "Invalid request data. Please review and try again.",
+      "costOptimizationFailed": "Failed to load cost optimization summary.",
+      "aiAnalysisFailed": "Failed to analyze costs right now."
+    }
+  },
+  "chat": {
+    "pageAria": "Chat",
+    "messages": {
+      "title": "Messages",
+      "listAria": "Messages",
+      "countAria": "{{count}} conversations",
+      "noConversations": "No conversations yet",
+      "searchToStart": "Search for a contact above to start chatting.",
+      "noMessagesYet": "No messages yet",
+      "unreadCount": "{{count}} unread messages"
+    },
+    "search": {
+      "placeholder": "Search by farm, name, address, or ID...",
+      "ariaLabel": "Search chat contacts",
+      "clear": "Clear search",
+      "searching": "Searching...",
+      "contactsFound": "{{count}} contact found",
+      "contactsFound_plural": "{{count}} contacts found",
+      "noResultsTitle": "No results",
+      "noMatch": "No contacts match your search.",
+      "tryDifferent": "Try a different farm name, representative, or ID.",
+      "confirmContact": "Confirm contact"
+    },
+    "contact": {
+      "idLabel": "ID: #{{id}}",
+      "noFarmProfile": "No farm profile yet",
+      "noAddress": "No address provided"
+    },
+    "actions": {
+      "backToMessages": "Back to messages",
+      "openConversation": "Open conversation",
+      "openConversationWith": "Open conversation with {{name}}",
+      "startConversationWith": "Start conversation with {{name}}"
+    },
+    "composer": {
+      "selectConversationPlaceholder": "Select a conversation to start typing...",
+      "messageTargetPlaceholder": "Message {{target}}...",
+      "messagePlaceholder": "Type a message...",
+      "messageInputAria": "Message input",
+      "sendAria": "Send message"
+    },
+    "empty": {
+      "selectConversationTitle": "Select a conversation",
+      "selectConversationDescription": "Choose a recent chat on the left, or search by farm, representative, address, or ID to start a new conversation.",
+      "searchContactsTitle": "Search contacts",
+      "searchContactsDescription": "Find farms, buyers, or representatives by name, address, or ID.",
+      "verifyIdentityTitle": "Verify identity",
+      "verifyIdentityDescription": "Confirm the farm and representative before messaging.",
+      "startMessagingTitle": "Start messaging",
+      "startMessagingDescription": "Discuss orders, pricing, delivery, or farm tasks securely.",
+      "recentConversationsHint": "Your recent conversations appear on the left panel.",
+      "noMessagesTitle": "No messages yet",
+      "noMessagesDescription": "Send the first message below to start the conversation."
+    },
+    "identity": {
+      "title": "Contact details",
+      "selectConversationHint": "Select a conversation to view farm, representative, role, address, and internal ID.",
+      "whyThisMatters": "Why this matters",
+      "verifyIdentity": "Verify identity before discussing orders, pricing, delivery, or farm work.",
+      "notProvided": "Not provided yet",
+      "contactInformation": "Contact information",
+      "farm": "Farm",
+      "representative": "Representative",
+      "address": "Address",
+      "role": "Role",
+      "internalId": "Internal ID",
+      "conversationContext": "Conversation context",
+      "contextDescription": "Contact details are provided to help verify identity before discussing orders, pricing, delivery, or farm work."
+    },
+    "realtime": {
+      "typing": "{{name}} is typing..."
+    },
+    "receipts": {
+      "sent": "Sent",
+      "read": "Read"
+    },
+    "thread": {
+      "loadingMessages": "Loading messages..."
     },
     "status": {
-      "draft": "Draft",
-      "pendingReview": "Pending approval",
-      "published": "Approved",
-      "hidden": "Rejected / Hidden"
-    },
-    "table": {
-      "product": "Product",
-      "category": "Category",
-      "price": "Price",
-      "stock": "Stock",
-      "status": "Status",
-      "updated": "Updated",
-      "actions": "Actions",
-      "adminReason": "Admin reason",
-      "available": "Available"
+      "unavailableTitle": "Chat Unavailable",
+      "initializing": "Initializing chat...",
+      "connectionFailedTitle": "Connection Failed",
+      "retryConnection": "Retry Connection"
     }
   }
 }

@@ -69,6 +69,14 @@ public class IncidentQueryService implements IncidentQueryPort {
     }
 
     @Override
+    public List<Incident> findOpenIncidentsByOwnerId(Long ownerId, Integer seasonId) {
+        if (ownerId == null) {
+            return List.of();
+        }
+        return incidentRepository.findOpenByOwnerIdAndSeasonId(ownerId, seasonId, OPEN_STATUSES);
+    }
+
+    @Override
     public Page<Alert> searchAlerts(
             String type,
             String severity,

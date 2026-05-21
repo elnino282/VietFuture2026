@@ -77,7 +77,6 @@ export function BuyerPagination({
                                 variant={currentPage === page ? 'default' : 'outline'}
                                 size="sm"
                                 onClick={() => onPageChange(page)}
-                                className={currentPage === page ? 'bg-[#2563EB] hover:bg-[#1E40AF]' : ''}
                             >
                                 {page}
                             </Button>

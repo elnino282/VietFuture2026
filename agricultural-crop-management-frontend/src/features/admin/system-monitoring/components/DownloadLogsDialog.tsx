@@ -176,10 +176,7 @@ export function DownloadLogsDialog({
           <Button variant="outline" onClick={() => setDownloadLogsOpen(false)}>
             Cancel
           </Button>
-          <Button
-            className="bg-[#2563EB] hover:bg-[#1E40AF]"
-            onClick={handleDownloadLogs}
-          >
+          <Button onClick={handleDownloadLogs}>
             <Download className="w-4 h-4 mr-2" />
             Download
           </Button>

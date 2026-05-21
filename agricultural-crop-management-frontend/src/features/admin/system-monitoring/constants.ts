@@ -28,9 +28,9 @@ export const KPI_METRICS: KPIMetric[] = [
         unit: '%',
         change: 5.2,
         icon: Activity,
-        color: '#2563EB',
-        bgColor: 'bg-blue-50',
-        textColor: 'text-blue-600',
+        color: '#3BA55D',
+        bgColor: 'bg-emerald-50',
+        textColor: 'text-emerald-600',
         sparklineData: [62, 65, 63, 67, 70, 68, 72, 69, 68],
         threshold: 80,
     },
@@ -256,7 +256,7 @@ export const SEVERITY_BADGE_COLORS: Record<AlertSeverity, string> = {
 };
 
 export const STATUS_BADGE_COLORS: Record<AlertStatus, string> = {
-    new: 'bg-blue-100 text-blue-700',
+    new: 'bg-amber-100 text-amber-700',
     acknowledged: 'bg-amber-100 text-amber-700',
     resolved: 'bg-emerald-100 text-emerald-700',
 };

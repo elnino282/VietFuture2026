@@ -11,6 +11,7 @@ const httpClient = axios.create({
 });
 
 const AUTH_STORAGE_KEY = 'acm_auth';
+const LANGUAGE_STORAGE_KEY = 'acm_language';
 
 type StoredAuth = {
     token: string;
@@ -55,6 +56,24 @@ function clearStoredAuth() {
     window.sessionStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
+function resolveRequestLanguage(): string {
+    if (typeof window === 'undefined') {
+        return 'en-US';
+    }
+
+    const storedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY)
+        || window.document?.documentElement?.lang
+        || 'en';
+    const normalized = storedLanguage.trim().toLowerCase();
+    if (normalized.startsWith('vi')) {
+        return 'vi-VN';
+    }
+    if (normalized.startsWith('en')) {
+        return 'en-US';
+    }
+    return normalized;
+}
+
 
 // Add request interceptor for JWT token
 httpClient.interceptors.request.use(
@@ -64,6 +83,10 @@ httpClient.interceptors.request.use(
         if (stored?.token && !config.headers['Authorization']) {
             // Attach Authorization header if not already set
             config.headers['Authorization'] = `Bearer ${stored.token}`;
+        }
+
+        if (!config.headers['Accept-Language']) {
+            config.headers['Accept-Language'] = resolveRequestLanguage();
         }
 
         return config;

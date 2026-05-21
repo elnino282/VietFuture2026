@@ -21,7 +21,6 @@ export default function BuyerManagement() {
         detailDrawerOpen,
         setDetailDrawerOpen,
         resetPasswordOpen,
-        setResetPasswordOpen,
         importWizardOpen,
         setImportWizardOpen,
         selectedBuyer,
@@ -63,11 +62,17 @@ export default function BuyerManagement() {
         handleCSVUpload,
         handleImportConfirm,
         handleResetPassword,
+        handleResetPasswordSubmit,
+        handleResetPasswordModalOpenChange,
         // Helper functions
         getRoleBadge,
         getKYCBadge,
         getStatusBadge,
-        getAuditIcon,
+        // API state
+        isLoading,
+        error,
+        totalResults,
+        validationErrors,
     } = useBuyerManagement();
 
     return (
@@ -85,7 +90,7 @@ export default function BuyerManagement() {
                         <Upload className="w-4 h-4 mr-2" />
                         Import CSV
                     </Button>
-                    <Button className="bg-[#2563EB] hover:bg-[#1E40AF]" onClick={handleAddBuyer}>
+                    <Button onClick={handleAddBuyer}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Buyer
                     </Button>
@@ -121,6 +126,16 @@ export default function BuyerManagement() {
 
             {/* Buyer Table with Pagination */}
             <div className="space-y-0">
+                {isLoading && (
+                    <div className="rounded-lg border p-3 text-sm text-muted-foreground">
+                        Loading buyers...
+                    </div>
+                )}
+                {error && (
+                    <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                        {error}
+                    </div>
+                )}
                 <BuyerTable
                     buyers={paginatedBuyers}
                     selectedBuyers={selectedBuyers}
@@ -142,7 +157,7 @@ export default function BuyerManagement() {
                     currentPage={currentPage}
                     totalPages={totalPages}
                     itemsPerPage={itemsPerPage}
-                    totalResults={filteredBuyers.length}
+                    totalResults={totalResults}
                     onPageChange={setCurrentPage}
                     onItemsPerPageChange={setItemsPerPage}
                 />
@@ -161,10 +176,14 @@ export default function BuyerManagement() {
                 onKYCVerify={() => handleKYCAction('verify')}
                 onKYCReject={() => handleKYCAction('reject')}
                 getKYCBadge={getKYCBadge}
-                getAuditIcon={getAuditIcon}
+                kycActionsSupported={false}
             />
 
-            <ResetPasswordModal open={resetPasswordOpen} onOpenChange={setResetPasswordOpen} />
+            <ResetPasswordModal
+                open={resetPasswordOpen}
+                onOpenChange={handleResetPasswordModalOpenChange}
+                onResetPassword={handleResetPasswordSubmit}
+            />
 
             <ImportCSVWizard
                 open={importWizardOpen}
@@ -172,9 +191,12 @@ export default function BuyerManagement() {
                 step={importStep}
                 onStepChange={setImportStep}
                 csvPreview={csvPreview}
+                validationErrors={validationErrors}
                 onFileUpload={handleCSVUpload}
                 onConfirm={handleImportConfirm}
                 getRoleBadge={getRoleBadge}
+                canImport={false}
+                importUnsupportedMessage="Buyer import API is not available yet."
             />
         </div>
     );

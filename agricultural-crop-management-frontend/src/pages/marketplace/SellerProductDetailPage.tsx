@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff, Pencil } from "lucide-react";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
+import { useI18n } from "@/hooks/useI18n";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, PageContainer } from "@/shared/ui";
 import type { MarketplaceProductStatus } from "@/shared/api";
 import {
   useMarketplaceFarmerProductDetail,
@@ -9,10 +10,9 @@ import {
 } from "@/features/marketplace/hooks";
 import { SellerMarketplaceTabs } from "@/features/marketplace/layout";
 import { formatDate, formatVnd } from "@/features/marketplace/lib/format";
-import {
-  getNextSellerProductStatusAction,
-  getNextSellerProductStatusLabel,
-} from "@/features/marketplace/lib/sellerProductStatus";
+import { getNextSellerProductStatusAction } from "@/features/marketplace/lib/sellerProductStatus";
+
+type Translator = (key: string, optionsOrDefault?: Record<string, unknown> | string) => string;
 
 function statusVariant(status: MarketplaceProductStatus) {
   switch (status) {
@@ -27,18 +27,33 @@ function statusVariant(status: MarketplaceProductStatus) {
   }
 }
 
-function statusLabel(status: MarketplaceProductStatus): string {
+function statusLabel(status: MarketplaceProductStatus, t: Translator): string {
   switch (status) {
     case "PUBLISHED":
-      return "Published";
+      return t("marketplaceSeller.status.published", "Published");
     case "PENDING_REVIEW":
-      return "Pending review";
+      return t("marketplaceSeller.status.pendingReview", "Pending review");
     case "HIDDEN":
-      return "Hidden";
+      return t("marketplaceSeller.status.hidden", "Hidden");
     case "DRAFT":
-      return "Draft";
+      return t("marketplaceSeller.status.draft", "Draft");
     default:
       return status;
+  }
+}
+
+function nextStatusActionLabel(status: MarketplaceProductStatus, t: Translator): string {
+  switch (status) {
+    case "DRAFT":
+      return t("marketplaceSeller.productDetail.actions.submitForReview", "Submit for review");
+    case "PENDING_REVIEW":
+      return t("marketplaceSeller.productDetail.actions.moveToDraft", "Move back to draft");
+    case "PUBLISHED":
+      return t("marketplaceSeller.productDetail.actions.hideProduct", "Hide product");
+    case "HIDDEN":
+      return t("marketplaceSeller.productDetail.actions.resubmitReview", "Resubmit for review");
+    default:
+      return t("marketplaceSeller.productDetail.actions.updateStatus", "Update status");
   }
 }
 
@@ -52,6 +67,7 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
 }
 
 export function SellerProductDetailPage() {
+  const { t, locale } = useI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const productId = Number(id ?? 0);
@@ -79,40 +95,47 @@ export function SellerProductDetailPage() {
 
   if (productQuery.isLoading) {
     return (
-      <div className="max-w-[1800px] mx-auto px-6 pt-6 space-y-6">
+      <PageContainer variant="wide" className="space-y-6">
         <SellerMarketplaceTabs />
         <Card className="border-dashed">
-          <CardContent className="p-8 text-sm text-muted-foreground">Loading product detail...</CardContent>
+          <CardContent className="p-8 text-sm text-muted-foreground">
+            {t("marketplaceSeller.productDetail.loading", "Loading product detail...")}
+          </CardContent>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   if (productQuery.isError || !product) {
     return (
-      <div className="max-w-[1800px] mx-auto px-6 pt-6 space-y-6">
+      <PageContainer variant="wide" className="space-y-6">
         <SellerMarketplaceTabs />
         <Card>
           <CardContent className="space-y-4 p-8 text-center">
-            <h2 className="text-xl font-semibold text-foreground">Product not found</h2>
+            <h2 className="text-xl font-semibold text-foreground">
+              {t("marketplaceSeller.productDetail.notFound.title", "Product not found")}
+            </h2>
             <p className="text-sm text-muted-foreground">
-              This product does not exist or is not available in your seller account.
+              {t(
+                "marketplaceSeller.productDetail.notFound.description",
+                "This product does not exist or is not available in your seller account.",
+              )}
             </p>
             <div className="flex justify-center">
               <Button type="button" variant="outline" onClick={() => navigate("/farmer/marketplace-products")}>
-                Back to products
+                {t("marketplaceSeller.common.backToProducts", "Back to products")}
               </Button>
             </div>
           </CardContent>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   const gallery = product.imageUrls.length > 0 ? product.imageUrls : [product.imageUrl];
 
   return (
-    <div className="min-h-full space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <PageContainer variant="wide" className="space-y-6">
       <SellerMarketplaceTabs />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -121,12 +144,17 @@ export function SellerProductDetailPage() {
             type="button"
             onClick={() => navigate("/farmer/marketplace-products")}
             className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label={t("marketplaceSeller.common.backToProducts", "Back to products")}
           >
             <ArrowLeft size={18} />
           </button>
           <div>
-            <p className="text-sm font-medium text-primary">FarmTrace Seller Portal</p>
-            <h1 className="mt-1 text-3xl font-bold text-foreground">Product detail</h1>
+            <p className="text-sm font-medium text-primary">
+              {t("marketplaceSeller.common.brand", "Seller Portal")}
+            </p>
+            <h1 className="mt-1 text-3xl font-bold text-foreground">
+              {t("marketplaceSeller.productDetail.title", "Product detail")}
+            </h1>
           </div>
         </div>
 
@@ -140,12 +168,14 @@ export function SellerProductDetailPage() {
               className="gap-2"
             >
               {product.status === "PUBLISHED" ? <EyeOff size={14} /> : <Eye size={14} />}
-              {statusMutation.isPending ? "Updating..." : getNextSellerProductStatusLabel(product.status)}
+              {statusMutation.isPending
+                ? t("marketplaceSeller.productDetail.actions.updating", "Updating...")
+                : nextStatusActionLabel(product.status, t)}
             </Button>
           ) : null}
           <Link to={`/farmer/marketplace-products/${product.id}/edit`}>
             <Button size="sm" className="gap-2">
-              <Pencil size={14} /> Edit listing
+              <Pencil size={14} /> {t("marketplaceSeller.productDetail.actions.editListing", "Edit listing")}
             </Button>
           </Link>
         </div>
@@ -157,10 +187,14 @@ export function SellerProductDetailPage() {
             <div>
               <CardTitle className="text-2xl">{product.name}</CardTitle>
               <p className="mt-2 text-sm text-muted-foreground">
-                Listing #{product.id} • Updated {formatDate(product.updatedAt)}
+                {t("marketplaceSeller.productDetail.updatedLabel", {
+                  id: product.id,
+                  date: formatDate(product.updatedAt, locale),
+                  defaultValue: "Listing #{{id}} - Updated {{date}}",
+                })}
               </p>
             </div>
-            <Badge variant={statusVariant(product.status)}>{statusLabel(product.status)}</Badge>
+            <Badge variant={statusVariant(product.status)}>{statusLabel(product.status, t)}</Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-8 p-6">
@@ -176,7 +210,7 @@ export function SellerProductDetailPage() {
                   />
                 ) : (
                   <div className="flex h-[360px] items-center justify-center text-sm text-muted-foreground">
-                    No image available
+                    {t("marketplaceSeller.productDetail.noImage", "No image available")}
                   </div>
                 )}
               </div>
@@ -200,34 +234,65 @@ export function SellerProductDetailPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Listing information
+                  {t("marketplaceSeller.productDetail.sections.listingInfo", "Listing information")}
                 </h3>
                 <div className="mt-3 divide-y divide-border/50 rounded-xl bg-muted/50 px-5">
-                  <DetailRow label="Category" value={product.category || "-"} />
                   <DetailRow
-                    label="Price"
+                    label={t("marketplaceSeller.productDetail.fields.category", "Category")}
+                    value={product.category || "-"}
+                  />
+                  <DetailRow
+                    label={t("marketplaceSeller.productDetail.fields.price", "Price")}
                     value={
                       <span className="font-semibold text-primary">
-                        {formatVnd(product.price)} / {product.unit}
+                        {formatVnd(product.price, locale)} / {product.unit}
                       </span>
                     }
                   />
-                  <DetailRow label="Listed quantity" value={`${product.stockQuantity} ${product.unit}`} />
-                  <DetailRow label="Available quantity" value={`${product.availableQuantity} ${product.unit}`} />
-                  <DetailRow label="Farmer" value={product.farmerDisplayName} />
-                  <DetailRow label="Region" value={product.region || "-"} />
+                  <DetailRow
+                    label={t("marketplaceSeller.productDetail.fields.listedQuantity", "Listed quantity")}
+                    value={`${product.stockQuantity} ${product.unit}`}
+                  />
+                  <DetailRow
+                    label={t("marketplaceSeller.productDetail.fields.availableQuantity", "Available quantity")}
+                    value={`${product.availableQuantity} ${product.unit}`}
+                  />
+                  <DetailRow
+                    label={t("marketplaceSeller.productDetail.fields.farmer", "Farmer")}
+                    value={product.farmerDisplayName}
+                  />
+                  <DetailRow
+                    label={t("marketplaceSeller.productDetail.fields.region", "Region")}
+                    value={product.region || "-"}
+                  />
                 </div>
               </div>
 
               <div>
                 <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Harvest traceability
+                  {t("marketplaceSeller.productDetail.sections.traceability", "Harvest traceability")}
                 </h3>
-                <div className="mt-3 divide-y divide-emerald-100 rounded-2xl border border-emerald-100 bg-emerald-50 px-5">
-                  <DetailRow label="Farm" value={product.farmName || "Not linked"} />
-                  <DetailRow label="Season" value={product.seasonName || "Not linked"} />
-                  <DetailRow label="Lot" value={product.traceabilityCode || "Not linked"} />
-                  <DetailRow label="Traceable" value={product.traceable ? "Yes" : "No"} />
+                <div className="mt-3 divide-y divide-primary/20 rounded-2xl border border-primary/20 bg-primary/10 px-5">
+                  <DetailRow
+                    label={t("marketplaceSeller.productDetail.fields.farm", "Farm")}
+                    value={product.farmName || t("marketplaceSeller.productDetail.notLinked", "Not linked")}
+                  />
+                  <DetailRow
+                    label={t("marketplaceSeller.productDetail.fields.season", "Season")}
+                    value={product.seasonName || t("marketplaceSeller.productDetail.notLinked", "Not linked")}
+                  />
+                  <DetailRow
+                    label={t("marketplaceSeller.productDetail.fields.lot", "Lot")}
+                    value={product.traceabilityCode || t("marketplaceSeller.productDetail.notLinked", "Not linked")}
+                  />
+                  <DetailRow
+                    label={t("marketplaceSeller.productDetail.fields.traceable", "Traceable")}
+                    value={
+                      product.traceable
+                        ? t("marketplaceSeller.productDetail.traceableYes", "Yes")
+                        : t("marketplaceSeller.productDetail.traceableNo", "No")
+                    }
+                  />
                 </div>
               </div>
             </div>
@@ -235,14 +300,16 @@ export function SellerProductDetailPage() {
 
           <div className="border-t border-border/50 pt-6">
             <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Description
+              {t("marketplaceSeller.productDetail.sections.description", "Description")}
             </h3>
             <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
-              {product.description || product.shortDescription || "No product description provided yet."}
+              {product.description ||
+                product.shortDescription ||
+                t("marketplaceSeller.productDetail.descriptionFallback", "No product description provided yet.")}
             </p>
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

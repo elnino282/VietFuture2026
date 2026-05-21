@@ -6,9 +6,9 @@ import {
     SheetHeader,
     SheetTitle,
     SheetDescription,
-} from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from "@/shared/ui/sheet";
+import { Input } from "@/shared/ui/input";
+import { Button } from "@/shared/ui/button";
 import { usePreferences } from "@/shared/contexts";
 import { convertToDisplayCurrency, formatMoney } from "@/shared/lib";
 import type { Expense } from "../types";

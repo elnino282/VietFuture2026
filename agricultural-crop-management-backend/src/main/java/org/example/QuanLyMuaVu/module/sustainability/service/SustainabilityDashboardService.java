@@ -34,6 +34,17 @@ import org.springframework.util.StringUtils;
 public class SustainabilityDashboardService {
 
     static final String RECOMMENDATION_SOURCE = "product_rule_config_v1";
+    static final String REASON_NO_ACTIVE_SEASON = "NO_ACTIVE_SEASON";
+    static final String REASON_NO_HARVEST = "NO_HARVEST";
+    static final String REASON_MISSING_NITROGEN_INPUT = "MISSING_NITROGEN_INPUT";
+    static final String REASON_MISSING_PLOT_AREA = "MISSING_PLOT_AREA";
+    static final String REASON_INSUFFICIENT_HISTORY = "INSUFFICIENT_HISTORY";
+    static final String MAP_UNAVAILABLE_MISSING_BOUNDARY_AND_FARM_LOCATION = "MISSING_BOUNDARY_AND_FARM_LOCATION";
+    static final String MAP_UNAVAILABLE_NO_FIELDS_FOR_FILTERS = "NO_FIELDS_FOR_FILTERS";
+    static final String MAP_VIEWPORT_SOURCE_PLOT_BOUNDARY = "PLOT_BOUNDARY";
+    static final String MAP_VIEWPORT_SOURCE_FARM_LOCATION = "FARM_LOCATION";
+    static final int MAP_VIEWPORT_ZOOM_BOUNDARY = 14;
+    static final int MAP_VIEWPORT_ZOOM_FARM = 12;
 
     CurrentUserService currentUserService;
     FarmerOwnershipService ownershipService;
@@ -94,7 +105,9 @@ public class SustainabilityDashboardService {
 
         String cropFilter = metricSupport.normalize(cropName);
         String levelFilter = metricSupport.normalize(alertLevel);
-        List<FieldMapResponse.FieldMapItem> items = new ArrayList<>();
+        List<FieldMapResponse.FieldMapItem> fieldsWithBoundary = new ArrayList<>();
+        List<FieldMapResponse.FieldMapItem> fieldsMissingBoundary = new ArrayList<>();
+        List<FieldMapResponse.LatLng> farmLocations = new ArrayList<>();
         for (org.example.QuanLyMuaVu.module.farm.entity.Plot plot : plots) {
             org.example.QuanLyMuaVu.module.season.entity.Season season = contextService.resolveSeasonForMap(plot, selectedSeason);
             SustainabilityCalculationService.CalculationResult result = season != null
@@ -112,14 +125,17 @@ public class SustainabilityDashboardService {
                     continue;
                 }
             }
-            JsonNode geometry = contextService.parseGeometry(plot.getBoundaryGeoJson());
-            items.add(FieldMapResponse.FieldMapItem.builder()
+            SustainabilityDashboardContextService.BoundaryGeometry boundaryGeometry = contextService
+                    .parseBoundaryGeometry(plot.getBoundaryGeoJson());
+            JsonNode boundaryGeoJson = boundaryGeometry.geometry();
+            FieldMapResponse.FieldMapItem item = FieldMapResponse.FieldMapItem.builder()
                     .fieldId(plot.getId())
                     .fieldName(plot.getPlotName())
                     .farmId(plot.getFarm() != null ? plot.getFarm().getId() : null)
                     .farmName(plot.getFarm() != null ? plot.getFarm().getName() : null)
-                    .geometry(geometry)
-                    .center(contextService.deriveCenter(geometry))
+                    .boundaryGeoJson(boundaryGeoJson)
+                    .center(contextService.deriveCenter(boundaryGeoJson))
+                    .boundaryIssue(boundaryGeometry.issue())
                     .cropName(season != null && season.getCrop() != null ? season.getCrop().getCropName() : "N/A")
                     .seasonName(season != null ? season.getSeasonName() : "No season")
                     .fdnLevel(result.getAlertLevel())
@@ -134,9 +150,95 @@ public class SustainabilityDashboardService {
                     .missingInputs(result.getMissingInputs() != null ? result.getMissingInputs() : List.of())
                     .inputsBreakdown(result.getInputsBreakdown())
                     .recommendations(recommendationService.generate(result))
-                    .build());
+                    .build();
+
+            FieldMapResponse.LatLng farmLocation = toFarmLocation(plot.getFarm());
+            if (farmLocation != null) {
+                farmLocations.add(farmLocation);
+            }
+
+            if (boundaryGeoJson != null) {
+                fieldsWithBoundary.add(item);
+            } else {
+                fieldsMissingBoundary.add(item);
+            }
         }
-        return FieldMapResponse.builder().items(items).build();
+
+        FieldMapResponse.MapViewport defaultViewport = resolveMapViewport(fieldsWithBoundary, farmLocations);
+        String unavailableReason = null;
+        if (fieldsWithBoundary.isEmpty() && fieldsMissingBoundary.isEmpty()) {
+            unavailableReason = MAP_UNAVAILABLE_NO_FIELDS_FOR_FILTERS;
+        } else if (fieldsWithBoundary.isEmpty() && defaultViewport == null) {
+            unavailableReason = MAP_UNAVAILABLE_MISSING_BOUNDARY_AND_FARM_LOCATION;
+        }
+
+        return FieldMapResponse.builder()
+                .fieldsWithBoundary(fieldsWithBoundary)
+                .fieldsMissingBoundary(fieldsMissingBoundary)
+                .defaultViewport(defaultViewport)
+                .unavailableReason(unavailableReason)
+                .build();
+    }
+
+    private FieldMapResponse.MapViewport resolveMapViewport(
+            List<FieldMapResponse.FieldMapItem> fieldsWithBoundary,
+            List<FieldMapResponse.LatLng> farmLocations
+    ) {
+        FieldMapResponse.LatLng boundaryCenter = averageLatLng(fieldsWithBoundary.stream()
+                .map(FieldMapResponse.FieldMapItem::getCenter)
+                .toList());
+        if (boundaryCenter != null) {
+            return FieldMapResponse.MapViewport.builder()
+                    .center(boundaryCenter)
+                    .zoom(MAP_VIEWPORT_ZOOM_BOUNDARY)
+                    .source(MAP_VIEWPORT_SOURCE_PLOT_BOUNDARY)
+                    .build();
+        }
+
+        FieldMapResponse.LatLng farmCenter = averageLatLng(farmLocations);
+        if (farmCenter == null) {
+            return null;
+        }
+        return FieldMapResponse.MapViewport.builder()
+                .center(farmCenter)
+                .zoom(MAP_VIEWPORT_ZOOM_FARM)
+                .source(MAP_VIEWPORT_SOURCE_FARM_LOCATION)
+                .build();
+    }
+
+    private FieldMapResponse.LatLng averageLatLng(List<FieldMapResponse.LatLng> points) {
+        if (points == null || points.isEmpty()) {
+            return null;
+        }
+        BigDecimal totalLat = BigDecimal.ZERO;
+        BigDecimal totalLng = BigDecimal.ZERO;
+        int count = 0;
+        for (FieldMapResponse.LatLng point : points) {
+            if (point == null || point.getLat() == null || point.getLng() == null) {
+                continue;
+            }
+            totalLat = totalLat.add(point.getLat());
+            totalLng = totalLng.add(point.getLng());
+            count++;
+        }
+        if (count == 0) {
+            return null;
+        }
+        BigDecimal divisor = BigDecimal.valueOf(count);
+        return FieldMapResponse.LatLng.builder()
+                .lat(totalLat.divide(divisor, 6, RoundingMode.HALF_UP))
+                .lng(totalLng.divide(divisor, 6, RoundingMode.HALF_UP))
+                .build();
+    }
+
+    private FieldMapResponse.LatLng toFarmLocation(org.example.QuanLyMuaVu.module.farm.entity.Farm farm) {
+        if (farm == null || farm.getLatitude() == null || farm.getLongitude() == null) {
+            return null;
+        }
+        return FieldMapResponse.LatLng.builder()
+                .lat(farm.getLatitude().setScale(6, RoundingMode.HALF_UP))
+                .lng(farm.getLongitude().setScale(6, RoundingMode.HALF_UP))
+                .build();
     }
 
     private SustainabilityOverviewResponse buildFieldOverview(Integer seasonId, Integer fieldId, Integer farmId, boolean includeHistory) {
@@ -147,6 +249,17 @@ public class SustainabilityDashboardService {
         List<String> notes = metricSupport.withScienceNotes(result.getNotes(), false);
         List<SustainabilityOverviewResponse.DataInputQuality> dataQuality = metricSupport.buildDataQuality(result.getSourceMethod());
         List<String> missingInputs = result.getMissingInputs() != null ? result.getMissingInputs() : List.of();
+        List<SustainabilityOverviewResponse.HistoryPoint> history = includeHistory
+                ? contextService.buildHistoryForPlot(context.plot())
+                : List.of();
+        List<String> unavailableReasons = buildFieldUnavailableReasons(
+                seasonId,
+                context,
+                result,
+                missingInputs,
+                history,
+                includeHistory
+        );
         AppProperties.AlertThresholds thresholds = resolveAlertThresholds();
         boolean hasContext = context.season() != null;
 
@@ -193,6 +306,7 @@ public class SustainabilityDashboardService {
                 .dataQuality(dataQuality)
                 .dataQualitySummary(metricSupport.buildDataQualitySummary(dataQuality, result.getConfidence()))
                 .missingInputs(missingInputs)
+                .unavailableReasons(unavailableReasons)
                 .notes(notes)
                 .recommendations(recommendationService.generate(result))
                 .recommendationSource(RECOMMENDATION_SOURCE)
@@ -204,7 +318,7 @@ public class SustainabilityDashboardService {
                 .nOutputMetric(metricSupport.buildMetric(result.getNOutput(), result.getUnit(), nOutputStatus, result.getConfidence(), result.getCalculationMode(), notes, missingInputs))
                 .nSurplusMetric(metricSupport.buildMetric(result.getNSurplus(), result.getUnit(), nSurplusStatus, result.getConfidence(), result.getCalculationMode(), notes, missingInputs))
                 .estimatedYieldMetric(metricSupport.buildMetric(result.getYieldValue(), result.getYieldUnit(), yieldStatus, result.getConfidence(), result.getCalculationMode(), notes, missingInputs))
-                .historicalTrend(includeHistory ? contextService.buildHistoryForPlot(context.plot()) : List.of())
+                .historicalTrend(history)
                 .build();
     }
 
@@ -281,6 +395,14 @@ public class SustainabilityDashboardService {
         List<String> recommendations = recommendationService.generate(fdnTotal, fdnMineral, nue, nSurplus, confidence, breakdown, mergedMethods);
         List<SustainabilityOverviewResponse.DataInputQuality> dataQuality = metricSupport.buildDataQuality(mergedMethods);
         List<String> missingInputs = metricSupport.collectMissingInputs(mergedMethods);
+        List<String> unavailableReasons = buildFarmUnavailableReasons(
+                seasonId,
+                computations,
+                mergedMethods,
+                totalArea,
+                hasYieldObserved,
+                missingInputs
+        );
 
         String scoreStatus = metricSupport.resolveScoreStatus(true, score, confidence, missingInputs);
         String fdnTotalStatus = metricSupport.resolveMetricStatusBySources(true, metricSupport.scale2(fdnTotal), mergedMethods, List.of(NutrientInputSource.MINERAL_FERTILIZER, NutrientInputSource.ORGANIC_FERTILIZER));
@@ -348,6 +470,7 @@ public class SustainabilityDashboardService {
                 .dataQuality(dataQuality)
                 .dataQualitySummary(metricSupport.buildDataQualitySummary(dataQuality, confidence))
                 .missingInputs(missingInputs)
+                .unavailableReasons(unavailableReasons)
                 .notes(notes)
                 .recommendations(recommendations)
                 .recommendationSource(RECOMMENDATION_SOURCE)
@@ -403,6 +526,7 @@ public class SustainabilityDashboardService {
                 .dataQuality(dataQuality)
                 .dataQualitySummary(metricSupport.buildDataQualitySummary(dataQuality, empty.getConfidence()))
                 .missingInputs(missingInputs)
+                .unavailableReasons(List.of(REASON_NO_ACTIVE_SEASON, REASON_MISSING_NITROGEN_INPUT))
                 .notes(notes)
                 .recommendations(recommendationService.generate(empty))
                 .recommendationSource(RECOMMENDATION_SOURCE)
@@ -464,6 +588,108 @@ public class SustainabilityDashboardService {
     private AppProperties.AlertThresholds resolveAlertThresholds() {
         AppProperties.Sustainability cfg = resolveSustainabilityConfig();
         return cfg.getAlerts() != null ? cfg.getAlerts() : new AppProperties.AlertThresholds();
+    }
+
+    private List<String> buildFieldUnavailableReasons(
+            Integer requestedSeasonId,
+            SustainabilityDashboardContextService.FieldContext context,
+            SustainabilityCalculationService.CalculationResult result,
+            List<String> missingInputs,
+            List<SustainabilityOverviewResponse.HistoryPoint> history,
+            boolean includeHistory
+    ) {
+        LinkedHashSet<String> reasons = new LinkedHashSet<>();
+        if (context.season() == null) {
+            reasons.add(REASON_NO_ACTIVE_SEASON);
+        } else if (requestedSeasonId == null && !isSeasonActive(context.season())) {
+            reasons.add(REASON_NO_ACTIVE_SEASON);
+        }
+
+        if (metricSupport.positiveOrNull(context.plot().getArea()) == null) {
+            reasons.add(REASON_MISSING_PLOT_AREA);
+        }
+
+        if (isMissingNitrogenInput(result.getSourceMethod(), missingInputs)) {
+            reasons.add(REASON_MISSING_NITROGEN_INPUT);
+        }
+
+        if (context.season() != null && !Boolean.TRUE.equals(result.getYieldObserved())) {
+            reasons.add(REASON_NO_HARVEST);
+        }
+
+        if (includeHistory && hasInsufficientHistory(history)) {
+            reasons.add(REASON_INSUFFICIENT_HISTORY);
+        }
+
+        return List.copyOf(reasons);
+    }
+
+    private List<String> buildFarmUnavailableReasons(
+            Integer requestedSeasonId,
+            List<FieldComputation> computations,
+            Map<NutrientInputSource, String> mergedMethods,
+            BigDecimal totalArea,
+            boolean hasYieldObserved,
+            List<String> missingInputs
+    ) {
+        LinkedHashSet<String> reasons = new LinkedHashSet<>();
+        if (computations.isEmpty()) {
+            reasons.add(REASON_NO_ACTIVE_SEASON);
+        } else if (requestedSeasonId == null
+                && computations.stream().map(FieldComputation::season).noneMatch(this::isSeasonActive)) {
+            reasons.add(REASON_NO_ACTIVE_SEASON);
+        }
+
+        if (totalArea == null || totalArea.compareTo(SustainabilityDashboardMetricSupport.ZERO) <= 0) {
+            reasons.add(REASON_MISSING_PLOT_AREA);
+        }
+
+        if (isMissingNitrogenInput(mergedMethods, missingInputs)) {
+            reasons.add(REASON_MISSING_NITROGEN_INPUT);
+        }
+
+        if (!hasYieldObserved) {
+            reasons.add(REASON_NO_HARVEST);
+        }
+
+        return List.copyOf(reasons);
+    }
+
+    private boolean isMissingNitrogenInput(
+            Map<NutrientInputSource, String> sourceMethods,
+            List<String> missingInputs
+    ) {
+        return isSourceMissing(sourceMethods, missingInputs, NutrientInputSource.MINERAL_FERTILIZER)
+                && isSourceMissing(sourceMethods, missingInputs, NutrientInputSource.ORGANIC_FERTILIZER);
+    }
+
+    private boolean isSourceMissing(
+            Map<NutrientInputSource, String> sourceMethods,
+            List<String> missingInputs,
+            NutrientInputSource source
+    ) {
+        String normalized = sourceMethods != null ? metricSupport.normalize(sourceMethods.get(source)) : "";
+        if (!StringUtils.hasText(normalized)) {
+            return missingInputs != null && missingInputs.contains(source.name());
+        }
+        return SustainabilityDashboardMetricSupport.METRIC_STATUS_MISSING.equals(normalized)
+                || SustainabilityDashboardMetricSupport.METRIC_STATUS_UNAVAILABLE.equals(normalized);
+    }
+
+    private boolean hasInsufficientHistory(List<SustainabilityOverviewResponse.HistoryPoint> history) {
+        if (history == null || history.isEmpty()) {
+            return true;
+        }
+        long comparablePointCount = history.stream()
+                .filter(point -> point.getFdnTotal() != null || point.getNue() != null || point.getYield() != null)
+                .count();
+        return comparablePointCount < 2;
+    }
+
+    private boolean isSeasonActive(org.example.QuanLyMuaVu.module.season.entity.Season season) {
+        return season != null
+                && season.getStatus() != null
+                && "ACTIVE".equalsIgnoreCase(season.getStatus().name());
     }
 
     record FieldComputation(

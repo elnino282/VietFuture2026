@@ -9,6 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,9 @@ import org.springframework.util.StringUtils;
 @Transactional(readOnly = true)
 @Slf4j
 public class SustainabilityDashboardContextService {
+
+    static final String BOUNDARY_ISSUE_MISSING = "MISSING_BOUNDARY_GEOJSON";
+    static final String BOUNDARY_ISSUE_INVALID = "INVALID_BOUNDARY_GEOJSON";
 
     CurrentUserService currentUserService;
     FarmerOwnershipService ownershipService;
@@ -153,16 +157,20 @@ public class SustainabilityDashboardContextService {
                 .build();
     }
 
-    JsonNode parseGeometry(String boundaryGeoJson) {
+    BoundaryGeometry parseBoundaryGeometry(String boundaryGeoJson) {
         if (!StringUtils.hasText(boundaryGeoJson)) {
-            return null;
+            return new BoundaryGeometry(null, BOUNDARY_ISSUE_MISSING);
         }
         try {
-            JsonNode geometry = objectMapper.readTree(boundaryGeoJson);
-            return geometry.has("type") ? geometry : null;
+            JsonNode root = objectMapper.readTree(boundaryGeoJson);
+            JsonNode geometry = unwrapGeometry(root);
+            if (!isValidBoundaryGeometry(geometry)) {
+                return new BoundaryGeometry(null, BOUNDARY_ISSUE_INVALID);
+            }
+            return new BoundaryGeometry(geometry, null);
         } catch (Exception ex) {
             log.warn("Failed to parse plot boundary geojson", ex);
-            return null;
+            return new BoundaryGeometry(null, BOUNDARY_ISSUE_INVALID);
         }
     }
 
@@ -198,6 +206,36 @@ public class SustainabilityDashboardContextService {
         }
     }
 
+    private JsonNode unwrapGeometry(JsonNode root) {
+        if (root == null || !root.isObject()) {
+            return null;
+        }
+        String type = root.path("type").asText("");
+        if ("feature".equals(type.toLowerCase(Locale.ROOT))) {
+            return root.get("geometry");
+        }
+        return root;
+    }
+
+    private boolean isValidBoundaryGeometry(JsonNode geometry) {
+        if (geometry == null || !geometry.isObject()) {
+            return false;
+        }
+        String type = geometry.path("type").asText("");
+        if (!StringUtils.hasText(type)) {
+            return false;
+        }
+        String normalizedType = type.toLowerCase(Locale.ROOT);
+        if (!"polygon".equals(normalizedType) && !"multipolygon".equals(normalizedType)) {
+            return false;
+        }
+        JsonNode coordinates = geometry.get("coordinates");
+        return coordinates != null && coordinates.isArray() && !coordinates.isEmpty();
+    }
+
     record FieldContext(org.example.QuanLyMuaVu.module.farm.entity.Plot plot, org.example.QuanLyMuaVu.module.season.entity.Season season) {
+    }
+
+    record BoundaryGeometry(JsonNode geometry, String issue) {
     }
 }

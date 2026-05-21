@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
     Sun,
     CloudRain,
@@ -10,9 +10,10 @@ import type {
     UseWeatherWidgetReturn,
     SprayConditions,
     SoilMoistureInfo,
-    LocationSuggestion,
     WeatherData,
     ForecastDay,
+    LocationSuggestion,
+    WeatherWidgetDataState,
 } from "../types";
 import {
     DEFAULT_AGRI_ALERTS,
@@ -26,208 +27,142 @@ import {
     SOIL_COLORS,
     ALERT_COLORS,
 } from "../constants";
-import { searchLocations, getForecast } from "../services/weatherApi";
+import { getDashboardWeather } from "../services/weatherApi";
 import {
     mapForecastToWeatherData,
     mapForecastDays,
     generateAgriAlerts,
-    mapLocationSuggestion,
 } from "../utils/weatherMapper";
 
-// LocalStorage key for persisting user's location preference
-const WEATHER_LOCATION_KEY = 'acm_weather_location';
-
-/**
- * Get farm location from user profile
- * TODO: Integrate with actual API when available
- */
-const getFarmLocation = async (): Promise<string | null> => {
-    try {
-        // Example: const response = await api.getUserProfile();
-        // return response.farm?.location || null;
-        return null; // Not implemented yet
-    } catch (error) {
-        console.error('Failed to load farm location:', error);
-        return null;
-    }
-};
+interface UseWeatherWidgetOptions {
+    farmId?: number;
+    seasonId?: number | null;
+}
 
 /**
  * Custom Hook: Weather Widget Controller
- * Encapsulates all business logic, state management, and data fetching
+ * Uses backend weather endpoint as single source of truth.
  */
-export function useWeatherWidget(): UseWeatherWidgetReturn {
-    // Location State - Start with null, will be loaded from localStorage or farm profile
+export function useWeatherWidget(
+    options: UseWeatherWidgetOptions = {}
+): UseWeatherWidgetReturn {
+    const { farmId, seasonId } = options;
+
+    // Location State (read-only from backend farm resolution)
     const [location, setLocation] = useState<string | null>(null);
     const [isEditingLocation, setIsEditingLocation] = useState(false);
-    const [tempLocation, setTempLocation] = useState<string>(location || "");
-    const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
-    const [isSearchingLocations, setIsSearchingLocations] = useState(false);
+    const [tempLocation, setTempLocation] = useState("");
+    const [locationSuggestions] = useState<LocationSuggestion[]>([]);
+    const [isSearchingLocations] = useState(false);
 
     // Loading/Error State
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [uiState, setUiState] = useState<WeatherWidgetDataState>("loading");
+    const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
     // Weather Data State
     const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
     const [forecast, setForecast] = useState<ForecastDay[]>([]);
     const [agriAlerts, setAgriAlerts] = useState(DEFAULT_AGRI_ALERTS);
 
-    // Debounce timer ref
-    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    
-    // Initial load ref to fetch weather on mount
-    const hasInitialLoadRef = useRef(false);
+    const clearWeatherData = useCallback(() => {
+        setWeatherData(null);
+        setForecast([]);
+        setAgriAlerts(DEFAULT_AGRI_ALERTS);
+    }, []);
 
-    /**
-     * Fetch Weather Data for a Location
-     */
-    const fetchWeatherData = useCallback(async (locationQuery: string) => {
-        if (!locationQuery) {
-            return;
-        }
-
+    const fetchWeatherData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
+        setUiState("loading");
+        setStatusMessage(null);
 
         try {
-            const response = await getForecast(locationQuery, API_CONFIG.FORECAST_DAYS);
-            
-            // Map current weather data
-            const mappedWeatherData = mapForecastToWeatherData(response);
-            setWeatherData(mappedWeatherData);
-            
-            // Map forecast data (skip today)
-            const mappedForecast = mapForecastDays(response.forecast.forecastday, true);
-            setForecast(mappedForecast);
-            
-            // Generate agricultural alerts
-            const alerts = generateAgriAlerts(mappedWeatherData);
-            setAgriAlerts(alerts);
-            
-            setIsLoading(false);
-        } catch (err) {
-            console.error("Error fetching weather data:", err);
-            setError(err instanceof Error ? err.message : "Failed to fetch weather data");
-            setIsLoading(false);
-        }
-    }, []);
+            const response = await getDashboardWeather({
+                farmId,
+                seasonId: seasonId ?? undefined,
+            });
 
-    /**
-     * Handle Location Search with Debouncing
-     */
-    const handleLocationSearch = useCallback((query: string) => {
-        // Clear previous timeout
-        if (searchTimeoutRef.current) {
-            clearTimeout(searchTimeoutRef.current);
-        }
+            const resolvedLocation =
+                response.location?.displayName ||
+                response.farmName ||
+                API_CONFIG.DEFAULT_LOCATION;
+            setLocation(resolvedLocation);
+            setTempLocation(resolvedLocation);
 
-        // If query is empty, clear suggestions
-        if (!query.trim()) {
-            setLocationSuggestions([]);
-            setIsSearchingLocations(false);
-            return;
-        }
-
-        // Set searching state
-        setIsSearchingLocations(true);
-
-        // Debounce the search
-        searchTimeoutRef.current = setTimeout(async () => {
-            try {
-                const results = await searchLocations(query);
-                const mappedResults = results.map(mapLocationSuggestion);
-                setLocationSuggestions(mappedResults);
-                setIsSearchingLocations(false);
-            } catch (err) {
-                console.error("Error searching locations:", err);
-                setLocationSuggestions([]);
-                setIsSearchingLocations(false);
-            }
-        }, API_CONFIG.AUTOCOMPLETE_DEBOUNCE_MS);
-    }, []);
-
-    /**
-     * Clear Location Suggestions
-     */
-    const clearLocationSuggestions = useCallback(() => {
-        setLocationSuggestions([]);
-        setIsSearchingLocations(false);
-        if (searchTimeoutRef.current) {
-            clearTimeout(searchTimeoutRef.current);
-        }
-    }, []);
-
-    /**
-     * Save Location Handler
-     * Updates location and fetches new weather data
-     * Persists location to localStorage
-     */
-    const handleSaveLocation = useCallback(
-        async (selectedLocation?: LocationSuggestion) => {
-            const newLocation = selectedLocation
-                ? selectedLocation.displayName
-                : tempLocation.trim();
-
-            if (!newLocation) {
-                setError("Please enter a valid location");
+            if (response.status === "LOCATION_REQUIRED") {
+                clearWeatherData();
+                setUiState("location_required");
+                setStatusMessage(
+                    response.message || "Please set farm coordinates before using weather dashboard."
+                );
                 return;
             }
 
-            setIsLoading(true);
-            setError(null);
-            clearLocationSuggestions();
-
-            try {
-                // Use the selected location query (name or coordinates)
-                const locationQuery = selectedLocation
-                    ? `${selectedLocation.lat},${selectedLocation.lon}`
-                    : newLocation;
-
-                await fetchWeatherData(locationQuery);
-                setLocation(newLocation);
-                
-                // Save location to localStorage for future sessions
-                localStorage.setItem(WEATHER_LOCATION_KEY, newLocation);
-                
-                setIsEditingLocation(false);
-            } catch (err) {
-                console.error("Error saving location:", err);
-                setError(
-                    err instanceof Error ? err.message : "Failed to fetch weather data"
+            if (response.status === "WEATHER_UNAVAILABLE") {
+                clearWeatherData();
+                setUiState("weather_unavailable");
+                setStatusMessage(
+                    response.message || "Weather service is temporarily unavailable."
                 );
-            } finally {
-                setIsLoading(false);
+                return;
             }
-        },
-        [tempLocation, fetchWeatherData, clearLocationSuggestions]
-    );
+
+            if (!response.weather) {
+                clearWeatherData();
+                setUiState("weather_unavailable");
+                setStatusMessage("Weather service returned no data.");
+                return;
+            }
+
+            const mappedWeatherData = mapForecastToWeatherData(response.weather);
+            setWeatherData(mappedWeatherData);
+
+            const mappedForecast = mapForecastDays(response.weather.forecast.forecastday, true);
+            setForecast(mappedForecast);
+
+            const alerts = generateAgriAlerts(mappedWeatherData);
+            setAgriAlerts(alerts);
+
+            setUiState("success");
+            setStatusMessage(null);
+        } catch (err) {
+            console.error("Error fetching weather data:", err);
+            clearWeatherData();
+            const message =
+                err instanceof Error ? err.message : "Failed to fetch weather data";
+            setUiState("error");
+            setStatusMessage(message);
+            setError(message);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [clearWeatherData, farmId, seasonId]);
+
+    useEffect(() => {
+        void fetchWeatherData();
+    }, [fetchWeatherData]);
 
     /**
-     * Cancel Location Edit Handler
+     * Location editing is intentionally disabled.
+     * Weather location must come from backend farm coordinates.
      */
+    const handleSaveLocation = useCallback(async () => {
+        setIsEditingLocation(false);
+        setError("Location is managed by farm settings. Please update farm coordinates.");
+    }, []);
+
     const handleCancelLocation = useCallback(() => {
         setTempLocation(location || "");
         setIsEditingLocation(false);
         setError(null);
-        clearLocationSuggestions();
-    }, [location, clearLocationSuggestions]);
+    }, [location]);
 
-    /**
-     * Refresh Weather Data Handler
-     */
     const handleRefresh = useCallback(async () => {
-        if (!location) {
-            setError("Please select a location first");
-            return;
-        }
-        await fetchWeatherData(location);
-    }, [location, fetchWeatherData]);
+        await fetchWeatherData();
+    }, [fetchWeatherData]);
 
-    /**
-     * Get UV Index Color
-     * Pure function to determine color based on UV index value
-     */
     const getUVIndexColor = useCallback((index: number): string => {
         if (index <= UV_INDEX.LOW_THRESHOLD) return UV_COLORS.LOW;
         if (index <= UV_INDEX.MODERATE_THRESHOLD) return UV_COLORS.MODERATE;
@@ -235,10 +170,6 @@ export function useWeatherWidget(): UseWeatherWidgetReturn {
         return UV_COLORS.VERY_HIGH;
     }, []);
 
-    /**
-     * Get UV Index Label
-     * Pure function to determine label based on UV index value
-     */
     const getUVIndexLabel = useCallback((index: number): string => {
         if (index <= UV_INDEX.LOW_THRESHOLD) return UV_LABELS.LOW;
         if (index <= UV_INDEX.MODERATE_THRESHOLD) return UV_LABELS.MODERATE;
@@ -246,10 +177,6 @@ export function useWeatherWidget(): UseWeatherWidgetReturn {
         return UV_LABELS.VERY_HIGH;
     }, []);
 
-    /**
-     * Get Spray Conditions
-     * Calculate optimal spray conditions based on weather parameters
-     */
     const getSprayConditions = useCallback((): SprayConditions => {
         if (!weatherData) {
             return {
@@ -296,11 +223,6 @@ export function useWeatherWidget(): UseWeatherWidgetReturn {
         };
     }, [weatherData]);
 
-    /**
-     * Get Soil Moisture Status
-     * Determine soil moisture level with color coding
-     * @deprecated Soil moisture data not available from Weather API
-     */
     const getSoilMoistureStatus = useCallback(
         (moisture: number): SoilMoistureInfo => {
             if (moisture < SOIL_MOISTURE.DRY_THRESHOLD) return SOIL_COLORS.DRY;
@@ -310,10 +232,6 @@ export function useWeatherWidget(): UseWeatherWidgetReturn {
         []
     );
 
-    /**
-     * Get Alert Icon
-     * Map alert type to corresponding icon component
-     */
     const getAlertIcon = useCallback((type: string): JSX.Element => {
         switch (type) {
             case "frost":
@@ -329,10 +247,6 @@ export function useWeatherWidget(): UseWeatherWidgetReturn {
         }
     }, []);
 
-    /**
-     * Get Alert Color
-     * Map severity to color classes
-     */
     const getAlertColor = useCallback((severity: string): string => {
         switch (severity) {
             case "high":
@@ -346,63 +260,17 @@ export function useWeatherWidget(): UseWeatherWidgetReturn {
         }
     }, []);
 
-    /**
-     * Wrapped State Setters
-     * Wrap setState functions to match type signature
-     */
     const handleSetTempLocation = useCallback((value: string) => {
         setTempLocation(value);
-        handleLocationSearch(value);
-    }, [handleLocationSearch]);
-
-    const handleSetIsEditingLocation = useCallback((value: boolean) => {
-        setIsEditingLocation(value);
-        if (!value) {
-            clearLocationSuggestions();
-        }
-    }, [clearLocationSuggestions]);
-
-    /**
-     * Smart Initial Location Loading
-     * Priority: 1) Farm location, 2) localStorage, 3) null (empty state)
-     */
-    useEffect(() => {
-        const loadInitialLocation = async () => {
-            if (hasInitialLoadRef.current) return;
-            hasInitialLoadRef.current = true;
-
-            // Try to get farm location first (future feature)
-            const farmLocation = await getFarmLocation();
-            if (farmLocation) {
-                setLocation(farmLocation);
-                setTempLocation(farmLocation);
-                fetchWeatherData(farmLocation);
-                return;
-            }
-
-            // Fallback to localStorage
-            const savedLocation = localStorage.getItem(WEATHER_LOCATION_KEY);
-            if (savedLocation) {
-                setLocation(savedLocation);
-                setTempLocation(savedLocation);
-                fetchWeatherData(savedLocation);
-            }
-            // If neither exists, location stays null and empty state is shown
-        };
-
-        loadInitialLocation();
-    }, [fetchWeatherData]);
-
-    // Cleanup timeout on unmount
-    useEffect(() => {
-        return () => {
-            if (searchTimeoutRef.current) {
-                clearTimeout(searchTimeoutRef.current);
-            }
-        };
     }, []);
 
-    // Return clean API surface
+    const handleSetIsEditingLocation = useCallback((value: boolean) => {
+        if (value) {
+            setError("Location is managed by farm settings. Please update farm coordinates.");
+        }
+        setIsEditingLocation(false);
+    }, []);
+
     return {
         // Weather Data
         weatherData,
@@ -419,6 +287,8 @@ export function useWeatherWidget(): UseWeatherWidgetReturn {
         // Loading/Error State
         isLoading,
         error,
+        uiState,
+        statusMessage,
 
         // Handlers
         setTempLocation: handleSetTempLocation,
@@ -427,8 +297,8 @@ export function useWeatherWidget(): UseWeatherWidgetReturn {
         handleCancelLocation,
         handleRefresh,
         setError,
-        handleLocationSearch,
-        clearLocationSuggestions,
+        handleLocationSearch: () => undefined,
+        clearLocationSuggestions: () => undefined,
 
         // Computed Values
         getUVIndexColor,
@@ -439,6 +309,3 @@ export function useWeatherWidget(): UseWeatherWidgetReturn {
         getAlertColor,
     };
 }
-
-
-

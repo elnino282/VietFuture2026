@@ -165,7 +165,7 @@ export function FieldLogsPage() {
         || selectedSeasonStatus === "CANCELLED"
         || selectedSeasonStatus === "ARCHIVED";
     const seasonWriteLockReason = isSeasonWriteLocked
-        ? "Season is locked. Field log write actions are disabled."
+        ? t("fieldLogs.validation.seasonLocked")
         : undefined;
     
     const logs = logsData?.items ?? [];
@@ -240,11 +240,11 @@ export function FieldLogsPage() {
                     : null;
             
             if (startDate && logDate < startDate) {
-                toast.error(`Ngày ghi phải sau hoặc bằng ngày bắt đầu mùa vụ (${selectedSeason.startDate})`);
+                toast.error(`${t("fieldLogs.validation.dateAfterStart")} (${selectedSeason.startDate})`);
                 return;
             }
             if (endDate && logDate > endDate) {
-                toast.error(`Ngày ghi phải trước hoặc bằng ngày kết thúc mùa vụ (${selectedSeason.endDate ?? selectedSeason.plannedHarvestDate})`);
+                toast.error(`${t("fieldLogs.validation.dateBeforeEnd")} (${selectedSeason.endDate ?? selectedSeason.plannedHarvestDate})`);
                 return;
             }
         }
@@ -340,9 +340,9 @@ export function FieldLogsPage() {
 
                             {isWorkspaceScoped ? (
                                 <div className="rounded-xl border border-border px-3 py-2 text-sm bg-card">
-                                    Mùa vụ:{" "}
+                                    {t("fieldLogs.currentSeason")}{" "}
                                     <span className="font-medium">
-                                        {selectedSeason?.seasonName ?? `Mùa vụ #${selectedSeasonId}`}
+                                        {selectedSeason?.seasonName ?? `${t("seasons.title")} #${selectedSeasonId}`}
                                     </span>
                                 </div>
                             ) : (
@@ -541,7 +541,7 @@ export function FieldLogsPage() {
                             />
                             {selectedSeason && (
                                 <p className="text-xs text-muted-foreground">
-                                    Season range: {formatDate(selectedSeason.startDate)} - {formatDate(selectedSeason.endDate ?? selectedSeason.plannedHarvestDate)}
+                                    {t("fieldLogs.form.seasonRange")}: {formatDate(selectedSeason.startDate)} - {formatDate(selectedSeason.endDate ?? selectedSeason.plannedHarvestDate)}
                                 </p>
                             )}
                         </div>

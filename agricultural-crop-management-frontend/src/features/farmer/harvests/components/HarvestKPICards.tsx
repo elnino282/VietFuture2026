@@ -6,7 +6,7 @@ import {
     TrendingUp,
     TrendingDown,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { usePreferences } from "@/shared/contexts";
 import { formatWeight } from "@/shared/lib";
 
@@ -25,7 +25,9 @@ export function HarvestKPICards({
     avgMoisture,
     yieldVsPlan,
 }: HarvestKPICardsProps) {
-    const isOnTarget = parseFloat(yieldVsPlan) >= 100;
+    const yieldVsPlanValue = Number.parseFloat(yieldVsPlan);
+    const hasYieldVsPlan = Number.isFinite(yieldVsPlanValue);
+    const isOnTarget = hasYieldVsPlan && yieldVsPlanValue >= 100;
     const { preferences } = usePreferences();
     const totalHarvestedLabel = formatWeight(
         totalHarvested,
@@ -108,9 +110,13 @@ export function HarvestKPICards({
                             <p className="text-sm text-muted-foreground mb-1">Yield vs Plan</p>
                             <div className="flex items-baseline gap-2">
                                 <p className="text-2xl numeric text-foreground">{yieldVsPlan}</p>
-                                <p className="text-xs text-muted-foreground">%</p>
+                                {hasYieldVsPlan && <p className="text-xs text-muted-foreground">%</p>}
                             </div>
-                            {isOnTarget ? (
+                            {!hasYieldVsPlan ? (
+                                <div className="flex items-center gap-1 mt-1">
+                                    <p className="text-xs text-muted-foreground">No plan data</p>
+                                </div>
+                            ) : isOnTarget ? (
                                 <div className="flex items-center gap-1 mt-1">
                                     <TrendingUp className="w-3 h-3 text-primary" />
                                     <p className="text-xs text-primary">On target</p>

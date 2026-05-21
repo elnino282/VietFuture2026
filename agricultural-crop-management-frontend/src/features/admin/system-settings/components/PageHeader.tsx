@@ -20,7 +20,7 @@ export function PageHeader({ onSaveAll, onResetToDefault }: PageHeaderProps) {
                     <RotateCcw className="w-4 h-4 mr-2" />
                     Reset to Default
                 </Button>
-                <Button className="bg-[#2563EB] hover:bg-[#1E40AF]" onClick={onSaveAll}>
+                <Button onClick={onSaveAll}>
                     <Save className="w-4 h-4 mr-2" />
                     Save All
                 </Button>

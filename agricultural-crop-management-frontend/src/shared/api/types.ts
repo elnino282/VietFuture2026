@@ -10,14 +10,18 @@ export const ApiResponseSchema = <T extends ZodType>(resultSchema: T) =>
         status: z.number(),
         code: z.string(),
         message: z.string(),
-        result: resultSchema,
+        generatedAt: z.string().optional(),
+        result: resultSchema.optional(),
+        data: resultSchema.optional(),
     });
 
 export type ApiResponse<T> = {
     status: number;
     code: string;
     message: string;
-    result: T;
+    generatedAt?: string;
+    result?: T;
+    data?: T;
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -61,10 +65,18 @@ export function parseApiResponse<T extends ZodType>(
         status: z.number(),
         code: z.string(),
         message: z.string(),
-        result: resultSchema,
+        generatedAt: z.string().optional(),
+        result: resultSchema.optional(),
+        data: resultSchema.optional(),
     });
     const parsed = schema.parse(data);
-    return parsed.result;
+    if (parsed.data !== undefined) {
+        return parsed.data;
+    }
+    if (parsed.result !== undefined) {
+        return parsed.result;
+    }
+    throw new Error("API response is missing both 'data' and 'result' payloads.");
 }
 
 /**
@@ -88,10 +100,16 @@ export function parsePageResponse<T extends ZodType>(
         status: z.number(),
         code: z.string(),
         message: z.string(),
-        result: pageSchema,
+        generatedAt: z.string().optional(),
+        result: pageSchema.optional(),
+        data: pageSchema.optional(),
     });
     const parsed = schema.parse(data);
-    return parsed.result as PageResponse<z.infer<T>>;
+    const payload = parsed.data ?? parsed.result;
+    if (!payload) {
+        throw new Error("API response is missing both 'data' and 'result' payloads.");
+    }
+    return payload as PageResponse<z.infer<T>>;
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -13,10 +13,10 @@ import {
     SheetHeader,
     SheetTitle,
     SheetDescription,
-} from "@/components/ui/sheet";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "@/shared/ui/sheet";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Badge } from "@/shared/ui/badge";
 import type { HarvestBatch, HarvestGrade, HarvestStatus } from "../types";
 import { usePreferences } from "@/shared/contexts";
 import { formatWeight } from "@/shared/lib";
@@ -26,8 +26,8 @@ interface HarvestDetailsDrawerProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onAction: (action: string, batch: HarvestBatch) => void;
-    getStatusBadge: (status: HarvestStatus) => JSX.Element | null;
-    getGradeBadge: (grade: HarvestGrade) => JSX.Element;
+    getStatusBadge: (status?: HarvestStatus | null) => JSX.Element | null;
+    getGradeBadge: (grade?: HarvestGrade | null) => JSX.Element;
 }
 
 export function HarvestDetailsDrawer({
@@ -96,13 +96,19 @@ export function HarvestDetailsDrawer({
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-muted-foreground">Moisture</span>
-                                <span className="numeric text-foreground">
-                                    {batch.moisture.toFixed(1)}%
-                                </span>
+                                {typeof batch.moisture === "number" ? (
+                                    <span className="numeric text-foreground">
+                                        {batch.moisture.toFixed(1)}%
+                                    </span>
+                                ) : (
+                                    <span className="text-sm text-muted-foreground">—</span>
+                                )}
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-muted-foreground">Status</span>
-                                {getStatusBadge(batch.status)}
+                                {getStatusBadge(batch.status) ?? (
+                                    <span className="text-sm text-muted-foreground">—</span>
+                                )}
                             </div>
                         </CardContent>
                     </Card>

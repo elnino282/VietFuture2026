@@ -1,15 +1,6 @@
 import { MapPin, List, Plus, MapIcon, Search, X, GitMerge } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ViewMode } from "../types";
+import { Button, Card, CardContent, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui";
+import type { ViewMode } from "../types";
 
 interface PlotToolbarProps {
   // View mode
@@ -80,16 +71,16 @@ export function PlotToolbar({
   const hasActiveFilters =
     searchQuery || filterCrop !== "all" || filterStatus !== "all" || filterSoilType !== "all";
 
-  return (
+    return (
     <div className="space-y-4">
-      <Card className="border border-border rounded-xl shadow-sm">
+      <Card variant="page-header">
         <CardContent className="px-6 py-4">
           {/* Header Row: Title + Actions */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {/* Title Section */}
             <div className="flex-shrink-0">
               <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
-                <MapPin className="w-6 h-6 text-emerald-600" />
+                <MapPin className="w-6 h-6 text-primary" />
                 My Plots
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
@@ -121,7 +112,7 @@ export function PlotToolbar({
                   onClick={() => setViewMode("list")}
                   className={`h-8 ${
                     viewMode === "list"
-                      ? "bg-card shadow-sm text-emerald-600"
+                      ? "bg-card shadow-sm text-primary"
                       : "hover:bg-card/50 text-muted-foreground"
                   }`}
                 >
@@ -134,7 +125,7 @@ export function PlotToolbar({
                   onClick={() => setViewMode("map")}
                   className={`h-8 ${
                     viewMode === "map"
-                      ? "bg-card shadow-sm text-emerald-600"
+                      ? "bg-card shadow-sm text-primary"
                       : "hover:bg-card/50 text-muted-foreground"
                   }`}
                 >
@@ -156,7 +147,7 @@ export function PlotToolbar({
         </CardContent>
       </Card>
 
-      <Card className="border border-border rounded-xl shadow-sm">
+      <Card variant="filter">
         <CardContent className="px-6 py-4">
           <div className="flex flex-wrap items-center justify-start gap-4">
             {/* Search Bar */}
@@ -166,13 +157,13 @@ export function PlotToolbar({
                 placeholder="Search plots..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 pl-10 border-border focus:border-emerald-600 focus:ring-emerald-600"
+                className="h-10 pl-10 border-border focus:border-primary focus:ring-primary"
               />
             </div>
 
             {/* Crop Filter */}
             <Select value={filterCrop} onValueChange={setFilterCrop} disabled={isLoadingFilterOptions}>
-              <SelectTrigger className="border-border focus:border-emerald-600 w-[180px]">
+              <SelectTrigger className="w-[180px] border-border focus:border-primary">
                 <SelectValue placeholder="All crops" />
               </SelectTrigger>
               <SelectContent>
@@ -186,7 +177,7 @@ export function PlotToolbar({
 
             {/* Status Filter */}
             <Select value={filterStatus} onValueChange={setFilterStatus} disabled={isLoadingFilterOptions}>
-              <SelectTrigger className="border-border focus:border-emerald-600 w-[180px]">
+              <SelectTrigger className="w-[180px] border-border focus:border-primary">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -200,7 +191,7 @@ export function PlotToolbar({
 
             {/* Soil Type Filter */}
             <Select value={filterSoilType} onValueChange={setFilterSoilType} disabled={isLoadingFilterOptions}>
-              <SelectTrigger className="border-border focus:border-emerald-600 w-[180px]">
+              <SelectTrigger className="w-[180px] border-border focus:border-primary">
                 <SelectValue placeholder="All soil types" />
               </SelectTrigger>
               <SelectContent>
@@ -257,7 +248,7 @@ export function PlotToolbar({
               variant="ghost"
               size="sm"
               onClick={onClearFilters}
-              className="text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+              className="text-xs text-primary hover:text-primary/80 hover:bg-primary/10"
             >
               Clear All
             </Button>

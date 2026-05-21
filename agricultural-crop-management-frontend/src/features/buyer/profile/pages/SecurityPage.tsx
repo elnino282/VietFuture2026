@@ -1,17 +1,38 @@
-import { changePassword, type ChangePasswordPayload } from '@/api/auth';
+import { type ChangePasswordPayload, useProfileChangePassword } from '@/entities/user';
 import { Card, CardContent, CardHeader } from '@/shared/ui';
+import axios from 'axios';
 import { toast } from 'sonner';
 import { PasswordChangeForm } from '../components/PasswordChangeForm';
 
+function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const apiMessage = (error.response?.data as { message?: string } | undefined)?.message;
+    if (apiMessage) {
+      return apiMessage;
+    }
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return 'Có lỗi xảy ra khi đổi mật khẩu';
+}
+
 export function SecurityPage() {
+  const changePassword = useProfileChangePassword();
+
   const handlePasswordChange = async (data: ChangePasswordPayload) => {
     try {
-      await changePassword(data);
+      await changePassword.mutateAsync({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
       toast.success('Đổi mật khẩu thành công');
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Có lỗi xảy ra khi đổi mật khẩu';
+      const message = getErrorMessage(error);
       toast.error(message);
-      throw error;
+      throw new Error(message);
     }
   };
 

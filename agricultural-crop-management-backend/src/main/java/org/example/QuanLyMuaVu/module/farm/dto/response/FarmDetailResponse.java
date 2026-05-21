@@ -22,6 +22,8 @@ public class FarmDetailResponse {
     String provinceName;
     String wardName;
     BigDecimal area;
+    BigDecimal latitude;
+    BigDecimal longitude;
     Boolean active;
     String ownerUsername;
 

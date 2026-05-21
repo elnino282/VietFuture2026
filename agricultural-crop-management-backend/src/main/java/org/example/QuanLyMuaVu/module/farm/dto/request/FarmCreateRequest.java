@@ -1,6 +1,7 @@
 package org.example.QuanLyMuaVu.module.farm.dto.request;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -30,6 +31,14 @@ public class FarmCreateRequest {
     @NotNull(message = "Area is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Area must be greater than 0")
     BigDecimal area;
+
+    @DecimalMin(value = "-90.0", message = "Latitude must be >= -90")
+    @DecimalMax(value = "90.0", message = "Latitude must be <= 90")
+    BigDecimal latitude;
+
+    @DecimalMin(value = "-180.0", message = "Longitude must be >= -180")
+    @DecimalMax(value = "180.0", message = "Longitude must be <= 180")
+    BigDecimal longitude;
 
     @Builder.Default
     Boolean active = true;

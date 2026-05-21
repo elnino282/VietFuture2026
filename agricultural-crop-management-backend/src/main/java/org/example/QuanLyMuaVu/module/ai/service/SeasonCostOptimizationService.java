@@ -51,10 +51,15 @@ public class SeasonCostOptimizationService {
     static final int TOP_CATEGORY_LIMIT = 3;
     static final int MAX_INVENTORY_USAGE_ROWS = 12;
     static final int MAX_TEXT_LENGTH = 280;
-    static final String DEFAULT_QUESTION =
+    static final String DEFAULT_QUESTION_VI =
             "Hay giai thich tinh hinh chi phi mua vu nay va goi y toi uu chi phi tham khao.";
-    static final String DISCLAIMER_MESSAGE =
+    static final String DEFAULT_QUESTION_EN =
+            "Please explain this season's cost situation and suggest reference cost optimization actions.";
+    static final String DISCLAIMER_MESSAGE_VI =
             "AI chi ho tro quyet dinh tham khao, khong thay the tu van tai chinh/chuyen gia nong nghiep va khong tu dong sua expense, budget, inventory.";
+    static final String DISCLAIMER_MESSAGE_EN =
+            "AI provides reference-only guidance, does not replace financial/agronomy experts, and does not auto-edit expenses, budget, or inventory.";
+    static final String NOT_AVAILABLE_TEXT = "N/A";
 
     GeminiService geminiService;
     SeasonRepository seasonRepository;
@@ -68,30 +73,48 @@ public class SeasonCostOptimizationService {
 
     @Transactional(readOnly = true)
     public SeasonCostOptimizationSummaryResponse getSummary(Integer seasonId) {
-        CostSummaryContext context = buildCostSummaryContext(seasonId, true);
+        return getSummary(seasonId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public SeasonCostOptimizationSummaryResponse getSummary(Integer seasonId, String locale) {
+        boolean vietnamese = isVietnameseLocale(locale);
+        CostSummaryContext context = buildCostSummaryContext(seasonId, true, vietnamese);
         return context.summary();
     }
 
     public SeasonCostOptimizationSuggestionResponse generateSuggestion(
             Integer seasonId,
             SeasonCostOptimizationSuggestionRequest request) {
+        return generateSuggestion(seasonId, request, null);
+    }
+
+    public SeasonCostOptimizationSuggestionResponse generateSuggestion(
+            Integer seasonId,
+            SeasonCostOptimizationSuggestionRequest request,
+            String locale) {
+        String resolvedLocale = normalizeLocale(
+                request != null ? request.getLocale() : null,
+                locale);
+        boolean vietnamese = isVietnameseLocale(resolvedLocale);
         boolean includeInventory = request == null
                 || request.getIncludeInventory() == null
                 || request.getIncludeInventory();
         String question = normalizeText(request != null ? request.getQuestion() : null);
         if (!StringUtils.hasText(question)) {
-            question = DEFAULT_QUESTION;
+            question = getDefaultQuestion(vietnamese);
         }
         String additionalNote = normalizeText(request != null ? request.getAdditionalNote() : null);
 
-        CostSummaryContext context = buildCostSummaryContext(seasonId, includeInventory);
+        CostSummaryContext context = buildCostSummaryContext(seasonId, includeInventory, vietnamese);
         SeasonCostOptimizationSummaryResponse summary = context.summary();
 
         String instruction = buildInstruction(
                 question,
                 includeInventory,
-                summary.getInventoryUsageSummary() == null || summary.getInventoryUsageSummary().isEmpty());
-        String structuredContext = buildStructuredContext(summary, additionalNote);
+                summary.getInventoryUsageSummary() == null || summary.getInventoryUsageSummary().isEmpty(),
+                vietnamese);
+        String structuredContext = buildStructuredContext(summary, additionalNote, vietnamese);
         String suggestionText = geminiService.chatAsAgriculturalExpert(instruction, structuredContext);
         LocalDateTime generatedAt = LocalDateTime.now();
 
@@ -101,7 +124,7 @@ public class SeasonCostOptimizationService {
                 question,
                 additionalNote,
                 generatedAt);
-        logSuggestionAudit(summary.getSeasonId(), usedContextSummary);
+        logSuggestionAudit(summary.getSeasonId(), usedContextSummary, getDisclaimerMessage(vietnamese));
 
         return SeasonCostOptimizationSuggestionResponse.builder()
                 .seasonId(summary.getSeasonId())
@@ -122,11 +145,11 @@ public class SeasonCostOptimizationService {
                 .aiSuggestionText(suggestionText)
                 .usedContextSummary(usedContextSummary)
                 .generatedAt(generatedAt)
-                .disclaimer(DISCLAIMER_MESSAGE)
+                .disclaimer(getDisclaimerMessage(vietnamese))
                 .build();
     }
 
-    private CostSummaryContext buildCostSummaryContext(Integer seasonId, boolean includeInventory) {
+    private CostSummaryContext buildCostSummaryContext(Integer seasonId, boolean includeInventory, boolean vietnamese) {
         if (seasonId == null) {
             throw new AppException(ErrorCode.KEY_INVALID);
         }
@@ -175,7 +198,8 @@ public class SeasonCostOptimizationService {
                 remainingBudget,
                 topCostCategories,
                 pesticideTreatmentCost,
-                expectedYieldKg);
+                expectedYieldKg,
+                vietnamese);
 
         SeasonCostOptimizationSummaryResponse summary = SeasonCostOptimizationSummaryResponse.builder()
                 .seasonId(season.getId())
@@ -193,7 +217,7 @@ public class SeasonCostOptimizationService {
                 .pesticideTreatmentCost(pesticideTreatmentCost)
                 .inventoryUsageSummary(inventoryUsageSummary)
                 .warnings(warnings)
-                .disclaimer(DISCLAIMER_MESSAGE)
+                .disclaimer(getDisclaimerMessage(vietnamese))
                 .build();
 
         return new CostSummaryContext(summary, expenses, treatments, inventoryMovements);
@@ -311,20 +335,27 @@ public class SeasonCostOptimizationService {
             BigDecimal remainingBudget,
             List<SeasonCostCategoryBreakdown> topCostCategories,
             BigDecimal treatmentCost,
-            BigDecimal expectedYieldKg) {
+            BigDecimal expectedYieldKg,
+            boolean vietnamese) {
         List<String> warnings = new ArrayList<>();
 
         if (budgetAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            warnings.add("Khong co budget hop le, can cap nhat budgetAmount de theo doi vuot ngan sach.");
+            warnings.add(vietnamese
+                    ? "Khong co budget hop le, can cap nhat budgetAmount de theo doi vuot ngan sach."
+                    : "No valid budget found. Please update budgetAmount to monitor overruns.");
         } else {
             if (totalExpense.compareTo(budgetAmount) > 0) {
-                warnings.add("Tong chi phi dang vuot ngan sach mua vu.");
+                warnings.add(vietnamese
+                        ? "Tong chi phi dang vuot ngan sach mua vu."
+                        : "Total costs are currently exceeding the seasonal budget.");
             }
 
             BigDecimal lowRemainingThreshold = budgetAmount.multiply(LOW_REMAINING_BUDGET_RATIO);
             if (remainingBudget.compareTo(BigDecimal.ZERO) >= 0
                     && remainingBudget.compareTo(lowRemainingThreshold) <= 0) {
-                warnings.add("Ngan sach con lai dang thap (<=10% budget).");
+                warnings.add(vietnamese
+                        ? "Ngan sach con lai dang thap (<=10% budget)."
+                        : "Remaining budget is low (<=10% of budget).");
             }
         }
 
@@ -332,57 +363,94 @@ public class SeasonCostOptimizationService {
                 && topCostCategories.getFirst().getPercentageOfTotal() != null
                 && topCostCategories.getFirst().getPercentageOfTotal()
                         .compareTo(HIGH_CATEGORY_SHARE_RATIO.multiply(ONE_HUNDRED)) >= 0) {
-            warnings.add("Mot nhom chi phi dang chiem ty trong rat cao, can ra soat de tranh mat can doi.");
+            warnings.add(vietnamese
+                    ? "Mot nhom chi phi dang chiem ty trong rat cao, can ra soat de tranh mat can doi."
+                    : "A single cost category is taking a very high share. Review for balance risk.");
         }
 
         if (totalExpense.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal treatmentRatio = treatmentCost.divide(totalExpense, 4, RoundingMode.HALF_UP);
             if (treatmentRatio.compareTo(HIGH_TREATMENT_SHARE_RATIO) >= 0) {
-                warnings.add("Chi phi thuoc/dieu tri dang chiem ty le cao trong tong chi phi.");
+                warnings.add(vietnamese
+                        ? "Chi phi thuoc/dieu tri dang chiem ty le cao trong tong chi phi."
+                        : "Treatment/pesticide costs are consuming a high share of total costs.");
             }
         }
 
         if (expectedYieldKg == null) {
-            warnings.add("Thieu expectedYieldKg nen chua tinh duoc costPerExpectedKg.");
+            warnings.add(vietnamese
+                    ? "Thieu expectedYieldKg nen chua tinh duoc costPerExpectedKg."
+                    : "Missing expectedYieldKg, so costPerExpectedKg cannot be computed yet.");
         }
 
         return warnings;
     }
 
-    private String buildInstruction(String question, boolean includeInventory, boolean inventoryEmpty) {
+    private String buildInstruction(String question, boolean includeInventory, boolean inventoryEmpty, boolean vietnamese) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Cau hoi cua nguoi dung: ").append(question).append("\n\n");
-        sb.append("Ban chi duoc giai thich va goi y dua tren tong hop backend da tinh san.\n");
-        sb.append("Khong duoc tu tinh lai so lieu goc neu backend da cung cap.\n\n");
-        sb.append("Tra loi dung format:\n");
-        sb.append("a. Tom tat buc tranh chi phi mua vu\n");
-        sb.append("b. Du lieu con thieu\n");
-        sb.append("c. Huong toi uu chi phi tham khao\n");
-        sb.append("d. Vat tu su dung hien co co the can nhac\n");
-        sb.append("e. Rui ro/canh bao\n");
-        sb.append("f. Buoc tiep theo nen ghi nhan tren he thong\n\n");
-        sb.append("Rang buoc an toan bat buoc:\n");
-        sb.append("- AI chi ho tro quyet dinh, khong thay the tu van tai chinh/chuyen gia nong nghiep.\n");
-        sb.append("- Khong tu dong chinh sua expense, budget, inventory hoac quyet dinh mua vat tu.\n");
-        sb.append("- Khong khang dinh loi nhuan neu thieu du lieu revenue.\n");
-        sb.append("- Neu thieu du lieu, phai noi ro can bo sung thong tin gi.\n");
-        if (!includeInventory) {
-            sb.append("- Request khong bao gom inventory summary, khong goi y vat tu cu the.\n");
-        } else if (inventoryEmpty) {
-            sb.append("- Khong co inventory usage summary noi bo, khong goi y mua vat tu tu dong.\n");
-        } else {
-            sb.append("- Chi goi y vat tu dua tren inventory usage summary noi bo da cung cap.\n");
+        if (vietnamese) {
+            sb.append("Cau hoi cua nguoi dung: ").append(question).append("\n\n");
+            sb.append("Ban chi duoc giai thich va goi y dua tren tong hop backend da tinh san.\n");
+            sb.append("Khong duoc tu tinh lai so lieu goc neu backend da cung cap.\n\n");
+            sb.append("Tra loi dung format:\n");
+            sb.append("a. Tom tat buc tranh chi phi mua vu\n");
+            sb.append("b. Du lieu con thieu\n");
+            sb.append("c. Huong toi uu chi phi tham khao\n");
+            sb.append("d. Vat tu su dung hien co co the can nhac\n");
+            sb.append("e. Rui ro/canh bao\n");
+            sb.append("f. Buoc tiep theo nen ghi nhan tren he thong\n\n");
+            sb.append("Rang buoc an toan bat buoc:\n");
+            sb.append("- AI chi ho tro quyet dinh, khong thay the tu van tai chinh/chuyen gia nong nghiep.\n");
+            sb.append("- Khong tu dong chinh sua expense, budget, inventory hoac quyet dinh mua vat tu.\n");
+            sb.append("- Khong khang dinh loi nhuan neu thieu du lieu revenue.\n");
+            sb.append("- Neu thieu du lieu, phai noi ro can bo sung thong tin gi.\n");
+            if (!includeInventory) {
+                sb.append("- Request khong bao gom inventory summary, khong goi y vat tu cu the.\n");
+            } else if (inventoryEmpty) {
+                sb.append("- Khong co inventory usage summary noi bo, khong goi y mua vat tu tu dong.\n");
+            } else {
+                sb.append("- Chi goi y vat tu dua tren inventory usage summary noi bo da cung cap.\n");
+            }
+            sb.append("Bat buoc ket thuc bang dong disclaimer: ");
+            sb.append("'Goi y toi uu chi phi chi mang tinh tham khao, vui long tham van chuyen gia truoc khi ap dung.'");
+            return sb.toString();
         }
-        sb.append("Bat buoc ket thuc bang dong disclaimer: ");
-        sb.append("'Goi y toi uu chi phi chi mang tinh tham khao, vui long tham van chuyen gia truoc khi ap dung.'");
+
+        sb.append("User question: ").append(question).append("\n\n");
+        sb.append("You must explain and suggest only from backend-precomputed summaries.\n");
+        sb.append("Do not recalculate raw source values when backend already provides them.\n\n");
+        sb.append("Return with this exact structure:\n");
+        sb.append("a. Seasonal cost overview\n");
+        sb.append("b. Missing data\n");
+        sb.append("c. Reference cost optimization directions\n");
+        sb.append("d. Candidate materials based on current usage\n");
+        sb.append("e. Risks/warnings\n");
+        sb.append("f. Next steps to record in the system\n\n");
+        sb.append("Mandatory safety constraints:\n");
+        sb.append("- AI supports decisions and does not replace finance/agronomy experts.\n");
+        sb.append("- Do not auto-edit expenses, budget, inventory, or purchase decisions.\n");
+        sb.append("- Do not claim profit certainty if revenue data is missing.\n");
+        sb.append("- If data is missing, clearly state what additional information is required.\n");
+        if (!includeInventory) {
+            sb.append("- Request does not include inventory summary, so do not suggest specific materials.\n");
+        } else if (inventoryEmpty) {
+            sb.append("- No internal inventory usage summary is available; do not auto-suggest purchases.\n");
+        } else {
+            sb.append("- Only suggest materials that can be grounded in the provided internal inventory usage summary.\n");
+        }
+        sb.append("Must end with this disclaimer line: ");
+        sb.append("'Cost optimization suggestions are reference-only. Consult experts before applying.'");
         return sb.toString();
     }
 
     private String buildStructuredContext(
             SeasonCostOptimizationSummaryResponse summary,
-            String additionalNote) {
+            String additionalNote,
+            boolean vietnamese) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Tom tat chi phi mua vu duoc backend tinh san:\n");
+        sb.append(vietnamese
+                ? "Tom tat chi phi mua vu duoc backend tinh san:\n"
+                : "Precomputed seasonal cost summary from backend:\n");
         sb.append("- SeasonId: ").append(summary.getSeasonId()).append("\n");
         sb.append("- SeasonName: ").append(safeText(summary.getSeasonName())).append("\n");
         sb.append("- BudgetAmount: ").append(toPlain(summary.getBudgetAmount())).append("\n");
@@ -395,9 +463,11 @@ public class SeasonCostOptimizationService {
         sb.append("- LaborCost: ").append(toPlain(summary.getLaborCost())).append("\n");
         sb.append("- PesticideTreatmentCost: ").append(toPlain(summary.getPesticideTreatmentCost())).append("\n\n");
 
-        sb.append("Expense by category:\n");
+        sb.append(vietnamese ? "Expense by category:\n" : "Expense by category:\n");
         if (summary.getExpenseByCategory() == null || summary.getExpenseByCategory().isEmpty()) {
-            sb.append("- Chua co du lieu chi phi theo nhom.\n");
+            sb.append(vietnamese
+                    ? "- Chua co du lieu chi phi theo nhom.\n"
+                    : "- No grouped expense data is currently available.\n");
         } else {
             for (SeasonCostCategoryBreakdown category : summary.getExpenseByCategory()) {
                 sb.append("- ")
@@ -408,9 +478,11 @@ public class SeasonCostOptimizationService {
         }
         sb.append("\n");
 
-        sb.append("Inventory usage summary:\n");
+        sb.append(vietnamese ? "Inventory usage summary:\n" : "Inventory usage summary:\n");
         if (summary.getInventoryUsageSummary() == null || summary.getInventoryUsageSummary().isEmpty()) {
-            sb.append("- Chua co du lieu su dung vat tu theo stock movement.\n");
+            sb.append(vietnamese
+                    ? "- Chua co du lieu su dung vat tu theo stock movement.\n"
+                    : "- No inventory usage data from stock movements is available.\n");
         } else {
             for (SeasonInventoryUsageSummary row : summary.getInventoryUsageSummary()) {
                 sb.append("- item=").append(safeText(row.getItemName()))
@@ -422,9 +494,11 @@ public class SeasonCostOptimizationService {
         }
         sb.append("\n");
 
-        sb.append("Warnings hien tai:\n");
+        sb.append(vietnamese ? "Warnings hien tai:\n" : "Current warnings:\n");
         if (summary.getWarnings() == null || summary.getWarnings().isEmpty()) {
-            sb.append("- Khong co canh bao nghiem trong tu bo rule hien tai.\n");
+            sb.append(vietnamese
+                    ? "- Khong co canh bao nghiem trong tu bo rule hien tai.\n"
+                    : "- No severe warnings from the current rule set.\n");
         } else {
             for (String warning : summary.getWarnings()) {
                 sb.append("- ").append(safeText(warning)).append("\n");
@@ -433,11 +507,15 @@ public class SeasonCostOptimizationService {
         sb.append("\n");
 
         if (StringUtils.hasText(additionalNote)) {
-            sb.append("Ghi chu bo sung tu nguoi dung:\n");
+            sb.append(vietnamese
+                    ? "Ghi chu bo sung tu nguoi dung:\n"
+                    : "Additional user note:\n");
             sb.append("- ").append(safeText(additionalNote)).append("\n\n");
         }
 
-        sb.append("Chi dung du lieu tren, khong suy dien them du lieu ngoai he thong.");
+        sb.append(vietnamese
+                ? "Chi dung du lieu tren, khong suy dien them du lieu ngoai he thong."
+                : "Use only the data above. Do not infer extra data outside the system.");
         return sb.toString();
     }
 
@@ -465,9 +543,12 @@ public class SeasonCostOptimizationService {
         return result;
     }
 
-    private void logSuggestionAudit(Integer seasonId, Map<String, Object> usedContextSummary) {
+    private void logSuggestionAudit(
+            Integer seasonId,
+            Map<String, Object> usedContextSummary,
+            String disclaimerMessage) {
         Map<String, Object> snapshot = new LinkedHashMap<>(usedContextSummary);
-        snapshot.put("disclaimer", DISCLAIMER_MESSAGE);
+        snapshot.put("disclaimer", disclaimerMessage);
 
         auditLogService.logModuleOperation(
                 "AI",
@@ -546,7 +627,7 @@ public class SeasonCostOptimizationService {
     private String safeText(String value) {
         String normalized = normalizeText(value);
         if (!StringUtils.hasText(normalized)) {
-            return "N/A";
+            return NOT_AVAILABLE_TEXT;
         }
         if (normalized.length() <= MAX_TEXT_LENGTH) {
             return normalized;
@@ -560,9 +641,33 @@ public class SeasonCostOptimizationService {
 
     private String toNullablePlain(BigDecimal value) {
         if (value == null) {
-            return "N/A";
+            return NOT_AVAILABLE_TEXT;
         }
         return value.stripTrailingZeros().toPlainString();
+    }
+
+    private String normalizeLocale(String primaryLocale, String fallbackLocale) {
+        String normalizedPrimary = normalizeText(primaryLocale);
+        if (StringUtils.hasText(normalizedPrimary)) {
+            return normalizedPrimary;
+        }
+        return normalizeText(fallbackLocale);
+    }
+
+    private boolean isVietnameseLocale(String locale) {
+        if (!StringUtils.hasText(locale)) {
+            return false;
+        }
+        String normalized = locale.trim().toLowerCase();
+        return normalized.equals("vi") || normalized.startsWith("vi-");
+    }
+
+    private String getDefaultQuestion(boolean vietnamese) {
+        return vietnamese ? DEFAULT_QUESTION_VI : DEFAULT_QUESTION_EN;
+    }
+
+    private String getDisclaimerMessage(boolean vietnamese) {
+        return vietnamese ? DISCLAIMER_MESSAGE_VI : DISCLAIMER_MESSAGE_EN;
     }
 
     private int compareNullableBigDecimalDesc(BigDecimal left, BigDecimal right) {

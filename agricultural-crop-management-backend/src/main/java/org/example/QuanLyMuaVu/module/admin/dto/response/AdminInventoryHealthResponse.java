@@ -21,6 +21,7 @@ public class AdminInventoryHealthResponse {
     Integer windowDays;
     Boolean includeExpiring;
     Summary summary;
+    DataQuality dataQuality;
     List<FarmHealth> farms;
 
     @Getter
@@ -31,9 +32,27 @@ public class AdminInventoryHealthResponse {
     @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class Summary {
         Integer expiredLots;
+        Integer expiringSoonLots;
         Integer expiringLots;
+        Integer lowStockLots;
+        Integer noMovementLots;
+        Integer slowMovementLots;
         Double qtyAtRisk;
+        Integer totalAffectedFarms;
+        Integer totalAffectedItems;
         Integer unknownExpiryLots;
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class DataQuality {
+        Integer missingExpiryDateCount;
+        Integer missingMovementHistoryCount;
+        Double coveragePercent;
     }
 
     @Getter
@@ -46,7 +65,11 @@ public class AdminInventoryHealthResponse {
         Integer farmId;
         String farmName;
         Integer expiredLots;
+        Integer expiringSoonLots;
         Integer expiringLots;
+        Integer lowStockLots;
+        Integer noMovementLots;
+        Integer slowMovementLots;
         Double qtyAtRisk;
         List<RiskLot> topRiskLots;
     }

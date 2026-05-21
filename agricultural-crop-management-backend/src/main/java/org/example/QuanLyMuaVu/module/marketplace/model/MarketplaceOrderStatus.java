@@ -1,5 +1,7 @@
 package org.example.QuanLyMuaVu.module.marketplace.model;
 
+import java.util.Locale;
+
 /**
  * Full order lifecycle for marketplace orders.
  * <p>
@@ -23,5 +25,20 @@ public enum MarketplaceOrderStatus {
     DELIVERED,
     COMPLETED,
     CANCELLED,
-    REJECTED
+    REJECTED;
+
+    /**
+     * Backward-compatible parser for status values persisted by legacy schema/data.
+     */
+    public static MarketplaceOrderStatus fromStorageValue(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String normalized = raw.trim().toUpperCase(Locale.ROOT);
+        return switch (normalized) {
+            case "PENDING" -> PENDING_PAYMENT;
+            case "DELIVERING" -> SHIPPED;
+            default -> MarketplaceOrderStatus.valueOf(normalized);
+        };
+    }
 }

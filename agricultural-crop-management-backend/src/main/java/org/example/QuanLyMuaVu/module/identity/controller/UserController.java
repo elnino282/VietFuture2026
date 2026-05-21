@@ -5,7 +5,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.example.QuanLyMuaVu.DTO.Common.ApiResponse;
-import org.example.QuanLyMuaVu.module.identity.dto.request.FarmerUpdateRequest;
+import org.example.QuanLyMuaVu.module.identity.dto.request.ChangePasswordRequest;
 import org.example.QuanLyMuaVu.module.identity.dto.request.UserProfileUpdateRequest;
 import org.example.QuanLyMuaVu.module.identity.dto.response.FarmerResponse;
 import org.example.QuanLyMuaVu.module.identity.service.UserService;
@@ -38,7 +38,7 @@ public class UserController {
 
     @PreAuthorize("hasAnyRole('ADMIN','BUYER','FARMER','EMPLOYEE')")
     @PutMapping("/change-password")
-    public ApiResponse<FarmerResponse> changePassword(@Valid @RequestBody FarmerUpdateRequest request) {
+    public ApiResponse<FarmerResponse> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         return ApiResponse.success(userService.changeMyPassword(request));
     }
 }

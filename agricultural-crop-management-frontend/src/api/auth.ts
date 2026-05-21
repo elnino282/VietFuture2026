@@ -27,6 +27,7 @@ export const validateResetToken = async (token: string): Promise<void> => {
 
 export const changePassword = async (payload: ChangePasswordPayload): Promise<void> => {
     await httpClient.put('/api/v1/user/change-password', {
-        password: payload.newPassword,
+        currentPassword: payload.currentPassword,
+        newPassword: payload.newPassword,
     });
 };

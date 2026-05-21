@@ -3,4 +3,6 @@ export type {
     ProfileResponse,
     ProfileUpdateRequest,
     ProfileChangePasswordRequest,
+    UpdateProfilePayload,
+    ChangePasswordPayload,
 } from './schemas';

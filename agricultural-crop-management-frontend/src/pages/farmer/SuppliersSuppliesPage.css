@@ -2,14 +2,14 @@
    SUPPLIERS & SUPPLIES PAGE STYLES
    ═══════════════════════════════════════════════════════════════ */
 
-.supplies-page {
+.farmer-suppliers-page .supplies-page {
     padding: 24px;
     max-width: 1400px;
     margin: 0 auto;
 }
 
 /* Header */
-.supplies-header {
+.farmer-suppliers-page .supplies-header {
     margin-bottom: 16px;
     padding: 16px 24px;
     background: var(--card);
@@ -18,7 +18,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.header-content {
+.farmer-suppliers-page .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -26,32 +26,32 @@
     gap: 16px;
 }
 
-.header-title {
+.farmer-suppliers-page .header-title {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.header-icon {
+.farmer-suppliers-page .header-icon {
     width: 32px;
     height: 32px;
     color: #2F9E44;
 }
 
-.supplies-header h1 {
+.farmer-suppliers-page .supplies-header h1 {
     margin: 0;
     font-size: var(--text-page-title);
     font-weight: var(--font-weight-bold);
     color: var(--foreground);
 }
 
-.supplies-header .subtitle {
+.farmer-suppliers-page .supplies-header .subtitle {
     margin: 4px 0 0;
     color: var(--muted-foreground);
     font-size: var(--text-body);
 }
 
-.btn-primary {
+.farmer-suppliers-page .btn-primary {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -65,25 +65,25 @@
     transition: all 0.2s ease;
 }
 
-.btn-primary:hover {
+.farmer-suppliers-page .btn-primary:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(47, 158, 68, 0.3);
 }
 
-.btn-primary svg {
+.farmer-suppliers-page .btn-primary svg {
     width: 18px;
     height: 18px;
 }
 
 /* Tabs */
-.supplies-tabs {
+.farmer-suppliers-page .supplies-tabs {
     display: flex;
     gap: 4px;
     margin-bottom: 16px;
     border-bottom: 2px solid var(--border);
 }
 
-.supplies-tabs .tab {
+.farmer-suppliers-page .supplies-tabs .tab {
     padding: 12px 24px;
     background: transparent;
     border: none;
@@ -95,15 +95,15 @@
     transition: color 0.2s ease;
 }
 
-.supplies-tabs .tab:hover {
+.farmer-suppliers-page .supplies-tabs .tab:hover {
     color: #2F9E44;
 }
 
-.supplies-tabs .tab.active {
+.farmer-suppliers-page .supplies-tabs .tab.active {
     color: #2F9E44;
 }
 
-.supplies-tabs .tab.active::after {
+.farmer-suppliers-page .supplies-tabs .tab.active::after {
     content: '';
     position: absolute;
     bottom: -2px;
@@ -114,7 +114,7 @@
 }
 
 /* Filters */
-.supplies-toolbar {
+.farmer-suppliers-page .supplies-toolbar {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -123,7 +123,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.supplies-filters {
+.farmer-suppliers-page .supplies-filters {
     display: flex;
     gap: 16px;
     align-items: center;
@@ -132,7 +132,7 @@
     justify-content: flex-start;
 }
 
-.search-input {
+.farmer-suppliers-page .search-input {
     width: 320px;
     padding: 10px 16px;
     border: 1px solid var(--border);
@@ -142,13 +142,13 @@
     color: var(--foreground);
 }
 
-.search-input:focus {
+.farmer-suppliers-page .search-input:focus {
     outline: none;
     border-color: #2F9E44;
     box-shadow: 0 0 0 3px rgba(47, 158, 68, 0.1);
 }
 
-.filter-select {
+.farmer-suppliers-page .filter-select {
     padding: 10px 16px;
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -158,7 +158,7 @@
     color: var(--foreground);
 }
 
-.filter-checkbox {
+.farmer-suppliers-page .filter-checkbox {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -167,14 +167,14 @@
     color: var(--muted-foreground);
 }
 
-.filter-checkbox input {
+.farmer-suppliers-page .filter-checkbox input {
     width: 16px;
     height: 16px;
     accent-color: #2F9E44;
 }
 
 /* Content */
-.supplies-content {
+.farmer-suppliers-page .supplies-content {
     background: var(--card);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -183,16 +183,16 @@
 }
 
 /* Tables */
-.table-container {
+.farmer-suppliers-page .table-container {
     overflow-x: auto;
 }
 
-.supplies-table {
+.farmer-suppliers-page .supplies-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.supplies-table th {
+.farmer-suppliers-page .supplies-table th {
     text-align: left;
     padding: 14px 16px;
     background: var(--muted);
@@ -202,22 +202,22 @@
     border-bottom: 1px solid var(--border);
 }
 
-.supplies-table td {
+.farmer-suppliers-page .supplies-table td {
     padding: 14px 16px;
     border-bottom: 1px solid var(--border);
     font-size: var(--text-body);
 }
 
-.supplies-table tr:hover {
+.farmer-suppliers-page .supplies-table tr:hover {
     background: var(--muted);
 }
 
-.supplies-table .name-cell {
+.farmer-suppliers-page .supplies-table .name-cell {
     font-weight: var(--font-weight-medium);
     color: var(--foreground);
 }
 
-.supplies-table .batch-cell {
+.farmer-suppliers-page .supplies-table .batch-cell {
     font-family: var(--font-family-mono);
     font-size: var(--text-body);
     color: var(--muted-foreground);
@@ -225,13 +225,13 @@
     font-feature-settings: "tnum";
 }
 
-.supplies-table .numeric-cell {
+.farmer-suppliers-page .supplies-table .numeric-cell {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
 }
 
 /* Badges */
-.badge {
+.farmer-suppliers-page .badge {
     display: inline-block;
     padding: 4px 10px;
     border-radius: 12px;
@@ -240,19 +240,19 @@
     text-transform: uppercase;
 }
 
-.badge-restricted {
+.farmer-suppliers-page .badge-restricted {
     background: #fff3e0;
     color: #e65100;
     border: 1px solid #ffe0b2;
 }
 
-.badge-normal {
+.farmer-suppliers-page .badge-normal {
     background: #e8f5e9;
     color: #2e7d32;
     border: 1px solid #c8e6c9;
 }
 
-.status-badge {
+.farmer-suppliers-page .status-badge {
     display: inline-block;
     padding: 4px 10px;
     border-radius: 12px;
@@ -260,42 +260,42 @@
     font-weight: var(--font-weight-semibold);
 }
 
-.status-badge.in_stock {
+.farmer-suppliers-page .status-badge.in_stock {
     background: #e8f5e9;
     color: #2e7d32;
 }
 
-.status-badge.pending,
-.status-badge.reserved,
-.status-badge.hold {
+.farmer-suppliers-page .status-badge.pending,
+.farmer-suppliers-page .status-badge.reserved,
+.farmer-suppliers-page .status-badge.hold {
     background: #fff3e0;
     color: #e65100;
 }
 
-.status-badge.depleted,
-.status-badge.expired,
-.status-badge.archived {
+.farmer-suppliers-page .status-badge.depleted,
+.farmer-suppliers-page .status-badge.expired,
+.farmer-suppliers-page .status-badge.archived {
     background: #ffebee;
     color: #c62828;
 }
 
-.ml-2 {
+.farmer-suppliers-page .ml-2 {
     margin-left: 8px;
 }
 
 /* Expiry Warnings */
-.expiring-soon {
+.farmer-suppliers-page .expiring-soon {
     color: #e65100;
 }
 
-.expiry-warning {
+.farmer-suppliers-page .expiry-warning {
     margin-left: 8px;
     font-size: var(--text-body-sm);
 }
 
 /* Loading & Empty States */
-.loading-state,
-.empty-state {
+.farmer-suppliers-page .loading-state,
+.farmer-suppliers-page .empty-state {
     padding: 48px;
     text-align: center;
     color: var(--muted-foreground);
@@ -303,7 +303,7 @@
 }
 
 /* Pagination */
-.pagination {
+.farmer-suppliers-page .pagination {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -312,7 +312,7 @@
     border-top: 1px solid var(--border);
 }
 
-.pagination button {
+.farmer-suppliers-page .pagination button {
     padding: 8px 16px;
     background: var(--muted);
     border: 1px solid var(--border);
@@ -323,16 +323,16 @@
     transition: all 0.2s ease;
 }
 
-.pagination button:hover:not(:disabled) {
+.farmer-suppliers-page .pagination button:hover:not(:disabled) {
     background: var(--accent);
 }
 
-.pagination button:disabled {
+.farmer-suppliers-page .pagination button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-.pagination span {
+.farmer-suppliers-page .pagination span {
     color: var(--muted-foreground);
     font-size: var(--text-body);
 }
@@ -341,7 +341,7 @@
    STOCK IN MODAL STYLES
    ═══════════════════════════════════════════════════════════════ */
 
-.modal-overlay {
+.farmer-suppliers-page .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -355,7 +355,7 @@
     padding: 20px;
 }
 
-.modal-content {
+.farmer-suppliers-page .modal-content {
     background: var(--card);
     border-radius: 16px;
     width: 100%;
@@ -365,18 +365,18 @@
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }
 
-.stock-in-modal {
+.farmer-suppliers-page .stock-in-modal {
     padding: 24px;
 }
 
-.stock-in-modal h2 {
+.farmer-suppliers-page .stock-in-modal h2 {
     margin: 0 0 24px;
     font-size: var(--text-section-title);
     color: var(--foreground);
 }
 
 /* Stepper */
-.stepper {
+.farmer-suppliers-page .stepper {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -384,14 +384,14 @@
     padding: 0 20px;
 }
 
-.step {
+.farmer-suppliers-page .step {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
 }
 
-.step-number {
+.farmer-suppliers-page .step-number {
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -405,28 +405,28 @@
     transition: all 0.3s ease;
 }
 
-.step.active .step-number {
+.farmer-suppliers-page .step.active .step-number {
     background: #2F9E44;
     color: white;
 }
 
-.step.completed .step-number {
+.farmer-suppliers-page .step.completed .step-number {
     background: #2F9E44;
     color: white;
 }
 
-.step-label {
+.farmer-suppliers-page .step-label {
     font-size: var(--text-body-xs);
     color: var(--muted-foreground);
     white-space: nowrap;
 }
 
-.step.active .step-label {
+.farmer-suppliers-page .step.active .step-label {
     color: #2F9E44;
     font-weight: var(--font-weight-medium);
 }
 
-.step-line {
+.farmer-suppliers-page .step-line {
     flex: 1;
     height: 2px;
     background: var(--border);
@@ -435,15 +435,15 @@
 }
 
 /* Step Content */
-.step-content {
+.farmer-suppliers-page .step-content {
     margin-bottom: 24px;
 }
 
-.form-group {
+.farmer-suppliers-page .form-group {
     margin-bottom: 16px;
 }
 
-.form-group label {
+.farmer-suppliers-page .form-group label {
     display: block;
     margin-bottom: 6px;
     font-weight: var(--font-weight-medium);
@@ -451,9 +451,9 @@
     color: var(--foreground);
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.farmer-suppliers-page .form-group input,
+.farmer-suppliers-page .form-group select,
+.farmer-suppliers-page .form-group textarea {
     width: 100%;
     padding: 12px 14px;
     border: 1px solid var(--border);
@@ -464,21 +464,21 @@
     color: var(--foreground);
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.farmer-suppliers-page .form-group input:focus,
+.farmer-suppliers-page .form-group select:focus,
+.farmer-suppliers-page .form-group textarea:focus {
     outline: none;
     border-color: #2F9E44;
     box-shadow: 0 0 0 3px rgba(47, 158, 68, 0.1);
 }
 
-.form-group textarea {
+.farmer-suppliers-page .form-group textarea {
     min-height: 80px;
     resize: vertical;
 }
 
 /* Warning Banner */
-.warning-banner {
+.farmer-suppliers-page .warning-banner {
     background: #fff3e0;
     border: 1px solid #ffe0b2;
     border-radius: 8px;
@@ -486,29 +486,29 @@
     margin-top: 16px;
 }
 
-.warning-banner strong {
+.farmer-suppliers-page .warning-banner strong {
     display: block;
     color: #e65100;
     margin-bottom: 6px;
 }
 
-.warning-banner p {
+.farmer-suppliers-page .warning-banner p {
     margin: 0 0 12px;
     color: #e65100;
     font-size: var(--text-body);
 }
 
-.warning-banner.small {
+.farmer-suppliers-page .warning-banner.small {
     padding: 10px;
     margin-top: 8px;
 }
 
-.warning-banner.small strong {
+.farmer-suppliers-page .warning-banner.small strong {
     margin-bottom: 4px;
     font-size: var(--text-body-sm);
 }
 
-.confirm-checkbox {
+.farmer-suppliers-page .confirm-checkbox {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -517,7 +517,7 @@
     color: #e65100;
 }
 
-.confirm-checkbox input {
+.farmer-suppliers-page .confirm-checkbox input {
     width: 16px;
     height: 16px;
     accent-color: #2F9E44;
@@ -525,7 +525,7 @@
 }
 
 /* Error Message */
-.error-message {
+.farmer-suppliers-page .error-message {
     background: #ffebee;
     color: #c62828;
     padding: 12px;
@@ -535,7 +535,7 @@
 }
 
 /* Modal Actions */
-.modal-actions {
+.farmer-suppliers-page .modal-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -544,12 +544,12 @@
     border-top: 1px solid var(--border);
 }
 
-.action-group {
+.farmer-suppliers-page .action-group {
     display: flex;
     gap: 12px;
 }
 
-.btn-cancel {
+.farmer-suppliers-page .btn-cancel {
     padding: 10px 20px;
     background: transparent;
     border: 1px solid var(--border);
@@ -559,11 +559,11 @@
     transition: all 0.2s ease;
 }
 
-.btn-cancel:hover {
+.farmer-suppliers-page .btn-cancel:hover {
     background: var(--muted);
 }
 
-.btn-secondary {
+.farmer-suppliers-page .btn-secondary {
     padding: 10px 20px;
     background: var(--muted);
     border: 1px solid var(--border);
@@ -573,11 +573,11 @@
     transition: all 0.2s ease;
 }
 
-.btn-secondary:hover {
+.farmer-suppliers-page .btn-secondary:hover {
     background: var(--accent);
 }
 
-.modal-actions .btn-primary:disabled {
+.farmer-suppliers-page .modal-actions .btn-primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;

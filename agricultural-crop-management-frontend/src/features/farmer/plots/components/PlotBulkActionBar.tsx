@@ -1,12 +1,12 @@
 import { X, Trash2, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import type { PlotStatus } from "../types";
 
 interface PlotBulkActionBarProps {
@@ -34,16 +34,16 @@ export function PlotBulkActionBar({
 
     return (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5">
-            <div className="bg-card rounded-lg shadow-lg border border-gray-200 px-4 py-3 flex items-center gap-4">
+            <div className="bg-card rounded-lg shadow-lg border border-border px-4 py-3 flex items-center gap-4">
                 {/* Selected Count */}
-                <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-md">
-                    <span className="text-sm font-medium text-blue-900">
+                <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-md">
+                    <span className="text-sm font-medium text-foreground">
                         {selectedCount} selected
                     </span>
                 </div>
 
                 {/* Divider */}
-                <div className="h-6 w-px bg-gray-300" />
+                <div className="h-6 w-px bg-border" />
 
                 {/* Change Status */}
                 <Select onValueChange={(value) => onBulkStatusChange(value as PlotStatus)}>
@@ -72,17 +72,17 @@ export function PlotBulkActionBar({
 
                 {/* Delete */}
                 <Button
-                    variant="outline"
+                    variant="destructive"
                     size="sm"
                     onClick={onBulkDelete}
-                    className="h-9 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    className="h-9"
                 >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete
                 </Button>
 
                 {/* Divider */}
-                <div className="h-6 w-px bg-gray-300" />
+                <div className="h-6 w-px bg-border" />
 
                 {/* Clear Selection */}
                 <Button

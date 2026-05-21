@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import org.example.QuanLyMuaVu.module.admin.dto.response.AdminReportProjections;
 import org.example.QuanLyMuaVu.module.season.entity.Harvest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -64,4 +65,13 @@ public interface HarvestRepository extends JpaRepository<Harvest, Integer> {
             "FROM Harvest h WHERE h.season.id IN :seasonIds GROUP BY h.season.id")
     List<AdminReportProjections.SeasonRevenueAgg> sumRevenueBySeasonIds(
             @Param("seasonIds") Set<Integer> seasonIds);
+
+    @Query("""
+            SELECT h FROM Harvest h
+            LEFT JOIN FETCH h.season s
+            LEFT JOIN FETCH s.plot p
+            WHERE s.plot.farm.user.id = :ownerId
+            ORDER BY h.createdAt DESC, h.id DESC
+            """)
+    List<Harvest> findRecentByOwnerId(@Param("ownerId") Long ownerId, Pageable pageable);
 }

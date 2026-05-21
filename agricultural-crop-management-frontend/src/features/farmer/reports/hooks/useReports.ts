@@ -6,8 +6,10 @@ import type {
   ExportFormat,
   FilterState,
   PesticideStatus,
+  PesticideRecord,
   ReportSection,
   CostOptimizationAiSuggestion,
+  TaskPerformance,
   YieldByCrop,
   YieldByPlot,
   YieldBySeason,
@@ -16,28 +18,30 @@ import type {
 import { DEFAULT_FILTERS } from "../constants";
 // eslint-disable-next-line no-restricted-imports -- keep legacy reports client until dedicated FSD entity API is introduced
 import { farmerReportsApi } from "@/services/api.farmer";
+import { useI18n } from "@/hooks/useI18n";
 import { useSeason } from "@/shared/contexts";
 import { taskApi } from "@/entities/task";
+import { fieldLogApi } from "@/entities/field-log";
 
 interface UseReportsOptions {
   seasonId?: number;
   initialSeasonValue?: string;
 }
 
-const toReadableApiError = (error: unknown, fallback: string) => {
+const toReadableApiError = (error: unknown, fallback: string, t: (key: string) => string) => {
   if (isAxiosError(error)) {
     const payload = error.response?.data as { code?: string; message?: string } | undefined;
     const status = error.response?.status;
     const code = payload?.code;
 
     if (status === 401 || code === "ERR_UNAUTHENTICATED" || code === "ERR_UNAUTHORIZED") {
-      return "Session expired. Please sign in again.";
+      return t("reports.apiErrors.sessionExpired");
     }
     if (status === 403 || code === "ERR_FORBIDDEN" || code === "NOT_OWNER") {
-      return "You do not have permission to access this season report.";
+      return t("reports.apiErrors.noPermission");
     }
     if (status === 400 || code === "ERR_KEY_INVALID") {
-      return payload?.message || "Invalid request data. Please review and try again.";
+      return payload?.message || t("reports.apiErrors.invalidRequest");
     }
     if (typeof payload?.message === "string" && payload.message.length > 0) {
       return payload.message;
@@ -50,9 +54,27 @@ const toReadableApiError = (error: unknown, fallback: string) => {
   return fallback;
 };
 
+const toMonthLabel = (dateValue?: string | null) => {
+  if (!dateValue) return "No date";
+  const normalizedDate = dateValue.includes("T") ? dateValue : `${dateValue}T00:00:00`;
+  const date = new Date(normalizedDate);
+  if (Number.isNaN(date.getTime())) return "No date";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    year: "numeric",
+  }).format(date);
+};
+
+const compareMonthLabels = (left: string, right: string) => {
+  if (left === "No date") return 1;
+  if (right === "No date") return -1;
+  return new Date(`1 ${left}`).getTime() - new Date(`1 ${right}`).getTime();
+};
+
 export function useReports(options: UseReportsOptions = {}) {
   const { seasonId: explicitSeasonId, initialSeasonValue } = options;
   const { selectedSeasonId } = useSeason();
+  const { t, locale } = useI18n();
   const resolvedSeasonId = explicitSeasonId ?? selectedSeasonId ?? null;
 
   const [activeSection, setActiveSection] = useState<ReportSection>("yield");
@@ -84,7 +106,7 @@ export function useReports(options: UseReportsOptions = {}) {
   useEffect(() => {
     setCostOptimizationAiSuggestion(null);
     setCostOptimizationAiError(null);
-  }, [resolvedSeasonId]);
+  }, [resolvedSeasonId, locale]);
 
   const {
     data: yieldReport,
@@ -148,14 +170,30 @@ export function useReports(options: UseReportsOptions = {}) {
   });
 
   const {
+    data: sprayLogPage,
+    isLoading: pesticideLoading,
+    error: pesticideError,
+  } = useQuery({
+    queryKey: ["farmerReports", "pesticide", "sprayLogs", resolvedSeasonId],
+    queryFn: () =>
+      fieldLogApi.listBySeason(resolvedSeasonId as number, {
+        type: "SPRAY",
+        page: 0,
+        size: 500,
+      }),
+    enabled: queryEnabled,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const {
     data: costOptimizationSummary,
     isLoading: costOptimizationSummaryLoading,
     error: costOptimizationSummaryError,
     refetch: refetchCostOptimizationSummary,
   } = useQuery({
-    queryKey: ["farmerReports", "costOptimization", "summary", resolvedSeasonId],
+    queryKey: ["farmerReports", "costOptimization", "summary", resolvedSeasonId, locale],
     queryFn: () =>
-      farmerReportsApi.getCostOptimizationSummary(resolvedSeasonId as number),
+      farmerReportsApi.getCostOptimizationSummary(resolvedSeasonId as number, locale),
     enabled: queryEnabled,
     staleTime: 1000 * 60 * 5,
   });
@@ -163,11 +201,12 @@ export function useReports(options: UseReportsOptions = {}) {
   const costOptimizationAiMutation = useMutation({
     mutationFn: async () => {
       if (!resolvedSeasonId) {
-        throw new Error("Season is required for AI analysis.");
+        throw new Error(t("reports.cost.seasonRequired"));
       }
       return farmerReportsApi.getCostOptimizationAiSuggestion(resolvedSeasonId, {
         includeInventory: true,
-      });
+        locale,
+      }, locale);
     },
     onSuccess: (data) => {
       setCostOptimizationAiSuggestion(data);
@@ -175,7 +214,7 @@ export function useReports(options: UseReportsOptions = {}) {
     },
     onError: (error) => {
       setCostOptimizationAiError(
-        toReadableApiError(error, "Failed to analyze costs right now.")
+        toReadableApiError(error, t("reports.apiErrors.aiAnalysisFailed"), t)
       );
     },
   });
@@ -268,31 +307,98 @@ export function useReports(options: UseReportsOptions = {}) {
     };
   }, [costReport, profitReport, revenueReport, seasonTaskPage?.items, yieldReport]);
 
-  const isLoading = yieldLoading || costLoading || revenueLoading || profitLoading || tasksLoading;
-  const hasError = Boolean(yieldError || costError || revenueError || profitError || tasksError);
+  const taskPerformance: TaskPerformance[] = useMemo(() => {
+    const tasks = seasonTaskPage?.items ?? [];
+    const monthMap = new Map<string, TaskPerformance>();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    tasks.forEach((task) => {
+      const month = toMonthLabel(task.actualEndDate ?? task.dueDate ?? task.plannedDate ?? task.createdAt);
+      const current = monthMap.get(month) ?? {
+        month,
+        onTime: 0,
+        late: 0,
+        overdue: 0,
+      };
+
+      if (task.status === "DONE") {
+        if (!task.dueDate || (task.actualEndDate && task.actualEndDate <= task.dueDate)) {
+          current.onTime += 1;
+        } else {
+          current.late += 1;
+        }
+      } else if (task.status === "OVERDUE") {
+        current.overdue += 1;
+      } else if (task.dueDate) {
+        const dueDate = new Date(`${task.dueDate}T00:00:00`);
+        if (!Number.isNaN(dueDate.getTime()) && dueDate < today) {
+          current.overdue += 1;
+        }
+      }
+
+      monthMap.set(month, current);
+    });
+
+    return Array.from(monthMap.values()).sort((left, right) =>
+      compareMonthLabels(left.month, right.month)
+    );
+  }, [seasonTaskPage?.items]);
+
+  const pesticideRecords: PesticideRecord[] = useMemo(() => {
+    const sprayLogs = sprayLogPage?.items ?? [];
+    return sprayLogs.map((log) => ({
+      id: log.id,
+      lotId: `Log #${log.id}`,
+      chemical: null,
+      quantity: null,
+      unit: null,
+      phi: null,
+      daysRemaining: null,
+      status: "review",
+      appliedAt: log.logDate,
+      notes: log.notes ?? null,
+    }));
+  }, [resolvedSeasonId, sprayLogPage?.items]);
+
+  const isLoading =
+    yieldLoading ||
+    costLoading ||
+    revenueLoading ||
+    profitLoading ||
+    tasksLoading ||
+    pesticideLoading;
+  const hasError = Boolean(
+    yieldError ||
+    costError ||
+    revenueError ||
+    profitError ||
+    tasksError ||
+    pesticideError
+  );
 
   const handleExport = () => {
     setIsExporting(true);
     setTimeout(() => {
       setIsExporting(false);
       setIsExportModalOpen(false);
-      toast.success("Report Exported Successfully", {
-        description: `Your ${exportFormat.toUpperCase()} report has been generated.`,
+      toast.success(t("reports.toast.exportSuccess"), {
+        description: t("reports.toast.exportDescription", { format: exportFormat.toUpperCase() }),
       });
     }, 2000);
   };
 
   const handleApplyFilters = () => {
     setIsFilterDrawerOpen(false);
-    toast.success("Filters Applied", {
-      description: "Report data has been updated based on your filters.",
+    toast.success(t("reports.toast.filtersApplied"), {
+      description: t("reports.toast.filtersAppliedDescription"),
     });
   };
 
   const handleClearFilters = () => {
     setFilters(DEFAULT_FILTERS);
-    toast.info("Filters Cleared", {
-      description: "All filters have been reset to default values.",
+    toast.info(t("reports.toast.filtersCleared"), {
+      description: t("reports.toast.filtersClearedDescription"),
     });
   };
 
@@ -313,15 +419,19 @@ export function useReports(options: UseReportsOptions = {}) {
     const statusConfig = {
       safe: {
         className: "bg-primary/10 text-primary border-primary/20",
-        label: "Safe",
+        label: t("reports.pesticide.statusSafe"),
       },
       approaching: {
         className: "bg-accent/10 text-accent border-accent/20",
-        label: "Approaching",
+        label: t("reports.pesticide.statusApproaching"),
       },
       violated: {
         className: "bg-destructive/10 text-destructive border-destructive/20",
-        label: "Violated",
+        label: t("reports.pesticide.statusViolated"),
+      },
+      review: {
+        className: "bg-muted text-muted-foreground border-border",
+        label: t("reports.pesticide.statusReview"),
       },
     };
 
@@ -330,7 +440,7 @@ export function useReports(options: UseReportsOptions = {}) {
 
   const handleAnalyzeCostOptimizationWithAi = () => {
     if (!resolvedSeasonId) {
-      setCostOptimizationAiError("Select a season before AI analysis.");
+      setCostOptimizationAiError(t("reports.cost.selectSeasonForAi"));
       return;
     }
     setCostOptimizationAiError(null);
@@ -352,6 +462,8 @@ export function useReports(options: UseReportsOptions = {}) {
     costReport: costReport ?? [],
     revenueReport: revenueReport ?? [],
     profitReport: profitReport ?? [],
+    taskPerformance,
+    pesticideRecords,
     kpiData,
     isLoading,
     hasError,
@@ -360,7 +472,8 @@ export function useReports(options: UseReportsOptions = {}) {
     costOptimizationSummaryError: costOptimizationSummaryError
       ? toReadableApiError(
         costOptimizationSummaryError,
-        "Failed to load cost optimization summary."
+        t("reports.apiErrors.costOptimizationFailed"),
+        t
       )
       : null,
     refetchCostOptimizationSummary,

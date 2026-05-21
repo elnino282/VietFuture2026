@@ -1,20 +1,24 @@
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
+import { Card, CardContent } from '@/shared/ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/ui/select';
 import { AlertCircle, Calendar, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { WeatherWidget } from '@/features/farmer/weather-widget';
+import { PageContainer } from '@/shared/ui';
 import { FdnAssistantPanel } from './components/FdnAssistantPanel';
 import { FdnHistoryChart } from './components/FdnHistoryChart';
 import { FdnKpiCards } from './components/FdnKpiCards';
 import { FieldSustainabilityMap } from './components/FieldSustainabilityMap';
+import { IncidentAlerts } from './components/IncidentAlerts';
+import { InventoryAlertsPanel } from './components/InventoryAlertsPanel';
 import { NitrogenInputBreakdown } from './components/NitrogenInputBreakdown';
+import { RecentActivityTimeline } from './components/RecentActivityTimeline';
 import { SeasonTaskPanels } from './components/SeasonTaskPanels';
 import { useFarmerDashboard } from './hooks/useFarmerDashboard';
 
@@ -25,18 +29,33 @@ export function FarmerDashboard() {
     setSelectedSeason,
     seasonOptions,
     overview,
-    fieldMapItems,
+    fieldMap,
+    mapLoading,
     todayTasks,
     upcomingTasks,
+    dataCompletenessWarnings,
+    incidentAlerts,
+    recentActivities,
+    inventoryAlerts,
+    inventoryAlertsSummary,
     isCriticalLoading,
     isDataLoading,
+    overviewLoading,
     hasNoSeasons,
     seasonsError,
     overviewError,
     mapError,
     todayTasksError,
     upcomingTasksError,
+    dataCompletenessWarningsError,
+    incidentAlertsError,
+    recentActivitiesError,
+    inventoryAlertsError,
   } = useFarmerDashboard();
+
+  const weatherSeasonId = selectedSeason
+    ? Number.parseInt(selectedSeason, 10)
+    : undefined;
 
   if (isCriticalLoading) {
     return (
@@ -74,26 +93,24 @@ export function FarmerDashboard() {
 
   if (hasNoSeasons) {
     return (
-      <div className="min-h-screen acm-main-content">
-        <div className="max-w-[1600px] mx-auto p-4 md:p-6">
-          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-            <Calendar className="w-20 h-20 text-primary opacity-40" />
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-semibold text-foreground">
-                {t('dashboard.empty.title', {
-                  defaultValue: 'No Seasons Available',
-                })}
-              </h2>
-              <p className="text-muted-foreground max-w-md">
-                {t('dashboard.empty.description', {
-                  defaultValue:
-                    'Start by creating a new season to track your crops.',
-                })}
-              </p>
-            </div>
+      <PageContainer variant="dashboard">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+          <Calendar className="w-20 h-20 text-primary opacity-40" />
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-semibold text-foreground">
+              {t('dashboard.empty.title', {
+                defaultValue: 'No Seasons Available',
+              })}
+            </h2>
+            <p className="text-muted-foreground max-w-md">
+              {t('dashboard.empty.description', {
+                defaultValue:
+                  'Start by creating a new season to track your crops.',
+              })}
+            </p>
           </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -102,11 +119,15 @@ export function FarmerDashboard() {
     mapError,
     todayTasksError,
     upcomingTasksError,
+    dataCompletenessWarningsError,
+    incidentAlertsError,
+    recentActivitiesError,
+    inventoryAlertsError,
   ].filter((error): error is Error => Boolean(error));
 
   return (
-    <div className="min-h-screen acm-main-content pb-10">
-      <div className="max-w-[1600px] mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
+    <PageContainer variant="dashboard" className="pb-10">
+      <div className="space-y-4 md:space-y-6">
         {partialErrors.length > 0 && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -123,7 +144,7 @@ export function FarmerDashboard() {
           </Alert>
         )}
 
-        <Card className="acm-card-elevated acm-hover-surface">
+        <Card variant="elevated">
           <CardContent className="pt-6">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-3 w-full md:w-auto">
@@ -151,30 +172,82 @@ export function FarmerDashboard() {
                     defaultValue: 'Weather summary',
                   })}
                 </span>
-                <WeatherWidget variant="compact" />
+                <WeatherWidget
+                  variant="compact"
+                  seasonId={Number.isNaN(weatherSeasonId) ? undefined : weatherSeasonId}
+                />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <FdnKpiCards overview={overview} isLoading={isDataLoading} />
+        <FdnKpiCards
+          overview={overview}
+          isLoading={overviewLoading}
+          errorMessage={overviewError?.message ?? null}
+        />
 
         <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
-          <NitrogenInputBreakdown overview={overview} isLoading={isDataLoading} />
-          <FdnAssistantPanel overview={overview} isLoading={isDataLoading} />
+          <NitrogenInputBreakdown
+            overview={overview}
+            isLoading={overviewLoading}
+            errorMessage={overviewError?.message ?? null}
+          />
+          <FdnAssistantPanel
+            overview={overview}
+            isLoading={overviewLoading}
+            errorMessage={overviewError?.message ?? null}
+          />
         </div>
 
-        <FieldSustainabilityMap items={fieldMapItems} isLoading={isDataLoading} />
+        <FieldSustainabilityMap
+          mapData={fieldMap}
+          isLoading={mapLoading}
+          apiErrorMessage={mapError?.message ?? null}
+        />
 
         <div className="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-6">
-          <FdnHistoryChart history={overview?.historicalTrend ?? []} isLoading={isDataLoading} />
+          <FdnHistoryChart
+            overview={overview}
+            isLoading={overviewLoading}
+            errorMessage={overviewError?.message ?? null}
+          />
           <SeasonTaskPanels
             todayTasks={todayTasks}
             upcomingTasks={upcomingTasks}
+            dataCompletenessWarnings={dataCompletenessWarnings}
             isLoading={isDataLoading}
+            errorMessage={
+              partialErrors.length > 0
+                ? t('dashboard.dataLoadError', {
+                  defaultValue: 'Some data failed to load',
+                })
+                : null
+            }
           />
         </div>
+
+        <IncidentAlerts
+          alerts={incidentAlerts}
+          isLoading={isDataLoading}
+          errorMessage={incidentAlertsError?.message ?? null}
+        />
+
+        <div id="recent-activity">
+          <RecentActivityTimeline
+            activities={recentActivities}
+            isLoading={isDataLoading}
+            errorMessage={recentActivitiesError?.message ?? null}
+          />
+        </div>
+
+        <InventoryAlertsPanel
+          alerts={inventoryAlerts}
+          summary={inventoryAlertsSummary}
+          isLoading={isDataLoading}
+          errorMessage={inventoryAlertsError?.message ?? null}
+        />
       </div>
-    </div>
+    </PageContainer>
   );
 }

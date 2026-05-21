@@ -1,18 +1,18 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/shared/ui/sheet";
+import { Textarea } from "@/shared/ui/textarea";
 import { usePreferences } from "@/shared/contexts";
 import { convertToDisplayCurrency, formatMoney } from "@/shared/lib";
 import { ExternalLink, FileText, Link as LinkIcon } from "lucide-react";

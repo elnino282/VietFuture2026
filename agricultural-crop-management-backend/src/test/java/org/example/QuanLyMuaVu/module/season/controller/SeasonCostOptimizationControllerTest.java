@@ -2,6 +2,7 @@ package org.example.QuanLyMuaVu.module.season.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -83,7 +84,7 @@ class SeasonCostOptimizationControllerTest {
                 .disclaimer("AI chi ho tro quyet dinh tham khao.")
                 .build();
 
-        when(seasonCostOptimizationService.getSummary(15)).thenReturn(summary);
+        when(seasonCostOptimizationService.getSummary(eq(15), isNull())).thenReturn(summary);
 
         mockMvc.perform(get("/api/v1/seasons/15/cost-optimization/summary"))
                 .andExpect(status().isOk())
@@ -109,7 +110,10 @@ class SeasonCostOptimizationControllerTest {
                 .disclaimer("AI chi ho tro quyet dinh tham khao.")
                 .build();
 
-        when(seasonCostOptimizationService.generateSuggestion(eq(15), any(SeasonCostOptimizationSuggestionRequest.class)))
+        when(seasonCostOptimizationService.generateSuggestion(
+                eq(15),
+                any(SeasonCostOptimizationSuggestionRequest.class),
+                isNull()))
                 .thenReturn(response);
 
         mockMvc.perform(post("/api/v1/seasons/15/cost-optimization/ai-suggestion")
