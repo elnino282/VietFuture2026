@@ -94,7 +94,7 @@ export function FarmerManagement() {
                         <Upload className="w-4 h-4 mr-2" />
                         Import CSV
                     </Button>
-                    <Button className="bg-[#2563EB] hover:bg-[#1E40AF]" onClick={handleCreate}>
+                    <Button onClick={handleCreate}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Farmer
                     </Button>

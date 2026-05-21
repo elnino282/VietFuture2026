@@ -1,12 +1,12 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent } from "@/shared/ui/card";
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { useI18n } from "@/hooks/useI18n";
 import { BackButton } from "@/shared/ui";
 import {
@@ -72,7 +72,7 @@ export function SeasonHeader({
 
     return (
       <div className="max-w-[1800px] mx-auto px-6 pt-6 mb-4">
-        <Card className="border border-border rounded-xl shadow-sm">
+        <Card variant="page-header">
           <CardContent className="px-6 py-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -159,7 +159,7 @@ export function SeasonHeader({
 
   return (
     <div className="max-w-[1800px] mx-auto px-6 pt-6 mb-4">
-      <Card className="border border-border rounded-xl shadow-sm">
+      <Card variant="page-header">
         <CardContent className="px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-shrink-0">

@@ -35,10 +35,10 @@ export function SellerMarketplaceTabs() {
   const { t } = useI18n();
 
   return (
-    <Card className="border border-border rounded-xl shadow-sm">
+    <Card variant="content" className="rounded-xl">
       <CardContent className="px-6 py-4">
         <div className="mb-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
             {t("marketplaceSeller.tabs.brand", "Seller")}
           </p>
           <h2 className="mt-1 text-lg font-semibold text-foreground">
@@ -62,7 +62,7 @@ export function SellerMarketplaceTabs() {
                   cn(
                     "flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors",
                     isActive
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                      ? "border-primary/20 bg-primary/10 text-primary"
                       : "border-border text-muted-foreground hover:border-border/80 hover:bg-muted hover:text-foreground",
                   )
                 }

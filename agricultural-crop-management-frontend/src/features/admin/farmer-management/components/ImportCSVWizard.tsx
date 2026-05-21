@@ -85,12 +85,12 @@ export function ImportCSVWizard({
                                 </Button>
                             </label>
                         </div>
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                             <div className="flex gap-3">
-                                <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                                <AlertCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                                 <div className="text-sm">
-                                    <p className="font-medium text-blue-900 mb-1">CSV Format Requirements:</p>
-                                    <ul className="text-blue-800 space-y-1 list-disc list-inside">
+                                    <p className="font-medium text-emerald-900 mb-1">CSV Format Requirements:</p>
+                                    <ul className="text-emerald-800 space-y-1 list-disc list-inside">
                                         <li>Columns: name, email, phone, role, status</li>
                                         <li>Role must be: farmer, manager, or owner</li>
                                         <li>Status must be: active, inactive, or locked</li>
@@ -194,7 +194,6 @@ export function ImportCSVWizard({
                     </Button>
                     {step === 2 && (
                         <Button
-                            className="bg-[#2563EB] hover:bg-[#1E40AF]"
                             onClick={onImportConfirm}
                             disabled={validEntriesCount === 0 || !canImport}
                         >

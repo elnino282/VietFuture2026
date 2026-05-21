@@ -157,7 +157,7 @@ export function FarmerFormDrawer({
                             Cancel
                         </Button>
                         <Button
-                            className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF]"
+                            className="flex-1"
                             onClick={onSave}
                         >
                             {editingFarmer ? 'Update Farmer' : 'Create Farmer'}

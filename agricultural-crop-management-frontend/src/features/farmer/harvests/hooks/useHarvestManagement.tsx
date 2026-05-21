@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Award, CheckCircle2, Clock, Package } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 import { toast } from "sonner";
 import {
   useAllFarmerHarvests,

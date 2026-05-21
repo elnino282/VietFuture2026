@@ -1,8 +1,8 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Separator } from '@/shared/ui/separator';
+import { Skeleton } from '@/shared/ui/skeleton';
 import type { DashboardFdnOverview } from '@/entities/dashboard';
 import { AlertTriangle, Bot, CheckCircle2, Leaf, ShieldAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';

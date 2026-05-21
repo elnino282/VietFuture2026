@@ -63,7 +63,7 @@ export function InventoryHealthCards() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <div className="flex items-center gap-2">
-                            <Package className="h-5 w-5 text-blue-500" />
+                            <Package className="h-5 w-5 text-primary" />
                             <CardTitle className="text-lg">Inventory Health</CardTitle>
                             {query.isFetching && (
                                 <RefreshCw className="h-4 w-4 text-muted-foreground animate-spin" />
@@ -93,7 +93,7 @@ export function InventoryHealthCards() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="text-blue-600"
+                            className="text-primary"
                             onClick={() => navigate(buildInventoryUrl())}
                         >
                             View all

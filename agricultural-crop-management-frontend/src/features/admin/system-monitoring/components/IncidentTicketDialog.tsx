@@ -151,10 +151,7 @@ export function IncidentTicketDialog({
           <Button variant="outline" onClick={() => setIncidentModalOpen(false)}>
             Cancel
           </Button>
-          <Button
-            className="bg-[#2563EB] hover:bg-[#1E40AF]"
-            onClick={handleCreateIncident}
-          >
+          <Button onClick={handleCreateIncident}>
             Create Ticket
           </Button>
         </DialogFooter>

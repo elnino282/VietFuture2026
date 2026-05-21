@@ -1,5 +1,5 @@
 import { MoreVertical, MapPin, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import { usePreferences } from '@/shared/contexts';
 import { formatWeight } from '@/shared/lib';
 import type { Season, SeasonStatus } from '../types';

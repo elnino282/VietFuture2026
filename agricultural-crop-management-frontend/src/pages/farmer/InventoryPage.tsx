@@ -32,6 +32,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  PageContainer,
   PageHeader,
 } from "@/shared/ui";
 import {
@@ -374,9 +375,9 @@ export function InventoryPage() {
 
   // ===== RENDER =====
   return (
-    <div className="min-h-screen acm-main-content pb-20">
-      <div className="inventory-page">
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+    <PageContainer variant="wide">
+      <div className="farmer-inventory-page">
+        <Card variant="page-header" className="mb-6">
           <CardContent className="px-6 py-4">
             <PageHeader
               className="mb-0"
@@ -388,7 +389,7 @@ export function InventoryPage() {
         </Card>
 
         {/* ===== CONTROLS ===== */}
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+        <Card variant="filter" className="mb-6">
           <CardContent className="px-6 py-4">
             <div className="inventory-controls flex flex-wrap items-center justify-start gap-4">
               <div className="control-group">
@@ -691,7 +692,7 @@ export function InventoryPage() {
           />
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }
 
@@ -1289,4 +1290,5 @@ function DeleteWarehouseModal({
 }
 
 export default InventoryPage;
+
 

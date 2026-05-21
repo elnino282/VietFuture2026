@@ -6,7 +6,7 @@ import {
     TrendingUp,
     TrendingDown,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { usePreferences } from "@/shared/contexts";
 import { formatWeight } from "@/shared/lib";
 

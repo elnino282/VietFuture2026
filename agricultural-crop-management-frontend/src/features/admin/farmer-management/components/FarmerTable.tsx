@@ -136,7 +136,7 @@ export function FarmerTable({
                                         <div className="flex items-center gap-3">
                                             <Avatar className="w-9 h-9">
                                                 <AvatarImage src={farmer.avatar} />
-                                                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-sm">
+                                                <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-green-600 text-white text-sm">
                                                     {farmer.name.split(' ').map(n => n[0]).join('')}
                                                 </AvatarFallback>
                                             </Avatar>

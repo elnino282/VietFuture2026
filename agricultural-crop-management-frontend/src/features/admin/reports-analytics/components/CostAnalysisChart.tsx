@@ -109,7 +109,7 @@ export const CostAnalysisChart: React.FC<CostAnalysisChartProps> = ({ data, isLo
                             yAxisId="right"
                             dataKey="costPerUnit"
                             name={`Cost/${unitLabel}`}
-                            fill="#3B82F6"
+                            fill="#3BA55D"
                             radius={[4, 4, 0, 0]}
                         />
                     </BarChart>

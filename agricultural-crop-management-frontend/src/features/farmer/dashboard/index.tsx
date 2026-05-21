@@ -1,15 +1,16 @@
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
+import { Card, CardContent } from '@/shared/ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/ui/select';
 import { AlertCircle, Calendar, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { WeatherWidget } from '@/features/farmer/weather-widget';
+import { PageContainer } from '@/shared/ui';
 import { FdnAssistantPanel } from './components/FdnAssistantPanel';
 import { FdnHistoryChart } from './components/FdnHistoryChart';
 import { FdnKpiCards } from './components/FdnKpiCards';
@@ -92,26 +93,24 @@ export function FarmerDashboard() {
 
   if (hasNoSeasons) {
     return (
-      <div className="min-h-screen acm-main-content">
-        <div className="max-w-[1600px] mx-auto p-4 md:p-6">
-          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-            <Calendar className="w-20 h-20 text-primary opacity-40" />
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-semibold text-foreground">
-                {t('dashboard.empty.title', {
-                  defaultValue: 'No Seasons Available',
-                })}
-              </h2>
-              <p className="text-muted-foreground max-w-md">
-                {t('dashboard.empty.description', {
-                  defaultValue:
-                    'Start by creating a new season to track your crops.',
-                })}
-              </p>
-            </div>
+      <PageContainer variant="dashboard">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+          <Calendar className="w-20 h-20 text-primary opacity-40" />
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-semibold text-foreground">
+              {t('dashboard.empty.title', {
+                defaultValue: 'No Seasons Available',
+              })}
+            </h2>
+            <p className="text-muted-foreground max-w-md">
+              {t('dashboard.empty.description', {
+                defaultValue:
+                  'Start by creating a new season to track your crops.',
+              })}
+            </p>
           </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -127,8 +126,8 @@ export function FarmerDashboard() {
   ].filter((error): error is Error => Boolean(error));
 
   return (
-    <div className="min-h-screen acm-main-content pb-10">
-      <div className="max-w-[1600px] mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
+    <PageContainer variant="dashboard" className="pb-10">
+      <div className="space-y-4 md:space-y-6">
         {partialErrors.length > 0 && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -145,7 +144,7 @@ export function FarmerDashboard() {
           </Alert>
         )}
 
-        <Card className="acm-card-elevated acm-hover-surface">
+        <Card variant="elevated">
           <CardContent className="pt-6">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-3 w-full md:w-auto">
@@ -249,6 +248,6 @@ export function FarmerDashboard() {
           errorMessage={inventoryAlertsError?.message ?? null}
         />
       </div>
-    </div>
+    </PageContainer>
   );
 }

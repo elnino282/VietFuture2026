@@ -67,7 +67,12 @@ export function AppShell({
         aiDrawerExternalOpen,
     });
 
-    const portalScopeClass = portalType === 'FARMER' ? 'portal-farmer' : 'portal-default';
+    const portalScopeClass =
+        portalType === 'FARMER'
+            ? 'portal-farmer'
+            : portalType === 'ADMIN'
+                ? 'portal-admin'
+                : 'portal-default';
     const [isMobile, setIsMobile] = useState(() => {
         if (typeof window === 'undefined') return false;
         return window.matchMedia('(max-width: 767px)').matches;

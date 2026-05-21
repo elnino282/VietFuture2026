@@ -40,7 +40,7 @@ export function ResetPasswordModal({
             onClick={() => onResetPassword("email")}
           >
             <div className="flex items-start gap-3">
-              <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
+              <Mail className="w-5 h-5 text-primary mt-0.5" />
               <div className="text-left">
                 <div className="font-medium text-sm">
                   Send Reset Link via Email
@@ -59,7 +59,7 @@ export function ResetPasswordModal({
             onClick={() => onResetPassword("temp")}
           >
             <div className="flex items-start gap-3">
-              <Key className="w-5 h-5 text-cyan-600 mt-0.5" />
+              <Key className="w-5 h-5 text-amber-600 mt-0.5" />
               <div className="text-left">
                 <div className="font-medium text-sm">
                   Generate Temporary Password

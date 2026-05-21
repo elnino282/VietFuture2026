@@ -47,10 +47,7 @@ export function AddRoleModal({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button
-            className="bg-[#2563EB] hover:bg-[#1E40AF]"
-            onClick={onCreateRole}
-          >
+          <Button onClick={onCreateRole}>
             Create Role
           </Button>
         </DialogFooter>

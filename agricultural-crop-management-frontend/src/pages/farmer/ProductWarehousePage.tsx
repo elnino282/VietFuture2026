@@ -30,6 +30,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  PageContainer,
   PageHeader,
 } from "@/shared/ui";
 import { Boxes, History, MapPin, PackageCheck } from "lucide-react";
@@ -385,9 +386,10 @@ export function ProductWarehousePage() {
   };
 
   return (
-    <div className="min-h-screen acm-main-content pb-20">
-      <div className="product-warehouse-page">
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+    <PageContainer variant="wide">
+      <div className="farmer-product-warehouse-page">
+        <div className="product-warehouse-page">
+        <Card variant="page-header" className="mb-6">
           <CardContent className="px-6 py-4">
             <PageHeader
               className="mb-0"
@@ -399,7 +401,7 @@ export function ProductWarehousePage() {
         </Card>
 
         <div className="product-warehouse-summary-grid">
-          <Card>
+          <Card variant="metric">
             <CardContent className="summary-card">
               <Boxes className="summary-icon" />
               <div>
@@ -410,7 +412,7 @@ export function ProductWarehousePage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card variant="metric">
             <CardContent className="summary-card">
               <PackageCheck className="summary-icon" />
               <div>
@@ -421,7 +423,7 @@ export function ProductWarehousePage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card variant="metric">
             <CardContent className="summary-card">
               <History className="summary-icon" />
               <div>
@@ -436,7 +438,7 @@ export function ProductWarehousePage() {
           </Card>
         </div>
 
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+        <Card variant="content" className="mb-6">
           <CardContent className="px-6 py-4">
             <div className="warehouse-directory-header">
               <h3>{t("productWarehouse.directory.title")}</h3>
@@ -477,7 +479,7 @@ export function ProductWarehousePage() {
           </CardContent>
         </Card>
 
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+        <Card variant="filter" className="mb-6">
           <CardContent className="px-6 py-4">
             <div className="product-warehouse-filters">
               <div className="control-group">
@@ -1037,13 +1039,14 @@ export function ProductWarehousePage() {
             </>
           )}
         </div>
+        </div>
       </div>
 
       <Dialog
         open={warehouseDialogMode !== null}
         onOpenChange={(open) => !open && closeWarehouseDialog()}
       >
-        <DialogContent className="w-[92vw] max-w-[480px]">
+        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
           <DialogHeader>
             <DialogTitle>
               {warehouseDialogMode === "create"
@@ -1116,7 +1119,7 @@ export function ProductWarehousePage() {
         open={showDeleteWarehouseDialog && !!selectedWarehouse}
         onOpenChange={(open) => !open && setShowDeleteWarehouseDialog(false)}
       >
-        <DialogContent className="w-[92vw] max-w-[480px]">
+        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
           <DialogHeader>
             <DialogTitle>{t("productWarehouse.dialog.deleteWarehouseTitle")}</DialogTitle>
           </DialogHeader>
@@ -1148,7 +1151,7 @@ export function ProductWarehousePage() {
       </Dialog>
 
       <Dialog open={!!adjustingLot} onOpenChange={(open) => !open && setAdjustingLot(null)}>
-        <DialogContent className="w-[92vw] max-w-[480px]">
+        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
           <DialogHeader>
             <DialogTitle>{t("productWarehouse.dialog.adjustTitle")}</DialogTitle>
           </DialogHeader>
@@ -1190,7 +1193,7 @@ export function ProductWarehousePage() {
       </Dialog>
 
       <Dialog open={!!stockingOutLot} onOpenChange={(open) => !open && setStockingOutLot(null)}>
-        <DialogContent className="w-[92vw] max-w-[480px]">
+        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
           <DialogHeader>
             <DialogTitle>{t("productWarehouse.dialog.stockOutTitle")}</DialogTitle>
           </DialogHeader>
@@ -1235,9 +1238,10 @@ export function ProductWarehousePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }
 
 export default ProductWarehousePage;
+
 

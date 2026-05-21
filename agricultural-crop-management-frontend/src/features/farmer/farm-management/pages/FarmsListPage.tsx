@@ -5,7 +5,7 @@
  */
 
 import type { FarmDetailResponse } from '@/entities/farm';
-import { Button } from '@/shared/ui';
+import { Button, PageContainer } from '@/shared/ui';
 import { AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useFarmManagement } from '../hooks/useFarmManagement';
@@ -63,7 +63,6 @@ export function FarmsListPage() {
         handleDeleteRequest,
         handleDeleteConfirm,
         handleDeleteCancel,
-        isDeleting,
         
         // Handlers
         handleClearFilters,
@@ -83,7 +82,7 @@ export function FarmsListPage() {
     // Error state
     if (isError) {
         return (
-            <div className="min-h-screen acm-main-content pb-20 flex items-center justify-center">
+            <PageContainer variant="wide" className="flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4 max-w-md text-center">
                     <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
                     <h2 className="text-2xl font-bold text-foreground mb-2">
@@ -96,23 +95,23 @@ export function FarmsListPage() {
                         Try Again
                     </Button>
                 </div>
-            </div>
+            </PageContainer>
         );
     }
     
     // Loading state
     if (isLoading) {
         return (
-            <div className="min-h-screen acm-main-content pb-20 flex items-center justify-center">
+            <PageContainer variant="wide" className="flex items-center justify-center">
                 <LoadingState />
-            </div>
+            </PageContainer>
         );
     }
     
     // Empty state (no farms at all)
     if (farms.length === 0 && !hasActiveFilters) {
         return (
-            <div className="min-h-screen acm-main-content pb-20">
+            <PageContainer variant="wide" className="space-y-6">
                 <FarmToolbar
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
@@ -124,9 +123,7 @@ export function FarmsListPage() {
                     selectedCount={0}
                     onClearFilters={handleClearFilters}
                 />
-                <div className="max-w-[1800px] mx-auto px-6">
-                    <EmptyState onCreateFarm={() => setShowCreateDialog(true)} />
-                </div>
+                <EmptyState onCreateFarm={() => setShowCreateDialog(true)} />
                 
                 {/* Create Dialog */}
                 <FarmFormDialog
@@ -135,7 +132,7 @@ export function FarmsListPage() {
                     mode="create"
                     onCreated={handleCreatedFarm}
                 />
-            </div>
+            </PageContainer>
         );
     }
     
@@ -145,7 +142,7 @@ export function FarmsListPage() {
         : undefined;
     
     return (
-        <div className="min-h-screen acm-main-content pb-20">
+        <PageContainer variant="wide" className="space-y-6">
             {/* Page Header with Create Button */}
             <FarmToolbar
                 searchQuery={searchQuery}
@@ -160,7 +157,7 @@ export function FarmsListPage() {
             />
             
             {/* Content */}
-            <div className="max-w-[1800px] mx-auto px-6 space-y-6">
+            <div className="space-y-6">
             {filteredFarms.length === 0 && hasActiveFilters ? (
                 <div className="bg-card rounded-xl border border-border shadow-sm p-12">
                     <div className="flex flex-col items-center text-center">
@@ -224,7 +221,7 @@ export function FarmsListPage() {
                     onDeleteSuccess={handleDeleteConfirm}
                 />
             )}
-        </div>
+        </PageContainer>
     );
 }
 

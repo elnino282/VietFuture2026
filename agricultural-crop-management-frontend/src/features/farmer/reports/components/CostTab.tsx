@@ -3,12 +3,12 @@ import {
   Tooltip as RechartsTooltip, XAxis, YAxis,
 } from "recharts";
 import { AlertCircle, AlertTriangle, Sparkles, Wallet } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Badge } from "@/shared/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+} from "@/shared/ui/table";
 import { usePreferences } from "@/shared/contexts";
 import {
   convertCostPerKg, convertToDisplayCurrency, formatMoney, getWeightUnitLabel,

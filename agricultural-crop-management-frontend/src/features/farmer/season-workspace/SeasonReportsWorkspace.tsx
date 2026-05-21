@@ -1,7 +1,7 @@
 import { AlertCircle, BarChart3, Wheat } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent } from "@/shared/ui/card";
 import { useAllFarmerHarvests } from "@/entities/harvest";
 import { useSeasonById } from "@/entities/season";
 import { Reports } from "@/features/farmer/reports";

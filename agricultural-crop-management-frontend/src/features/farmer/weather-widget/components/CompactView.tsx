@@ -1,6 +1,6 @@
 import React from "react";
 import { MapPin, Droplets, CloudRain, ExternalLink } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { useI18n } from "@/hooks/useI18n";
 import type { WeatherData, WeatherWidgetDataState } from "../types";
 

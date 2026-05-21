@@ -9,16 +9,16 @@ import { QuickActionsPanel } from "./components/QuickActionsPanel";
 import { AddBatchDialog } from "./components/AddBatchDialog";
 import { HarvestDetailsDrawer } from "./components/HarvestDetailsDrawer";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import { useMyWarehouses } from "@/entities/inventory";
 import { useSeasons } from "@/entities/season";
 import { useParams } from "react-router-dom";

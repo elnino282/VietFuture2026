@@ -12,7 +12,7 @@ import type { PortalType, PortalConfig } from '../model/types';
 export const portalConfig: Record<PortalType, PortalConfig> = {
     ADMIN: {
         name: 'Admin Portal',
-        color: '#4263EB',
+        color: '#3BA55D',
         icon: Shield,
         emoji: '🔐',
         navigation: [

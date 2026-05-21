@@ -2,15 +2,15 @@ import { Download, Filter, BarChart3 } from "lucide-react";
 import {
     Card,
     CardContent,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import { SEASON_OPTIONS } from "../constants";
 import { useI18n } from "@/hooks/useI18n";
 

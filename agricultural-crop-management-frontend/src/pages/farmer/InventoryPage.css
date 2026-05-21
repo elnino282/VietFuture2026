@@ -1,12 +1,12 @@
 /* Inventory page visual alignment with Suppliers & Supplies */
 
-.inventory-page {
+.farmer-inventory-page {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-.inventory-page .inventory-controls {
+.farmer-inventory-page .inventory-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -14,26 +14,26 @@
   gap: 16px;
 }
 
-.inventory-page .inventory-warehouse-toolbar {
+.farmer-inventory-page .inventory-warehouse-toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-.inventory-page .control-group {
+.farmer-inventory-page .control-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 220px;
 }
 
-.inventory-page .control-group--search {
+.farmer-inventory-page .control-group--search {
   min-width: 320px;
   flex: 1 1 320px;
 }
 
-.inventory-page .control-group label {
+.farmer-inventory-page .control-group label {
   font-size: 12px;
   font-weight: var(--font-weight-semibold);
   color: var(--muted-foreground);
@@ -41,11 +41,11 @@
   letter-spacing: 0.02em;
 }
 
-.inventory-page .control-group select,
-.inventory-page .control-group input[type="text"],
-.inventory-page .control-group input[type="date"],
-.inventory-page .control-group input[type="number"],
-.inventory-page .control-group textarea {
+.farmer-inventory-page .control-group select,
+.farmer-inventory-page .control-group input[type="text"],
+.farmer-inventory-page .control-group input[type="date"],
+.farmer-inventory-page .control-group input[type="number"],
+.farmer-inventory-page .control-group textarea {
   width: 100%;
   min-height: 44px;
   padding: 10px 16px;
@@ -56,32 +56,32 @@
   font-size: var(--text-body, 0.95rem);
 }
 
-.inventory-page .control-group textarea {
+.farmer-inventory-page .control-group textarea {
   min-height: 88px;
   resize: vertical;
 }
 
-.inventory-page .control-group select:focus,
-.inventory-page .control-group input:focus,
-.inventory-page .control-group textarea:focus,
-.inventory-page .action-btn:focus-visible,
-.inventory-page .pagination button:focus-visible,
-.inventory-page .tab:focus-visible,
-.inventory-page .btn-cancel:focus-visible,
-.inventory-page .btn-submit:focus-visible {
+.farmer-inventory-page .control-group select:focus,
+.farmer-inventory-page .control-group input:focus,
+.farmer-inventory-page .control-group textarea:focus,
+.farmer-inventory-page .action-btn:focus-visible,
+.farmer-inventory-page .pagination button:focus-visible,
+.farmer-inventory-page .tab:focus-visible,
+.farmer-inventory-page .btn-cancel:focus-visible,
+.farmer-inventory-page .btn-submit:focus-visible {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(59, 165, 93, 0.16);
 }
 
-.inventory-page .inventory-tabs {
+.farmer-inventory-page .inventory-tabs {
   display: flex;
   gap: 4px;
   margin-bottom: 16px;
   border-bottom: 2px solid var(--border);
 }
 
-.inventory-page .inventory-tabs .tab {
+.farmer-inventory-page .inventory-tabs .tab {
   position: relative;
   border: none;
   background: transparent;
@@ -93,12 +93,12 @@
   transition: color 0.2s ease;
 }
 
-.inventory-page .inventory-tabs .tab:hover,
-.inventory-page .inventory-tabs .tab.active {
+.farmer-inventory-page .inventory-tabs .tab:hover,
+.farmer-inventory-page .inventory-tabs .tab.active {
   color: var(--primary);
 }
 
-.inventory-page .inventory-tabs .tab.active::after {
+.farmer-inventory-page .inventory-tabs .tab.active::after {
   content: "";
   position: absolute;
   left: 0;
@@ -108,7 +108,7 @@
   background: var(--primary);
 }
 
-.inventory-page .inventory-content {
+.farmer-inventory-page .inventory-content {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -116,17 +116,17 @@
   overflow: hidden;
 }
 
-.inventory-page .table-container {
+.farmer-inventory-page .table-container {
   overflow-x: auto;
 }
 
-.inventory-page .inventory-table {
+.farmer-inventory-page .inventory-table {
   width: 100%;
   min-width: 920px;
   border-collapse: collapse;
 }
 
-.inventory-page .inventory-table th {
+.farmer-inventory-page .inventory-table th {
   text-align: left;
   padding: 14px 16px;
   background: var(--muted);
@@ -136,7 +136,7 @@
   border-bottom: 1px solid var(--border);
 }
 
-.inventory-page .inventory-table td {
+.farmer-inventory-page .inventory-table td {
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
   font-size: var(--text-body, 0.95rem);
@@ -144,29 +144,29 @@
   vertical-align: middle;
 }
 
-.inventory-page .inventory-table tr:hover {
+.farmer-inventory-page .inventory-table tr:hover {
   background: var(--muted);
 }
 
-.inventory-page .inventory-table .quantity {
+.farmer-inventory-page .inventory-table .quantity {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
   font-weight: var(--font-weight-semibold);
 }
 
-.inventory-page .inventory-table .note {
+.farmer-inventory-page .inventory-table .note {
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.inventory-page .actions-cell {
+.farmer-inventory-page .actions-cell {
   text-align: center;
   width: 92px;
 }
 
-.inventory-page .action-btn {
+.farmer-inventory-page .action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -180,13 +180,13 @@
   transition: all 0.2s ease;
 }
 
-.inventory-page .action-btn:hover {
+.farmer-inventory-page .action-btn:hover {
   background: var(--muted);
   color: var(--foreground);
 }
 
-.inventory-page .status-badge,
-.inventory-page .type-badge {
+.farmer-inventory-page .status-badge,
+.farmer-inventory-page .type-badge {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 12px;
@@ -195,36 +195,36 @@
   white-space: nowrap;
 }
 
-.inventory-page .status-in-stock {
+.farmer-inventory-page .status-in-stock {
   background: #e8f5e9;
   color: #2e7d32;
 }
 
-.inventory-page .status-low-stock,
-.inventory-page .status-hold,
-.inventory-page .movement-adjust {
+.farmer-inventory-page .status-low-stock,
+.farmer-inventory-page .status-hold,
+.farmer-inventory-page .movement-adjust {
   background: #fff3e0;
   color: #e65100;
 }
 
-.inventory-page .status-expired,
-.inventory-page .movement-out {
+.farmer-inventory-page .status-expired,
+.farmer-inventory-page .movement-out {
   background: #ffebee;
   color: #c62828;
 }
 
-.inventory-page .status-out-of-stock,
-.inventory-page .status-neutral {
+.farmer-inventory-page .status-out-of-stock,
+.farmer-inventory-page .status-neutral {
   background: #eceff1;
   color: #455a64;
 }
 
-.inventory-page .movement-in {
+.farmer-inventory-page .movement-in {
   background: #e8f5e9;
   color: #2e7d32;
 }
 
-.inventory-page .pagination {
+.farmer-inventory-page .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -233,7 +233,7 @@
   border-top: 1px solid var(--border);
 }
 
-.inventory-page .pagination button {
+.farmer-inventory-page .pagination button {
   min-height: 40px;
   padding: 8px 16px;
   border: 1px solid var(--border);
@@ -244,28 +244,28 @@
   transition: all 0.2s ease;
 }
 
-.inventory-page .pagination button:hover:not(:disabled) {
+.farmer-inventory-page .pagination button:hover:not(:disabled) {
   background: var(--muted);
 }
 
-.inventory-page .pagination button:disabled {
+.farmer-inventory-page .pagination button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.inventory-page .pagination span {
+.farmer-inventory-page .pagination span {
   color: var(--muted-foreground);
   font-size: var(--text-body, 0.95rem);
 }
 
-.inventory-page .loading-state,
-.inventory-page .empty-state {
+.farmer-inventory-page .loading-state,
+.farmer-inventory-page .empty-state {
   padding: 48px;
   text-align: center;
   color: var(--muted-foreground);
 }
 
-.inventory-page .modal-overlay {
+.farmer-inventory-page .modal-overlay {
   position: fixed;
   inset: 0;
   display: flex;
@@ -276,7 +276,7 @@
   padding: 20px;
 }
 
-.inventory-page .modal-content {
+.farmer-inventory-page .modal-content {
   width: 100%;
   max-width: 430px;
   max-height: 90vh;
@@ -287,19 +287,19 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }
 
-.inventory-page .modal-content h2 {
+.farmer-inventory-page .modal-content h2 {
   margin: 0 0 8px;
   font-size: var(--text-section-title, 1.25rem);
   color: var(--foreground);
 }
 
-.inventory-page .modal-subtitle {
+.farmer-inventory-page .modal-subtitle {
   margin: 0 0 12px;
   font-size: var(--text-body, 0.95rem);
   color: var(--muted-foreground);
 }
 
-.inventory-page .on-hand-info {
+.farmer-inventory-page .on-hand-info {
   margin: 0 0 16px;
   padding: 12px;
   border-radius: 8px;
@@ -308,11 +308,11 @@
   font-size: var(--text-body, 0.95rem);
 }
 
-.inventory-page .form-group {
+.farmer-inventory-page .form-group {
   margin-bottom: 16px;
 }
 
-.inventory-page .form-group label {
+.farmer-inventory-page .form-group label {
   display: block;
   margin-bottom: 6px;
   font-size: var(--text-body-sm, 0.875rem);
@@ -320,17 +320,17 @@
   color: var(--foreground);
 }
 
-.inventory-page .form-group .preview {
+.farmer-inventory-page .form-group .preview {
   margin-top: 8px;
   font-size: var(--text-body-sm, 0.875rem);
   color: var(--muted-foreground);
 }
 
-.inventory-page .form-group .preview .negative {
+.farmer-inventory-page .form-group .preview .negative {
   color: #c62828;
 }
 
-.inventory-page .error-message {
+.farmer-inventory-page .error-message {
   margin-bottom: 16px;
   padding: 12px;
   border-radius: 8px;
@@ -339,15 +339,15 @@
   font-size: var(--text-body-sm, 0.875rem);
 }
 
-.inventory-page .modal-actions {
+.farmer-inventory-page .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 20px;
 }
 
-.inventory-page .btn-cancel,
-.inventory-page .btn-submit {
+.farmer-inventory-page .btn-cancel,
+.farmer-inventory-page .btn-submit {
   min-height: 40px;
   padding: 8px 16px;
   border-radius: 8px;
@@ -357,79 +357,80 @@
   transition: all 0.2s ease;
 }
 
-.inventory-page .btn-cancel {
+.farmer-inventory-page .btn-cancel {
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--foreground);
 }
 
-.inventory-page .btn-cancel:hover:not(:disabled) {
+.farmer-inventory-page .btn-cancel:hover:not(:disabled) {
   background: var(--muted);
 }
 
-.inventory-page .btn-submit {
+.farmer-inventory-page .btn-submit {
   border: 1px solid transparent;
   background: var(--primary);
   color: var(--primary-foreground);
 }
 
-.inventory-page .btn-submit:hover:not(:disabled) {
+.farmer-inventory-page .btn-submit:hover:not(:disabled) {
   filter: brightness(0.94);
 }
 
-.inventory-page .btn-submit.btn-submit-danger {
+.farmer-inventory-page .btn-submit.btn-submit-danger {
   background: #e74c3c;
 }
 
-.inventory-page .btn-submit:disabled,
-.inventory-page .btn-cancel:disabled {
+.farmer-inventory-page .btn-submit:disabled,
+.farmer-inventory-page .btn-cancel:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 @media (max-width: 1024px) {
-  .inventory-page .control-group,
-  .inventory-page .control-group--search {
+  .farmer-inventory-page .control-group,
+  .farmer-inventory-page .control-group--search {
     min-width: 240px;
     flex: 1 1 240px;
   }
 }
 
 @media (max-width: 768px) {
-  .inventory-page {
+  .farmer-inventory-page {
     padding: 16px;
   }
 
-  .inventory-page .inventory-controls {
+  .farmer-inventory-page .inventory-controls {
     gap: 12px;
   }
 
-  .inventory-page .inventory-warehouse-toolbar {
+  .farmer-inventory-page .inventory-warehouse-toolbar {
     width: 100%;
     gap: 8px;
   }
 
-  .inventory-page .inventory-warehouse-toolbar [data-slot="button"] {
+  .farmer-inventory-page .inventory-warehouse-toolbar [data-slot="button"] {
     flex: 1 1 calc(33.333% - 8px);
     min-width: 140px;
   }
 
-  .inventory-page .control-group,
-  .inventory-page .control-group--search {
+  .farmer-inventory-page .control-group,
+  .farmer-inventory-page .control-group--search {
     min-width: 100%;
     flex: 1 1 100%;
   }
 
-  .inventory-page .inventory-tabs .tab {
+  .farmer-inventory-page .inventory-tabs .tab {
     padding: 10px 14px;
   }
 
-  .inventory-page .loading-state,
-  .inventory-page .empty-state {
+  .farmer-inventory-page .loading-state,
+  .farmer-inventory-page .empty-state {
     padding: 28px 16px;
   }
 
-  .inventory-page .modal-content {
+  .farmer-inventory-page .modal-content {
     padding: 18px;
   }
 }
+

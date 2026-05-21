@@ -1,7 +1,7 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/shared/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { useI18n } from "@/hooks/useI18n";
-import { PageHeader } from "@/shared/ui";
+import { PageContainer, PageHeader } from "@/shared/ui";
 import { FileText } from "lucide-react";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -79,10 +79,10 @@ export function Documents() {
   ]);
 
   return (
-    <div className="min-h-screen acm-main-content pb-20">
-      <div className="max-w-[1920px] mx-auto p-6">
+    <PageContainer variant="default">
+      <div>
         {/* Page Header */}
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+        <Card variant="page-header" className="mb-6">
           <CardContent className="px-6 py-4">
             <PageHeader
               className="mb-0"
@@ -104,7 +104,7 @@ export function Documents() {
         </div>
 
         {/* Tabs and Content */}
-        <Card className="border-border rounded-2xl shadow-sm">
+        <Card variant="content" className="rounded-2xl">
           <CardContent className="px-6 py-4">
             <Tabs
               value={filters.tab}
@@ -172,7 +172,7 @@ export function Documents() {
         getRelatedDocuments={getRelatedDocuments}
         onSelectRelated={setSelectedDoc}
       />
-    </div>
+    </PageContainer>
   );
 }
 

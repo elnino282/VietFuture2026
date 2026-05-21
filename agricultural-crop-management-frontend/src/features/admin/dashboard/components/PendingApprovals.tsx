@@ -20,7 +20,7 @@ const severityClasses: Record<string, string> = {
   CRITICAL: 'bg-red-100 text-red-700 border-red-300',
   HIGH: 'bg-orange-100 text-orange-700 border-orange-300',
   MEDIUM: 'bg-amber-100 text-amber-700 border-amber-300',
-  LOW: 'bg-blue-100 text-blue-700 border-blue-300',
+  LOW: 'bg-emerald-100 text-emerald-700 border-emerald-300',
 };
 
 function resolveSeverityTag(input?: string | null): string {

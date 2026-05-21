@@ -1,7 +1,7 @@
 import { Plus, AlertTriangle, Sprout } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { CropCard } from './CropCard';
 import type { Crop } from '../types';
 

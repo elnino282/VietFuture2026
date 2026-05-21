@@ -190,7 +190,7 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
             <Button
               size="sm"
               onClick={onApply}
-              className="h-9 px-4 rounded-[14px] bg-[#3ba55d] hover:bg-[#2e8b4a] text-white font-medium text-sm"
+              className="h-9 px-4 rounded-[14px] bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm"
             >
               Apply
             </Button>

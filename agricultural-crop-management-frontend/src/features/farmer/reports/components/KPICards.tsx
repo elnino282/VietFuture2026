@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { usePreferences } from "@/shared/contexts";
 import { convertToDisplayCurrency, formatMoney, formatWeight } from "@/shared/lib";
 import { CheckCircle2, DollarSign, TrendingDown, TrendingUp, Wheat } from "lucide-react";

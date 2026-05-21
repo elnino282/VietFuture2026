@@ -1,6 +1,6 @@
 import { useDrop } from "react-dnd";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/shared/ui/badge";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { useI18n } from "@/hooks/useI18n";
 import type { Task, TaskStatus } from "../types";
 import { TaskCard } from "./TaskCard";

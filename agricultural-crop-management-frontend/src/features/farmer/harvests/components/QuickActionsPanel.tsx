@@ -1,7 +1,7 @@
 import { QrCode, ClipboardCheck, Link as LinkIcon, Truck, Scale } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Separator } from "@/shared/ui/separator";
 import type { SummaryStats } from "../types";
 import { usePreferences } from "@/shared/contexts";
 import { formatWeight } from "@/shared/lib";

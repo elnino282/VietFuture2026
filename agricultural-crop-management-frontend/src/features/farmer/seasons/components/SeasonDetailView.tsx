@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Download, Save } from "lucide-react";
 import { toast } from "sonner";
 import type { Activity, Season, SeasonStatus } from "../types";

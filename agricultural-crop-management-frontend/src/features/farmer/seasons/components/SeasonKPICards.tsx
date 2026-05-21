@@ -1,5 +1,5 @@
 import { TrendingUp, DollarSign, CheckCircle2, MapPin } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/shared/ui/card';
 import { usePreferences } from '@/shared/contexts';
 import { formatMoney, formatWeight, convertToDisplayCurrency } from '@/shared/lib';
 import { Season } from '../types';

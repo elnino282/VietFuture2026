@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardContent,
+  PageContainer,
   Table,
   TableBody,
   TableCell,
@@ -81,15 +82,15 @@ export function SellerOrdersPage() {
   const orders = ordersQuery.data?.items ?? [];
 
   return (
-    <div className="max-w-[1800px] mx-auto px-6 pt-6 space-y-6">
+    <PageContainer variant="wide" className="space-y-6">
       <SellerMarketplaceTabs />
 
-      <Card className="border border-border rounded-xl shadow-sm">
+      <Card variant="page-header">
         <CardContent className="px-6 py-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex-shrink-0">
               <h1 className="flex items-center gap-2 text-2xl font-bold leading-tight text-foreground">
-                <ShoppingBag className="h-6 w-6 text-emerald-600" />
+                <ShoppingBag className="h-6 w-6 text-primary" />
                 {t("marketplaceSeller.orders.title", "Manage orders")}
               </h1>
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
@@ -103,7 +104,7 @@ export function SellerOrdersPage() {
         </CardContent>
       </Card>
 
-      <Card className="border border-border rounded-xl shadow-sm">
+      <Card variant="filter">
         <CardContent className="px-4 py-4 sm:px-6">
           <div className="-mx-1 overflow-x-auto pb-1">
             <div
@@ -138,7 +139,7 @@ export function SellerOrdersPage() {
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border border-border rounded-xl shadow-sm">
+      <Card variant="content" className="overflow-hidden rounded-xl">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
@@ -229,6 +230,6 @@ export function SellerOrdersPage() {
           </TableBody>
         </Table>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

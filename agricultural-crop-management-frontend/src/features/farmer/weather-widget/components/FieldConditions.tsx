@@ -1,6 +1,6 @@
 import React from "react";
 import { Sprout } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 import type { SprayConditions } from "../types";
 
 interface FieldConditionsProps {

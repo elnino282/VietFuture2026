@@ -113,7 +113,7 @@ export function SellerDashboardPage() {
     .slice(0, 5);
 
   return (
-    <PageContainer>
+    <PageContainer variant="wide">
       <div className="space-y-6">
         <SellerMarketplaceTabs />
 
@@ -124,12 +124,12 @@ export function SellerDashboardPage() {
           onRetry={() => dashboardQuery.refetch()}
           loadingText={t("marketplaceSeller.dashboard.loading", "Loading marketplace dashboard...")}
         >
-          <Card className="border border-border rounded-xl shadow-sm">
+          <Card variant="page-header">
             <CardContent className="px-6 py-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex-shrink-0">
                   <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
-                    <Store className="w-6 h-6 text-emerald-600" />
+                    <Store className="w-6 h-6 text-primary" />
                     {t("marketplaceSeller.products.title", "Manage products")}
                   </h1>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -226,19 +226,19 @@ export function SellerDashboardPage() {
               icon={ShoppingBag}
               label={t("marketplaceSeller.dashboard.metrics.pendingOrders", "Pending orders")}
               value={dashboard?.pendingOrders ?? "--"}
-              tone="bg-blue-100 text-blue-600"
+              tone="bg-secondary/15 text-secondary"
             />
             <MetricCard
               icon={Package}
               label={t("marketplaceSeller.dashboard.metrics.publishedProducts", "Published products")}
               value={dashboard?.publishedProducts ?? "--"}
-              tone="bg-purple-100 text-purple-600"
+              tone="bg-accent/20 text-accent"
             />
             <MetricCard
               icon={Store}
               label={t("marketplaceSeller.dashboard.metrics.pendingReview", "Pending review")}
               value={dashboard?.pendingReviewProducts ?? "--"}
-              tone="bg-orange-100 text-orange-600"
+              tone="bg-muted text-foreground"
             />
           </div>
 

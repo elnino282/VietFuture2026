@@ -158,7 +158,7 @@ export function BuyerTable({
                                     <TableCell>
                                         <div className="flex items-center gap-3">
                                             <Avatar className="w-9 h-9">
-                                                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-sm">
+                                                <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-green-600 text-white text-sm">
                                                     <Building2 className="w-5 h-5" />
                                                 </AvatarFallback>
                                             </Avatar>

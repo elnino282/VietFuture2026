@@ -18,6 +18,8 @@ export { Badge, badgeVariants } from "./badge";
 
 // Card
 export {
+  cardVariants,
+  type CardProps,
   Card,
   CardAction,
   CardContent,

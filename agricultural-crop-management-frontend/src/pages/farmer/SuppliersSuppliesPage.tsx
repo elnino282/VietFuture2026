@@ -3,7 +3,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 import {
   useLocations,
   useMyWarehouses,
@@ -37,6 +37,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  PageContainer,
   PageHeader,
 } from "@/shared/ui";
 import {
@@ -168,9 +169,10 @@ export function SuppliersSuppliesPage() {
 
   // ===== RENDER =====
   return (
-    <div className="min-h-screen acm-main-content pb-20">
-      <div className="supplies-page">
-        <Card className="mb-6 border border-border rounded-xl shadow-sm">
+    <PageContainer variant="wide">
+      <div className="farmer-suppliers-page">
+        <div className="supplies-page">
+        <Card variant="page-header" className="mb-6">
           <CardContent className="px-6 py-4">
             <PageHeader
               className="mb-0"
@@ -394,8 +396,10 @@ export function SuppliersSuppliesPage() {
           onConfirm={handleConfirmDeleteSupplier}
           isPending={deleteSupplierMutation.isPending}
         />
+        </div>
+
       </div>
-    </div>
+    </PageContainer>
   );
 }
 

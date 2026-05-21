@@ -1,11 +1,11 @@
 import { Download, Loader2, FileSpreadsheet, FileText, FileDown } from "lucide-react";
 import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
+} from "@/shared/ui/dialog";
+import { Button } from "@/shared/ui/button";
+import { Label } from "@/shared/ui/label";
+import { Switch } from "@/shared/ui/switch";
+import { Separator } from "@/shared/ui/separator";
 import { useI18n } from "@/hooks/useI18n";
 import type { ExportFormat } from "../types";
 

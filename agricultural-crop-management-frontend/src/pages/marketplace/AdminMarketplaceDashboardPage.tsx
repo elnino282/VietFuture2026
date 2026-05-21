@@ -129,7 +129,7 @@ export function AdminMarketplaceDashboardPage() {
           icon={Package}
           label="Total products"
           value={stats.totalProducts}
-          tone="bg-blue-100 text-blue-600"
+          tone="bg-emerald-100 text-primary"
         />
         <MetricCard
           icon={Package}

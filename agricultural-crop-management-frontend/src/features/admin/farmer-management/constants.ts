@@ -103,7 +103,7 @@ export const PLACEHOLDER_AUDIT_LOGS: AuditLog[] = [
 
 export const ROLE_BADGE_COLORS = {
     owner: 'bg-purple-100 text-purple-700 hover:bg-purple-200',
-    manager: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+    manager: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200',
     farmer: 'bg-green-100 text-green-700 hover:bg-green-200',
 } as const;
 

@@ -33,18 +33,18 @@ const transformDashboardData = (data: DashboardStats) => {
       title: 'Total Users',
       value: data.summary.totalUsers.toLocaleString(),
       icon: Users,
-      color: '#2563EB',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
+      color: '#3BA55D',
+      bgColor: 'bg-emerald-50',
+      textColor: 'text-emerald-600',
     },
     {
       key: 'totalFarms',
       title: 'Total Farms',
       value: data.summary.totalFarms.toLocaleString(),
       icon: Boxes,
-      color: '#0891B2',
-      bgColor: 'bg-cyan-50',
-      textColor: 'text-cyan-600',
+      color: '#2F8A4D',
+      bgColor: 'bg-green-50',
+      textColor: 'text-green-700',
     },
     {
       key: 'totalPlots',
@@ -71,7 +71,7 @@ const transformDashboardData = (data: DashboardStats) => {
     userRoles: data.userRoleCounts.map((r) => ({
       name: r.role || 'Unknown',
       value: r.total,
-      color: r.role === 'ADMIN' ? '#2563EB' : r.role === 'FARMER' ? '#10B981' : '#F59E0B',
+      color: r.role === 'ADMIN' ? '#4A90E2' : r.role === 'FARMER' ? '#3BA55D' : '#F4C542',
     })),
     userStatus: data.userStatusCounts.map((s) => ({
       name: s.status || 'Unknown',
@@ -83,9 +83,9 @@ const transformDashboardData = (data: DashboardStats) => {
       value: s.total,
       color:
         s.status === 'ACTIVE'
-          ? '#2563EB'
+          ? '#3BA55D'
           : s.status === 'COMPLETED'
-            ? '#10B981'
+            ? '#F4C542'
             : s.status === 'CANCELLED'
               ? '#EF4444'
               : '#64748B',

@@ -146,9 +146,9 @@ export const PLACEHOLDER_AUDIT_LOGS: AuditLog[] = [
 
 // Badge Color Configurations
 export const ROLE_BADGE_COLORS = {
-    buyer: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+    buyer: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200',
     enterprise: 'bg-purple-100 text-purple-700 hover:bg-purple-200',
-    distributor: 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200',
+    distributor: 'bg-amber-100 text-amber-700 hover:bg-amber-200',
 };
 
 export const KYC_BADGE_COLORS = {

@@ -125,10 +125,7 @@ export function BuyerFilters({
                                     <Button variant="outline" className="flex-1" onClick={clearAllFilters}>
                                         Clear All
                                     </Button>
-                                    <Button
-                                        className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF]"
-                                        onClick={() => onFilterOpenChange(false)}
-                                    >
+                                    <Button className="flex-1" onClick={() => onFilterOpenChange(false)}>
                                         Apply
                                     </Button>
                                 </div>

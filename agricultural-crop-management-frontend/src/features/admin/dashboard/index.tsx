@@ -100,7 +100,7 @@ export function AdminDashboard() {
             <RefreshCw className={cn('h-4 w-4 mr-2', isFetching && 'animate-spin')} />
             {t('common.refresh')}
           </Button>
-          <Button className="w-full sm:w-auto bg-[#2563EB] hover:bg-[#1E40AF]">
+          <Button className="w-full sm:w-auto">
             <BarChart3 className="w-4 h-4 mr-2" />
             {t('admin.dashboard.exportReport')}
           </Button>

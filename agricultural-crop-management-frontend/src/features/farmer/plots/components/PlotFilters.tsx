@@ -1,14 +1,14 @@
 import { Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Card, CardContent } from "@/shared/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 
 interface PlotFiltersProps {
   searchQuery: string;
@@ -55,11 +55,11 @@ export function PlotFilters({
     searchQuery || filterCrop !== "all" || filterStatus !== "all" || filterSoilType !== "all";
 
   return (
-    <Card className="border border-gray-200 shadow-md">
-      <CardContent className="pt-6 pb-6">
+    <Card variant="filter">
+      <CardContent className="px-6 py-4">
         <div className="flex flex-wrap items-center justify-start gap-4">
           {/* Search */}
-          <div className="relative w-[320px]">
+          <div className="relative w-full sm:w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search plots by name or ID"
@@ -71,7 +71,7 @@ export function PlotFilters({
 
           {/* Crop Filter */}
           <Select value={filterCrop} onValueChange={setFilterCrop} disabled={isLoadingFilterOptions}>
-            <SelectTrigger className="border-border focus:border-primary w-[180px]">
+            <SelectTrigger className="w-full border-border focus:border-primary sm:w-[180px]">
               <SelectValue placeholder="Crop" />
             </SelectTrigger>
             <SelectContent>
@@ -85,7 +85,7 @@ export function PlotFilters({
 
           {/* Status Filter */}
           <Select value={filterStatus} onValueChange={setFilterStatus} disabled={isLoadingFilterOptions}>
-            <SelectTrigger className="border-border focus:border-primary w-[180px]">
+            <SelectTrigger className="w-full border-border focus:border-primary sm:w-[180px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -99,7 +99,7 @@ export function PlotFilters({
 
           {/* Soil Type Filter */}
           <Select value={filterSoilType} onValueChange={setFilterSoilType} disabled={isLoadingFilterOptions}>
-            <SelectTrigger className="border-border focus:border-primary w-[180px]">
+            <SelectTrigger className="w-full border-border focus:border-primary sm:w-[180px]">
               <SelectValue placeholder="Soil Type" />
             </SelectTrigger>
             <SelectContent>

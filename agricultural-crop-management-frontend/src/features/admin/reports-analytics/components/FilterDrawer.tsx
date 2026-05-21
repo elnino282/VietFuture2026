@@ -92,10 +92,7 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
                         >
                             Clear All
                         </Button>
-                        <Button
-                            className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF]"
-                            onClick={handleFilterApply}
-                        >
+                        <Button className="flex-1" onClick={handleFilterApply}>
                             Apply Filters
                         </Button>
                     </div>

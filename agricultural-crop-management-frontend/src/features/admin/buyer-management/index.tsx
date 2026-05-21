@@ -90,7 +90,7 @@ export default function BuyerManagement() {
                         <Upload className="w-4 h-4 mr-2" />
                         Import CSV
                     </Button>
-                    <Button className="bg-[#2563EB] hover:bg-[#1E40AF]" onClick={handleAddBuyer}>
+                    <Button onClick={handleAddBuyer}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Buyer
                     </Button>

@@ -14,9 +14,9 @@ export const KPI_DATA: KPIData[] = [
         change: 12.5,
         trend: 'up',
         icon: Users,
-        color: '#2563EB',
-        bgColor: 'bg-blue-50',
-        textColor: 'text-blue-600',
+        color: '#3BA55D',
+        bgColor: 'bg-emerald-50',
+        textColor: 'text-emerald-600',
         subtitle: 'DAU/WAU',
         trendData: [65, 72, 68, 75, 82, 78, 85],
     },
@@ -201,5 +201,5 @@ export const SYSTEM_ALERTS: SystemAlert[] = [
 export const ALERT_COLORS: AlertColors = {
     high: 'bg-red-100 text-red-700',
     medium: 'bg-amber-100 text-amber-700',
-    low: 'bg-blue-100 text-blue-700',
+    low: 'bg-emerald-100 text-emerald-700',
 };

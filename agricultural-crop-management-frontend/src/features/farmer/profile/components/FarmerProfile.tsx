@@ -1,8 +1,4 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
+import { Button, Card, CardContent, Label, PageContainer, Separator, Switch } from '@/shared/ui';
 import { useFarms } from '@/entities/farm';
 import { usePlots } from '@/entities/plot';
 import { useSeasons } from '@/entities/season';
@@ -139,8 +135,7 @@ export function FarmerProfile() {
   }
 
   return (
-    <div className="min-h-screen acm-main-content pb-20 bg-gradient-to-b from-slate-50 to-white">
-      <div className="space-y-6 p-6 max-w-[1280px] mx-auto">
+    <PageContainer variant="narrow" className="space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -190,7 +185,7 @@ export function FarmerProfile() {
         />
 
         {/* Farm Overview Card */}
-        <Card className="border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.06)]">
+        <Card variant="content">
           <SectionCardHeader icon={Sprout} title={t('profile.farmOverview.title')} />
           <CardContent className="space-y-6 px-6 pb-6 sm:px-8 sm:pb-8">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -248,7 +243,7 @@ export function FarmerProfile() {
         </Card>
 
         {/* Recent Activity Card */}
-        <Card className="border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.06)]">
+        <Card variant="content">
           <SectionCardHeader icon={Clock} title={t('profile.recentActivity.title')} />
           <CardContent className="px-6 pb-6 sm:px-8 sm:pb-8">
             {recentActivities.length === 0 ? (
@@ -279,7 +274,7 @@ export function FarmerProfile() {
         </Card>
 
         {/* Notifications Card */}
-        <Card className="border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.06)]">
+        <Card variant="content">
           <SectionCardHeader icon={Bell} title={t('profile.notifications.title')} />
           <CardContent className="space-y-4 px-6 pb-6 sm:px-8 sm:pb-8">
             <div className="bg-muted border border-border rounded-2xl p-4 flex items-center justify-between">
@@ -327,7 +322,6 @@ export function FarmerProfile() {
           onOpenChange={setEditDialogOpen}
           profileData={profileData}
         />
-      </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -1,5 +1,5 @@
 import { Calendar } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/shared/ui/card';
 
 interface UnderConstructionProps {
   title: string;

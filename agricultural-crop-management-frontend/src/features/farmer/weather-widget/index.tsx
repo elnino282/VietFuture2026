@@ -1,5 +1,5 @@
-import { Card } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Card } from "@/shared/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { useWeatherWidget } from "./hooks/useWeatherWidget";
 import { CompactView } from "./components/CompactView";
 import { DetailedView } from "./components/DetailedView";

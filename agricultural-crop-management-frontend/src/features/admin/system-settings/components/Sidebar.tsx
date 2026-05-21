@@ -27,7 +27,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
                                 key={section.id}
                                 onClick={() => onSectionChange(section.id)}
                                 className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors ${isActive
-                                        ? 'bg-[#2563EB] text-white'
+                                        ? 'bg-primary text-primary-foreground'
                                         : 'hover:bg-muted text-muted-foreground hover:text-foreground'
                                     }`}
                             >

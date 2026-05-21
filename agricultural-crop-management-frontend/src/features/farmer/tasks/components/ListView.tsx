@@ -1,8 +1,8 @@
 import { Edit, Trash2, Check, MoreVertical, Paperclip } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/shared/ui/button";
+import { Badge } from "@/shared/ui/badge";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { useI18n } from "@/hooks/useI18n";
 import {
   Table,
@@ -11,14 +11,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/shared/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Card, CardContent } from "@/components/ui/card";
+} from "@/shared/ui/dropdown-menu";
+import { Card, CardContent } from "@/shared/ui/card";
 import type { Task } from "../types";
 import { TASK_TYPES, STATUS_COLORS, STATUS_LABELS } from "../constants";
 

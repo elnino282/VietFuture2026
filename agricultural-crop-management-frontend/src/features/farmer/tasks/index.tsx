@@ -12,6 +12,7 @@ import { CreateTaskDialog } from './components/CreateTaskDialog';
 import { ReassignDialog } from './components/ReassignDialog';
 import { BulkActionToolbar } from './components/BulkActionToolbar';
 import { DueDateDialog } from './components/DueDateDialog';
+import { PageContainer } from '@/shared/ui';
 
 export function TaskWorkspace() {
   const [searchParams] = useSearchParams();
@@ -67,8 +68,8 @@ export function TaskWorkspace() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen acm-main-content pb-20">
-        <div className="max-w-[1800px] mx-auto p-6 space-y-6">
+      <PageContainer variant="wide" className="pb-20">
+        <div className="space-y-6">
           <TaskHeader
             viewMode={viewMode}
             onViewModeChange={setViewMode}
@@ -155,7 +156,7 @@ export function TaskWorkspace() {
           disabled={isSeasonWriteLocked}
           disabledReason={seasonWriteLockReason}
         />
-      </div>
+      </PageContainer>
     </DndProvider>
   );
 }

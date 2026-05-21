@@ -610,7 +610,7 @@ export function SellerProductFormPage() {
                 </Select>
               </div>
 
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm">
+              <div className="rounded-xl border border-primary/20 bg-primary/10 p-4 text-sm">
                 {selectedLot ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-3">
@@ -732,7 +732,7 @@ export function SellerProductFormPage() {
               </div>
 
               {productModerationReason ? (
-                <div className="rounded-xl border border-destructive/30 bg-red-50 p-3 text-sm text-red-700">
+                <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                   {t("marketplaceSeller.productForm.adminReasonPrefix", "Admin reason")}: {productModerationReason}
                 </div>
               ) : null}

@@ -5487,6 +5487,33 @@
   --portal-status-level-high-border: var(--farmer-status-level-high-border);
 }
 
+.portal-admin {
+  --portal-content-bg: #f8faf9;
+  --portal-touch-target-min: 44px;
+
+  --portal-sidebar-bg: #fff;
+  --portal-sidebar-fg: #334155;
+  --portal-sidebar-border: #dbe7df;
+  --portal-sidebar-item-bg: transparent;
+  --portal-sidebar-item-fg: #334155;
+  --portal-sidebar-item-border: transparent;
+  --portal-sidebar-item-hover-bg: #eaf7ef;
+  --portal-sidebar-item-hover-fg: #1f2937;
+  --portal-sidebar-item-active-bg: #3ba55d;
+  --portal-sidebar-item-active-fg: #fff;
+  --portal-sidebar-item-active-indicator: #2f8a4d;
+  --portal-sidebar-item-active-ring: #ffffff30;
+  --portal-sidebar-badge-bg: #eaf7ef;
+  --portal-sidebar-badge-fg: #2f8a4d;
+  --portal-sidebar-badge-active-bg: #ffffff2e;
+  --portal-sidebar-badge-active-fg: #fff;
+
+  --portal-button-primary-bg: #3ba55d;
+  --portal-button-primary-hover-bg: #2f8a4d;
+  --portal-button-primary-active-bg: #267241;
+  --portal-button-primary-fg: #fff;
+}
+
 .numeric,
 .font-numeric,
 [data-numeric="true"] {

@@ -68,7 +68,7 @@ export function NotificationSettingsSection({
                     </Table>
                 </div>
                 <div className="flex gap-2 mt-6">
-                    <Button className="bg-[#2563EB] hover:bg-[#1E40AF]">
+                    <Button>
                         <Save className="w-4 h-4 mr-2" />
                         Save Notification Settings
                     </Button>

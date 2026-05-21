@@ -1,5 +1,5 @@
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Button } from "@/shared/ui/button";
 import { PlotStatusChip } from "./PlotStatusChip";
 import { PlotActionsMenu } from "./PlotActionsMenu";
 import type { Plot } from "../types";

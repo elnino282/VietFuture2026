@@ -38,6 +38,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  PageContainer,
 } from "@/shared/ui";
 import { useI18n } from "@/hooks/useI18n";
 import { Calendar, RefreshCw, Trash2, UserPlus } from "lucide-react";
@@ -326,7 +327,7 @@ export function LaborManagementPage() {
 
   if (!isWorkspaceScoped && isSeasonsLoading) {
     return (
-      <div className="p-6">
+      <PageContainer variant="wide">
         <Card className="rounded-2xl border border-border">
           <CardContent className="p-6 space-y-3">
             <div className="flex items-center gap-2 text-muted-foreground">
@@ -335,13 +336,13 @@ export function LaborManagementPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   if (!isWorkspaceScoped && (!mySeasons || mySeasons.length === 0)) {
     return (
-      <div className="p-6">
+      <PageContainer variant="wide">
         <Card className="rounded-2xl border border-border">
           <CardContent className="p-6 space-y-3">
             <h2 className="text-lg text-foreground">{t("laborWorkspace.emptySeasonsTitle")}</h2>
@@ -350,12 +351,12 @@ export function LaborManagementPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <PageContainer variant="wide" className="space-y-6">
       <Card className="rounded-2xl border border-border">
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -782,7 +783,7 @@ export function LaborManagementPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }
 

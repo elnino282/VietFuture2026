@@ -4,7 +4,7 @@ import {
 } from "recharts";
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+} from "@/shared/ui/table";
 import { useI18n } from "@/hooks/useI18n";
 import type { TaskPerformance } from "../types";
 

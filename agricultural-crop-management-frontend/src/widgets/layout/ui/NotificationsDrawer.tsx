@@ -26,7 +26,7 @@ export function NotificationsDrawer({
             case 'task':
                 return <CheckSquare className="w-4 h-4 text-[#F4C542]" />;
             case 'weather':
-                return <Sun className="w-4 h-4 text-[#4A90E2]" />;
+                return <Sun className="w-4 h-4 text-info" />;
             case 'inventory':
                 return <Package className="w-4 h-4 text-[#E74C3C]" />;
             case 'incident':
@@ -80,7 +80,7 @@ export function NotificationsDrawer({
                                         <div className="flex items-center justify-between mb-1">
                                             <h4 className="font-medium text-sm">{notification.title}</h4>
                                             {!notification.read && (
-                                                <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                                                <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
                                             )}
                                         </div>
                                         <p className="text-sm text-muted-foreground mb-1">

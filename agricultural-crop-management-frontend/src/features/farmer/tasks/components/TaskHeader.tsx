@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
 import { useI18n } from '@/hooks/useI18n';
 import { CalendarDays, ClipboardList, Columns3, List, Plus } from 'lucide-react';
 import type { ViewMode } from '../types';
@@ -23,7 +23,7 @@ export function TaskHeader({
   const { t } = useI18n();
   
   return (
-    <Card className="border border-border rounded-xl shadow-sm">
+    <Card variant="page-header">
       <CardContent className="px-6 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex-shrink-0">

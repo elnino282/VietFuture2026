@@ -1,5 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, PageContainer, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 import { Wheat, DollarSign, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useReports } from "./hooks/useReports";
 import { Sidebar } from "./components/Sidebar";
@@ -71,86 +70,80 @@ export function Reports({
         : t("reports.header.subtitleInterim");
 
     return (
-        <div className="min-h-screen acm-main-content pb-20">
-            <div className="max-w-[1920px] mx-auto">
-                <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-0">
-                    <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+        <PageContainer variant="default">
+            <div className="grid grid-cols-1 gap-0 lg:grid-cols-[240px_1fr]">
+                <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
 
-                    <main className="p-6">
-                        <HeaderBar
-                            selectedSeason={selectedSeason}
-                            onSeasonChange={setSelectedSeason}
-                            onFilterClick={() => setIsFilterDrawerOpen(true)}
-                            onExportClick={() => setIsExportModalOpen(true)}
-                            seasonOptions={seasonOptions}
-                            disableSeasonSelect={Boolean(workspaceSeasonId)}
-                            title={reportTitle}
-                            subtitle={reportSubtitle}
-                            progressPercent={harvestProgressPercent}
-                        />
-                        {hasError && (
-                            <Card className="mb-4 border-destructive/20 bg-destructive/5">
-                                <CardContent className="py-3 text-sm text-destructive">
-                                    {t("reports.error.loadFailed")}
-                                </CardContent>
-                            </Card>
-                        )}
-                        <KPICards
-                            totalCost={kpiData.totalCost}
-                            netProfit={kpiData.netProfit}
-                            totalYieldKg={kpiData.totalYieldKg}
-                            onTimeTasksPercent={kpiData.onTimeTasksPercent}
-                        />
-
-                        <Card className="border-border rounded-2xl shadow-sm">
-                            <CardContent className="px-6 py-4">
-                                <Tabs value={activeSection} onValueChange={(v: string) => setActiveSection(v as ReportSection)}>
-                                    <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 mb-6 bg-muted rounded-xl p-1">
-                                        {tabConfig.map(({ value, icon: Icon, label }) => (
-                                            <TabsTrigger
-                                                key={value}
-                                                value={value}
-                                                className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary"
-                                            >
-                                                <Icon className="w-4 h-4 mr-2" />
-                                                <span className="hidden sm:inline">{label}</span>
-                                            </TabsTrigger>
-                                        ))}
-                                    </TabsList>
-
-                                    <TabsContent value="yield" className="mt-0">
-                                        {isLoading ? (
-                                            <p className="text-sm text-muted-foreground py-8">{t("reports.loading")}</p>
-                                        ) : (
-                                            <YieldTab yieldViewMode={yieldViewMode} onViewModeChange={setYieldViewMode} chartData={getYieldChartData()} />
-                                        )}
-                                    </TabsContent>
-                                    <TabsContent value="cost" className="mt-0">
-                                        <CostTab
-                                            summary={costOptimizationSummary}
-                                            summaryLoading={costOptimizationSummaryLoading}
-                                            summaryError={costOptimizationSummaryError}
-                                            onRetrySummary={refetchCostOptimizationSummary}
-                                            aiSuggestion={costOptimizationAiSuggestion}
-                                            aiLoading={costOptimizationAiLoading}
-                                            aiError={costOptimizationAiError}
-                                            onAnalyzeWithAi={handleAnalyzeCostOptimizationWithAi}
-                                        />
-                                    </TabsContent>
-                                    <TabsContent value="performance" className="mt-0">
-                                        <PerformanceTab data={taskPerformance} />
-                                    </TabsContent>
-                                    <TabsContent value="pesticide" className="mt-0">
-                                        <PesticideTab
-                                            records={pesticideRecords}
-                                            getPesticideStatusBadge={getPesticideStatusBadge}
-                                        />
-                                    </TabsContent>
-                                </Tabs>
+                <main className="p-6">
+                    <HeaderBar
+                        selectedSeason={selectedSeason}
+                        onSeasonChange={setSelectedSeason}
+                        onFilterClick={() => setIsFilterDrawerOpen(true)}
+                        onExportClick={() => setIsExportModalOpen(true)}
+                        seasonOptions={seasonOptions}
+                        disableSeasonSelect={Boolean(workspaceSeasonId)}
+                        title={reportTitle}
+                        subtitle={reportSubtitle}
+                        progressPercent={harvestProgressPercent}
+                    />
+                    {hasError && (
+                        <Card className="mb-4 border-destructive/20 bg-destructive/5">
+                            <CardContent className="py-3 text-sm text-destructive">
+                                {t("reports.error.loadFailed")}
                             </CardContent>
                         </Card>
-                    </main>
-                </div>
+                    )}
+                    <KPICards
+                        totalCost={kpiData.totalCost}
+                        netProfit={kpiData.netProfit}
+                        totalYieldKg={kpiData.totalYieldKg}
+                        onTimeTasksPercent={kpiData.onTimeTasksPercent}
+                    />
+
+                    <Card variant="content" className="rounded-2xl">
+                        <CardContent className="px-6 py-4">
+                            <Tabs value={activeSection} onValueChange={(v: string) => setActiveSection(v as ReportSection)}>
+                                <TabsList className="mb-6 grid w-full grid-cols-2 p-1 md:grid-cols-4">
+                                    {tabConfig.map(({ value, icon: Icon, label }) => (
+                                        <TabsTrigger key={value} value={value} className="rounded-lg data-[state=active]:text-primary">
+                                            <Icon className="mr-2 h-4 w-4" />
+                                            <span className="hidden sm:inline">{label}</span>
+                                        </TabsTrigger>
+                                    ))}
+                                </TabsList>
+
+                                <TabsContent value="yield" className="mt-0">
+                                    {isLoading ? (
+                                        <p className="py-8 text-sm text-muted-foreground">{t("reports.loading")}</p>
+                                    ) : (
+                                        <YieldTab yieldViewMode={yieldViewMode} onViewModeChange={setYieldViewMode} chartData={getYieldChartData()} />
+                                    )}
+                                </TabsContent>
+                                <TabsContent value="cost" className="mt-0">
+                                    <CostTab
+                                        summary={costOptimizationSummary}
+                                        summaryLoading={costOptimizationSummaryLoading}
+                                        summaryError={costOptimizationSummaryError}
+                                        onRetrySummary={refetchCostOptimizationSummary}
+                                        aiSuggestion={costOptimizationAiSuggestion}
+                                        aiLoading={costOptimizationAiLoading}
+                                        aiError={costOptimizationAiError}
+                                        onAnalyzeWithAi={handleAnalyzeCostOptimizationWithAi}
+                                    />
+                                </TabsContent>
+                                <TabsContent value="performance" className="mt-0">
+                                    <PerformanceTab data={taskPerformance} />
+                                </TabsContent>
+                                <TabsContent value="pesticide" className="mt-0">
+                                    <PesticideTab
+                                        records={pesticideRecords}
+                                        getPesticideStatusBadge={getPesticideStatusBadge}
+                                    />
+                                </TabsContent>
+                            </Tabs>
+                        </CardContent>
+                    </Card>
+                </main>
             </div>
 
             <FilterDrawer
@@ -173,6 +166,6 @@ export function Reports({
                 onIncludeNotesChange={setIncludeNotes}
                 onExport={handleExport}
             />
-        </div>
+        </PageContainer>
     );
 }

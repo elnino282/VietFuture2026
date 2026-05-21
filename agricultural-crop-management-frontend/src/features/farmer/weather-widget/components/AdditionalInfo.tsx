@@ -1,6 +1,6 @@
 import React from "react";
 import { Gauge } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@/shared/ui/separator";
 import type { WeatherData } from "../types";
 
 interface AdditionalInfoProps {

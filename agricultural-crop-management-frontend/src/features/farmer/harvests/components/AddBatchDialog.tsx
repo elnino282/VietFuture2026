@@ -1,4 +1,4 @@
-﻿import { ClipboardCheck, Loader2, Plus, Save, X } from "lucide-react";
+import { ClipboardCheck, Loader2, Plus, Save, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -6,19 +6,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/shared/ui/dialog";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
+} from "@/shared/ui/select";
+import { Textarea } from "@/shared/ui/textarea";
+import { Separator } from "@/shared/ui/separator";
 import type { HarvestFormData, HarvestGrade } from "../types";
 import { GRADE_OPTIONS } from "../constants";
 import { useSeasons } from "@/entities/season";

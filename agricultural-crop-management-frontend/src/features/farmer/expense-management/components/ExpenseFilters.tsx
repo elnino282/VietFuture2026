@@ -1,12 +1,12 @@
 import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/shared/ui/input";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import { useI18n } from "@/hooks/useI18n";
 import { CATEGORY_OPTIONS, STATUS_OPTIONS } from "../constants";
 

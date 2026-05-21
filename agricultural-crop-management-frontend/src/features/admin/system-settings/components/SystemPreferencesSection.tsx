@@ -114,7 +114,7 @@ export function SystemPreferencesSection({
                 <Separator />
 
                 <div className="flex gap-2">
-                    <Button className="bg-[#2563EB] hover:bg-[#1E40AF]" onClick={onSave}>
+                    <Button onClick={onSave}>
                         <Save className="w-4 h-4 mr-2" />
                         Save
                     </Button>

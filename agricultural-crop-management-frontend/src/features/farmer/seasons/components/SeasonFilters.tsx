@@ -1,14 +1,14 @@
 import { Search, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/ui/select';
 import { FilterState } from '../types';
 
 interface SeasonFiltersProps {
@@ -29,7 +29,7 @@ export function SeasonFilters({
   uniqueYears,
 }: SeasonFiltersProps) {
   return (
-    <Card className="border border-border rounded-xl shadow-sm">
+    <Card variant="filter">
       <CardContent className="px-6 py-4">
         <div className="flex flex-wrap items-center justify-start gap-4">
           {/* Crop Filter */}

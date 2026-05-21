@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff, Pencil } from "lucide-react";
 import { useI18n } from "@/hooks/useI18n";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, PageContainer } from "@/shared/ui";
 import type { MarketplaceProductStatus } from "@/shared/api";
 import {
   useMarketplaceFarmerProductDetail,
@@ -95,20 +95,20 @@ export function SellerProductDetailPage() {
 
   if (productQuery.isLoading) {
     return (
-      <div className="max-w-[1800px] mx-auto px-6 pt-6 space-y-6">
+      <PageContainer variant="wide" className="space-y-6">
         <SellerMarketplaceTabs />
         <Card className="border-dashed">
           <CardContent className="p-8 text-sm text-muted-foreground">
             {t("marketplaceSeller.productDetail.loading", "Loading product detail...")}
           </CardContent>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   if (productQuery.isError || !product) {
     return (
-      <div className="max-w-[1800px] mx-auto px-6 pt-6 space-y-6">
+      <PageContainer variant="wide" className="space-y-6">
         <SellerMarketplaceTabs />
         <Card>
           <CardContent className="space-y-4 p-8 text-center">
@@ -128,14 +128,14 @@ export function SellerProductDetailPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   const gallery = product.imageUrls.length > 0 ? product.imageUrls : [product.imageUrl];
 
   return (
-    <div className="min-h-full space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <PageContainer variant="wide" className="space-y-6">
       <SellerMarketplaceTabs />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -272,7 +272,7 @@ export function SellerProductDetailPage() {
                 <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   {t("marketplaceSeller.productDetail.sections.traceability", "Harvest traceability")}
                 </h3>
-                <div className="mt-3 divide-y divide-emerald-100 rounded-2xl border border-emerald-100 bg-emerald-50 px-5">
+                <div className="mt-3 divide-y divide-primary/20 rounded-2xl border border-primary/20 bg-primary/10 px-5">
                   <DetailRow
                     label={t("marketplaceSeller.productDetail.fields.farm", "Farm")}
                     value={product.farmName || t("marketplaceSeller.productDetail.notLinked", "Not linked")}
@@ -310,6 +310,6 @@ export function SellerProductDetailPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

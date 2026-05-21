@@ -194,7 +194,7 @@ export function BuyerDetailDrawer({
                             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
                                 Cancel
                             </Button>
-                            <Button className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF]" onClick={onSave}>
+                            <Button className="flex-1" onClick={onSave}>
                                 {buyer ? 'Update Buyer' : 'Create Buyer'}
                             </Button>
                         </div>
@@ -316,7 +316,7 @@ export function BuyerDetailDrawer({
                                     <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
                                         Cancel
                                     </Button>
-                                    <Button className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF]" disabled>
+                                    <Button className="flex-1" disabled>
                                         Save Permissions
                                     </Button>
                                 </div>

@@ -1,8 +1,8 @@
 import { AlertTriangle, AlertCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+} from "@/shared/ui/table";
 import { useI18n } from "@/hooks/useI18n";
 import type { PesticideRecord, PesticideStatus } from "../types";
 

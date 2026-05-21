@@ -1,5 +1,5 @@
 import { Calendar, CheckCircle2, DollarSign, AlertCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card';
 import { Activity } from '../types';
 
 interface ActivityFeedProps {
