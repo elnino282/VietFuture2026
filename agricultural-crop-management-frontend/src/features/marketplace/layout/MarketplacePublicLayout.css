@@ -1,3 +1,11 @@
+html.marketplace-document-scroll,
+body.marketplace-document-scroll {
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 .marketplace-header__inner {
   display: flex;
   height: 4rem;

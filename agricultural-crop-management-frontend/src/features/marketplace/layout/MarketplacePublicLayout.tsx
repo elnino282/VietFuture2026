@@ -75,6 +75,8 @@ const PRODUCTS_NAV_ACTIVE_STYLE = {
   background: "rgba(255, 255, 255, 0.12)",
 };
 
+const MARKETPLACE_DOCUMENT_SCROLL_CLASS = "marketplace-document-scroll";
+
 function ProductsNavItem() {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<CSSProperties>();
@@ -490,6 +492,16 @@ export function MarketplacePublicLayout() {
   const { isAuthenticated, user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const showPortalAction = isAuthenticated && user?.role !== "buyer";
+
+  useEffect(() => {
+    document.documentElement.classList.add(MARKETPLACE_DOCUMENT_SCROLL_CLASS);
+    document.body.classList.add(MARKETPLACE_DOCUMENT_SCROLL_CLASS);
+
+    return () => {
+      document.documentElement.classList.remove(MARKETPLACE_DOCUMENT_SCROLL_CLASS);
+      document.body.classList.remove(MARKETPLACE_DOCUMENT_SCROLL_CLASS);
+    };
+  }, []);
 
   useMarketplaceCartMergeBridge();
   const cartCount = useMarketplaceCartCount();
