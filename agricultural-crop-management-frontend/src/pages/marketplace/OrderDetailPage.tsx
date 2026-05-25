@@ -74,14 +74,22 @@ export function OrderDetailPage() {
     paymentProofMutation.error instanceof Error ? paymentProofMutation.error.message : null;
   const reviewError = reviewMutation.error instanceof Error ? reviewMutation.error.message : null;
 
+  const paymentMethodLabel = (method: string) => {
+    return t(`marketplaceBuyer.myOrders.paymentMethod.${method}`, method);
+  };
+
+  const verificationStatusLabel = (status: string) => {
+    return t(`marketplaceBuyer.myOrders.paymentVerificationStatus.${status}`, status);
+  };
+
   const paymentStatusLabel = useMemo(() => {
     if (!order) return "";
-    return `${order.payment.method} · ${order.payment.verificationStatus}`;
-  }, [order]);
+    return `${paymentMethodLabel(order.payment.method)} · ${verificationStatusLabel(order.payment.verificationStatus)}`;
+  }, [order, t]);
 
   if (orderQuery.isLoading) {
     return (
-      <div className="max-w-[1800px] mx-auto px-6 pt-6">
+      <div className="max-w-6xl mx-auto px-6 pt-6">
         <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
           {t("marketplaceBuyer.orderDetail.loadingOrder")}
         </div>
@@ -91,7 +99,7 @@ export function OrderDetailPage() {
 
   if (orderQuery.isError || !order) {
     return (
-      <div className="max-w-[1800px] mx-auto px-6 pt-6">
+      <div className="max-w-6xl mx-auto px-6 pt-6">
         <div className="space-y-3 rounded-xl border border-dashed border-destructive/30 bg-card p-8 text-center text-sm text-destructive">
           <p>{t("marketplaceBuyer.orderDetail.errorOrder")}</p>
           <Link to="/marketplace/orders" className="text-primary hover:underline">
@@ -103,58 +111,64 @@ export function OrderDetailPage() {
   }
 
   return (
-    <div className="max-w-[1800px] mx-auto px-6 pt-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-12">
       <Link
         to="/marketplace/orders"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+        className="mb-6 inline-flex items-center gap-1 text-sm text-primary hover:underline font-medium transition-colors"
       >
         <ArrowLeft size={15} /> {t("marketplaceBuyer.orderDetail.backToOrders")}
       </Link>
 
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3 border-b border-border/40 pb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{order.orderCode}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("marketplaceBuyer.orderDetail.group")}: {order.orderGroupCode} · {formatDateTime(order.createdAt)}
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">{order.orderCode}</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {t("marketplaceBuyer.orderDetail.group")}: <span className="font-semibold text-foreground/80">{order.orderGroupCode}</span> · {formatDateTime(order.createdAt)}
           </p>
         </div>
-        <Badge variant={statusVariant(order.status)}>
-          {t(`marketplaceSeller.status.order.${order.status}`)}
+        <Badge variant={statusVariant(order.status)} className="px-3 py-1 text-xs font-semibold shadow-sm">
+          {t(`marketplaceBuyer.myOrders.status.${order.status}`)}
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("marketplaceBuyer.orderDetail.itemsTitle")}</CardTitle>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="border-border/50 shadow-sm rounded-xl overflow-hidden">
+            <CardHeader className="border-b border-border/50 pb-4">
+              <CardTitle className="text-lg font-semibold text-foreground">
+                {t("marketplaceBuyer.orderDetail.itemsTitle")}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               {order.items.map((item) => {
                 const draft = reviewDrafts[item.productId] ?? { rating: 5, comment: "" };
                 return (
-                  <div key={item.id} className="rounded-lg border border-border p-4">
+                  <div key={item.id} className="rounded-xl border border-border/60 bg-card p-4 transition-all duration-200 hover:bg-muted/10">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       <img
                         src={item.imageUrl}
                         alt={item.productName}
-                        className="h-16 w-16 rounded-md bg-muted object-cover"
+                        className="h-16 w-16 rounded-lg bg-muted border border-border/40 object-cover shadow-sm"
                         referrerPolicy="no-referrer"
                       />
-                      <div className="flex-1">
-                        <p className="font-medium text-foreground">{item.productName}</p>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground text-sm sm:text-base leading-tight truncate">{item.productName}</p>
+                        <p className="mt-1 text-xs sm:text-sm text-muted-foreground font-medium">
                           {item.quantity} x {formatVnd(item.unitPriceSnapshot)}
                         </p>
                       </div>
-                      <p className="font-semibold text-foreground">{formatVnd(item.lineTotal)}</p>
+                      <p className="font-bold text-foreground text-sm sm:text-base shrink-0">{formatVnd(item.lineTotal)}</p>
                     </div>
 
                     {item.reviewId ? (
-                      <Badge variant="success" className="mt-3">{t("marketplaceBuyer.orderDetail.reviewed")}</Badge>
+                      <Badge variant="success" className="mt-3 font-semibold shadow-xs">
+                        {t("marketplaceBuyer.orderDetail.reviewed")}
+                      </Badge>
                     ) : item.canReview ? (
-                      <div className="mt-4 rounded-lg bg-muted/50 p-4">
-                        <p className="mb-2 text-sm font-medium text-foreground">{t("marketplaceBuyer.orderDetail.rateProduct")}</p>
+                      <div className="mt-4 rounded-xl border border-border/50 bg-muted/20 p-4">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">
+                          {t("marketplaceBuyer.orderDetail.rateProduct")}
+                        </p>
                         <StarInput
                           rating={draft.rating}
                           onChange={(value) =>
@@ -174,6 +188,7 @@ export function OrderDetailPage() {
                               }))
                             }
                             placeholder={t("marketplaceBuyer.orderDetail.reviewPlaceholder")}
+                            className="bg-card text-sm border-border/80"
                           />
                           <Button
                             disabled={!draft.comment.trim() || reviewMutation.isPending}
@@ -191,6 +206,7 @@ export function OrderDetailPage() {
                                 toast.error(error instanceof Error ? error.message : 'Không thể hoàn tất thao tác.');
                               }
                             }}
+                            className="shadow-sm font-semibold"
                           >
                             {t("marketplaceBuyer.orderDetail.submitReview")}
                           </Button>
@@ -201,20 +217,20 @@ export function OrderDetailPage() {
                 );
               })}
 
-              {reviewError ? <p className="text-sm text-destructive">{reviewError}</p> : null}
+              {reviewError ? <p className="text-sm text-destructive font-medium">{reviewError}</p> : null}
 
-              <div className="space-y-2 border-t border-border pt-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("marketplaceBuyer.orderDetail.subtotal")}</span>
-                  <span>{formatVnd(order.subtotal)}</span>
+              <div className="space-y-3 border-t border-border/60 pt-4 text-sm">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{t("marketplaceBuyer.orderDetail.subtotal")}</span>
+                  <span className="font-medium text-foreground">{formatVnd(order.subtotal)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("marketplaceBuyer.orderDetail.shipping")}</span>
-                  <span>{formatVnd(order.shippingFee)}</span>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{t("marketplaceBuyer.orderDetail.shipping")}</span>
+                  <span className="font-medium text-foreground">{formatVnd(order.shippingFee)}</span>
                 </div>
-                <div className="flex justify-between border-t border-border pt-3">
-                  <span className="font-bold text-foreground">{t("marketplaceBuyer.orderDetail.total")}</span>
-                  <span className="text-xl font-bold text-primary">{formatVnd(order.totalAmount)}</span>
+                <div className="flex items-center justify-between border-t border-border/60 pt-3">
+                  <span className="font-bold text-foreground text-base">{t("marketplaceBuyer.orderDetail.total")}</span>
+                  <span className="text-2xl font-black text-primary tracking-tight">{formatVnd(order.totalAmount)}</span>
                 </div>
               </div>
             </CardContent>
@@ -222,50 +238,62 @@ export function OrderDetailPage() {
         </div>
 
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("marketplaceBuyer.orderDetail.shippingInfoTitle")}</CardTitle>
+          <Card className="border-border/50 shadow-sm rounded-xl overflow-hidden">
+            <CardHeader className="border-b border-border/50 pb-4">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                {t("marketplaceBuyer.orderDetail.shippingInfoTitle")}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-4 pt-5 text-sm">
               <div className="flex items-start gap-3">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/60" />
-                <div>
-                  <p className="font-medium text-foreground">{order.shippingRecipientName}</p>
-                  <p>{order.shippingAddressLine}</p>
+                <div className="rounded-lg bg-primary/10 p-2 shrink-0">
+                  <MapPin className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-foreground text-sm sm:text-base leading-tight">{order.shippingRecipientName}</p>
+                  <p className="mt-1 text-muted-foreground leading-relaxed">{order.shippingAddressLine}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Phone className="h-4 w-4 shrink-0 text-muted-foreground/60" />
-                <p>{order.shippingPhone}</p>
+                <div className="rounded-lg bg-primary/10 p-2 shrink-0">
+                  <Phone className="h-4 w-4 text-primary" />
+                </div>
+                <p className="font-medium text-foreground">{order.shippingPhone}</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("marketplaceBuyer.orderDetail.paymentTitle")}</CardTitle>
+          <Card className="border-border/50 shadow-sm rounded-xl overflow-hidden">
+            <CardHeader className="border-b border-border/50 pb-4">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                {t("marketplaceBuyer.orderDetail.paymentTitle")}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-sm text-muted-foreground">
+            <CardContent className="space-y-4 pt-5 text-sm">
               <div className="flex items-start gap-3">
-                <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/60" />
-                <div>
-                  <p className="font-medium text-foreground">{paymentStatusLabel}</p>
+                <div className="rounded-lg bg-primary/10 p-2 shrink-0">
+                  <CreditCard className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-foreground text-sm sm:text-base leading-tight">{paymentStatusLabel}</p>
                   {order.note ? (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {t("marketplaceBuyer.orderDetail.orderNote")}: {order.note}
+                    <p className="mt-2 rounded-lg bg-muted/40 border border-border/50 p-2 text-xs text-muted-foreground leading-normal">
+                      <span className="font-semibold text-foreground/80">{t("marketplaceBuyer.orderDetail.orderNote")}:</span> {order.note}
                     </p>
                   ) : null}
                 </div>
               </div>
 
               {order.payment.proofFileName ? (
-                <div className="rounded-lg border border-border bg-muted/50 p-3">
-                  <div className="flex items-center gap-2">
-                    <FileCheck size={16} className="text-primary" />
-                    <div>
-                      <p className="font-medium text-foreground">{order.payment.proofFileName}</p>
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-3.5 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-emerald-100 p-1.5">
+                      <FileCheck size={16} className="text-emerald-700" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-foreground text-xs sm:text-sm truncate">{order.payment.proofFileName}</p>
                       {order.payment.proofUploadedAt ? (
-                        <p className="text-xs text-muted-foreground/60">
+                        <p className="mt-0.5 text-xs text-muted-foreground/80 font-medium">
                           {t("marketplaceBuyer.orderDetail.proofUploadedAt")}: {formatDateTime(order.payment.proofUploadedAt)}
                         </p>
                       ) : null}
@@ -275,13 +303,22 @@ export function OrderDetailPage() {
               ) : null}
 
               {order.payment.method === "BANK_TRANSFER" ? (
-                <div className="space-y-3 rounded-lg border border-border p-3">
-                  <p className="text-sm font-medium text-foreground">{t("marketplaceBuyer.orderDetail.transferProofTitle")}</p>
+                <div className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4">
+                  <div className="flex items-center gap-2">
+                    <Upload size={16} className="text-primary" />
+                    <p className="text-sm font-semibold text-foreground">
+                      {t("marketplaceBuyer.orderDetail.transferProofTitle")}
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-normal">
+                    Hỗ trợ định dạng JPG, PNG, WEBP hoặc PDF tối đa 5MB.
+                  </p>
                   <Input
                     aria-label="payment proof"
                     data-testid="payment-proof-input"
                     type="file"
                     accept="image/jpeg,image/png,image/webp,application/pdf"
+                    className="cursor-pointer border-border/80 bg-card hover:border-primary/50 text-xs py-1 transition-colors"
                     onChange={(event) => {
                       const file = event.target.files?.[0] ?? null;
                       if (!file) {
@@ -311,19 +348,21 @@ export function OrderDetailPage() {
                         toast.error(error instanceof Error ? error.message : 'Không thể hoàn tất thao tác.');
                       }
                     }}
+                    className="w-full mt-2 font-semibold shadow-xs"
                   >
                     <Upload size={14} className="mr-2" />
                     {paymentProofMutation.isPending
                       ? t("marketplaceBuyer.orderDetail.uploading")
                       : t("marketplaceBuyer.orderDetail.uploadProof")}
                   </Button>
-                  {paymentError ? <p className="text-sm text-destructive">{paymentError}</p> : null}
+                  {paymentError ? <p className="text-sm text-destructive font-medium">{paymentError}</p> : null}
                 </div>
               ) : null}
 
               {order.canCancel ? (
                 <Button
                   variant="destructive"
+                  className="w-full mt-2 font-semibold shadow-sm"
                   disabled={cancelMutation.isPending}
                   onClick={async () => {
                     try {
@@ -339,7 +378,7 @@ export function OrderDetailPage() {
                     : t("marketplaceBuyer.orderDetail.cancelOrder")}
                 </Button>
               ) : null}
-              {cancelError ? <p className="text-sm text-destructive">{cancelError}</p> : null}
+              {cancelError ? <p className="text-sm text-destructive font-medium">{cancelError}</p> : null}
             </CardContent>
           </Card>
         </div>

@@ -7,8 +7,7 @@
  * Language Detection Priority:
  * 1. User preference from API/context (locale in preferences)
  * 2. localStorage value
- * 3. Browser language
- * 4. Default fallback: en-US
+ * 3. Default fallback: vi-VN
  */
 
 import i18n from 'i18next';
@@ -20,7 +19,7 @@ import { initReactI18next } from 'react-i18next';
 export const SUPPORTED_LOCALES = ['en-US', 'vi-VN'] as const;
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number];
 
-export const DEFAULT_LOCALE: SupportedLocale = 'en-US';
+export const DEFAULT_LOCALE: SupportedLocale = 'vi-VN';
 
 // Language code mapping (short code -> full locale)
 export const LANGUAGE_LOCALE_MAP: Record<string, SupportedLocale> = {
@@ -38,6 +37,8 @@ export const LANGUAGE_DISPLAY_NAMES: Record<SupportedLocale, { native: string; e
 
 // Storage key for language preference
 export const LANGUAGE_STORAGE_KEY = 'acm_language';
+export const LANGUAGE_DEFAULT_VERSION_KEY = 'acm_language_default_version';
+const LANGUAGE_DEFAULT_VERSION = 'vi-default-2026-05-22';
 
 /**
  * Get the i18next language code from a locale
@@ -81,6 +82,33 @@ export function normalizeLocale(locale: string | null | undefined): SupportedLoc
     return DEFAULT_LOCALE;
 }
 
+export function ensureDefaultLanguagePreference(
+    storage: Pick<Storage, 'getItem' | 'setItem'> | null | undefined,
+): void {
+    if (!storage) return;
+
+    if (storage.getItem(LANGUAGE_DEFAULT_VERSION_KEY) === LANGUAGE_DEFAULT_VERSION) {
+        return;
+    }
+
+    const storedLanguage = storage.getItem(LANGUAGE_STORAGE_KEY);
+    if (!storedLanguage || normalizeLocale(storedLanguage) === 'en-US') {
+        storage.setItem(LANGUAGE_STORAGE_KEY, getLanguageCode(DEFAULT_LOCALE));
+    }
+    storage.setItem(LANGUAGE_DEFAULT_VERSION_KEY, LANGUAGE_DEFAULT_VERSION);
+}
+
+function getBrowserLanguageStorage(): Storage | null {
+    if (typeof window === 'undefined') return null;
+    try {
+        return window.localStorage;
+    } catch {
+        return null;
+    }
+}
+
+ensureDefaultLanguagePreference(getBrowserLanguageStorage());
+
 // Initialize i18next
 i18n
     .use(HttpBackend)
@@ -93,12 +121,12 @@ i18n
         },
         
         // Language configuration
-        fallbackLng: 'en',
+        fallbackLng: 'vi',
         supportedLngs: ['en', 'vi'],
         
         // Detection options
         detection: {
-            order: ['localStorage', 'navigator'],
+            order: ['localStorage'],
             lookupLocalStorage: LANGUAGE_STORAGE_KEY,
             caches: ['localStorage'],
             convertDetectedLanguage: (lng) => {

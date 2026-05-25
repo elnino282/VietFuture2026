@@ -125,7 +125,7 @@ export function ChatThreadView({
     <div
       ref={scrollContainerRef}
       onScroll={handleThreadScroll}
-      className="chat-thread-scroll chat-thread-gradient h-full space-y-2 overflow-y-auto px-4 py-4"
+      className="chat-thread-scroll chat-thread-gradient h-full space-y-3 overflow-y-auto px-[14px] py-[14px]"
       data-chat-panel="thread"
       aria-live="polite"
     >

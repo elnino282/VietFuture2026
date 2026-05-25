@@ -219,128 +219,128 @@ export function ProductDetailPage() {
           </div>
         </div>
 
-      {product.traceable ? (
-        <div className="mb-6">
-          <div className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
-            <ShieldCheck className="text-primary" size={24} />
-            Thông tin truy xuất nguồn gốc
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-              <h3 className="mb-4 text-base font-bold text-primary">Thông tin Nông trại</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tên nông trại:</span>
-                  <span className="font-semibold text-foreground text-right">
-                    {traceabilityQuery.data?.farm?.name ?? product.farmName ?? product.farmerDisplayName}
-                  </span>
+        {product.traceable ? (
+          <div className="mb-6">
+            <div className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
+              <ShieldCheck className="text-primary" size={24} />
+              Thông tin truy xuất nguồn gốc
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                <h3 className="mb-4 text-base font-bold text-primary">Thông tin Nông trại</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tên nông trại:</span>
+                    <span className="font-semibold text-foreground text-right">
+                      {traceabilityQuery.data?.farm?.name ?? product.farmName ?? product.farmerDisplayName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Khu vực:</span>
+                    <span className="flex items-center gap-1 font-semibold text-foreground">
+                      <MapPin size={14} className="text-primary" />
+                      {traceabilityQuery.data?.farm?.region ?? product.region ?? "Đang cập nhật"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Địa chỉ:</span>
+                    <span className="max-w-[250px] text-right font-semibold text-foreground">
+                      {traceabilityQuery.data?.farm?.address ?? "Đang cập nhật"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Khu vực:</span>
-                  <span className="flex items-center gap-1 font-semibold text-foreground">
-                    <MapPin size={14} className="text-primary" />
-                    {traceabilityQuery.data?.farm?.region ?? product.region ?? "Đang cập nhật"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Địa chỉ:</span>
-                  <span className="max-w-[250px] text-right font-semibold text-foreground">
-                    {traceabilityQuery.data?.farm?.address ?? "Đang cập nhật"}
-                  </span>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                <h3 className="mb-4 text-base font-bold text-primary">Thông tin lô hàng</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Mã lô:</span>
+                    <span className="font-semibold text-foreground">
+                      {traceabilityQuery.data?.lot?.lotCode ?? product.traceabilityCode ?? "Đang cập nhật"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Mùa vụ:</span>
+                    <span className="font-semibold text-foreground">
+                      {traceabilityQuery.data?.season?.name ?? product.seasonName ?? "Đang cập nhật"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Ngày thu hoạch:</span>
+                    <span className="flex items-center gap-1 font-semibold text-foreground">
+                      <Calendar size={14} className="text-primary" />
+                      {traceabilityQuery.data?.lot?.harvestedAt ?? "Đang cập nhật"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
+        ) : null}
 
+        {product.description && (
+          <div className="mb-6">
             <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-              <h3 className="mb-4 text-base font-bold text-primary">Thông tin Lô hàng</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Mã lô:</span>
-                  <span className="font-semibold text-foreground">
-                    {traceabilityQuery.data?.lot?.lotCode ?? product.traceabilityCode ?? "Đang cập nhật"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Mùa vụ:</span>
-                  <span className="font-semibold text-foreground">
-                    {traceabilityQuery.data?.season?.name ?? product.seasonName ?? "Đang cập nhật"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Ngày thu hoạch:</span>
-                  <span className="flex items-center gap-1 font-semibold text-foreground">
-                    <Calendar size={14} className="text-primary" />
-                    {traceabilityQuery.data?.lot?.harvestedAt ?? "Đang cập nhật"}
-                  </span>
-                </div>
+              <h2 className="mb-4 text-lg font-bold text-foreground">Mô tả sản phẩm</h2>
+              <div className="text-sm leading-relaxed text-foreground">
+                <p>{product.description}</p>
+                <p className="mt-4 text-xs text-muted-foreground/60">Cập nhật lần cuối: {formatDateTime(product.updatedAt)}</p>
               </div>
             </div>
           </div>
-        </div>
-      ) : null}
+        )}
 
-      {product.description && (
-        <div className="mb-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-bold text-foreground">Mô tả sản phẩm</h2>
-            <div className="text-sm leading-relaxed text-foreground">
-              <p>{product.description}</p>
-              <p className="mt-4 text-xs text-muted-foreground/60">Cập nhật lần cuối: {formatDateTime(product.updatedAt)}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-base font-bold text-foreground">Thông tin bổ sung</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-border bg-muted/50 p-3">
-              <p className="text-xs text-muted-foreground mb-1">Người bán</p>
-              <p className="text-sm font-semibold text-foreground truncate">{product.farmerDisplayName}</p>
-            </div>
-            <div className="rounded-xl border border-border bg-muted/50 p-3">
-              <p className="text-xs text-muted-foreground mb-1">Tồn kho</p>
-              <p className="text-sm font-semibold text-foreground">
-                {product.availableQuantity} {product.unit}
-              </p>
-            </div>
-            {product.region && (
-              <div className="col-span-2 rounded-xl border border-border bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground mb-1">Khu vực</p>
-                <p className="text-sm font-semibold text-foreground flex items-center gap-1">
-                  <MapPin size={14} className="text-primary" /> {product.region}
+            <h2 className="mb-4 text-base font-bold text-foreground">Thông tin bổ sung</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-border bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground mb-1">Người bán</p>
+                <p className="text-sm font-semibold text-foreground truncate">{product.farmerDisplayName}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground mb-1">Tồn kho</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {product.availableQuantity} {product.unit}
                 </p>
               </div>
+              {product.region && (
+                <div className="col-span-2 rounded-xl border border-border bg-muted/50 p-3">
+                  <p className="text-xs text-muted-foreground mb-1">Khu vực</p>
+                  <p className="text-sm font-semibold text-foreground flex items-center gap-1">
+                    <MapPin size={14} className="text-primary" /> {product.region}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="mb-4 text-base font-bold text-foreground">Đánh giá gần đây</h2>
+            {reviewsQuery.isLoading ? (
+              <p className="text-sm text-muted-foreground">Đang tải đánh giá...</p>
+            ) : reviewsQuery.isError ? (
+              <p className="text-sm text-destructive">Không thể tải đánh giá.</p>
+            ) : reviewsQuery.data && reviewsQuery.data.items.length > 0 ? (
+              <div className="space-y-3">
+                {reviewsQuery.data.items.map((review) => (
+                  <div key={review.id} className="rounded-xl border border-border bg-muted/50 p-3">
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-foreground">{review.buyerDisplayName}</p>
+                      <StarRating rating={(review as { rating?: number }).rating} />
+                    </div>
+                    <p className="text-xs text-muted-foreground/60 mb-1">{formatDateTime(review.createdAt)}</p>
+                    <p className="text-sm text-muted-foreground">{review.comment}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Chưa có đánh giá nào cho sản phẩm này.</p>
             )}
           </div>
         </div>
-
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-base font-bold text-foreground">Đánh giá gần đây</h2>
-          {reviewsQuery.isLoading ? (
-            <p className="text-sm text-muted-foreground">Đang tải đánh giá...</p>
-          ) : reviewsQuery.isError ? (
-            <p className="text-sm text-destructive">Không thể tải đánh giá.</p>
-          ) : reviewsQuery.data && reviewsQuery.data.items.length > 0 ? (
-            <div className="space-y-3">
-              {reviewsQuery.data.items.map((review) => (
-                <div key={review.id} className="rounded-xl border border-border bg-muted/50 p-3">
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-foreground">{review.buyerDisplayName}</p>
-                    <StarRating rating={(review as { rating?: number }).rating} />
-                  </div>
-                  <p className="text-xs text-muted-foreground/60 mb-1">{formatDateTime(review.createdAt)}</p>
-                  <p className="text-sm text-muted-foreground">{review.comment}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">Chưa có đánh giá nào cho sản phẩm này.</p>
-          )}
-        </div>
       </div>
-    </div>
     </div>
   );
 }

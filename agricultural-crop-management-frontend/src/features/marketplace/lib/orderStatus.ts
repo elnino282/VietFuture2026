@@ -52,14 +52,11 @@ const BUYER_FALLBACK_CANCELLABLE_STATUSES = new Set<CanonicalMarketplaceOrderSta
 
 export const BUYER_ORDER_FILTER_STATUSES: CanonicalMarketplaceOrderStatus[] = [
   "PENDING_PAYMENT",
-  "PAYMENT_SUBMITTED",
-  "PAYMENT_VERIFIED",
   "CONFIRMED",
   "PREPARING",
   "SHIPPED",
   "DELIVERED",
   "COMPLETED",
-  "REJECTED",
   "CANCELLED",
 ];
 

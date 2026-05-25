@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { I18nProvider } from '@/providers/I18nProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { ErrorBoundary, Toaster } from '@/shared/ui';
@@ -7,6 +8,15 @@ import { AppRoutes } from './app/routes';
 import { AuthProvider } from './features/auth/context/AuthContext';
 import { AccountLockedModal } from './shared/components/AccountLockedModal';
 import { PreferencesProvider } from './shared/contexts';
+
+/**
+ * Lazy-loaded so the chat Firebase SDK is not bundled into the main chunk.
+ * No Suspense fallback needed — the button simply doesn't render
+ * until the chunk is ready (null is returned during loading).
+ */
+const FloatingChatButton = lazy(() =>
+  import('@/features/chat').then((m) => ({ default: m.FloatingChatButton }))
+);
 
 // Initialize i18n
 import '@/i18n';
@@ -39,6 +49,10 @@ export default function App() {
                   <AppRoutes />
                   <Toaster />
                   <AccountLockedModal />
+                  {/* Global floating chat button — shown on all authenticated pages except /chat */}
+                  <Suspense fallback={null}>
+                    <FloatingChatButton />
+                  </Suspense>
                 </BrowserRouter>
               </PreferencesProvider>
             </AuthProvider>

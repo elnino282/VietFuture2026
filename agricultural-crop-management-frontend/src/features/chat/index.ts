@@ -1,4 +1,5 @@
 export { ChatPage } from "./pages/ChatPage";
+export { FloatingChatButton } from "./components/FloatingChatButton";
 export { useChatBootstrap } from "./hooks/useChatBootstrap";
 export { useConversations } from "./hooks/useConversations";
 export { useMessages } from "./hooks/useMessages";

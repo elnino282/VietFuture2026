@@ -176,6 +176,11 @@ describe("MyOrdersPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("#ORD-1")).toBeInTheDocument();
     expect(screen.getByTestId("order-status-1")).toHaveTextContent("Pending payment");
+    expect(screen.getByText("Group: Payment").parentElement!).toHaveClass("rounded-lg");
+    expect(screen.getByText("Eligible for cancellation").parentElement!).toHaveClass("rounded-lg");
+    expect(screen.getByText("Payment: Bank transfer - Submitted").parentElement!).toHaveClass(
+      "rounded-lg",
+    );
     expect(screen.queryByText("PENDING_PAYMENT")).not.toBeInTheDocument();
   });
 
@@ -183,18 +188,18 @@ describe("MyOrdersPage", () => {
     const calls: Array<Record<string, unknown> | undefined> = [];
     mockedUseMarketplaceOrders.mockImplementation((query) => {
       calls.push(query as Record<string, unknown> | undefined);
-      return createOrdersHookResult([createOrder(2, "PAYMENT_SUBMITTED")]);
+      return createOrdersHookResult([createOrder(2, "CONFIRMED")]);
     });
     const user = userEvent.setup();
 
     renderPage();
 
     expect(calls.at(-1)).toMatchObject({ status: undefined, page: 0, size: 10 });
-    await user.click(screen.getByRole("button", { name: "Payment submitted" }));
+    await user.click(screen.getByRole("button", { name: "Confirmed" }));
 
     await waitFor(() => {
       expect(calls.at(-1)).toMatchObject({
-        status: "PAYMENT_SUBMITTED",
+        status: "CONFIRMED",
         page: 0,
         size: 10,
       });

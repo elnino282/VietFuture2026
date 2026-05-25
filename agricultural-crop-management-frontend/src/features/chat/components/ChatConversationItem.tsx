@@ -76,12 +76,20 @@ export function ChatConversationItem({
           isSelected ? "is-selected" : ""
         )}
       >
-        <ChatAvatar
-          size="md"
-          profile={profile}
-          fallbackUid={conversation.peerUid}
-          className="shrink-0"
-        />
+        <div className="relative shrink-0">
+          <ChatAvatar
+            size="md"
+            profile={profile}
+            fallbackUid={conversation.peerUid}
+          />
+          {/* Online indicator dot — Figma spec: red dot top-right of avatar */}
+          {hasUnread ? (
+            <span
+              className="chat-online-dot"
+              aria-hidden="true"
+            />
+          ) : null}
+        </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">

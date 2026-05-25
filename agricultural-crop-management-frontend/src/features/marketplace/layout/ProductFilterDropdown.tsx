@@ -94,7 +94,7 @@ export function ProductFilterDropdown({
 
   return (
     <div
-      className="marketplace-filter-panel"
+      className="marketplace-filter-panel marketplace-product-filter-panel"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
