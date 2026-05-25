@@ -10,33 +10,33 @@ import { requestFirebaseChatToken } from "../api/firebaseChatTokenApi";
 
 export type ChatBootstrapState =
   | {
-      status: "disabled";
-      user: null;
-      appUid: null;
-      role: null;
-      error: string;
-    }
+    status: "disabled";
+    user: null;
+    appUid: null;
+    role: null;
+    error: string;
+  }
   | {
-      status: "loading";
-      user: null;
-      appUid: null;
-      role: null;
-      error: null;
-    }
+    status: "loading";
+    user: null;
+    appUid: null;
+    role: null;
+    error: null;
+  }
   | {
-      status: "ready";
-      user: User;
-      appUid: string;
-      role: string;
-      error: null;
-    }
+    status: "ready";
+    user: User;
+    appUid: string;
+    role: string;
+    error: null;
+  }
   | {
-      status: "error";
-      user: null;
-      appUid: null;
-      role: null;
-      error: string;
-    };
+    status: "error";
+    user: null;
+    appUid: null;
+    role: null;
+    error: string;
+  };
 
 export function useChatBootstrap(): ChatBootstrapState {
   const { isAuthenticated, user } = useAuth();
