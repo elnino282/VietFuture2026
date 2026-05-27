@@ -1,4 +1,5 @@
 import type { ChatContactProfile } from "../model/types";
+import type { ChatWidgetTransactionStatus } from "../model/widgetTypes";
 
 /**
  * Returns the primary display name for a chat contact.
@@ -260,4 +261,36 @@ function extractUserIdLabel(uid: string | null | undefined): string | null {
   return `#${match[1]}`;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   Transaction status helpers (ChatWidget)
+   ═══════════════════════════════════════════════════════════════ */
 
+const TRANSACTION_STATUS_LABELS: Record<ChatWidgetTransactionStatus, string> = {
+  trading: "Đang giao dịch",
+  pending_confirmation: "Chờ xác nhận",
+  delivered: "Đã giao",
+  completed: "Hoàn thành",
+  cancelled: "Đã hủy",
+};
+
+/**
+ * Returns the Vietnamese display label for a transaction status enum key.
+ */
+export function getTransactionStatusLabel(status: ChatWidgetTransactionStatus): string {
+  return TRANSACTION_STATUS_LABELS[status];
+}
+
+const TRANSACTION_STATUS_CLASSES: Record<ChatWidgetTransactionStatus, string> = {
+  trading: "chat-widget-status--trading",
+  pending_confirmation: "chat-widget-status--pending",
+  delivered: "chat-widget-status--delivered",
+  completed: "chat-widget-status--completed",
+  cancelled: "chat-widget-status--cancelled",
+};
+
+/**
+ * Returns the full CSS class string for a transaction status badge.
+ */
+export function getTransactionStatusClass(status: ChatWidgetTransactionStatus): string {
+  return `chat-widget-status ${TRANSACTION_STATUS_CLASSES[status]}`;
+}

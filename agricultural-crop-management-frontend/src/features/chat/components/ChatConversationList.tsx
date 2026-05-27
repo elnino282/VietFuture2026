@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { MessageSquare, SlidersHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ChatConversation } from "../model/types";
 import { ChatContactSearch } from "./ChatContactSearch";

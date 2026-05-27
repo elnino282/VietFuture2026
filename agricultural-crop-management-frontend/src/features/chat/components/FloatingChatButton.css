@@ -12,23 +12,23 @@
    self-contained without importing a full chat stylesheet)
    ────────────────────────────────────────────────────────────── */
 .floating-chat-btn-wrapper {
-  --fcb-primary:        #3BA55D;
-  --fcb-primary-hover:  #2f8f50;
+  --fcb-primary: #3BA55D;
+  --fcb-primary-hover: #2f8f50;
   --fcb-primary-active: #257645;
-  --fcb-primary-ring:   rgba(59, 165, 93, 0.30);
-  --fcb-shadow:         rgba(25, 68, 39, 0.22);
-  --fcb-badge-bg:       #e53e3e;
-  --fcb-badge-text:     #ffffff;
-  --fcb-tooltip-bg:     #17351f;
-  --fcb-tooltip-text:   #ffffff;
-  --fcb-size:           56px;
-  --fcb-icon-size:      26px;
-  --fcb-badge-size:     20px;
+  --fcb-primary-ring: rgba(59, 165, 93, 0.30);
+  --fcb-shadow: rgba(25, 68, 39, 0.22);
+  --fcb-badge-bg: #e53e3e;
+  --fcb-badge-text: #ffffff;
+  --fcb-tooltip-bg: #17351f;
+  --fcb-tooltip-text: #ffffff;
+  --fcb-size: 56px;
+  --fcb-icon-size: 26px;
+  --fcb-badge-size: 20px;
 
   /* Positioning — fixed bottom-right, above any scroll bar */
   position: fixed;
-  bottom: 28px;
-  right: 28px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  right: max(16px, env(safe-area-inset-right));
   z-index: 9999;
 }
 
@@ -57,9 +57,9 @@
 
   color: #ffffff;
   transition:
-    transform          200ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow         200ms ease,
-    background         160ms ease;
+    transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 200ms ease,
+    background 160ms ease;
 
   /* Prevent text selection on rapid click */
   user-select: none;
@@ -76,6 +76,7 @@
     opacity: 0;
     transform: translateY(20px) scale(0.8);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -113,7 +114,7 @@
    Icon
    ────────────────────────────────────────────────────────────── */
 .floating-chat-btn__icon {
-  width:  var(--fcb-icon-size);
+  width: var(--fcb-icon-size);
   height: var(--fcb-icon-size);
   flex-shrink: 0;
   /* subtle drop-shadow on the icon itself */
@@ -130,21 +131,22 @@
    ────────────────────────────────────────────────────────────── */
 .floating-chat-btn__badge {
   position: absolute;
-  top:   -4px;
+  top: -4px;
   right: -4px;
 
   min-width: var(--fcb-badge-size);
-  height:    var(--fcb-badge-size);
+  height: var(--fcb-badge-size);
   padding: 0 5px;
   border-radius: 999px;
   border: 2px solid #ffffff;
 
   background: var(--fcb-badge-bg);
-  color:      var(--fcb-badge-text);
+  color: var(--fcb-badge-text);
 
-  font-size:   10px;
+  font-size: 10px;
   font-weight: 700;
-  line-height: calc(var(--fcb-badge-size) - 4px); /* subtract border */
+  line-height: calc(var(--fcb-badge-size) - 4px);
+  /* subtract border */
   text-align: center;
   white-space: nowrap;
 
@@ -153,8 +155,15 @@
 }
 
 @keyframes fcb-badge-pop {
-  from { transform: scale(0.4); opacity: 0; }
-  to   { transform: scale(1);   opacity: 1; }
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────
@@ -179,7 +188,7 @@
 
   opacity: 0;
   transition:
-    opacity   160ms ease,
+    opacity 160ms ease,
     transform 160ms ease;
 }
 
@@ -204,6 +213,7 @@
    Reduced motion
    ────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+
   .floating-chat-btn-wrapper,
   .floating-chat-btn,
   .floating-chat-btn__badge,
@@ -219,9 +229,9 @@
    ────────────────────────────────────────────────────────────── */
 @media (max-width: 639px) {
   .floating-chat-btn-wrapper {
-    bottom: 16px;
-    right:  16px;
-    --fcb-size:      48px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    right: max(16px, env(safe-area-inset-right));
+    --fcb-size: 48px;
     --fcb-icon-size: 22px;
   }
 }
