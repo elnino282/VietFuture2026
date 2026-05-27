@@ -208,7 +208,8 @@ describe("Floating chat widget", () => {
     );
 
     await user.click(await screen.findByRole("button", { name: /open conversation with Nong trai An Phu/i }));
-    expect(await screen.findByText("Don hang #FT12345")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /more options/i })).toBeInTheDocument();
+    expect(screen.getByText("Don hang #FT12345 da san sang.")).toBeInTheDocument();
 
     const input = screen.getByRole("textbox", { name: /message input/i });
     await user.type(input, "  Giao giup minh sau 15h  ");
@@ -235,7 +236,7 @@ describe("Floating chat widget", () => {
     );
 
     await user.click(await screen.findByRole("button", { name: /open conversation with GreenFarm Organic/i }));
-    expect(await screen.findByText("Gio rau theo mua")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /more options/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /back to conversations/i }));
 

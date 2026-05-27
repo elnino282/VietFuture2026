@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, SendHorizonal } from "lucide-react";
+import { ClipboardList, ImageIcon, Loader2, SendHorizonal, Smile, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -31,20 +31,36 @@ export function ChatWidgetInput({ disabled, isSending, onSend }: ChatWidgetInput
         void handleSend();
       }}
     >
-      <Textarea
-        aria-label="Message input"
-        value={value}
-        disabled={disabled || isSending}
-        rows={2}
-        placeholder="Nhập nội dung tin nhắn..."
-        onChange={(event) => setValue(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            void handleSend();
-          }
-        }}
-      />
+      <div className="chat-widget-input__main">
+        <Textarea
+          aria-label="Message input"
+          value={value}
+          disabled={disabled || isSending}
+          rows={1}
+          placeholder="Nhập nội dung tin nhắn"
+          onChange={(event) => setValue(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              void handleSend();
+            }
+          }}
+        />
+        <div className="chat-widget-input__tools" aria-hidden="true">
+          <span>
+            <Smile className="h-5 w-5" />
+          </span>
+          <span>
+            <ImageIcon className="h-5 w-5" />
+          </span>
+          <span>
+            <Video className="h-5 w-5" />
+          </span>
+          <span>
+            <ClipboardList className="h-5 w-5" />
+          </span>
+        </div>
+      </div>
       <Button
         type="submit"
         aria-label="Send message"

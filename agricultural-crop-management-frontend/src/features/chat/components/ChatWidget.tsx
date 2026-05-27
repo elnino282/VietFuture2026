@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, MessageSquare, Minus, X } from "lucide-react";
+import { ExternalLink, Minus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/lib";
 import { useChatWidget } from "../hooks/useChatWidget";
@@ -98,20 +98,21 @@ export function ChatWidget({
       aria-hidden={!isOpen}
     >
       <header className="chat-widget-header">
-        <div className="flex min-w-0 items-center gap-2">
-          <MessageSquare className="h-4 w-4 text-white/80" aria-hidden="true" />
+        <div className="chat-widget-header__title">
           <h2>Chat</h2>
-          {widget.totalUnreadCount > 0 ? (
-            <span
-              className="chat-widget-header__badge"
-              aria-label={`${totalUnreadLabel} unread messages`}
-            >
-              {totalUnreadLabel}
-            </span>
-          ) : null}
+          <span aria-label={`${totalUnreadLabel} unread messages`}>({totalUnreadLabel})</span>
         </div>
         <div className="chat-widget-header__actions">
-          
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Expand chat"
+            onClick={onExpand}
+            title="Open full chat page"
+          >
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          </Button>
           <Button
             type="button"
             variant="ghost"

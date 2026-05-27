@@ -1,8 +1,8 @@
 import type { RefObject } from "react";
-import { ArrowLeft, MapPin, MoreVertical } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Bell, ChevronDown, Flag, MoreVertical, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ChatWidgetConversation, ChatWidgetMessage } from "../model/widgetTypes";
-import { ChatWidgetContextCard } from "./ChatWidgetContextCard";
 import { ChatWidgetEmptyState } from "./ChatWidgetEmptyState";
 import { ChatWidgetInput } from "./ChatWidgetInput";
 import { ChatWidgetMessageBubble } from "./ChatWidgetMessageBubble";
@@ -28,6 +28,8 @@ export function ChatWidgetWindow({
   onSend,
   bottomRef,
 }: ChatWidgetWindowProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   if (!conversation) {
     return (
       <main className="chat-widget-window chat-widget-window--empty">
@@ -41,7 +43,6 @@ export function ChatWidgetWindow({
   return (
     <main className="chat-widget-window">
       <header className="chat-widget-thread-header">
-        {/* Back button: visible on mobile only via CSS */}
         <Button
           type="button"
           variant="ghost"
@@ -52,38 +53,88 @@ export function ChatWidgetWindow({
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </Button>
-        <div className="chat-widget-avatar chat-widget-avatar--sm" aria-hidden="true">
-          {conversation.avatarUrl ? (
-            <img src={conversation.avatarUrl} alt="" referrerPolicy="no-referrer" />
-          ) : (
-            conversation.farmName.slice(0, 1).toUpperCase()
-          )}
-          {conversation.status === "online" ? <span /> : null}
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3>{conversation.farmName}</h3>
-          <p>
-            <MapPin className="h-3 w-3" aria-hidden="true" />
-            {conversation.region} · {conversation.sellerName}
-            <span className="chat-widget-thread-header__status" data-status={conversation.status}>
-              {" · "}{onlineLabel}
-            </span>
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="chat-widget-back"
-          aria-label="More options"
-        >
-          <MoreVertical className="h-4 w-4" aria-hidden="true" />
-        </Button>
-      </header>
 
-      <div className="chat-widget-window__context">
-        <ChatWidgetContextCard context={conversation.context} />
-      </div>
+        <div className="chat-widget-thread-header__identity">
+          <div className="chat-widget-avatar chat-widget-avatar--sm" aria-hidden="true">
+            {conversation.avatarUrl ? (
+              <img src={conversation.avatarUrl} alt="" referrerPolicy="no-referrer" />
+            ) : (
+              conversation.farmName.slice(0, 1).toUpperCase()
+            )}
+            {conversation.status === "online" ? <span /> : null}
+          </div>
+
+          <div className="min-w-0">
+            <button
+              type="button"
+              className="chat-widget-thread-header__name"
+              aria-expanded={isMenuOpen}
+              onClick={() => setIsMenuOpen((current) => !current)}
+            >
+              <span>{conversation.farmName}</span>
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <p>
+              {conversation.sellerName}
+              <span className="chat-widget-thread-header__status" data-status={conversation.status}>
+                {" - "}
+                {onlineLabel}
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <div className="chat-widget-thread-header__menu">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="chat-widget-back"
+            aria-label="More options"
+            aria-expanded={isMenuOpen}
+            onClick={() => setIsMenuOpen((current) => !current)}
+          >
+            <MoreVertical className="h-4 w-4" aria-hidden="true" />
+          </Button>
+
+          {isMenuOpen ? (
+            <div className="chat-widget-profile-menu" role="menu">
+              <div className="chat-widget-profile-menu__profile">
+                <div className="chat-widget-avatar" aria-hidden="true">
+                  {conversation.avatarUrl ? (
+                    <img src={conversation.avatarUrl} alt="" referrerPolicy="no-referrer" />
+                  ) : (
+                    conversation.farmName.slice(0, 1).toUpperCase()
+                  )}
+                </div>
+                <strong>{conversation.farmName}</strong>
+              </div>
+
+              <button type="button" role="menuitem">
+                <span>
+                  <Bell className="h-4 w-4" aria-hidden="true" />
+                  Tắt thông báo
+                </span>
+                <span className="chat-widget-profile-menu__toggle" aria-hidden="true" />
+              </button>
+              <button type="button" role="menuitem">
+                <span>
+                  <Flag className="h-4 w-4" aria-hidden="true" />
+                  Báo cáo
+                </span>
+                <ChevronDown className="h-4 w-4 -rotate-90" aria-hidden="true" />
+              </button>
+              <button type="button" role="menuitem">
+                <span>
+                  <UserRound className="h-4 w-4" aria-hidden="true" />
+                  Xem thông tin cá nhân
+                </span>
+                <ChevronDown className="h-4 w-4 -rotate-90" aria-hidden="true" />
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </header>
 
       <div className="chat-widget-messages" aria-live="polite">
         {isMessagesLoading ? <p className="chat-widget-muted">Đang tải tin nhắn...</p> : null}
