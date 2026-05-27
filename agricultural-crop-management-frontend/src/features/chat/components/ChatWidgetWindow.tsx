@@ -43,16 +43,6 @@ export function ChatWidgetWindow({
   return (
     <main className="chat-widget-window">
       <header className="chat-widget-thread-header">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="chat-widget-back chat-widget-back--mobile-only"
-          aria-label="Back to conversations"
-          onClick={onBack}
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        </Button>
 
         <div className="chat-widget-thread-header__identity">
           <div className="chat-widget-avatar chat-widget-avatar--sm" aria-hidden="true">
@@ -85,17 +75,7 @@ export function ChatWidgetWindow({
         </div>
 
         <div className="chat-widget-thread-header__menu">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="chat-widget-back"
-            aria-label="More options"
-            aria-expanded={isMenuOpen}
-            onClick={() => setIsMenuOpen((current) => !current)}
-          >
-            <MoreVertical className="h-4 w-4" aria-hidden="true" />
-          </Button>
+          
 
           {isMenuOpen ? (
             <div className="chat-widget-profile-menu" role="menu">
