@@ -10,60 +10,60 @@ import {
 } from "@/features/marketplace/hooks";
 import { SellerMarketplaceTabs } from "@/features/marketplace/layout";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
+import {
+  getMarketplaceOrderStatusLabel,
+  getMarketplaceOrderStatusTone,
+} from "@/features/marketplace/lib/orderStatus";
 
 type Translator = (key: string, optionsOrDefault?: Record<string, unknown> | string) => string;
 
 function nextStatusOptions(status: MarketplaceOrderStatus): MarketplaceOrderStatus[] {
   switch (status) {
-    case "PENDING":
-      return ["CONFIRMED", "CANCELLED"];
+    case "PENDING_PAYMENT":
+    case "PAYMENT_SUBMITTED":
+      return ["REJECTED", "CANCELLED"];
+    case "PAYMENT_VERIFIED":
+      return ["CONFIRMED", "REJECTED"];
     case "CONFIRMED":
       return ["PREPARING", "CANCELLED"];
     case "PREPARING":
-      return ["DELIVERING"];
-    case "DELIVERING":
+      return ["SHIPPED"];
+    case "SHIPPED":
+      return ["DELIVERED"];
+    case "DELIVERED":
       return ["COMPLETED"];
+    case "PENDING":
+      return ["CONFIRMED", "CANCELLED"];
+    case "DELIVERING":
+      return ["DELIVERED"];
     default:
       return [];
   }
 }
 
 function sellerOrderStatusLabel(status: MarketplaceOrderStatus, t: Translator) {
-  switch (status) {
-    case "PENDING":
-      return t("marketplaceSeller.status.order.pending", "Pending");
-    case "CONFIRMED":
-      return t("marketplaceSeller.status.order.confirmed", "Confirmed");
-    case "PREPARING":
-      return t("marketplaceSeller.status.order.preparing", "Preparing");
-    case "DELIVERING":
-      return t("marketplaceSeller.status.order.delivering", "Delivering");
-    case "COMPLETED":
-      return t("marketplaceSeller.status.order.completed", "Completed");
-    case "CANCELLED":
-      return t("marketplaceSeller.status.order.cancelled", "Cancelled");
+  return getMarketplaceOrderStatusLabel(status, t, "marketplaceSeller.status.order");
+}
+
+function statusBadgeVariant(status: MarketplaceOrderStatus) {
+  switch (getMarketplaceOrderStatusTone(status)) {
+    case "warning":
+      return "warning" as const;
+    case "info":
+      return "info" as const;
+    case "success":
+      return "success" as const;
+    case "destructive":
+      return "destructive" as const;
+    case "neutral":
+      return "outline" as const;
     default:
-      return status;
+      return "secondary" as const;
   }
 }
 
 function statusBadge(status: MarketplaceOrderStatus, t: Translator) {
-  switch (status) {
-    case "PENDING":
-      return <Badge variant="warning">{sellerOrderStatusLabel(status, t)}</Badge>;
-    case "CONFIRMED":
-      return <Badge variant="secondary">{sellerOrderStatusLabel(status, t)}</Badge>;
-    case "PREPARING":
-      return <Badge variant="secondary">{sellerOrderStatusLabel(status, t)}</Badge>;
-    case "DELIVERING":
-      return <Badge variant="default">{sellerOrderStatusLabel(status, t)}</Badge>;
-    case "COMPLETED":
-      return <Badge variant="success">{sellerOrderStatusLabel(status, t)}</Badge>;
-    case "CANCELLED":
-      return <Badge variant="destructive">{sellerOrderStatusLabel(status, t)}</Badge>;
-    default:
-      return <Badge variant="secondary">{status}</Badge>;
-  }
+  return <Badge variant={statusBadgeVariant(status)}>{sellerOrderStatusLabel(status, t)}</Badge>;
 }
 
 function paymentMethodLabel(method: string, t: Translator) {

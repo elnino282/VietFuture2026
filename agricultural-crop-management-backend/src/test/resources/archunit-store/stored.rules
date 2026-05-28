@@ -1,3 +1,0 @@
-#
-#Wed Apr 01 16:33:39 GMT+07:00 2026
-no\ classes\ that\ reside\ outside\ of\ package\ '..module..'\ should\ depend\ on\ classes\ that\ reside\ in\ any\ package\ ['..module..']=d80f3422-f06f-46fa-a9f8-57ca1b4beb15

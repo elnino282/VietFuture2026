@@ -1,14 +1,27 @@
 import { BarChart3, RefreshCw, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/ui';
 import { useAdminDashboard } from './hooks/useAdminDashboard';
 import { DashboardSkeleton } from './components/DashboardSkeleton';
 import { RiskySeasonsTable } from './components/RiskySeasonsTable';
 import { InventoryHealthCards } from './components/InventoryHealthCards';
 import { PendingApprovals } from './components/PendingApprovals';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { cn } from '@/shared/lib';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
+import {
+  AdminContentCard,
+  AdminHeaderCard,
+  AdminMetricCard,
+  AdminPageContainer,
+} from '@/features/admin/shared/ui';
 import {
   PieChart,
   Pie,
@@ -54,7 +67,7 @@ export function AdminDashboard() {
   // Show error state with retry option
   if (isError) {
     return (
-      <div className="p-4 sm:p-6 max-w-[1600px] mx-auto">
+      <AdminPageContainer>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>{t('admin.dashboard.error.title')}</AlertTitle>
@@ -71,65 +84,63 @@ export function AdminDashboard() {
             </Button>
           </AlertDescription>
         </Alert>
-      </div>
+      </AdminPageContainer>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold mb-1"><b>{t('admin.dashboard.title')}</b></h1>
+    <AdminPageContainer>
+      <AdminHeaderCard
+        title={t('admin.dashboard.title')}
+        description={t('admin.dashboard.subtitle')}
+        metadata={
+          <>
             {isFetching && (
               <RefreshCw className="h-4 w-4 text-muted-foreground animate-spin" />
             )}
-          </div>
-          <p className="text-muted-foreground">
-            {t('admin.dashboard.subtitle')}
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
+          </>
+        }
+        actions={
+          <>
           <Button
             variant="outline"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="w-full sm:w-auto"
+            className="w-full rounded-[14px] sm:w-auto"
           >
             <RefreshCw className={cn('h-4 w-4 mr-2', isFetching && 'animate-spin')} />
             {t('common.refresh')}
           </Button>
-          <Button className="w-full sm:w-auto">
+          <Button
+            className="w-full rounded-[14px] sm:w-auto"
+            disabled
+            disabledHint="Dashboard export is not implemented yet"
+          >
             <BarChart3 className="w-4 h-4 mr-2" />
             {t('admin.dashboard.exportReport')}
           </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {kpiMetrics.map((kpi) => (
-          <Card key={kpi.key} className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{kpi.title}</p>
-                  <p className="text-2xl font-bold mt-1">{kpi.value}</p>
-                </div>
-                <div className={cn('p-3 rounded-lg', kpi.bgColor)}>
-                  <kpi.icon className={cn('h-6 w-6', kpi.textColor)} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <AdminMetricCard
+            key={kpi.key}
+            label={kpi.title}
+            value={kpi.value}
+            icon={kpi.icon}
+            iconWrapClassName={kpi.bgColor}
+            iconClassName={kpi.textColor}
+          />
         ))}
       </div>
 
       {/* Charts Row - User Distribution & Season Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* User Roles Distribution */}
-        <Card className="border-0 shadow-sm">
+        <AdminContentCard>
           <CardHeader>
             <CardTitle className="text-lg">User Distribution by Role</CardTitle>
             <CardDescription>Breakdown of users by their assigned roles</CardDescription>
@@ -161,10 +172,10 @@ export function AdminDashboard() {
               </ResponsiveContainer>
             )}
           </CardContent>
-        </Card>
+        </AdminContentCard>
 
         {/* Season Status Distribution */}
-        <Card className="border-0 shadow-sm">
+        <AdminContentCard>
           <CardHeader>
             <CardTitle className="text-lg">Season Status Distribution</CardTitle>
             <CardDescription>Current status of all seasons</CardDescription>
@@ -196,7 +207,7 @@ export function AdminDashboard() {
               </ResponsiveContainer>
             )}
           </CardContent>
-        </Card>
+        </AdminContentCard>
       </div>
 
       {/* Risky Seasons & Inventory Health */}
@@ -217,6 +228,6 @@ export function AdminDashboard() {
         />
         <InventoryHealthCards />
       </div>
-    </div>
+    </AdminPageContainer>
   );
 }

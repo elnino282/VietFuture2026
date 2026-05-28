@@ -4,17 +4,23 @@ import {
   ExternalLink,
   Loader2,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AdminContentCard } from '@/features/admin/shared/ui';
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/shared/ui';
 import type {
   RiskBasis,
   RiskDataCoverage,
@@ -101,7 +107,7 @@ export function RiskySeasonsTable({
   const coverageMessage = buildCoverageMessage(dataCoverage);
 
   return (
-    <Card className="border-0 shadow-sm">
+    <AdminContentCard>
       <CardHeader>
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -205,6 +211,6 @@ export function RiskySeasonsTable({
           </div>
         )}
       </CardContent>
-    </Card>
+    </AdminContentCard>
   );
 }

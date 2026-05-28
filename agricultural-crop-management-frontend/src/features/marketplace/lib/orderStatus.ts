@@ -24,6 +24,9 @@ export type MarketplaceOrderLifecycleGroup =
   | "unknown";
 
 type Translator = (key: string, options?: Record<string, unknown>) => string;
+type OrderStatusLabelPrefix =
+  | "marketplaceBuyer.myOrders.status"
+  | "marketplaceSeller.status.order";
 
 const CANONICAL_STATUS_SET = new Set<CanonicalMarketplaceOrderStatus>([
   "PENDING_PAYMENT",
@@ -78,15 +81,16 @@ export function normalizeMarketplaceOrderStatus(
 export function getMarketplaceOrderStatusLabel(
   status: MarketplaceOrderStatus | string,
   t: Translator,
+  labelPrefix: OrderStatusLabelPrefix = "marketplaceBuyer.myOrders.status",
 ): string {
-  if (status === "PENDING" || status === "DELIVERING") {
-    return t(`marketplaceBuyer.myOrders.status.${status}`);
+  if (labelPrefix === "marketplaceBuyer.myOrders.status" && (status === "PENDING" || status === "DELIVERING")) {
+    return t(`${labelPrefix}.${status}`);
   }
   const normalizedStatus = normalizeMarketplaceOrderStatus(status);
   if (normalizedStatus === "UNKNOWN") {
-    return t("marketplaceBuyer.myOrders.status.unknown", { status });
+    return t(`${labelPrefix}.unknown`, { status });
   }
-  return t(`marketplaceBuyer.myOrders.status.${normalizedStatus}`);
+  return t(`${labelPrefix}.${normalizedStatus}`);
 }
 
 export function getMarketplaceOrderStatusTone(

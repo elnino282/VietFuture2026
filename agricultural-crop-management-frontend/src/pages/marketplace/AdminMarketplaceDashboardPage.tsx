@@ -1,9 +1,15 @@
 import { Package, ShieldAlert, ShoppingBag, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { MarketplaceStatsUnavailableReason } from "@/shared/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
+import { CardContent, CardHeader, CardTitle } from "@/shared/ui";
 import { useMarketplaceAdminStats } from "@/features/marketplace/hooks";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
+import {
+  AdminContentCard,
+  AdminHeaderCard,
+  AdminMetricCard,
+  AdminPageContainer,
+} from "@/features/admin/shared/ui";
 
 function MetricCard({
   icon: Icon,
@@ -19,20 +25,13 @@ function MetricCard({
   helperText?: string;
 }) {
   return (
-    <Card className="border-border shadow-sm">
-      <CardContent className="flex items-center gap-4 p-6">
-        <div className={`rounded-xl p-3 ${tone}`}>
-          <Icon size={22} />
-        </div>
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
-          {helperText ? (
-            <p className="mt-1 text-xs text-muted-foreground">{helperText}</p>
-          ) : null}
-        </div>
-      </CardContent>
-    </Card>
+    <AdminMetricCard
+      label={label}
+      value={value}
+      helper={helperText}
+      icon={Icon}
+      iconWrapClassName={tone}
+    />
   );
 }
 
@@ -56,21 +55,25 @@ export function AdminMarketplaceDashboardPage() {
 
   if (statsQuery.isLoading) {
     return (
-      <Card className="border-dashed">
+      <AdminPageContainer>
+      <AdminContentCard className="border-dashed">
         <CardContent className="p-8 text-sm text-muted-foreground">
           Loading marketplace admin dashboard...
         </CardContent>
-      </Card>
+      </AdminContentCard>
+      </AdminPageContainer>
     );
   }
 
   if (statsQuery.isError || !statsQuery.data) {
     return (
-      <Card className="border-destructive/30">
+      <AdminPageContainer>
+      <AdminContentCard className="border-destructive/30">
         <CardContent className="p-8 text-sm text-destructive">
           Failed to load marketplace admin stats.
         </CardContent>
-      </Card>
+      </AdminContentCard>
+      </AdminPageContainer>
     );
   }
 
@@ -83,33 +86,31 @@ export function AdminMarketplaceDashboardPage() {
   const unavailableReasons = stats.unavailableReasons;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-primary">FarmTrace Admin</p>
-          <h1 className="mt-1 text-3xl font-bold text-foreground">Marketplace dashboard</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Live marketplace metrics only. Empty states are shown when product, order, or revenue data is not available yet.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3 text-sm">
+    <AdminPageContainer>
+      <AdminHeaderCard
+        title="Marketplace dashboard"
+        description="Live marketplace metrics only. Empty states are shown when product, order, or revenue data is not available yet."
+        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">FarmTrace Admin</span>}
+        actions={
+          <div className="flex flex-wrap gap-3 text-sm">
           <Link
             to="/admin/marketplace-products"
-            className="rounded-full border border-primary/20 bg-primary/5 px-4 py-2 font-medium text-primary transition-colors hover:bg-primary/10"
+            className="rounded-[14px] border border-primary/20 bg-primary/5 px-4 py-2 font-medium text-primary transition-colors hover:bg-primary/10"
           >
             Review products
           </Link>
           <Link
             to="/admin/marketplace-orders"
-            className="rounded-full border border-border px-4 py-2 font-medium text-foreground transition-colors hover:bg-muted"
+            className="rounded-[14px] border border-border px-4 py-2 font-medium text-foreground transition-colors hover:bg-muted"
           >
             Review orders
           </Link>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {showSystemEmpty ? (
-        <Card className="border-dashed border-border">
+        <AdminContentCard className="border-dashed">
           <CardContent className="space-y-3 p-8 text-center">
             <h2 className="text-xl font-semibold text-foreground">Marketplace has no product or order yet</h2>
             <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
@@ -121,10 +122,10 @@ export function AdminMarketplaceDashboardPage() {
               </p>
             ) : null}
           </CardContent>
-        </Card>
+        </AdminContentCard>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard
           icon={Package}
           label="Total products"
@@ -159,7 +160,7 @@ export function AdminMarketplaceDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="border-border shadow-sm">
+        <AdminContentCard>
           <CardHeader className="border-b border-border/50">
             <CardTitle>Operations summary</CardTitle>
           </CardHeader>
@@ -187,9 +188,9 @@ export function AdminMarketplaceDashboardPage() {
               </span>
             </div>
           </CardContent>
-        </Card>
+        </AdminContentCard>
 
-        <Card className="border-border shadow-sm">
+        <AdminContentCard>
           <CardHeader className="border-b border-border/50">
             <CardTitle>Revenue and moderation</CardTitle>
           </CardHeader>
@@ -231,8 +232,8 @@ export function AdminMarketplaceDashboardPage() {
               </p>
             </div>
           </CardContent>
-        </Card>
+        </AdminContentCard>
       </div>
-    </div>
+    </AdminPageContainer>
   );
 }

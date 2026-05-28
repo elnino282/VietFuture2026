@@ -7,6 +7,41 @@ import type { MarketplaceOrder, MarketplaceOrderStatus } from '@/shared/api';
 import { marketplaceApi } from '@/shared/api';
 import { SellerOrderDetailPage } from './SellerOrderDetailPage';
 
+vi.mock('@/hooks/useI18n', () => ({
+  useI18n: () => ({
+    locale: 'en-US',
+    t: (key: string, optionsOrDefault?: Record<string, unknown> | string) => {
+      if (typeof optionsOrDefault === 'string') {
+        return optionsOrDefault;
+      }
+      if (typeof optionsOrDefault?.defaultValue === 'string') {
+        return optionsOrDefault.defaultValue.replace(
+          /\{\{(\w+)\}\}/g,
+          (_match, name: string) => String(optionsOrDefault[name] ?? ''),
+        );
+      }
+
+      const dictionary: Record<string, string> = {
+        'marketplaceSeller.status.order.PENDING_PAYMENT': 'Pending payment',
+        'marketplaceSeller.status.order.PAYMENT_SUBMITTED': 'Payment submitted',
+        'marketplaceSeller.status.order.PAYMENT_VERIFIED': 'Payment verified',
+        'marketplaceSeller.status.order.CONFIRMED': 'Confirmed',
+        'marketplaceSeller.status.order.PREPARING': 'Preparing',
+        'marketplaceSeller.status.order.SHIPPED': 'Shipped',
+        'marketplaceSeller.status.order.DELIVERED': 'Delivered',
+        'marketplaceSeller.status.order.COMPLETED': 'Completed',
+        'marketplaceSeller.status.order.REJECTED': 'Rejected',
+        'marketplaceSeller.status.order.CANCELLED': 'Cancelled',
+        'marketplaceSeller.status.order.PENDING': 'Pending payment',
+        'marketplaceSeller.status.order.DELIVERING': 'Shipped',
+        'marketplaceSeller.orderDetail.verificationStatus.notRequired': 'Not required',
+      };
+
+      return dictionary[key] ?? key;
+    },
+  }),
+}));
+
 vi.mock('@/shared/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/shared/api')>();
   return {
@@ -94,15 +129,15 @@ describe('SellerOrderDetailPage', () => {
     vi.clearAllMocks();
   });
 
-  it('confirms a pending farmer order end-to-end', async () => {
-    vi.mocked(marketplaceApi.getFarmerOrderDetail).mockResolvedValue({ result: orderFixture('PENDING') } as never);
+  it('confirms a payment-verified farmer order end-to-end', async () => {
+    vi.mocked(marketplaceApi.getFarmerOrderDetail).mockResolvedValue({ result: orderFixture('PAYMENT_VERIFIED') } as never);
     renderPage();
     const user = userEvent.setup();
 
     expect(await screen.findByRole('heading', { name: 'ORD-77' })).toBeInTheDocument();
     expect(screen.getByText('Buyer Nguyen')).toBeInTheDocument();
     expect(screen.getByText('Premium jasmine rice')).toBeInTheDocument();
-    expect(screen.getByText(/Verification: NOT_REQUIRED/i)).toBeInTheDocument();
+    expect(screen.getByText(/Verification: Not required/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Confirmed' }));
 
@@ -113,7 +148,7 @@ describe('SellerOrderDetailPage', () => {
 
   it('marks a preparing farmer order as shipped end-to-end', async () => {
     vi.mocked(marketplaceApi.getFarmerOrderDetail).mockResolvedValue({ result: orderFixture('PREPARING') } as never);
-    vi.mocked(marketplaceApi.updateFarmerOrderStatus).mockResolvedValue({ result: orderFixture('DELIVERING') } as never);
+    vi.mocked(marketplaceApi.updateFarmerOrderStatus).mockResolvedValue({ result: orderFixture('SHIPPED') } as never);
     renderPage();
     const user = userEvent.setup();
 
@@ -124,7 +159,7 @@ describe('SellerOrderDetailPage', () => {
     await user.click(shippedButton);
 
     await waitFor(() => {
-      expect(marketplaceApi.updateFarmerOrderStatus).toHaveBeenCalledWith(77, { status: 'DELIVERING' });
+      expect(marketplaceApi.updateFarmerOrderStatus).toHaveBeenCalledWith(77, { status: 'SHIPPED' });
     });
   });
 });

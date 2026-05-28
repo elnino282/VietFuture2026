@@ -58,12 +58,12 @@ interface CreatePlotInFarmDialogProps {
 }
 
 const SOIL_TYPES = [
-  { value: "LOAM", label: "Loam" },
-  { value: "CLAY", label: "Clay" },
-  { value: "SANDY", label: "Sandy" },
-  { value: "SILT", label: "Silt" },
+  { value: "FERRALSOLS", label: "Ferralsols" },
+  { value: "CHERNOZEMS", label: "Chernozems" },
+  { value: "FLUVISOLS", label: "Fluvisols" },
+  { value: "PODZOL", label: "Podzol" },
   { value: "PEAT", label: "Peat" },
-  { value: "CHALK", label: "Chalk" },
+  { value: "ARENOSOLS", label: "Arenosols" },
 ];
 
 const PLOT_STATUSES = [

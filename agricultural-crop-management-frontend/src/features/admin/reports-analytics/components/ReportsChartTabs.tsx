@@ -1,21 +1,27 @@
-﻿import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
+  Button,
+  CardContent,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/ui";
+import {
+  AdminContentCard,
+  ADMIN_CHART_COLORS,
+  adminTabsListClass,
+  adminTabsTriggerClass,
+} from "@/features/admin/shared/ui";
 import type {
   CostCategoryRow,
   CostTimeRow,
@@ -23,7 +29,7 @@ import type {
   ProfitRow,
   RevenueRow,
   YieldAnalyticsRow,
-} from "@/services/api.admin";
+} from "@/features/admin/shared/api";
 import { usePreferences } from "@/shared/contexts";
 import { convertWeight, formatMoney, getWeightUnitLabel } from "@/shared/lib";
 import { ChevronDown } from "lucide-react";
@@ -256,28 +262,28 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
           }
         >
           <div className="overflow-x-auto pb-1">
-            <TabsList className="h-10 w-max p-1 rounded-[18px] bg-muted border-0">
+            <TabsList className={adminTabsListClass}>
               <TabsTrigger
                 value="yield"
-                className="h-8 px-4 rounded-[18px] text-sm font-medium text-muted-foreground data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-foreground transition-all"
+                className={adminTabsTriggerClass}
               >
                 Yield
               </TabsTrigger>
               <TabsTrigger
                 value="cost"
-                className="h-8 px-4 rounded-[18px] text-sm font-medium text-muted-foreground data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-foreground transition-all"
+                className={adminTabsTriggerClass}
               >
                 Cost
               </TabsTrigger>
               <TabsTrigger
                 value="revenue"
-                className="h-8 px-4 rounded-[18px] text-sm font-medium text-muted-foreground data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-foreground transition-all"
+                className={adminTabsTriggerClass}
               >
                 Revenue
               </TabsTrigger>
               <TabsTrigger
                 value="profit"
-                className="h-8 px-4 rounded-[18px] text-sm font-medium text-muted-foreground data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-foreground transition-all"
+                className={adminTabsTriggerClass}
               >
                 Profit
               </TabsTrigger>
@@ -311,7 +317,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
             onClick={() => setShowTable(!showTable)}
             className="h-8 w-full sm:w-auto px-3 rounded-[14px] border-border bg-muted hover:bg-muted/80 text-foreground font-medium text-sm"
           >
-            Show table
+            {showTable ? "Hide table" : "Show table"}
             <ChevronDown
               className={`w-4 h-4 ml-2 transition-transform ${showTable ? "rotate-180" : ""}`}
             />
@@ -320,7 +326,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
       </div>
 
       {/* Chart Card */}
-      <Card className="!rounded-[18px] border-border bg-card shadow-sm">
+      <AdminContentCard>
         <CardContent className="p-4 sm:p-6">
           {/* Chart Header */}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-6">
@@ -349,8 +355,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
             <EmptyState onReset={onReset} />
           ) : (
             <ResponsiveContainer width="100%" height={320}>
-              <>
-              {activeTab === "yield" && (
+              {activeTab === "yield" ? (
                 <BarChart
                   data={displayYieldData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
@@ -417,14 +422,12 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   <Bar
                     dataKey="actual"
                     name={`Yield (${unitLabel})`}
-                    fill="#4ade80"
+                    fill={ADMIN_CHART_COLORS.yield}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={100}
                   />
                 </BarChart>
-              )}
-
-              {activeTab === "cost" && (
+              ) : activeTab === "cost" ? (
                 <BarChart
                   data={displayCostCategories}
                   margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
@@ -491,14 +494,12 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   <Bar
                     dataKey="totalCost"
                     name={`Total Cost (${preferences.currency})`}
-                    fill="#f59e0b"
+                    fill={ADMIN_CHART_COLORS.cost}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={100}
                   />
                 </BarChart>
-              )}
-
-              {activeTab === "revenue" && (
+              ) : activeTab === "revenue" ? (
                 <BarChart
                   data={displayRevenueData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
@@ -565,14 +566,12 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   <Bar
                     dataKey="totalRevenue"
                     name={`Revenue (${preferences.currency})`}
-                    fill="#4ade80"
+                    fill={ADMIN_CHART_COLORS.revenue}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={100}
                   />
                 </BarChart>
-              )}
-
-              {activeTab === "profit" && (
+              ) : (
                 <BarChart
                   data={displayProfitData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
@@ -643,35 +642,34 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   <Bar
                     dataKey="totalRevenue"
                     name={`Revenue (${preferences.currency})`}
-                    fill="#4ade80"
+                    fill={ADMIN_CHART_COLORS.profitRevenue}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={70}
                   />
                   <Bar
                     dataKey="totalCost"
                     name={`Cost (${preferences.currency})`}
-                    fill="#f59e0b"
+                    fill={ADMIN_CHART_COLORS.profitCost}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={70}
                   />
                   <Bar
                     dataKey="grossProfit"
                     name={`Gross Profit (${preferences.currency})`}
-                    fill="#2f8a4d"
+                    fill={ADMIN_CHART_COLORS.profitGross}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={70}
                   />
                 </BarChart>
               )}
-              </>
             </ResponsiveContainer>
           )}
         </CardContent>
-      </Card>
+      </AdminContentCard>
 
       {/* Data Tables (Collapsible) */}
       {showTable && (
-        <Card className="!rounded-[18px] border-border bg-card shadow-sm">
+        <AdminContentCard>
           <CardContent className="p-4 sm:p-6 space-y-6">
             {/* Yield Table */}
             {activeTab === "yield" && (
@@ -1103,7 +1101,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
               </Table>
             )}
           </CardContent>
-        </Card>
+        </AdminContentCard>
       )}
     </div>
   );

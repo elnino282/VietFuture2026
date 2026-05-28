@@ -1,29 +1,38 @@
-﻿import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Button,
+  CardContent,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
+  Skeleton,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { adminInventoryApi } from "@/services/api.admin";
+} from "@/shared/ui";
+import { adminInventoryApi } from "@/features/admin/shared/api";
+import {
+  AdminContentCard,
+  AdminHeaderCard,
+  AdminPageContainer,
+} from "@/features/admin/shared/ui";
 import { usePreferences } from "@/shared/contexts";
 import { useDebounce } from "@/shared/lib";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, Search } from "lucide-react";
+import { AlertCircle, MoreVertical, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -243,19 +252,14 @@ export function AdminInventoryPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold mb-1">
-          <b>Inventory Risks</b>
-        </h1>
-        <p className="text-muted-foreground">
-          Monitor expiring, expired, low stock, and abnormal movement lots.
-        </p>
-      </div>
+    <AdminPageContainer>
+      <AdminHeaderCard
+        title="Inventory Risks"
+        description="Monitor expiring, expired, low stock, and abnormal movement lots."
+      />
 
-      <Card className="border-0 shadow-sm">
-        <CardContent className="space-y-4">
+      <AdminContentCard>
+        <CardContent className="space-y-4 p-4">
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <Select
               value={farmId?.toString() ?? "all"}
@@ -263,7 +267,7 @@ export function AdminInventoryPage() {
                 updateParams({ farmId: value === "all" ? undefined : value })
               }
             >
-              <SelectTrigger className="h-9 w-full sm:w-[220px]">
+              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[220px]">
                 <SelectValue placeholder="All farms" />
               </SelectTrigger>
               <SelectContent>
@@ -282,7 +286,7 @@ export function AdminInventoryPage() {
                 updateParams({ itemId: value === "all" ? undefined : value })
               }
             >
-              <SelectTrigger className="h-9 w-full sm:w-[220px]">
+              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[220px]">
                 <SelectValue placeholder="All items" />
               </SelectTrigger>
               <SelectContent>
@@ -299,7 +303,7 @@ export function AdminInventoryPage() {
               value={status}
               onValueChange={(value) => updateParams({ status: value })}
             >
-              <SelectTrigger className="h-9 w-full sm:w-[170px]">
+              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[170px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -315,7 +319,7 @@ export function AdminInventoryPage() {
               value={severity}
               onValueChange={(value) => updateParams({ severity: value })}
             >
-              <SelectTrigger className="h-9 w-full sm:w-[170px]">
+              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[170px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -332,7 +336,7 @@ export function AdminInventoryPage() {
                 value={String(windowDays)}
                 onValueChange={(value) => updateParams({ windowDays: value })}
               >
-                <SelectTrigger className="h-9 w-full sm:w-[120px]">
+                <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -356,7 +360,7 @@ export function AdminInventoryPage() {
                       lowStockThreshold: event.target.value || undefined,
                     })
                   }
-                  className="h-9 w-full sm:w-[120px]"
+                  className="h-9 w-full rounded-[14px] sm:w-[120px]"
                 />
                 <span className="text-xs text-muted-foreground">
                   Low stock threshold
@@ -368,7 +372,7 @@ export function AdminInventoryPage() {
               value={sort}
               onValueChange={(value) => updateParams({ sort: value })}
             >
-              <SelectTrigger className="h-9 w-full sm:w-[190px]">
+              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[190px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -384,7 +388,7 @@ export function AdminInventoryPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search item or lot code"
-                className="pl-9 h-9"
+                className="h-9 rounded-[14px] pl-9"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
               />
@@ -455,13 +459,26 @@ export function AdminInventoryPage() {
                             {renderSeverityBadge(lot.severity)}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewDetail(lot.lotId)}
-                            >
-                              View
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-[14px]"
+                                  aria-label={`Actions for ${lot.itemName}`}
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                  onSelect={() => handleViewDetail(lot.lotId)}
+                                >
+                                  View details
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -494,7 +511,7 @@ export function AdminInventoryPage() {
             </>
           )}
         </CardContent>
-      </Card>
+      </AdminContentCard>
 
       {detailOpen && (
         <div
@@ -662,6 +679,6 @@ export function AdminInventoryPage() {
           </div>
         </div>
       )}
-    </div>
+    </AdminPageContainer>
   );
 }

@@ -55,6 +55,32 @@ public class SuppliesController {
         return ApiResponse.success(suppliesService.getSuppliers(q, pageable));
     }
 
+    @Operation(summary = "Create supplier", description = "Create a new supplier")
+    @PreAuthorize("hasRole('FARMER')")
+    @PostMapping("/suppliers")
+    public ApiResponse<SupplierResponse> createSupplier(
+            @Valid @RequestBody org.example.QuanLyMuaVu.module.inventory.dto.request.CreateSupplierRequest request) {
+        return ApiResponse.success(suppliesService.createSupplier(request));
+    }
+
+    @Operation(summary = "Update supplier", description = "Update an existing supplier")
+    @PreAuthorize("hasRole('FARMER')")
+    @org.springframework.web.bind.annotation.PutMapping("/suppliers/{id}")
+    public ApiResponse<SupplierResponse> updateSupplier(
+            @org.springframework.web.bind.annotation.PathVariable("id") Integer id,
+            @Valid @RequestBody org.example.QuanLyMuaVu.module.inventory.dto.request.UpdateSupplierRequest request) {
+        return ApiResponse.success(suppliesService.updateSupplier(id, request));
+    }
+
+    @Operation(summary = "Delete supplier", description = "Delete a supplier by ID")
+    @PreAuthorize("hasRole('FARMER')")
+    @org.springframework.web.bind.annotation.DeleteMapping("/suppliers/{id}")
+    public ApiResponse<Void> deleteSupplier(
+            @org.springframework.web.bind.annotation.PathVariable("id") Integer id) {
+        suppliesService.deleteSupplier(id);
+        return ApiResponse.success(null);
+    }
+
     // ===================================
     // CATALOG: SUPPLY ITEMS
     // ===================================

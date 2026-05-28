@@ -4,9 +4,18 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useI18n } from "@/hooks/useI18n";
-import { adminCropApi, adminVarietyApi } from "@/services/api.admin";
+  CardContent,
+} from "@/shared/ui";
+import {
+  AdminContentCard,
+  AdminFilterCard,
+  AdminHeaderCard,
+  AdminPageContainer,
+  adminTabsListClass,
+} from "@/features/admin/shared/ui";
+import { cn } from "@/shared/lib";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
+import { adminCropApi, adminVarietyApi } from "@/features/admin/shared/api";
 import {
   AlertCircle,
   Edit,
@@ -261,53 +270,57 @@ export function CropsVarietiesPage() {
 
   const renderCrops = () => (
     <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="relative w-full sm:flex-1 sm:max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={cropSearchQuery}
-            onChange={(e) => setCropSearchQuery(e.target.value)}
-            placeholder="Search crops..."
-            className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-          />
-        </div>
-        <button
-          onClick={() => setCropSearchQuery(cropSearchQuery)}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50 transition-colors"
-        >
-          <Search className="h-4 w-4" />
-          Search
-        </button>
-      </div>
+      <AdminFilterCard>
+        <CardContent className="space-y-3 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="relative w-full sm:flex-1 sm:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={cropSearchQuery}
+                onChange={(e) => setCropSearchQuery(e.target.value)}
+                placeholder="Search crops..."
+                className="w-full pl-9 pr-3 py-2 border border-border rounded-[14px] bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+            </div>
+            <button
+              onClick={() => setCropSearchQuery(cropSearchQuery)}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50 transition-colors"
+            >
+              <Search className="h-4 w-4" />
+              Search
+            </button>
+          </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            {filteredCrops.length}{" "}
-            {filteredCrops.length === 1 ? "crop" : "crops"}
-            {cropSearchQuery && ` (filtered from ${crops.length})`}
-          </span>
-        </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <button
-            onClick={() => openCropForm()}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            Add Crop
-          </button>
-          <button
-            onClick={fetchCrops}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          </button>
-        </div>
-      </div>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {filteredCrops.length}{" "}
+                {filteredCrops.length === 1 ? "crop" : "crops"}
+                {cropSearchQuery && ` (filtered from ${crops.length})`}
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <button
+                onClick={() => openCropForm()}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90"
+              >
+                <Plus className="h-4 w-4" />
+                Add Crop
+              </button>
+              <button
+                onClick={fetchCrops}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              </button>
+            </div>
+          </div>
+        </CardContent>
+      </AdminFilterCard>
 
-      <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
+      <AdminContentCard>
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[620px]">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
@@ -412,73 +425,78 @@ export function CropsVarietiesPage() {
             )}
           </tbody>
         </table>
-      </div>
+        </div>
+      </AdminContentCard>
     </div>
   );
 
   const renderVarieties = () => (
     <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="relative w-full sm:flex-1 sm:max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={varietySearchQuery}
-            onChange={(e) => setVarietySearchQuery(e.target.value)}
-            placeholder="Search varieties..."
-            className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-          />
-        </div>
-        <button
-          onClick={() => setVarietySearchQuery(varietySearchQuery)}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50 transition-colors"
-        >
-          <Search className="h-4 w-4" />
-          Search
-        </button>
-      </div>
+      <AdminFilterCard>
+        <CardContent className="space-y-3 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="relative w-full sm:flex-1 sm:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={varietySearchQuery}
+                onChange={(e) => setVarietySearchQuery(e.target.value)}
+                placeholder="Search varieties..."
+                className="w-full pl-9 pr-3 py-2 border border-border rounded-[14px] bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+            </div>
+            <button
+              onClick={() => setVarietySearchQuery(varietySearchQuery)}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50 transition-colors"
+            >
+              <Search className="h-4 w-4" />
+              Search
+            </button>
+          </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <select
-            value={selectedCropId || ""}
-            onChange={(e) =>
-              setSelectedCropId(e.target.value ? Number(e.target.value) : null)
-            }
-            className="w-full sm:w-auto px-3 py-2 border border-border rounded-lg bg-background text-sm"
-          >
-            <option value="">All Crops</option>
-            {crops.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.cropName}
-              </option>
-            ))}
-          </select>
-          <span className="text-sm text-muted-foreground">
-            {filteredVarieties.length}{" "}
-            {filteredVarieties.length === 1 ? "variety" : "varieties"}
-            {varietySearchQuery && ` (filtered from ${varieties.length})`}
-          </span>
-        </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <button
-            onClick={() => openVarietyForm()}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            Add Variety
-          </button>
-          <button
-            onClick={fetchVarieties}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          </button>
-        </div>
-      </div>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <select
+                value={selectedCropId || ""}
+                onChange={(e) =>
+                  setSelectedCropId(e.target.value ? Number(e.target.value) : null)
+                }
+                className="w-full sm:w-auto px-3 py-2 border border-border rounded-[14px] bg-card text-sm"
+              >
+                <option value="">All Crops</option>
+                {crops.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.cropName}
+                  </option>
+                ))}
+              </select>
+              <span className="text-sm text-muted-foreground">
+                {filteredVarieties.length}{" "}
+                {filteredVarieties.length === 1 ? "variety" : "varieties"}
+                {varietySearchQuery && ` (filtered from ${varieties.length})`}
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <button
+                onClick={() => openVarietyForm()}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90"
+              >
+                <Plus className="h-4 w-4" />
+                Add Variety
+              </button>
+              <button
+                onClick={fetchVarieties}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              </button>
+            </div>
+          </div>
+        </CardContent>
+      </AdminFilterCard>
 
-      <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
+      <AdminContentCard>
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[760px]">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
@@ -591,43 +609,46 @@ export function CropsVarietiesPage() {
             )}
           </tbody>
         </table>
-      </div>
+        </div>
+      </AdminContentCard>
     </div>
   );
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">Crops & Varieties</h1>
-        <p className="text-muted-foreground">
-          Manage the catalog of crops and varieties
-        </p>
-      </div>
+    <AdminPageContainer>
+      <AdminHeaderCard
+        title="Crops & Varieties"
+        description="Manage the catalog of crops and varieties"
+      />
 
       {/* Tab Navigation */}
-      <div className="flex overflow-x-auto border-b border-border mb-6">
+      <div className="overflow-x-auto pb-1">
+        <div className={adminTabsListClass}>
         <button
           onClick={() => setActiveTab("crops")}
-          className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 -mb-px ${
+          className={cn(
+            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
             activeTab === "crops"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
         >
           <Leaf className="inline-block h-4 w-4 mr-2" />
           Crops
         </button>
         <button
           onClick={() => setActiveTab("varieties")}
-          className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 -mb-px ${
+          className={cn(
+            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
             activeTab === "varieties"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
         >
           <Sprout className="inline-block h-4 w-4 mr-2" />
           Varieties
         </button>
+        </div>
       </div>
 
       {/* Tab Content */}
@@ -839,6 +860,6 @@ export function CropsVarietiesPage() {
           </button>
         </div>
       )}
-    </div>
+    </AdminPageContainer>
   );
 }

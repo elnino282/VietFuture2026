@@ -2,8 +2,8 @@ package org.example.QuanLyMuaVu.module.farm.controller;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.example.QuanLyMuaVu.module.farm.entity.Province;
-import org.example.QuanLyMuaVu.module.farm.entity.Ward;
+import org.example.QuanLyMuaVu.module.farm.dto.response.ProvinceResponse;
+import org.example.QuanLyMuaVu.module.farm.dto.response.WardResponse;
 import org.example.QuanLyMuaVu.module.farm.service.AddressService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,12 +16,12 @@ public class LocationController {
     private final AddressService addressService;
 
     @GetMapping("/provinces")
-    public ResponseEntity<List<Province>> getAllProvinces() {
-        return ResponseEntity.ok(addressService.findAllProvinceEntities());
+    public ResponseEntity<List<ProvinceResponse>> getAllProvinces() {
+        return ResponseEntity.ok(addressService.getAllProvinces(null, null));
     }
 
     @GetMapping("/wards")
-    public ResponseEntity<List<Ward>> getWardsByProvince(@RequestParam Integer provinceId) {
-        return ResponseEntity.ok(addressService.findWardsByProvince(provinceId));
+    public ResponseEntity<List<WardResponse>> getWardsByProvince(@RequestParam Integer provinceId) {
+        return ResponseEntity.ok(addressService.getWardsByProvinceId(provinceId, null));
     }
 }

@@ -1,14 +1,3 @@
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useProfileUpdate } from "@/entities/user";
 import {
   AddressSelector,
   AlertDialog,
@@ -18,14 +7,23 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
   type AddressValue,
 } from "@/shared/ui";
+import { useProfileUpdate } from "@/entities/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { CheckCircle2, Loader2 } from "lucide-react";

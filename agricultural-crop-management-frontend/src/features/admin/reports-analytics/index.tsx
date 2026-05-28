@@ -6,7 +6,7 @@
   adminVarietyApi,
   reportsKeys,
   type ReportFilterParams,
-} from "@/services/api.admin";
+} from "@/features/admin/shared/api";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import {
 } from "./components/ReportsFilterCard";
 import { ReportsHeader } from "./components/ReportsHeader";
 import { ReportsSummaryCards } from "./components/ReportsSummaryCards";
+import { AdminPageContainer } from "@/features/admin/shared/ui";
 import {
   downloadBlob,
   getExportFileName,
@@ -321,10 +322,6 @@ export const ReportsAnalytics: React.FC = () => {
     }
   };
 
-  const handleSaveView = () => {
-    // No-op: saved views are not implemented in this repo yet.
-  };
-
   const handleFiltersChange = (nextFilters: ReportFilters) => {
     let updated = nextFilters;
     if (nextFilters.farmId !== draftFilters.farmId) {
@@ -359,11 +356,10 @@ export const ReportsAnalytics: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+    <AdminPageContainer>
       <ReportsHeader
         onRefresh={handleRefresh}
         onExport={handleExport}
-        onSaveView={handleSaveView}
         isLoading={isRefreshing}
         isExporting={isExporting}
       />
@@ -418,7 +414,7 @@ export const ReportsAnalytics: React.FC = () => {
         drilldownAvailable={drilldownAvailable}
         onRowClick={handleRowClick}
       />
-    </div>
+    </AdminPageContainer>
   );
 };
 

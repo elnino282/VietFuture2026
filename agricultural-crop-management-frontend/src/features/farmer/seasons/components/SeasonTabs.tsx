@@ -20,8 +20,8 @@ export function SeasonTabs({ season, activeTab, setActiveTab, activities }: Seas
   return (
     <Card className="border-border acm-rounded-lg acm-card-shadow">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <CardHeader className="border-b border-border">
-          <TabsList className="bg-muted">
+        <CardHeader className="border-b border-border overflow-x-auto">
+          <TabsList className="bg-muted w-max">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="plots">Linked Plots</TabsTrigger>
             <TabsTrigger value="tasks">Tasks Summary</TabsTrigger>

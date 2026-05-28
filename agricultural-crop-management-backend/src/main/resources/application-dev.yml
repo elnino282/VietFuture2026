@@ -3,6 +3,12 @@ app:
     enabled: ${MAIL_ENABLED:false}
 
 spring:
+  sql:
+    init:
+      mode: never
+  jpa:
+    hibernate:
+      ddl-auto: validate
   mail:
     host: ${SMTP_HOST:localhost}
     port: ${SMTP_PORT:1025}

@@ -3,8 +3,9 @@ app:
     enabled: ${MAIL_ENABLED:true}
 
 spring:
-  flyway:
-    enabled: ${SPRING_FLYWAY_ENABLED:true}
+  sql:
+    init:
+      mode: never
 
   # Production database settings
   jpa:

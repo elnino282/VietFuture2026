@@ -2,7 +2,13 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import type { MarketplaceOrderStatus } from "@/shared/api";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
+import { Badge, Button, CardContent, CardHeader, CardTitle } from "@/shared/ui";
+import {
+  AdminContentCard,
+  AdminFilterCard,
+  AdminHeaderCard,
+  AdminPageContainer,
+} from "@/features/admin/shared/ui";
 import {
   useMarketplaceAdminOrderAuditLogs,
   useMarketplaceAdminOrderDetail,
@@ -90,7 +96,7 @@ export function AdminMarketplaceOrdersPage() {
       });
       await Promise.all([selectedOrderQuery.refetch(), auditLogsQuery.refetch()]);
       closeRejectPaymentModal();
-    } catch (error) {
+    } catch {
       toast.error("Failed to reject payment proof. Please try again.");
       // Keep modal open on error so user can retry
     }
@@ -111,22 +117,22 @@ export function AdminMarketplaceOrdersPage() {
       await cancelMutation.mutateAsync({ status: "CANCELLED", reason });
       await Promise.all([selectedOrderQuery.refetch(), auditLogsQuery.refetch()]);
       closeCancelOrderModal();
-    } catch (error) {
+    } catch {
       toast.error("Failed to cancel order. Please try again.");
       // Keep modal open on error so user can retry
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-sm font-medium text-primary">FarmTrace Admin</p>
-        <h1 className="mt-1 text-3xl font-bold text-foreground">Manage marketplace orders</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Review and manage marketplace orders, verify payment proofs, and track order status changes.
-        </p>
-      </div>
+    <AdminPageContainer>
+      <AdminHeaderCard
+        title="Manage marketplace orders"
+        description="Review and manage marketplace orders, verify payment proofs, and track order status changes."
+        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">FarmTrace Admin</span>}
+      />
 
+      <AdminFilterCard>
+        <CardContent className="p-4">
       <div className="flex flex-wrap gap-2">
         {statusFilters.map((option) => (
           <Button
@@ -138,15 +144,17 @@ export function AdminMarketplaceOrdersPage() {
               setStatus(option.value);
               setPage(0);
             }}
-            className="rounded-full"
+            className="rounded-[14px]"
           >
             {option.label}
           </Button>
         ))}
       </div>
+        </CardContent>
+      </AdminFilterCard>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-        <Card className="border-border shadow-sm">
+        <AdminContentCard>
           <CardHeader className="border-b border-border/50">
             <CardTitle>Order list</CardTitle>
           </CardHeader>
@@ -180,11 +188,11 @@ export function AdminMarketplaceOrdersPage() {
               <p className="p-4 text-sm text-muted-foreground">No orders matched the current status filter.</p>
             ) : null}
           </CardContent>
-        </Card>
+        </AdminContentCard>
 
         {selectedOrder ? (
           <div className="space-y-6">
-            <Card className="border-border shadow-sm">
+            <AdminContentCard>
               <CardHeader className="border-b border-border/50">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -236,7 +244,7 @@ export function AdminMarketplaceOrdersPage() {
                             verificationNote: "",
                           });
                           await Promise.all([selectedOrderQuery.refetch(), auditLogsQuery.refetch()]);
-                        } catch (error) {
+                        } catch {
                           toast.error("Failed to verify payment. Please try again.");
                         }
                       }}
@@ -281,9 +289,9 @@ export function AdminMarketplaceOrdersPage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </AdminContentCard>
 
-            <Card className="border-border shadow-sm">
+            <AdminContentCard>
               <CardHeader className="border-b border-border/50">
                 <CardTitle>Audit log</CardTitle>
               </CardHeader>
@@ -303,14 +311,14 @@ export function AdminMarketplaceOrdersPage() {
                   <p className="text-sm text-muted-foreground">No audit log entries for this order yet.</p>
                 ) : null}
               </CardContent>
-            </Card>
+            </AdminContentCard>
           </div>
         ) : (
-          <Card className="border-border shadow-sm">
+          <AdminContentCard>
             <CardContent className="p-8 text-sm text-muted-foreground">
               Select an order from the list to review shipping, payment proof, and audit history.
             </CardContent>
-          </Card>
+          </AdminContentCard>
         )}
       </div>
 
@@ -349,6 +357,6 @@ export function AdminMarketplaceOrdersPage() {
         reasonPlaceholder="Explain why this order is being cancelled..."
         isLoading={cancelMutation.isPending}
       />
-    </div>
+    </AdminPageContainer>
   );
 }

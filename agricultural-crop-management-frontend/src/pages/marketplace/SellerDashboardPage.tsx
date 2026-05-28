@@ -12,6 +12,7 @@ import { AsyncState, Button, Card, CardContent, CardHeader, CardTitle, PageConta
 import { useMarketplaceFarmerDashboard, useMarketplaceFarmerProducts } from "@/features/marketplace/hooks";
 import { SellerMarketplaceTabs } from "@/features/marketplace/layout";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
+import { getMarketplaceOrderStatusLabel } from "@/features/marketplace/lib/orderStatus";
 
 type Translator = (key: string, optionsOrDefault?: Record<string, unknown> | string) => string;
 
@@ -47,22 +48,7 @@ function MetricCard({
 }
 
 function orderStatusLabel(status: string, t: Translator) {
-  switch (status) {
-    case "PENDING":
-      return t("marketplaceSeller.status.order.pending", "Pending");
-    case "CONFIRMED":
-      return t("marketplaceSeller.status.order.confirmed", "Confirmed");
-    case "PREPARING":
-      return t("marketplaceSeller.status.order.preparing", "Preparing");
-    case "DELIVERING":
-      return t("marketplaceSeller.status.order.delivering", "Delivering");
-    case "COMPLETED":
-      return t("marketplaceSeller.status.order.completed", "Completed");
-    case "CANCELLED":
-      return t("marketplaceSeller.status.order.cancelled", "Cancelled");
-    default:
-      return status;
-  }
+  return getMarketplaceOrderStatusLabel(status, t, "marketplaceSeller.status.order");
 }
 
 function unavailableReasonLabel(reason: MarketplaceStatsUnavailableReason, t: Translator) {

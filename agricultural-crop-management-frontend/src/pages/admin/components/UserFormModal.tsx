@@ -1,28 +1,26 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useI18n } from "@/hooks/useI18n";
-import {
-  adminRoleApi,
-  adminUsersApi,
-  type AdminUser,
-  type Role,
-} from "@/services/api.admin";
-import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/shared/ui";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
+import {
+  adminRoleApi,
+  adminUsersApi,
+  type AdminUser,
+  type Role,
+} from "@/features/admin/shared/api";
 import {
   Edit,
   Loader2,
@@ -206,7 +204,7 @@ export function UserFormModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-[18px] border-border bg-card shadow-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             {isEditMode ? (
@@ -244,7 +242,7 @@ export function UserFormModal({
                 onChange={(e) =>
                   setFormData({ ...formData, username: e.target.value })
                 }
-                className={`pl-10 ${errors.username ? "border-destructive" : ""}`}
+                className={`rounded-[14px] pl-10 ${errors.username ? "border-destructive" : ""}`}
               />
             </div>
             {errors.username && (
@@ -266,7 +264,7 @@ export function UserFormModal({
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className={errors.password ? "border-destructive" : ""}
+                className={`rounded-[14px] ${errors.password ? "border-destructive" : ""}`}
               />
               {errors.password && (
                 <p className="text-xs text-destructive">{errors.password}</p>
@@ -287,7 +285,7 @@ export function UserFormModal({
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
+                className={`rounded-[14px] pl-10 ${errors.email ? "border-destructive" : ""}`}
               />
             </div>
             {errors.email && (
@@ -305,6 +303,7 @@ export function UserFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, fullName: e.target.value })
               }
+              className="rounded-[14px]"
             />
           </div>
 
@@ -320,7 +319,7 @@ export function UserFormModal({
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value })
                 }
-                className="pl-10"
+                className="rounded-[14px] pl-10"
               />
             </div>
           </div>
@@ -331,7 +330,7 @@ export function UserFormModal({
               <Shield className="w-4 h-4" />
               Roles <span className="text-destructive">*</span>
             </Label>
-            <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-muted/30">
+            <div className="flex flex-wrap gap-2 rounded-[14px] border bg-muted/30 p-3">
               {loadingRoles ? (
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -376,7 +375,7 @@ export function UserFormModal({
                   setFormData({ ...formData, status: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="rounded-[14px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -405,14 +404,19 @@ export function UserFormModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={loading}
+            className="rounded-[14px]"
+          >
             <X className="w-4 h-4 mr-2" />
             {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={loading}
-            className="bg-primary hover:bg-primary/90"
+            className="rounded-[14px] bg-primary hover:bg-primary/90"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

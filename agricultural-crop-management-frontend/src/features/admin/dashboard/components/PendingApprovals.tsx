@@ -1,11 +1,19 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, Clock3 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
+import { AdminContentCard } from '@/features/admin/shared/ui';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Button,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Skeleton,
+} from '@/shared/ui';
 import { cn } from '@/shared/lib';
 import type { AdminDashboardPendingApproval } from '../hooks/useAdminDashboard';
 
@@ -58,7 +66,7 @@ export function PendingApprovals({
   );
 
   return (
-    <Card className="border-0 shadow-sm">
+    <AdminContentCard>
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -140,6 +148,6 @@ export function PendingApprovals({
           </div>
         )}
       </CardContent>
-    </Card>
+    </AdminContentCard>
   );
 }

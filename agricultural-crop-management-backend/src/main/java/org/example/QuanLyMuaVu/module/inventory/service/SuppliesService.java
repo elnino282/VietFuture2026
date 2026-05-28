@@ -59,6 +59,44 @@ public class SuppliesService {
         return PageResponse.of(page, items);
     }
 
+    public SupplierResponse createSupplier(org.example.QuanLyMuaVu.module.inventory.dto.request.CreateSupplierRequest request) {
+        Supplier supplier = Supplier.builder()
+                .name(request.getName())
+                .licenseNo(request.getLicenseNo())
+                .contactEmail(request.getContactEmail())
+                .contactPhone(request.getContactPhone())
+                .build();
+        supplier = supplierRepository.save(supplier);
+        return toSupplierResponse(supplier);
+    }
+
+    public SupplierResponse updateSupplier(Integer id, org.example.QuanLyMuaVu.module.inventory.dto.request.UpdateSupplierRequest request) {
+        Supplier supplier = supplierRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.SUPPLIER_NOT_FOUND));
+        
+        if (request.getName() != null) {
+            supplier.setName(request.getName());
+        }
+        if (request.getLicenseNo() != null) {
+            supplier.setLicenseNo(request.getLicenseNo());
+        }
+        if (request.getContactEmail() != null) {
+            supplier.setContactEmail(request.getContactEmail());
+        }
+        if (request.getContactPhone() != null) {
+            supplier.setContactPhone(request.getContactPhone());
+        }
+        
+        supplier = supplierRepository.save(supplier);
+        return toSupplierResponse(supplier);
+    }
+
+    public void deleteSupplier(Integer id) {
+        Supplier supplier = supplierRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.SUPPLIER_NOT_FOUND));
+        supplierRepository.delete(supplier);
+    }
+
     // ============================================
     // CATALOG: SUPPLY ITEMS
     // ============================================

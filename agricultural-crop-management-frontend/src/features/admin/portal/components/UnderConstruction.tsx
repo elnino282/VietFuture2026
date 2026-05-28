@@ -1,6 +1,6 @@
 import { Calendar } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { useI18n } from '@/hooks/useI18n';
+import { Card, CardContent } from '@/shared/ui';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 type UnderConstructionProps = {
   title: string;
@@ -13,8 +13,8 @@ export function UnderConstruction({ title }: UnderConstructionProps) {
     <div className="p-6 max-w-7xl mx-auto">
       <Card className="border-dashed border-2">
         <CardContent className="flex flex-col items-center justify-center py-16">
-          <div className="w-16 h-16 rounded-full bg-[#F5F6F8] flex items-center justify-center mb-4">
-            <Calendar className="w-8 h-8 text-[#6B7280]" />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            <Calendar className="h-8 w-8 text-muted-foreground" />
           </div>
           <h3 className="mb-2 font-semibold text-lg">{title}</h3>
           <p className="text-sm text-muted-foreground">

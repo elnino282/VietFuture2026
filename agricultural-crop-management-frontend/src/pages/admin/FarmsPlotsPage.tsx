@@ -1,7 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Building2, MapPin, Search, RefreshCw, ChevronRight } from 'lucide-react';
-import { AsyncState, PageContainer } from '@/shared/ui';
+import { Building2, MapPin, Search, RefreshCw, MoreVertical } from 'lucide-react';
+import {
+  AsyncState,
+  CardContent,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui';
+import {
+  AdminContentCard,
+  AdminFilterCard,
+  AdminHeaderCard,
+  AdminPageContainer,
+  adminTabsListClass,
+} from '@/features/admin/shared/ui';
+import { cn } from '@/shared/lib';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useAdminFarms,
@@ -200,35 +215,39 @@ export function FarmsPlotsPage() {
 
   const renderFarms = () => (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search farms..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-sm w-full sm:w-64"
-            />
+      <AdminFilterCard>
+        <CardContent className="p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search farms..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  className="pl-10 pr-4 py-2 border border-border rounded-[14px] bg-card text-sm w-full sm:w-64"
+                />
+              </div>
+              <button
+                onClick={() => handleSearch()}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+              >
+                <Search className="h-4 w-4" />
+                Search
+              </button>
+            </div>
+            <button
+              onClick={handleRefresh}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
           </div>
-          <button
-            onClick={() => handleSearch()}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
-          >
-            <Search className="h-4 w-4" />
-            Search
-          </button>
-        </div>
-        <button
-          onClick={handleRefresh}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
-      </div>
+        </CardContent>
+      </AdminFilterCard>
 
       <AsyncState
         isLoading={loading}
@@ -240,7 +259,8 @@ export function FarmsPlotsPage() {
         emptyTitle="No farms found"
         emptyDescription="There are no farms matching your current search criteria."
       >
-        <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
+        <AdminContentCard>
+          <div className="overflow-x-auto">
           <table className="w-full min-w-[860px]">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
@@ -249,7 +269,7 @@ export function FarmsPlotsPage() {
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Area (ha)</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Location</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -269,19 +289,30 @@ export function FarmsPlotsPage() {
                   <td className="px-4 py-3 text-sm text-muted-foreground">
                     {[farm.wardName, farm.provinceName].filter(Boolean).join(', ') || '-'}
                   </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => handleViewFarm(farm)}
-                      className="text-sm text-primary hover:underline inline-flex items-center gap-1"
-                    >
-                      View <ChevronRight className="h-4 w-4" />
-                    </button>
+                  <td className="px-4 py-3 text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-[14px] border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          aria-label={`Actions for ${farm.name}`}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem onSelect={() => handleViewFarm(farm)}>
+                          View details
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </AdminContentCard>
       </AsyncState>
 
       {totalPages > 1 && (
@@ -310,38 +341,42 @@ export function FarmsPlotsPage() {
 
   const renderPlots = () => (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search plots..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-sm w-full sm:w-64"
-            />
+      <AdminFilterCard>
+        <CardContent className="p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search plots..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  className="pl-10 pr-4 py-2 border border-border rounded-[14px] bg-card text-sm w-full sm:w-64"
+                />
+              </div>
+              <select
+                value={farmFilter || ''}
+                onChange={(e) => { setFarmFilter(e.target.value ? Number(e.target.value) : null); setPage(0); }}
+                className="w-full sm:w-auto px-3 py-2 border border-border rounded-[14px] bg-card text-sm"
+              >
+                <option value="">All Farms</option>
+                {(filterFarms ?? []).map(f => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={handleRefresh}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
           </div>
-          <select
-            value={farmFilter || ''}
-            onChange={(e) => { setFarmFilter(e.target.value ? Number(e.target.value) : null); setPage(0); }}
-            className="w-full sm:w-auto px-3 py-2 border border-border rounded-lg bg-background text-sm"
-          >
-            <option value="">All Farms</option>
-            {(filterFarms ?? []).map(f => (
-              <option key={f.id} value={f.id}>{f.name}</option>
-            ))}
-          </select>
-        </div>
-        <button
-          onClick={handleRefresh}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
-      </div>
+        </CardContent>
+      </AdminFilterCard>
 
       <AsyncState
         isLoading={loading}
@@ -353,7 +388,8 @@ export function FarmsPlotsPage() {
         emptyTitle="No plots found"
         emptyDescription="There are no plots matching your current search criteria."
       >
-        <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
+        <AdminContentCard>
+          <div className="overflow-x-auto">
           <table className="w-full min-w-[760px]">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
@@ -361,7 +397,7 @@ export function FarmsPlotsPage() {
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Farm</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Area (ha)</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Soil Type</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -371,19 +407,30 @@ export function FarmsPlotsPage() {
                   <td className="px-4 py-3 text-sm">{plot.farmName || '-'}</td>
                   <td className="px-4 py-3 text-sm">{plot.area?.toFixed(2) || '-'}</td>
                   <td className="px-4 py-3 text-sm">{plot.soilType || '-'}</td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => handleViewPlot(plot)}
-                      className="text-sm text-primary hover:underline inline-flex items-center gap-1"
-                    >
-                      View Seasons <ChevronRight className="h-4 w-4" />
-                    </button>
+                  <td className="px-4 py-3 text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-[14px] border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          aria-label={`Actions for ${plot.plotName || 'plot'}`}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onSelect={() => handleViewPlot(plot)}>
+                          View seasons
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </AdminContentCard>
       </AsyncState>
 
       {totalPages > 1 && (
@@ -411,34 +458,40 @@ export function FarmsPlotsPage() {
   );
 
   return (
-    <PageContainer>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">Farms & Plots</h1>
-        <p className="text-muted-foreground">System-wide overview of all farms and plots</p>
-      </div>
+    <AdminPageContainer>
+      <AdminHeaderCard
+        title="Farms & Plots"
+        description="System-wide overview of all farms and plots"
+      />
 
       {/* Tab Navigation */}
-      <div className="flex overflow-x-auto border-b border-border mb-6">
+      <div className="overflow-x-auto pb-1">
+        <div className={adminTabsListClass}>
         <button
           onClick={() => { setActiveTab('farms'); setPage(0); setSearchTerm(''); }}
-          className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 -mb-px ${activeTab === 'farms'
-            ? 'border-primary text-primary'
-            : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
+          className={cn(
+            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
+            activeTab === 'farms'
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
         >
           <Building2 className="inline-block h-4 w-4 mr-2" />
           Farms
         </button>
         <button
           onClick={() => { setActiveTab('plots'); setPage(0); setSearchTerm(''); }}
-          className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 -mb-px ${activeTab === 'plots'
-            ? 'border-primary text-primary'
-            : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
+          className={cn(
+            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
+            activeTab === 'plots'
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
         >
           <MapPin className="inline-block h-4 w-4 mr-2" />
           Plots
         </button>
+        </div>
       </div>
 
       {/* Tab Content */}
@@ -610,6 +663,6 @@ export function FarmsPlotsPage() {
           </div>
         </div>
       )}
-    </PageContainer>
+    </AdminPageContainer>
   );
 }

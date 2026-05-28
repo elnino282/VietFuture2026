@@ -2500,7 +2500,20 @@
         "preparing": "Đang chuẩn bị",
         "delivering": "Đang giao",
         "completed": "Hoàn tất",
-        "cancelled": "Đã hủy"
+        "cancelled": "Đã hủy",
+        "PENDING_PAYMENT": "Chờ thanh toán",
+        "PAYMENT_SUBMITTED": "Đã gửi biên lai",
+        "PAYMENT_VERIFIED": "Đã xác minh thanh toán",
+        "CONFIRMED": "Đã xác nhận",
+        "PREPARING": "Đang chuẩn bị",
+        "SHIPPED": "Đang giao",
+        "DELIVERED": "Đã giao",
+        "COMPLETED": "Hoàn tất",
+        "REJECTED": "Bị từ chối",
+        "CANCELLED": "Đã hủy",
+        "PENDING": "Chờ thanh toán",
+        "DELIVERING": "Đang giao",
+        "unknown": "Trạng thái không xác định ({{status}})"
       }
     },
     "table": {

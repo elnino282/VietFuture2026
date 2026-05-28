@@ -18,9 +18,15 @@ export function SeasonKPICards({ season }: SeasonKPICardsProps) {
   const costPerHaLabel = Number.isFinite(costPerHa)
     ? formatMoney(convertToDisplayCurrency(costPerHa, preferences.currency), preferences.currency, preferences.locale)
     : '-';
+  const budgetUsage = season.budgetTotal > 0
+    ? (season.actualCost / season.budgetTotal) * 100
+    : null;
+  const budgetUsageLabel = budgetUsage == null || !Number.isFinite(budgetUsage)
+    ? '-'
+    : budgetUsage.toFixed(0);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
       <Card className="border-border acm-rounded-lg acm-card-shadow">
         <CardContent className="px-6 py-4">
           <div className="flex items-center justify-between mb-2">
@@ -67,11 +73,11 @@ export function SeasonKPICards({ season }: SeasonKPICardsProps) {
             <DollarSign className="w-4 h-4 text-accent" />
           </div>
           <div className={`numeric text-2xl ${
-            (season.actualCost / season.budgetTotal) * 100 > 100
+            budgetUsage != null && budgetUsage > 100
               ? 'text-destructive'
               : 'text-foreground'
           }`}>
-            {((season.actualCost / season.budgetTotal) * 100).toFixed(0)}
+            {budgetUsageLabel}
           </div>
           <div className="text-xs text-muted-foreground mt-1">%</div>
         </CardContent>

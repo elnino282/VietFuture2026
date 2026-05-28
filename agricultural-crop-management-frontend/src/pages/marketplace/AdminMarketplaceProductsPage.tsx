@@ -1,8 +1,23 @@
 import { useState } from "react";
-import { Check, RotateCcw, Search, X } from "lucide-react";
+import { Check, MoreVertical, RotateCcw, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import type { MarketplaceProductStatus } from "@/shared/api";
-import { Badge, Button, Input } from "@/shared/ui";
+import {
+  Badge,
+  Button,
+  CardContent,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  Input,
+} from "@/shared/ui";
+import {
+  AdminContentCard,
+  AdminFilterCard,
+  AdminHeaderCard,
+  AdminPageContainer,
+} from "@/features/admin/shared/ui";
 import {
   useMarketplaceAdminProducts,
   useMarketplaceUpdateAdminProductStatusMutation,
@@ -124,32 +139,43 @@ function ModerationActions({
             ];
 
   return (
-    <div className="flex flex-wrap justify-end gap-1">
-      {actions.map((action) => {
-        const Icon = action.icon;
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-[14px]"
+          disabled={mutation.isPending}
+          aria-label="Product actions"
+        >
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        {actions.map((action) => {
+          const Icon = action.icon;
 
-        return (
-          <Button
-            key={action.status}
-            type="button"
-            variant="ghost"
-            size="sm"
-            className={action.className}
-            disabled={mutation.isPending}
-            onClick={() => {
-              if (action.requiresReason) {
-                onOpenRejectModal(productId, action.status);
-              } else {
-                handleApprove(action.status);
-              }
-            }}
-          >
-            <Icon size={14} />
-            <span className="ml-1">{action.label}</span>
-          </Button>
-        );
-      })}
-    </div>
+          return (
+            <DropdownMenuItem
+              key={action.status}
+              className={action.className}
+              disabled={mutation.isPending}
+              onSelect={() => {
+                if (action.requiresReason) {
+                  onOpenRejectModal(productId, action.status);
+                } else {
+                  handleApprove(action.status);
+                }
+              }}
+            >
+              <Icon size={14} />
+              <span>{action.label}</span>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -193,23 +219,22 @@ export function AdminMarketplaceProductsPage() {
         statusReason: reason,
       });
       closeRejectModal();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update product status. Please try again.");
       // Keep modal open on error so user can retry
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-sm font-medium text-primary">FarmTrace Admin</p>
-        <h1 className="mt-1 text-3xl font-bold text-foreground">Moderate marketplace products</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Return to the older review-table layout while keeping current moderation mutations and filters.
-        </p>
-      </div>
+    <AdminPageContainer>
+      <AdminHeaderCard
+        title="Moderate marketplace products"
+        description="Review product listings while keeping current moderation mutations and filters."
+        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">FarmTrace Admin</span>}
+      />
 
-      <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <AdminFilterCard>
+        <CardContent className="p-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
           <div className="relative max-w-xl flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -217,7 +242,7 @@ export function AdminMarketplaceProductsPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search by product, farm, or seller..."
-              className="h-11 rounded-xl border-border pl-10"
+              className="h-11 rounded-[14px] border-border pl-10"
             />
           </div>
 
@@ -232,16 +257,17 @@ export function AdminMarketplaceProductsPage() {
                   setStatus(option.value);
                   setPage(0); // Reset page to 0 on filter change
                 }}
-                className="rounded-full"
+                className="rounded-[14px]"
               >
                 {option.label}
               </Button>
             ))}
           </div>
         </div>
-      </div>
+        </CardContent>
+      </AdminFilterCard>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <AdminContentCard>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
@@ -315,7 +341,7 @@ export function AdminMarketplaceProductsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </AdminContentCard>
 
       {productsQuery.data && (
         <PaginationControls
@@ -345,6 +371,6 @@ export function AdminMarketplaceProductsPage() {
         reasonLabel="Reason for action"
         reasonPlaceholder="Explain why this action is being taken..."
       />
-    </div>
+    </AdminPageContainer>
   );
 }

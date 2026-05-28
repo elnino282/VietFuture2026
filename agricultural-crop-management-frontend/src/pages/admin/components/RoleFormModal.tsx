@@ -1,22 +1,22 @@
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useI18n } from "@/hooks/useI18n";
+  Input,
+  Label,
+  Textarea,
+} from "@/shared/ui";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
   adminRoleApi,
   type Role,
   type RoleCreateRequest,
   type RoleUpdateRequest,
-} from "@/services/api.admin";
+} from "@/features/admin/shared/api";
 import { Edit, FileText, Loader2, Plus, Save, Shield, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -138,7 +138,7 @@ export function RoleFormModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md rounded-[18px] border-border bg-card shadow-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             {isEditMode ? (
@@ -176,7 +176,7 @@ export function RoleFormModal({
                 onChange={(e) =>
                   setFormData({ ...formData, code: e.target.value })
                 }
-                className={`pl-10 uppercase ${errors.code ? "border-destructive" : ""}`}
+                className={`rounded-[14px] pl-10 uppercase ${errors.code ? "border-destructive" : ""}`}
                 disabled={isEditMode}
               />
             </div>
@@ -202,7 +202,7 @@ export function RoleFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className={errors.name ? "border-destructive" : ""}
+              className={`rounded-[14px] ${errors.name ? "border-destructive" : ""}`}
             />
             {errors.name && (
               <p className="text-xs text-destructive">{errors.name}</p>
@@ -222,20 +222,26 @@ export function RoleFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
+              className="rounded-[14px]"
               rows={3}
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={loading}
+            className="rounded-[14px]"
+          >
             <X className="w-4 h-4 mr-2" />
             {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={loading}
-            className="bg-primary hover:bg-primary/90"
+            className="rounded-[14px] bg-primary hover:bg-primary/90"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

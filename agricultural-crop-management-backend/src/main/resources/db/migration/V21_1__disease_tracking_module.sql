@@ -55,8 +55,72 @@ CREATE TABLE IF NOT EXISTS disease_treatments (
     CONSTRAINT fk_disease_treatments_created_by FOREIGN KEY (created_by_user_id) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX IF NOT EXISTS idx_disease_records_season_id ON disease_records(season_id);
-CREATE INDEX IF NOT EXISTS idx_disease_records_status ON disease_records(status);
-CREATE INDEX IF NOT EXISTS idx_disease_records_severity ON disease_records(severity);
-CREATE INDEX IF NOT EXISTS idx_disease_records_detected_at ON disease_records(detected_at);
-CREATE INDEX IF NOT EXISTS idx_disease_treatments_disease_record_id ON disease_treatments(disease_record_id);
+SET @sql := IF(
+    EXISTS (
+        SELECT 1 FROM information_schema.statistics
+        WHERE table_schema = DATABASE()
+          AND table_name = 'disease_records'
+          AND index_name = 'idx_disease_records_season_id'
+    ),
+    'SELECT 1',
+    'CREATE INDEX idx_disease_records_season_id ON disease_records(season_id)'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql := IF(
+    EXISTS (
+        SELECT 1 FROM information_schema.statistics
+        WHERE table_schema = DATABASE()
+          AND table_name = 'disease_records'
+          AND index_name = 'idx_disease_records_status'
+    ),
+    'SELECT 1',
+    'CREATE INDEX idx_disease_records_status ON disease_records(status)'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql := IF(
+    EXISTS (
+        SELECT 1 FROM information_schema.statistics
+        WHERE table_schema = DATABASE()
+          AND table_name = 'disease_records'
+          AND index_name = 'idx_disease_records_severity'
+    ),
+    'SELECT 1',
+    'CREATE INDEX idx_disease_records_severity ON disease_records(severity)'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql := IF(
+    EXISTS (
+        SELECT 1 FROM information_schema.statistics
+        WHERE table_schema = DATABASE()
+          AND table_name = 'disease_records'
+          AND index_name = 'idx_disease_records_detected_at'
+    ),
+    'SELECT 1',
+    'CREATE INDEX idx_disease_records_detected_at ON disease_records(detected_at)'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql := IF(
+    EXISTS (
+        SELECT 1 FROM information_schema.statistics
+        WHERE table_schema = DATABASE()
+          AND table_name = 'disease_treatments'
+          AND index_name = 'idx_disease_treatments_disease_record_id'
+    ),
+    'SELECT 1',
+    'CREATE INDEX idx_disease_treatments_disease_record_id ON disease_treatments(disease_record_id)'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

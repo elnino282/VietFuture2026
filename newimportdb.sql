@@ -1,7 +1,11 @@
+-- LEGACY FULL DUMP - DO NOT USE WITH FLYWAY RESET FLOW
+-- This file creates/drops schema and may break Flyway-managed database.
+-- Use the seed-only SQL at agricultural-crop-management-backend/newimportdb.sql after Flyway migrate.
+
 -- =========================================================
 -- ACM Platform - One-Run Demo Bootstrap (MySQL 8 Compatible)
 -- =========================================================
--- Version: 7.0 - Full bootstrap with marketplace demo - 2026-04-23
+-- Version: 7.1 - FDN rotation demo aligned to 2021-2026 storyline - 2026-05-26
 --
 -- Demo accounts:
 --   admin    / admin123
@@ -26,9 +30,8 @@ USE `quanlymuavu`;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-DROP VIEW IF EXISTS vw_admin_inventory_lot_expiry_base;
-DROP VIEW IF EXISTS vw_admin_inventory_lot_farm;
-DROP VIEW IF EXISTS vw_admin_season_risk;
+-- Admin views may have been created previously with a SYSTEM_USER definer.
+-- Avoid dropping/replacing them here so demo imports also work with app-level DB users.
 
 DROP TABLE IF EXISTS marketplace_product_reviews;
 DROP TABLE IF EXISTS marketplace_addresses;
@@ -112,15 +115,17 @@ CREATE TABLE users (
     user_id BIGINT NOT NULL PRIMARY KEY,
     user_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
+    google_id VARCHAR(255) NULL,
     phone VARCHAR(30) NULL,
     full_name VARCHAR(255) NULL,
-    password_hash VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NULL,
     status VARCHAR(30) NOT NULL,
     province_id INT NULL,
     ward_id INT NULL,
     joined_date DATETIME NULL,
     CONSTRAINT uk_users_username UNIQUE (user_name),
     CONSTRAINT uk_users_email UNIQUE (email),
+    CONSTRAINT uk_users_google_id UNIQUE (google_id),
     CONSTRAINT fk_users_province FOREIGN KEY (province_id) REFERENCES provinces(id),
     CONSTRAINT fk_users_ward FOREIGN KEY (ward_id) REFERENCES wards(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -154,6 +159,10 @@ CREATE TABLE farms (
     province_id INT NOT NULL,
     ward_id INT NOT NULL,
     area DECIMAL(19,2) NULL,
+    latitude DECIMAL(10,6) NULL,
+    longitude DECIMAL(10,6) NULL,
+    average_rating DOUBLE NOT NULL DEFAULT 0,
+    rating_count INT NOT NULL DEFAULT 0,
     active BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT fk_farms_user FOREIGN KEY (user_id) REFERENCES users(user_id),
     CONSTRAINT fk_farms_province FOREIGN KEY (province_id) REFERENCES provinces(id),
@@ -652,6 +661,8 @@ CREATE TABLE marketplace_products (
     season_id INT NULL,
     lot_id INT NOT NULL,
     traceable BOOLEAN NOT NULL DEFAULT FALSE,
+    average_rating DOUBLE NOT NULL DEFAULT 0,
+    rating_count INT NOT NULL DEFAULT 0,
     status VARCHAR(30) NOT NULL DEFAULT 'DRAFT',
     published_at TIMESTAMP NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -764,6 +775,7 @@ CREATE TABLE marketplace_addresses (
     is_default BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
     CONSTRAINT fk_marketplace_addresses_user FOREIGN KEY (user_id) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -771,13 +783,18 @@ CREATE TABLE marketplace_product_reviews (
     id BIGINT NOT NULL PRIMARY KEY,
     product_id BIGINT NOT NULL,
     order_id BIGINT NOT NULL,
+    order_item_id BIGINT NULL,
     buyer_user_id BIGINT NOT NULL,
     rating TINYINT NOT NULL,
     comment TEXT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL,
+    hidden BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT uk_marketplace_reviews_product_order_buyer UNIQUE (product_id, order_id, buyer_user_id),
+    CONSTRAINT uq_review_order_item_buyer UNIQUE (order_item_id, buyer_user_id),
     CONSTRAINT fk_marketplace_reviews_product FOREIGN KEY (product_id) REFERENCES marketplace_products(id),
     CONSTRAINT fk_marketplace_reviews_order FOREIGN KEY (order_id) REFERENCES marketplace_orders(id),
+    CONSTRAINT fk_review_order_item FOREIGN KEY (order_item_id) REFERENCES marketplace_order_items(id),
     CONSTRAINT fk_marketplace_reviews_buyer_user FOREIGN KEY (buyer_user_id) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -823,6 +840,7 @@ CREATE INDEX idx_marketplace_orders_payment_verification_status ON marketplace_o
 CREATE INDEX idx_marketplace_order_items_order ON marketplace_order_items(order_id);
 CREATE INDEX idx_marketplace_order_items_product ON marketplace_order_items(product_id);
 CREATE INDEX idx_marketplace_addresses_user ON marketplace_addresses(user_id);
+CREATE INDEX idx_marketplace_addresses_user_deleted ON marketplace_addresses(user_id, deleted_at);
 CREATE INDEX idx_marketplace_reviews_product ON marketplace_product_reviews(product_id);
 CREATE INDEX idx_marketplace_reviews_order ON marketplace_product_reviews(order_id);
 
@@ -897,27 +915,26 @@ INSERT INTO varieties (id, crop_id, name, description) VALUES
 -- =========================================================
 -- 2. FARMS (primary farmer = user_id 2)
 -- =========================================================
-INSERT INTO farms (farm_id, user_id, farm_name, province_id, ward_id, area, active) VALUES
-    (1, 2, 'Nông trại Phú Điền', 1, 1, 15.50, TRUE),
-    (2, 2, 'Nông trại An Phát', 1, 1, 10.20, TRUE),
-    (3, 2, 'Khu thử nghiệm Ngũ Cốc', 1, 1, 3.00, FALSE),
-    (4, @farmer2_user_id, 'Nông trại Cao Nguyên Xanh', 2, 2, 12.80, TRUE);
+INSERT INTO farms (farm_id, user_id, farm_name, province_id, ward_id, area, latitude, longitude, average_rating, rating_count, active) VALUES
+    (1, 2, 'Nông trại Phú Điền', 1, 1, 15.50, 10.493100, 105.688200, 5.0, 1, TRUE),
+    (2, 2, 'Nông trại An Phát', 1, 1, 10.20, 10.505400, 105.667900, 0.0, 0, TRUE),
+    (3, 2, 'Khu thử nghiệm Ngũ Cốc', 1, 1, 3.00, 10.512800, 105.681100, 0.0, 0, FALSE),
+    (4, @farmer2_user_id, 'Nông trại Cao Nguyên Xanh', 2, 2, 12.80, 11.940400, 108.445700, 0.0, 0, TRUE);
 
 
 -- =========================================================
 -- 3. PLOTS (Multiple statuses)
 -- =========================================================
-INSERT INTO plots (plot_id, farm_id, plot_name, area, soil_type, status, created_by, created_at, updated_at) VALUES
-    (1, 1, 'Lô A1 - Đậu nành', 2.50, 'LOAM', 'IN_USE', 2, '2024-06-01 08:00:00', NOW()),
-    (2, 1, 'Lô A2 - Lúa nước Đài Thơm 8', 4.00, 'CLAY', 'IN_USE', 2, '2024-06-01 08:00:00', NOW()),
-    (3, 1, 'Lô A3 - Luân canh lạc', 3.00, 'SANDY', 'FALLOW', 2, '2024-06-01 08:00:00', NOW()),
-    (4, 1, 'Lô A4 - Bảo trì tưới', 2.00, 'LOAM', 'MAINTENANCE', 2, '2024-06-01 08:00:00', NOW()),
-    (5, 1, 'Lô A5 - Sẵn sàng gieo ngô', 2.50, 'CLAY', 'AVAILABLE', 2, '2024-06-01 08:00:00', NOW()),
-    (6, 2, 'Lô B1 - Đậu đen', 1.80, 'LOAM', 'IN_USE', 2, '2024-08-01 08:00:00', NOW()),
-    (7, 2, 'Lô B2 - Lạc', 2.00, 'SANDY', 'IN_USE', 2, '2024-08-01 08:00:00', NOW()),
-    (8, 2, 'Lô B3 - Dự phòng', 3.00, 'CLAY', 'IDLE', 2, '2024-08-01 08:00:00', NOW()),
-    (9, 4, 'Lô C1 - Ngô cao nguyên', 4.60, 'LOAM', 'IN_USE', @farmer2_user_id, '2026-01-12 08:00:00', '2026-03-20 08:00:00');
-
+INSERT INTO plots (plot_id, farm_id, plot_name, area, soil_type, status, boundary_geojson, created_by, created_at, updated_at) VALUES
+    (1, 1, 'Lô A1 - Luân canh Lúa - Ngô - Cây họ đậu', 2.50, 'FERRALSOLS', 'IN_USE', '{"type":"Polygon","coordinates":[[[106.7018,10.7765],[106.7031,10.7765],[106.7031,10.7776],[106.7018,10.7776],[106.7018,10.7765]]]}', 2, '2024-06-01 08:00:00', NOW()),
+    (2, 1, 'Lô A2 - Lúa nước Đài Thơm 8', 4.00, 'CHERNOZEMS', 'IN_USE', '{"type":"Polygon","coordinates":[[[106.7040,10.7759],[106.7057,10.7759],[106.7057,10.7773],[106.7040,10.7773],[106.7040,10.7759]]]}', 2, '2024-06-01 08:00:00', NOW()),
+    (3, 1, 'Lô A3 - Luân canh lạc', 3.00, 'FLUVISOLS', 'FALLOW', NULL, 2, '2024-06-01 08:00:00', NOW()),
+    (4, 1, 'Lô A4 - Bảo trì tưới', 2.00, 'FERRALSOLS', 'MAINTENANCE', NULL, 2, '2024-06-01 08:00:00', NOW()),
+    (5, 1, 'Lô A5 - Sẵn sàng gieo ngô', 2.50, 'CHERNOZEMS', 'AVAILABLE', NULL, 2, '2024-06-01 08:00:00', NOW()),
+    (6, 2, 'Lô B1 - Đậu đen', 1.80, 'FERRALSOLS', 'IN_USE', NULL, 2, '2024-08-01 08:00:00', NOW()),
+    (7, 2, 'Lô B2 - Lạc', 2.00, 'FLUVISOLS', 'IN_USE', '{"type":"Polygon","coordinates":[[[106.7090,10.7728],[106.7101,10.7728],[106.7101,10.7738],[106.7090,10.7738],[106.7090,10.7728]]]}', 2, '2024-08-01 08:00:00', NOW()),
+    (8, 2, 'Lô B3 - Dự phòng', 3.00, 'CHERNOZEMS', 'IDLE', NULL, 2, '2024-08-01 08:00:00', NOW()),
+    (9, 4, 'Lô C1 - Ngô cao nguyên', 4.60, 'FERRALSOLS', 'IN_USE', NULL, @farmer2_user_id, '2026-01-12 08:00:00', '2026-03-20 08:00:00');
 
 -- =========================================================
 -- 4. SEASONS (All statuses: PLANNED, ACTIVE, COMPLETED, CANCELLED, ARCHIVED)
@@ -925,37 +942,33 @@ INSERT INTO plots (plot_id, farm_id, plot_name, area, soil_type, status, created
 INSERT INTO seasons (season_id, season_name, plot_id, crop_id, variety_id, start_date, planned_harvest_date, end_date, status, initial_plant_count, current_plant_count, expected_yield_kg, actual_yield_kg, budget_amount, notes, created_at) VALUES
     -- ============== NĂM 0 (2020): Dữ liệu rủi ro và tiền đề chu kỳ ==============
     (1, '2020 - Vụ Ớt Hè Thu (Bị hủy)', 1, 6, 8, '2020-05-15', '2020-08-15', '2020-06-20', 'CANCELLED', 45000, 0, 1500.00, 0.00, 4000000.00, 'Mùa vụ thất bại: Hủy do ngập lụt sớm, mất trắng toàn bộ cây giống', '2020-05-01 08:00:00'),
-    (2, '2020 - Vụ Khoai Tây Đông [Lưu trữ]', 1, 7, 9, '2020-09-10', '2020-12-20', '2020-12-25', 'ARCHIVED', 80000, 78000, 4500.00, 4600.00, 9500000.00, 'Trồng cây lấy củ giúp cày sâu, phá vỡ tầng đất nén chặt sau đợt ngập lụt, tạo tiền đề tốt cho chu kỳ luân canh FDN 2021', '2020-09-01 08:00:00'),
+    (2, '2020 - Vụ Khoai Tây Đông [Lưu trữ]', 1, 7, 9, '2020-09-10', '2020-12-20', '2020-12-25', 'ARCHIVED', 80000, 78000, 4500.00, 4600.00, 9500000.00, 'Trồng cây lấy củ giúp cày sâu, phá vỡ tầng đất nén chặt sau đợt ngập lụt, tạo tiền đề cho chuỗi theo dõi FDN từ năm 2021', '2020-09-01 08:00:00'),
 
-    -- ============== NĂM 1 (2021): Thiết lập nền tảng FDN ban đầu ==============
-    (3, '2021 - Vụ Ngô Xuân (Nền tảng FDN)', 1, 5, 7, '2021-01-15', '2021-04-25', '2021-04-28', 'COMPLETED', 18000, 17500, 2500.00, 2450.00, 7000000.00, 'Khởi đầu chu kỳ: Đất nghèo dinh dưỡng, FDN ở mức cao nhất, phụ thuộc 100% phân bón vô cơ', '2021-01-01 08:00:00'),
-    (4, '2021 - Vụ Đậu nành Hè', 1, 2, 3, '2021-05-15', '2021-08-20', '2021-08-25', 'COMPLETED', 120000, 115000, 950.00, 980.00, 5000000.00, 'Đưa cây họ đậu vào để bắt đầu tạo nốt sần, tích lũy Nitơ sinh học', '2021-05-01 08:00:00'),
-    (5, '2021 - Vụ Lúa Thu Đông', 1, 1, 1, '2021-09-10', '2021-12-15', '2021-12-20', 'COMPLETED', 200000, 195000, 3000.00, 3100.00, 15000000.00, 'Lúa hưởng lợi đạm dư thừa (Soil Legacy) từ vụ đậu trước, FDN bắt đầu giảm nhẹ', '2021-09-01 08:00:00'),
+    -- ============== GIAI ĐOẠN 1 (2021-2023): Lúa/Ngô liên tục, không có cây họ đậu -> FDN cao ==============
+    (3, '2021 - Vụ Ngô Xuân (FDN cao)', 1, 5, 7, '2021-01-15', '2021-04-25', '2021-04-28', 'COMPLETED', 18000, 17500, 2500.00, 2450.00, 8500000.00, 'Năm 1 không có cây họ đậu: ngô phụ thuộc chủ yếu vào phân đạm khoáng, FDN duy trì mức cao.', '2021-01-01 08:00:00'),
+    (4, '2021 - Vụ Lúa Hè (FDN cao)', 1, 1, 2, '2021-05-15', '2021-08-20', '2021-08-25', 'COMPLETED', 220000, 215000, 3100.00, 3150.00, 16000000.00, 'Tiếp tục trồng lúa sau ngô, chưa có nguồn cố định đạm sinh học nên vẫn cần bón đạm cao.', '2021-05-01 08:00:00'),
+    (5, '2021 - Vụ Ngô Thu Đông (FDN cao)', 1, 5, 7, '2021-09-10', '2021-12-15', '2021-12-20', 'COMPLETED', 18500, 18000, 2600.00, 2550.00, 8700000.00, 'Lúa - ngô liên tục làm soil legacy thấp, dashboard cần hiển thị FDN cao để làm baseline.', '2021-09-01 08:00:00'),
 
-    -- ============== NĂM 2 (2022): Tích lũy hữu cơ ==============
-    (6, '2022 - Vụ Lạc Xuân', 1, 3, 5, '2022-01-15', '2022-04-20', '2022-04-25', 'COMPLETED', 80000, 78000, 500.00, 520.00, 2000000.00, 'Gia tăng sinh khối hữu cơ, rễ lạc tơi xốp đất sâu', '2022-01-01 08:00:00'),
-    (7, '2022 - Vụ Đậu đen Hè', 1, 4, 6, '2022-05-10', '2022-07-25', '2022-07-28', 'COMPLETED', 50000, 48000, 2000.00, 1950.00, 10000000.00, 'Trồng kép họ đậu để ép cực đại lượng đạm tự nhiên vào đất', '2022-05-01 08:00:00'),
-    (8, '2022 - Vụ Ngô Thu', 1, 5, 7, '2022-08-15', '2022-11-20', '2022-11-25', 'COMPLETED', 18000, 17200, 2600.00, 2650.00, 7000000.00, 'Ngô thu hoạch năng suất cao nhưng FDN đã thấp hơn đáng kể so với vụ 3 (Năm 2021)', '2022-08-01 08:00:00'),
+    (6, '2022 - Vụ Lúa Đông Xuân (FDN cao)', 1, 1, 1, '2022-01-10', '2022-04-20', '2022-04-25', 'COMPLETED', 225000, 219000, 3000.00, 3050.00, 16200000.00, 'Năm 2 vẫn chưa luân canh cây họ đậu, lượng phân đạm khoáng tiếp tục chiếm tỷ trọng lớn.', '2022-01-01 08:00:00'),
+    (7, '2022 - Vụ Ngô Hè Thu (FDN cao)', 1, 5, 7, '2022-05-10', '2022-08-20', '2022-08-25', 'COMPLETED', 18800, 18100, 2700.00, 2700.00, 8800000.00, 'Ngô sau lúa không có nguồn N sinh học bổ sung, FDN vẫn ở vùng cảnh báo cao.', '2022-05-01 08:00:00'),
+    (8, '2022 - Vụ Lúa Thu Đông (FDN cao)', 1, 1, 2, '2022-09-05', '2022-12-15', '2022-12-20', 'COMPLETED', 225000, 218000, 3150.00, 3200.00, 16500000.00, 'Mùa lúa thứ ba trong chuỗi lúa/ngô liên tục, dữ liệu dùng để chứng minh phụ thuộc phân bón còn cao.', '2022-09-01 08:00:00'),
 
-    -- ============== NĂM 3 (2023): Giai đoạn tối ưu FDN ==============
-    (9, '2023 - Vụ Đậu nành Xuân', 1, 2, 4, '2023-01-15', '2023-04-20', '2023-04-22', 'COMPLETED', 130000, 125000, 1000.00, 1050.00, 5500000.00, 'Chu kỳ cố định đạm thường niên', '2023-01-01 08:00:00'),
-    (10, '2023 - Vụ Lúa Hè', 1, 1, 2, '2023-05-15', '2023-08-20', '2023-08-25', 'COMPLETED', 220000, 215000, 3200.00, 3350.00, 16000000.00, 'Lúa đạt đỉnh năng suất nhờ cấu trúc đất đã được phục hồi hoàn toàn', '2023-05-01 08:00:00'),
-    (11, '2023 - Vụ Lạc Thu Đông', 1, 3, 5, '2023-09-15', '2023-12-20', '2023-12-25', 'COMPLETED', 85000, 83000, 550.00, 580.00, 2200000.00, 'Phục hồi đất sau vụ lúa nước', '2023-09-01 08:00:00'),
+    (9, '2023 - Vụ Ngô Xuân (FDN cao)', 1, 5, 7, '2023-01-12', '2023-04-20', '2023-04-25', 'COMPLETED', 19000, 18400, 2800.00, 2850.00, 9000000.00, 'Năm 3 vẫn là cây ngũ cốc, chưa có cây họ đậu nên FDN tiếp tục cao.', '2023-01-01 08:00:00'),
+    (10, '2023 - Vụ Lúa Hè (Baseline FDN cao)', 1, 1, 1, '2023-05-15', '2023-08-20', '2023-08-25', 'COMPLETED', 230000, 224000, 3300.00, 3350.00, 17000000.00, 'Baseline trước khi thay đổi chiến lược: lúa hè phụ thuộc mạnh vào phân khoáng, dùng để so sánh với vụ lúa hè 2026.', '2023-05-01 08:00:00'),
+    (11, '2023 - Vụ Ngô Thu Đông (Chốt baseline FDN cao)', 1, 5, 7, '2023-09-10', '2023-12-20', '2023-12-25', 'COMPLETED', 19500, 18800, 2900.00, 2950.00, 9200000.00, 'Kết thúc ba năm lúa/ngô liên tục, soil legacy thấp và chưa có biological fixation đáng kể.', '2023-09-01 08:00:00'),
 
-    -- ============== NĂM 4 (2024): Ổn định và duy trì ==============
-    (12, '2024 - Vụ Ngô Xuân', 1, 5, 7, '2024-01-15', '2024-04-20', '2024-04-25', 'COMPLETED', 19000, 18500, 2800.00, 2900.00, 7500000.00, 'FDN duy trì ở vùng xanh an toàn (dưới 40%)', '2024-01-01 08:00:00'),
-    (13, '2024 - Vụ Đậu đen Hè', 1, 4, 6, '2024-05-15', '2024-07-25', '2024-07-28', 'COMPLETED', 55000, 53000, 2200.00, 2150.00, 10500000.00, 'Tăng cường hữu cơ', '2024-05-01 08:00:00'),
-    (14, '2024 - Vụ Lúa Thu Đông', 1, 1, 1, '2024-08-15', '2024-11-20', '2024-11-25', 'COMPLETED', 210000, 205000, 3100.00, 3250.00, 15500000.00, 'Giảm 60% lượng phân đạm hóa học so với các vụ thông thường', '2024-08-01 08:00:00'),
+    -- ============== GIAI ĐOẠN 2 (2024-2026): Bắt đầu luân canh cây họ đậu -> FDN giảm dần ==============
+    (12, '2024 - Vụ Đậu nành Xuân (Bắt đầu cải thiện FDN)', 1, 2, 4, '2024-01-15', '2024-04-20', '2024-04-25', 'COMPLETED', 135000, 130000, 1100.00, 1150.00, 6500000.00, 'Lần đầu đưa cây họ đậu vào sau ba năm ngũ cốc, bắt đầu tăng biological fixation và cải thiện đất.', '2024-01-01 08:00:00'),
+    (13, '2024 - Vụ Lúa Hè Thu (Sau đậu nành)', 1, 1, 2, '2024-05-15', '2024-08-20', '2024-08-25', 'COMPLETED', 225000, 219000, 3200.00, 3280.00, 15800000.00, 'Lúa sau đậu nành bắt đầu hưởng soil legacy, lượng phân khoáng giảm so với giai đoạn 2021-2023.', '2024-05-01 08:00:00'),
+    (14, '2024 - Vụ Ngô Thu Đông (FDN giảm nhẹ)', 1, 5, 7, '2024-09-10', '2024-12-20', '2024-12-25', 'COMPLETED', 19000, 18400, 2950.00, 3000.00, 8800000.00, 'Ngô sau giai đoạn cải tạo đầu tiên, FDN giảm nhưng chưa về mức tối ưu vì mới có một vụ họ đậu.', '2024-09-01 08:00:00'),
 
-    -- ============== NĂM 5 (2025): Chốt chu kỳ dài hạn 5 năm ==============
-    (15, '2025 - Vụ Đậu nành Xuân', 1, 2, 3, '2025-01-15', '2025-04-20', '2025-04-25', 'COMPLETED', 140000, 135000, 1100.00, 1150.00, 6000000.00, 'Cố định đạm trước khi chốt chu kỳ', '2025-01-01 08:00:00'),
-    (16, '2025 - Vụ Lạc Hè', 1, 3, 5, '2025-05-15', '2025-08-20', '2025-08-25', 'COMPLETED', 90000, 88000, 600.00, 620.00, 2500000.00, 'Tạo nền tảng Soil Legacy cực đại', '2025-05-01 08:00:00'),
-    (17, '2025 - Vụ Ngô Thu (Kết thúc Chu kỳ 1)', 1, 5, 7, '2025-09-15', '2025-12-20', '2025-12-25', 'COMPLETED', 20000, 19500, 3000.00, 3150.00, 8000000.00, 'Chốt chu kỳ 5 năm: Ngô đạt sản lượng kỷ lục với chỉ số FDN thấp nhất lịch sử trang trại', '2025-09-01 08:00:00'),
+    (15, '2025 - Vụ Lạc Xuân (Tăng cố định đạm)', 1, 3, 5, '2025-01-15', '2025-04-20', '2025-04-25', 'COMPLETED', 90000, 87500, 620.00, 650.00, 3000000.00, 'Lạc bổ sung một nhịp cây họ đậu, giúp tăng N sinh học và hữu cơ đất.', '2025-01-01 08:00:00'),
+    (16, '2025 - Vụ Đậu nành Hè (Tích lũy soil legacy)', 1, 2, 3, '2025-05-15', '2025-08-20', '2025-08-25', 'COMPLETED', 140000, 136000, 1150.00, 1180.00, 6500000.00, 'Đậu nành hè tiếp tục tạo nốt sần, tích lũy soil legacy rõ hơn cho vụ ngũ cốc sau.', '2025-05-01 08:00:00'),
+    (17, '2025 - Vụ Ngô Thu (Sau hai vụ họ đậu)', 1, 5, 7, '2025-09-15', '2025-12-20', '2025-12-25', 'COMPLETED', 20000, 19500, 3050.00, 3100.00, 8200000.00, 'Ngô sau hai vụ họ đậu cần ít phân khoáng hơn, FDN giảm rõ so với ngô giai đoạn 2021-2023.', '2025-09-01 08:00:00'),
 
-    -- ============== NĂM 6 (2026): Khởi động Vòng luân canh thứ 2 (TRẠNG THÁI THỰC TẾ ĐẾN THÁNG 4/2026) ==============
-    (18, '2026 - Vụ Đậu nành Xuân (Khởi tạo Chu kỳ 2)', 1, 2, 4, '2026-01-10', '2026-04-10', '2026-04-15', 'COMPLETED', 145000, 140000, 1150.00, 1200.00, 6200000.00, 'Vừa thu hoạch xong giữa tháng 4/2026', '2026-01-01 08:00:00'),
-    (19, '2026 - Vụ Lúa Hè', 1, 1, 1, '2026-04-20', '2026-07-25', NULL, 'ACTIVE', 220000, 218000, 3300.00, NULL, 16500000.00, 'Vụ mùa đang canh tác hiện tại (Vừa sạ giống cuối tháng 4)', '2026-04-16 08:00:00'),
-    (20, '2026 - Vụ Lạc Thu', 1, 3, 5, '2026-08-15', '2026-11-20', NULL, 'PLANNED', 90000, NULL, 600.00, NULL, 2500000.00, 'Kế hoạch gieo trồng cho quý 3/2026', '2026-04-16 08:00:00');
+    (18, '2026 - Vụ Đậu nành Xuân (Chốt cải tạo trước lúa)', 1, 2, 4, '2026-01-15', '2026-05-10', '2026-05-10', 'COMPLETED', 145000, 140000, 1200.00, 1250.00, 6800000.00, 'Vụ đậu nành ngay trước mùa lúa 2026, tạo nền soil legacy để kiểm tra FDN đầu vụ lúa.', '2026-01-01 08:00:00'),
+    (19, '2026 - Vụ Lúa Hè (Bắt đầu 26/05 - kiểm tra FDN)', 1, 1, 1, '2026-05-26', '2026-09-05', NULL, 'ACTIVE', 220000, 220000, 3350.00, NULL, 15500000.00, 'Ngày 26/05/2026 bắt đầu vụ lúa hè và đồng thời nhập 3 nhóm dữ liệu: phân bón, nước tưới, chất lượng đất để kiểm tra FDN đã giảm nhờ luân canh cây họ đậu.', '2026-05-26 08:00:00'),
+    (20, '2026 - Vụ Lạc Thu (Kế hoạch duy trì FDN thấp)', 1, 3, 5, '2026-09-20', '2026-12-20', NULL, 'PLANNED', 90000, NULL, 650.00, NULL, 3200000.00, 'Kế hoạch tiếp tục dùng cây họ đậu sau vụ lúa để duy trì FDN thấp cho chu kỳ kế tiếp.', '2026-05-26 08:30:00');
 
 
 -- =========================================================
@@ -1023,21 +1036,23 @@ INSERT INTO expenses (expense_id, user_id, season_id, task_id, category, item_na
 -- 7. HARVESTS
 -- =========================================================
 INSERT INTO harvests (harvest_id, season_id, harvest_date, quantity, unit, grade, note, created_at) VALUES
-    (1, 1, '2024-11-25', 350.00, 18000.00, 'A', 'Thu hoạch đợt 1 - Quả đẹp', '2024-11-25 17:00:00'),
-    (2, 1, '2024-11-30', 380.00, 19000.00, 'A', 'Thu hoạch đợt 2', '2024-11-30 16:00:00'),
-    (3, 1, '2024-12-05', 120.50, 15000.00, 'B', 'Thu hoạch cuối vụ - Quả nhỏ', '2024-12-05 15:00:00'),
-    (4, 2, '2024-11-18', 1600.00, 8500.00, 'A', 'Thu hoạch lúa nước đợt 1', '2024-11-18 10:00:00'),
-    (5, 2, '2024-11-20', 1600.00, 8500.00, 'A', 'Thu hoạch lúa nước đợt 2 - hoàn thành', '2024-11-20 10:00:00'),
-    (6, 9, '2024-07-03', 1400.00, 8000.00, 'A', 'Thu hoạch lúa nước hè', '2024-07-03 10:00:00'),
-    (7, 9, '2024-07-05', 1350.00, 8000.00, 'B', 'Đợt cuối', '2024-07-05 10:00:00'),
-    (8, 3, '2025-03-02', 260.00, 17500.00, 'A', 'Thu hoạch sớm phục vụ đơn hàng thử nghiệm', '2025-03-02 16:00:00'),
-    (9, 4, '2025-02-28', 900.00, 8500.00, 'A', 'Thu hoạch lúa nước trước mốc chính vụ', '2025-02-28 17:00:00'),
-    (10, 5, '2025-02-08', 180.00, 12000.00, 'B', 'Thu hoạch lạc lứa đầu', '2025-02-08 11:00:00'),
-    (11, 15, '2026-02-08', 1100.00, 12500.00, 'A', 'Thu hoạch đậu đen đợt 1', '2026-02-08 16:00:00'),
-    (12, 15, '2026-02-14', 950.00, 13000.00, 'A', 'Thu hoạch đậu đen đợt cuối', '2026-02-14 16:30:00'),
-    (13, 16, '2026-03-10', 280.00, 22000.00, 'A', 'Thu sớm đậu nành cho kênh online', '2026-03-10 11:00:00'),
-    (14, 16, '2026-03-17', 190.00, 21500.00, 'B', 'Thu đợt tiếp theo để test doanh thu', '2026-03-17 11:00:00'),
-    (15, 14, '2026-03-26', 940.00, 15000.00, 'A', 'Thu hoạch ngô ngọt cao nguyên phục vụ kênh online', '2026-03-26 16:30:00');
+    (1, 2, '2020-12-25', 4600.00, 6500.00, 'A', 'Thu hoạch khoai tây vụ đông trước khi bắt đầu chuỗi theo dõi FDN', '2020-12-25 17:00:00'),
+    (2, 3, '2021-04-28', 2450.00, 7200.00, 'A', 'Ngô xuân baseline FDN cao do phụ thuộc phân khoáng', '2021-04-28 17:00:00'),
+    (3, 4, '2021-08-25', 3150.00, 7800.00, 'A', 'Lúa hè trong giai đoạn chưa có cây họ đậu', '2021-08-25 17:00:00'),
+    (4, 5, '2021-12-20', 2550.00, 7100.00, 'B', 'Ngô thu đông kết thúc năm 2021, FDN vẫn cao', '2021-12-20 17:00:00'),
+    (5, 6, '2022-04-25', 3050.00, 7900.00, 'A', 'Lúa đông xuân 2022, tiếp tục chuỗi lúa/ngô', '2022-04-25 17:00:00'),
+    (6, 7, '2022-08-25', 2700.00, 7300.00, 'A', 'Ngô hè thu 2022, chưa có biological fixation đáng kể', '2022-08-25 17:00:00'),
+    (7, 8, '2022-12-20', 3200.00, 8000.00, 'A', 'Lúa thu đông 2022 trong baseline FDN cao', '2022-12-20 17:00:00'),
+    (8, 9, '2023-04-25', 2850.00, 7400.00, 'A', 'Ngô xuân 2023, năm thứ ba không luân canh họ đậu', '2023-04-25 17:00:00'),
+    (9, 10, '2023-08-25', 3350.00, 8200.00, 'A', 'Lúa hè 2023 dùng làm baseline FDN cao để so sánh với lúa hè 2026', '2023-08-25 17:00:00'),
+    (10, 11, '2023-12-25', 2950.00, 7600.00, 'A', 'Ngô thu đông 2023 chốt ba năm FDN cao', '2023-12-25 17:00:00'),
+    (11, 12, '2024-04-25', 1150.00, 11800.00, 'A', 'Đậu nành xuân 2024 bắt đầu cải thiện nguồn N sinh học', '2024-04-25 17:00:00'),
+    (12, 13, '2024-08-25', 3280.00, 8100.00, 'A', 'Lúa hè thu 2024 bắt đầu hưởng lợi từ soil legacy sau đậu nành', '2024-08-25 17:00:00'),
+    (13, 14, '2024-12-25', 3000.00, 7700.00, 'A', 'Ngô thu đông 2024, FDN giảm nhẹ so với giai đoạn baseline', '2024-12-25 17:00:00'),
+    (14, 15, '2025-04-25', 650.00, 13500.00, 'A', 'Lạc xuân 2025 tăng cố định đạm sinh học', '2025-04-25 17:00:00'),
+    (15, 16, '2025-08-25', 1180.00, 12000.00, 'A', 'Đậu nành hè 2025 tích lũy soil legacy cho vụ ngô sau', '2025-08-25 17:00:00'),
+    (16, 17, '2025-12-25', 3100.00, 7800.00, 'A', 'Ngô thu 2025 sau hai vụ họ đậu, năng suất ổn định dù giảm phân khoáng', '2025-12-25 17:10:00'),
+    (17, 18, '2026-05-10', 1250.00, 12200.00, 'A', 'Đậu nành xuân 2026 chốt cải tạo đất trước khi bắt đầu vụ lúa hè ngày 26/05', '2026-05-10 16:40:00');
 
 
 -- =========================================================
@@ -1134,14 +1149,10 @@ INSERT INTO inventory_balances (id, supply_lot_id, warehouse_id, location_id, qu
 -- 15. DOCUMENTS
 -- =========================================================
 INSERT INTO documents (document_id, title, url, description, crop, stage, topic, is_active, is_public, created_by, document_type, view_count, is_pinned, created_at, updated_at) VALUES
-                                                                                                                                                                                                 (1, 'Quy trinh trong dau nanh theo GAP', 'https://example.com/docs/soybean-gap.pdf', 'Tai lieu van hanh chuan cho cay dau nanh.', 'Dau nanh', 'ALL', 'GUIDE', TRUE, TRUE, 1, 'GUIDE', 125, TRUE, '2024-01-15 08:00:00', NOW()),
-                                                                                                                                                                                                 (2, 'Lich thoi vu 2026', 'https://example.com/docs/calendar-2026.pdf', 'Lich ke hoach vu mua dung cho dashboard va planning.', NULL, 'ALL', 'CALENDAR', TRUE, TRUE, 1, 'GUIDE', 98, TRUE, '2025-12-01 08:00:00', NOW()),
-                                                                                                                                                                                                 (3, 'Ky thuat canh tac lua OM5451', 'https://example.com/docs/om5451-guide.pdf', 'Tai lieu chi tiet cho lua OM5451 va phong tru sau benh.', 'Lua nuoc', 'GROWING', 'GUIDE', TRUE, TRUE, 1, 'GUIDE', 71, FALSE, '2024-06-01 08:00:00', NOW()),
-                                                                                                                                                                                                 (4, 'SOP thuoc bao ve thuc vat (Luu tru)', 'https://example.com/docs/legacy-pesticide-sop.pdf', 'Tai lieu cu duoc giu lai phuc vu audit, khong dung van hanh.', NULL, 'ALL', 'ARCHIVE', FALSE, FALSE, 1, 'GUIDE', 14, FALSE, '2023-02-01 08:00:00', NOW()),
-                                                                                                                                                                                                 (5, 'Mau so nhat ky dong ruong', 'https://example.com/docs/field-log-template.xlsx', 'Template ghi nhat ky cong viec cho farmer va employee.', NULL, 'ALL', 'TEMPLATE', TRUE, TRUE, 1, 'TEMPLATE', 33, FALSE, '2024-03-01 08:00:00', NOW()),
-                                                                                                                                                                                                 (6, 'Thong bao cap nhat he thong Q2/2026', 'https://example.com/docs/system-update-2026-q2.pdf', 'Thong bao tinh nang moi phuc vu demo toan bo luong nghiep vu.', NULL, 'ALL', 'ANNOUNCEMENT', TRUE, TRUE, 1, 'ANNOUNCEMENT', 172, TRUE, '2026-04-01 08:00:00', NOW()),
-                                                                                                                                                                                                 (7, 'Huong dan su dung ung dung', 'https://example.com/docs/user-guide.pdf', 'Huong dan tong quan cho admin, farmer, buyer va employee.', NULL, 'ALL', 'HELP', TRUE, TRUE, 1, 'SYSTEM_HELP', 210, FALSE, '2024-01-01 08:00:00', NOW()),
-                                                                                                                                                                                                 (8, 'Checklist xu ly su co noi bo', 'https://example.com/docs/internal-incident-checklist.pdf', 'Tai lieu noi bo cho dien tap incident, khong cong khai.', NULL, 'ALL', 'CHECKLIST', FALSE, FALSE, 1, 'TEMPLATE', 9, FALSE, '2025-08-01 08:00:00', NOW());
+                                                                                                                                                                                                 (1, 'Quy trinh trong dau nanh theo GAP', '/demo-evidence/documents/Soybean-Guide-2021-Print-Version.pdf', 'Tai lieu van hanh chuan cho cay dau nanh.', 'Dau nanh', 'ALL', 'GUIDE', TRUE, TRUE, 1, 'GUIDE', 125, TRUE, '2024-01-15 08:00:00', NOW()),
+                                                                                                                                                                                                 (2, 'Lich thoi vu 2026', '/demo-evidence/documents/TB lịch thời vụ, cơ cấu giống vụ hè thu 2026.pdf', 'Lich ke hoach vu mua dung cho dashboard va planning.', NULL, 'ALL', 'CALENDAR', TRUE, TRUE, 1, 'GUIDE', 98, TRUE, '2025-12-01 08:00:00', NOW()),
+                                                                                                                                                                                                 (3, 'Ky thuat canh tac lua OM5451', '/demo-evidence/documents/Study_on_the_flowering_in_rice_plant_Oryza_sativa_.pdf', 'Tai lieu chi tiet cho lua OM5451 va phong tru sau benh.', 'Lua nuoc', 'GROWING', 'GUIDE', TRUE, TRUE, 1, 'GUIDE', 71, FALSE, '2024-06-01 08:00:00', NOW()),
+                                                                                                                                                                                                 (4, 'SOP thuoc bao ve thuc vat (Luu tru)', '/demo-evidence/documents/The_legacy_of_pesticide_pollution_WatRes_Revision_Final.pdf', 'Tai lieu cu duoc giu lai phuc vu audit, khong dung van hanh.', NULL, 'ALL', 'ARCHIVE', FALSE, FALSE, 1, 'GUIDE', 14, FALSE, '2023-02-01 08:00:00', NOW());
  
 -- =========================================================
 -- 16. INCIDENTS (All severities & statuses)
@@ -1257,26 +1268,12 @@ INSERT INTO audit_logs (audit_log_id, entity_type, entity_id, operation, perform
     (3, 'SEASON', 9, 'UPDATE', 'farmer', '2024-08-01 08:00:00', '{"status":"COMPLETED"}', 'Luu tru vu mua cu', '192.168.1.100'),
     (4, 'MARKETPLACE_ORDER', 1, 'CREATE', 'buyer', '2026-04-20 09:05:00', '{"status":"COMPLETED","paymentMethod":"COD","orderCode":"MPO-2026-0001"}', 'Tao don demo COD hoan tat', '10.10.0.21'),
     (5, 'MARKETPLACE_ORDER', 2, 'PAYMENT_VERIFIED', 'admin', '2026-04-20 10:30:00', '{"status":"PREPARING","paymentVerificationStatus":"VERIFIED","orderCode":"MPO-2026-0002"}', 'Xac minh chuyen khoan cho don seller 2', '10.10.0.11'),
-    (6, 'MARKETPLACE_ORDER', 3, 'PAYMENT_PROOF_SUBMITTED', 'buyer', '2026-04-22 11:05:00', '{"status":"PENDING","paymentVerificationStatus":"SUBMITTED","orderCode":"MPO-2026-0003"}', 'Buyer tai minh chung chuyen khoan', '10.10.0.21'),
+    (6, 'MARKETPLACE_ORDER', 3, 'PAYMENT_PROOF_SUBMITTED', 'buyer', '2026-04-22 11:05:00', '{"status":"PENDING_PAYMENT","paymentVerificationStatus":"SUBMITTED","orderCode":"MPO-2026-0003"}', 'Buyer tai minh chung chuyen khoan', '10.10.0.21'),
     (7, 'MARKETPLACE_ORDER', 4, 'CREATE', 'buyer', '2026-04-24 08:30:00', '{"status":"CONFIRMED","paymentVerificationStatus":"AWAITING_PROOF","orderCode":"MPO-2026-0004"}', 'Don da xac nhan, cho nop bang chung thanh toan', '10.10.0.21'),
-    (8, 'MARKETPLACE_ORDER', 5, 'PAYMENT_VERIFIED', 'admin', '2026-04-24 14:00:00', '{"status":"DELIVERING","paymentVerificationStatus":"VERIFIED","orderCode":"MPO-2026-0005"}', 'Xac minh thanh toan va ban giao don cho van chuyen', '10.10.0.11'),
+    (8, 'MARKETPLACE_ORDER', 5, 'PAYMENT_VERIFIED', 'admin', '2026-04-24 14:00:00', '{"status":"SHIPPED","paymentVerificationStatus":"VERIFIED","orderCode":"MPO-2026-0005"}', 'Xac minh thanh toan va ban giao don cho van chuyen', '10.10.0.11'),
     (9, 'MARKETPLACE_ORDER', 6, 'PAYMENT_REJECTED', 'admin', '2026-04-26 10:30:00', '{"status":"CANCELLED","paymentVerificationStatus":"REJECTED","orderCode":"MPO-2026-0006"}', 'Bang chung khong hop le, huy don', '10.10.0.11');
 
 
--- =========================================================
--- 23. PLOT GEOMETRY (for map rendering readiness)
--- =========================================================
-UPDATE plots
-SET boundary_geojson = '{"type":"Polygon","coordinates":[[[106.7018,10.7765],[106.7031,10.7765],[106.7031,10.7776],[106.7018,10.7776],[106.7018,10.7765]]]}'
-WHERE plot_id = 1;
-
-UPDATE plots
-SET boundary_geojson = '{"type":"Polygon","coordinates":[[[106.7040,10.7759],[106.7057,10.7759],[106.7057,10.7773],[106.7040,10.7773],[106.7040,10.7759]]]}'
-WHERE plot_id = 2;
-
-UPDATE plots
-SET boundary_geojson = '{"type":"Polygon","coordinates":[[[106.7090,10.7728],[106.7101,10.7728],[106.7101,10.7738],[106.7090,10.7738],[106.7090,10.7728]]]}'
-WHERE plot_id = 7;
 
 -- =========================================================
 -- 24. CROP NITROGEN REFERENCES (for NUE/N-output quality)
@@ -1290,86 +1287,364 @@ INSERT INTO crop_nitrogen_references (id, crop_id, n_content_kg_per_kg_yield, so
     (6, 6, 0.022000, 'VN-CHILI-N-REF-2024', TRUE, '2025-01-01 08:00:00', '2025-01-01 08:00:00'),
     (7, 7, 0.004500, 'VN-POTATO-N-REF-2024', TRUE, '2025-01-01 08:00:00', '2025-01-01 08:00:00');
 
--- =========================================================
--- 25. ADDITIONAL HARVESTS (active seasons for dashboard output)
--- =========================================================
-INSERT INTO harvests (harvest_id, season_id, harvest_date, quantity, unit, grade, note, created_at) VALUES
-    (16, 6, '2022-04-22', 520.00, 13500.00, 'A', 'Final batch for season 6 historical closure', '2022-04-22 17:00:00'),
-    (17, 7, '2022-07-26', 1950.00, 9800.00, 'A', 'Main black bean harvest for season 7', '2022-07-26 17:00:00'),
-    (18, 8, '2022-11-22', 2650.00, 11200.00, 'A', 'Corn harvest closeout for season 8', '2022-11-22 17:00:00'),
-    (19, 10, '2023-08-22', 3350.00, 8400.00, 'A', 'Rice harvest consolidation for season 10', '2023-08-22 17:00:00'),
-    (20, 11, '2023-12-22', 580.00, 12800.00, 'A', 'Peanut harvest final batch for season 11', '2023-12-22 16:30:00'),
-    (21, 12, '2024-04-23', 2900.00, 11500.00, 'A', 'Corn harvest finalization for season 12', '2024-04-23 17:00:00'),
-    (22, 13, '2024-07-26', 2150.00, 9900.00, 'A', 'Black bean harvest finalization for season 13', '2024-07-26 16:45:00'),
-    (23, 17, '2025-12-23', 3150.00, 12100.00, 'A', 'Cycle-1 closeout corn harvest for season 17', '2025-12-23 17:10:00'),
-    (24, 18, '2026-04-14', 1200.00, 12400.00, 'A', 'Cycle-2 kickoff soybean harvest closure for season 18', '2026-04-14 16:40:00'),
-    (25, 19, '2026-06-30', 900.00, 14600.00, 'A', 'Interim harvested volume for active season 19', '2026-06-30 17:20:00'),
-    (26, 20, '2026-11-20', 0.00, 0.00, NULL, 'Planned season placeholder: no harvest recorded yet', '2026-04-16 08:30:00');
-
 
 -- =========================================================
 -- 26. NUTRIENT INPUT EVENTS (aggregate inputs incl. historical legacy)
 -- =========================================================
 INSERT INTO nutrient_input_events
-    (id, season_id, plot_id, input_source, n_kg, applied_date, measured, data_source, note, created_at)
+    (id, season_id, plot_id, input_source, n_kg, applied_date, measured, data_source, source_type, source_document, note, created_by_user_id, created_at)
 VALUES
-    (1, 3, 1, 'MINERAL_FERTILIZER', 120.0000, '2025-01-22', TRUE, 'user_entered', 'Urê + NPK đợt chính', '2025-01-22 08:30:00'),
-    (2, 3, 1, 'ORGANIC_FERTILIZER', 60.0000, '2025-01-10', TRUE, 'user_entered', 'Bón compost nền', '2025-01-10 07:30:00'),
-    (3, 3, 1, 'BIOLOGICAL_FIXATION', 4.0000, '2025-02-01', FALSE, 'external_reference', 'Ước tính theo canh tác xen vi sinh', '2025-02-01 06:00:00'),
-    (4, 3, 1, 'ATMOSPHERIC_DEPOSITION', 6.0000, '2025-02-01', FALSE, 'default_reference', 'Theo tham chiếu cấu hình vùng', '2025-02-01 06:01:00'),
-    (5, 3, 1, 'SEED_IMPORT', 2.0000, '2025-01-05', FALSE, 'default_reference', 'Nguồn N theo giống gieo trồng', '2025-01-05 06:01:00'),
-    (6, 4, 2, 'MINERAL_FERTILIZER', 210.0000, '2025-01-20', TRUE, 'user_entered', 'Urê + DAP đợt 1', '2025-01-20 09:00:00'),
-    (7, 4, 2, 'ORGANIC_FERTILIZER', 25.0000, '2025-01-05', TRUE, 'user_entered', 'Phân chuồng ủ hoai', '2025-01-05 08:00:00'),
-    (8, 4, 2, 'ATMOSPHERIC_DEPOSITION', 8.0000, '2025-02-01', FALSE, 'default_reference', 'Tham chiếu khí quyển theo cấu hình', '2025-02-01 06:10:00'),
-    (9, 4, 2, 'SEED_IMPORT', 3.0000, '2024-12-20', FALSE, 'default_reference', 'Nguồn N từ hạt giống', '2024-12-20 06:10:00'),
-    (10, 5, 7, 'MINERAL_FERTILIZER', 25.0000, '2025-01-18', TRUE, 'user_entered', 'NPK giai đoạn đầu rau', '2025-01-18 07:00:00'),
-    (11, 5, 7, 'ORGANIC_FERTILIZER', 12.0000, '2025-01-12', TRUE, 'user_entered', 'Bổ sung hữu cơ nền', '2025-01-12 07:00:00'),
-    (12, 5, 7, 'ATMOSPHERIC_DEPOSITION', 3.0000, '2025-01-20', FALSE, 'default_reference', 'Tham chiếu khí quyển', '2025-01-20 06:00:00'),
-    (13, 5, 7, 'SEED_IMPORT', 1.0000, '2025-01-10', FALSE, 'default_reference', 'Nguồn N từ hạt giống', '2025-01-10 06:00:00'),
-    (14, 1, 1, 'MINERAL_FERTILIZER', 95.0000, '2024-10-01', TRUE, 'user_entered', 'Lịch sử: bón khoáng vụ hoàn thành', '2024-10-01 09:00:00'),
-    (15, 1, 1, 'ORGANIC_FERTILIZER', 40.0000, '2024-09-18', TRUE, 'user_entered', 'Lịch sử: bón hữu cơ vụ hoàn thành', '2024-09-18 09:00:00'),
-    (16, 1, 1, 'IRRIGATION_WATER', 9.0000, '2024-10-20', FALSE, 'legacy_aggregate', 'Lịch sử legacy aggregate (đã deprecate)', '2024-10-20 09:00:00'),
-    (17, 1, 1, 'SOIL_LEGACY', 22.0000, '2024-10-20', FALSE, 'legacy_aggregate', 'Lịch sử legacy aggregate (đã deprecate)', '2024-10-20 09:05:00'),
-    (18, 2, 2, 'MINERAL_FERTILIZER', 180.0000, '2024-09-10', TRUE, 'user_entered', 'Lịch sử vụ lúa nước thu đông', '2024-09-10 09:00:00'),
-    (19, 2, 2, 'ORGANIC_FERTILIZER', 35.0000, '2024-09-01', TRUE, 'user_entered', 'Lịch sử vụ lúa nước thu đông', '2024-09-01 09:00:00'),
-    (20, 2, 2, 'IRRIGATION_WATER', 20.0000, '2024-09-20', FALSE, 'legacy_aggregate', 'Legacy irrigation aggregate', '2024-09-20 09:00:00'),
-    (21, 2, 2, 'SOIL_LEGACY', 70.0000, '2024-09-20', FALSE, 'legacy_aggregate', 'Legacy soil aggregate', '2024-09-20 09:05:00'),
-    -- FDN INTEGRATED: 5-year N cycle with harvested legumes + residue incorporation on farm_id = 1 / plot_id = 1
-    (22, 10, 1, 'MINERAL_FERTILIZER', 120.0000, '2024-03-12', TRUE, 'fdn_integrated', 'Năm 1 - ngô: phân vô cơ cao, phụ thuộc lớn vào N nhân tạo', '2024-03-12 08:00:00'),
-    (23, 10, 1, 'ORGANIC_FERTILIZER', 20.0000, '2024-03-05', TRUE, 'fdn_integrated', 'Năm 1 - ngô: phân hữu cơ nền mức thấp', '2024-03-05 08:00:00'),
-    (24, 10, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2024-04-15', FALSE, 'fdn_integrated', 'Năm 1 - ngũ cốc không tự cố định đạm', '2024-04-15 06:00:00'),
-    (25, 10, 1, 'ATMOSPHERIC_DEPOSITION', 5.0000, '2024-04-01', FALSE, 'default_reference', 'Năm 1 - lắng đọng khí quyển ổn định', '2024-04-01 06:00:00'),
-    (26, 10, 1, 'SEED_IMPORT', 2.0000, '2024-03-01', FALSE, 'default_reference', 'Năm 1 - nguồn N từ hạt giống', '2024-03-01 06:00:00'),
-    (27, 10, 1, 'IRRIGATION_WATER', 15.0000, '2024-04-10', FALSE, 'default_reference', 'Năm 1 - N từ nước tưới mức ổn định', '2024-04-10 06:00:00'),
-    (28, 10, 1, 'SOIL_LEGACY', 0.0000, '2024-03-01', FALSE, 'fdn_integrated', 'Năm 1 - chưa tính di sản đạm từ vụ trước trong chu kỳ FDN tích hợp', '2024-03-01 06:05:00'),
-    (29, 11, 1, 'MINERAL_FERTILIZER', 22.0000, '2025-03-12', TRUE, 'fdn_integrated', 'Năm 2 - đậu nành: bón khoáng khởi đầu mức thấp để tối ưu chi phí nhưng vẫn đảm bảo năng suất', '2025-03-12 08:00:00'),
-    (30, 11, 1, 'ORGANIC_FERTILIZER', 18.0000, '2025-03-05', TRUE, 'fdn_integrated', 'Năm 2 - đậu nành: bổ sung hữu cơ nền vừa phải để cải tạo đất', '2025-03-05 08:00:00'),
-    (31, 11, 1, 'BIOLOGICAL_FIXATION', 105.0000, '2025-04-25', FALSE, 'external_reference', 'Năm 2 - đậu nành: cố định đạm sinh học cao trong chu kỳ sinh trưởng 70-90 ngày', '2025-04-25 06:00:00'),
-    (32, 11, 1, 'ATMOSPHERIC_DEPOSITION', 5.0000, '2025-04-01', FALSE, 'default_reference', 'Năm 2 - lắng đọng khí quyển ổn định', '2025-04-01 06:00:00'),
-    (33, 11, 1, 'SEED_IMPORT', 2.0000, '2025-03-01', FALSE, 'default_reference', 'Năm 2 - nguồn N từ hạt giống', '2025-03-01 06:00:00'),
-    (34, 11, 1, 'IRRIGATION_WATER', 15.0000, '2025-04-15', FALSE, 'default_reference', 'Năm 2 - N từ nước tưới mức ổn định', '2025-04-15 06:00:00'),
-    (35, 11, 1, 'SOIL_LEGACY', 0.0000, '2025-03-01', FALSE, 'fdn_integrated', 'Năm 2 - không cộng soil legacy đầu vụ; di sản đạm sẽ được chuyển sang vụ sau sau 15 ngày xử lý đất', '2025-03-01 06:05:00'),
-    (36, 12, 1, 'MINERAL_FERTILIZER', 85.0000, '2026-04-25', TRUE, 'fdn_integrated', 'Năm 3 - lúa Đài Thơm 8: giảm phân vô cơ nhờ đạm tồn dư từ vụ đậu', '2026-04-25 08:00:00'),
-    (37, 12, 1, 'ORGANIC_FERTILIZER', 0.0000, '2026-04-12', TRUE, 'fdn_integrated', 'Năm 3 - không bổ sung hữu cơ để làm nổi bật tác động soil legacy', '2026-04-12 08:00:00'),
-    (38, 12, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2026-05-20', FALSE, 'fdn_integrated', 'Năm 3 - lúa nước không tự cố định đạm', '2026-05-20 06:00:00'),
-    (39, 12, 1, 'ATMOSPHERIC_DEPOSITION', 5.0000, '2026-05-01', FALSE, 'default_reference', 'Năm 3 - lắng đọng khí quyển ổn định', '2026-05-01 06:00:00'),
-    (40, 12, 1, 'SEED_IMPORT', 2.0000, '2026-04-10', FALSE, 'default_reference', 'Năm 3 - nguồn N từ giống lúa', '2026-04-10 06:00:00'),
-    (41, 12, 1, 'IRRIGATION_WATER', 15.0000, '2026-05-10', FALSE, 'default_reference', 'Năm 3 - N từ nước tưới mức ổn định', '2026-05-10 06:00:00'),
-    (42, 12, 1, 'SOIL_LEGACY', 35.0000, '2026-04-10', FALSE, 'fdn_integrated', 'Năm 3 - đạm tồn dư từ vụ đậu năm 2025 sau thu hoạch và cày vùi tàn dư giúp giảm nhu cầu phân khoáng', '2026-04-10 06:05:00'),
-    (43, 17, 2, 'MINERAL_FERTILIZER', 18.0000, '2027-03-12', TRUE, 'fdn_integrated', 'Năm 4 - lạc cải tạo đất: bón khoáng mức thấp, ưu tiên sinh học', '2027-03-12 08:00:00'),
-    (44, 17, 2, 'ORGANIC_FERTILIZER', 25.0000, '2027-03-05', TRUE, 'fdn_integrated', 'Năm 4 - tăng hữu cơ để phục hồi đất trước năm cuối chu kỳ', '2027-03-05 08:00:00'),
-    (45, 17, 2, 'BIOLOGICAL_FIXATION', 95.0000, '2027-04-18', FALSE, 'external_reference', 'Năm 4 - cây họ đậu cố định đạm cao và để lại di sản N', '2027-04-18 06:00:00'),
-    (46, 17, 2, 'ATMOSPHERIC_DEPOSITION', 5.0000, '2027-04-01', FALSE, 'default_reference', 'Năm 4 - lắng đọng khí quyển ổn định', '2027-04-01 06:00:00'),
-    (47, 17, 2, 'SEED_IMPORT', 2.0000, '2027-03-01', FALSE, 'default_reference', 'Năm 4 - nguồn N từ giống lạc', '2027-03-01 06:00:00'),
-    (48, 17, 2, 'IRRIGATION_WATER', 14.0000, '2027-04-12', FALSE, 'default_reference', 'Năm 4 - N từ nước tưới mức trung bình', '2027-04-12 06:00:00'),
-    (49, 17, 2, 'SOIL_LEGACY', 0.0000, '2027-03-01', FALSE, 'fdn_integrated', 'Năm 4 - không cộng legacy đầu vụ để quan sát đóng góp cố định sinh học thuần', '2027-03-01 06:05:00'),
-    (50, 18, 6, 'MINERAL_FERTILIZER', 70.0000, '2028-01-25', TRUE, 'fdn_integrated', 'Năm 5 - ngô xuân: giảm phân khoáng nhờ soil legacy tích lũy qua 4 năm', '2028-01-25 08:00:00'),
-    (51, 18, 6, 'ORGANIC_FERTILIZER', 12.0000, '2028-01-15', TRUE, 'fdn_integrated', 'Năm 5 - bổ sung hữu cơ mức duy trì', '2028-01-15 08:00:00'),
-    (52, 18, 6, 'BIOLOGICAL_FIXATION', 0.0000, '2028-02-20', FALSE, 'fdn_integrated', 'Năm 5 - ngũ cốc không tự cố định đạm', '2028-02-20 06:00:00'),
-    (53, 18, 6, 'ATMOSPHERIC_DEPOSITION', 5.0000, '2028-02-01', FALSE, 'default_reference', 'Năm 5 - lắng đọng khí quyển ổn định', '2028-02-01 06:00:00'),
-    (54, 18, 6, 'SEED_IMPORT', 2.0000, '2028-01-10', FALSE, 'default_reference', 'Năm 5 - nguồn N từ giống ngô', '2028-01-10 06:00:00'),
-    (55, 18, 6, 'IRRIGATION_WATER', 13.0000, '2028-02-12', FALSE, 'default_reference', 'Năm 5 - N từ nước tưới mức ổn định', '2028-02-12 06:00:00'),
-    (56, 18, 6, 'SOIL_LEGACY', 42.0000, '2028-01-10', FALSE, 'fdn_integrated', 'Năm 5 - đạm tồn dư từ năm 4 giúp duy trì năng suất với đầu vào khoáng thấp', '2028-01-10 06:05:00');
+    (1, 3, 1, 'MINERAL_FERTILIZER', 145.0000, '2021-01-20', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2021 ngô xuân: baseline cao do không có cây họ đậu, nguồn mineral_fertilizer = 145 kg N', 2, '2021-01-20 08:00:00'),
+    (2, 3, 1, 'ORGANIC_FERTILIZER', 15.0000, '2021-01-20', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2021 ngô xuân: baseline cao do không có cây họ đậu, nguồn organic_fertilizer = 15 kg N', 2, '2021-01-20 08:00:00'),
+    (3, 3, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2021-01-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2021 ngô xuân: baseline cao do không có cây họ đậu, nguồn biological_fixation = 0 kg N', 2, '2021-01-20 08:00:00'),
+    (4, 3, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2021-01-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2021 ngô xuân: baseline cao do không có cây họ đậu, nguồn atmospheric_deposition = 4 kg N', 2, '2021-01-20 08:00:00'),
+    (5, 3, 1, 'SEED_IMPORT', 2.0000, '2021-01-20', FALSE, 'fdn_rotation_estimated', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2021 ngô xuân: baseline cao do không có cây họ đậu, nguồn seed_import = 2 kg N', 2, '2021-01-20 08:00:00'),
+    (6, 3, 1, 'IRRIGATION_WATER', 5.0000, '2021-01-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2021 ngô xuân: baseline cao do không có cây họ đậu, nguồn irrigation_water = 5 kg N', 2, '2021-01-20 08:00:00'),
+    (7, 3, 1, 'SOIL_LEGACY', 4.0000, '2021-01-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2021 ngô xuân: baseline cao do không có cây họ đậu, nguồn soil_legacy = 4 kg N', 2, '2021-01-20 08:00:00'),
+    (8, 4, 1, 'MINERAL_FERTILIZER', 165.0000, '2021-05-25', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2021 lúa hè: tiếp tục phụ thuộc phân khoáng, nguồn mineral_fertilizer = 165 kg N', 2, '2021-05-25 08:00:00'),
+    (9, 4, 1, 'ORGANIC_FERTILIZER', 18.0000, '2021-05-25', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2021 lúa hè: tiếp tục phụ thuộc phân khoáng, nguồn organic_fertilizer = 18 kg N', 2, '2021-05-25 08:00:00'),
+    (10, 4, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2021-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2021 lúa hè: tiếp tục phụ thuộc phân khoáng, nguồn biological_fixation = 0 kg N', 2, '2021-05-25 08:00:00'),
+    (11, 4, 1, 'ATMOSPHERIC_DEPOSITION', 5.0000, '2021-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2021 lúa hè: tiếp tục phụ thuộc phân khoáng, nguồn atmospheric_deposition = 5 kg N', 2, '2021-05-25 08:00:00'),
+    (12, 4, 1, 'SEED_IMPORT', 2.0000, '2021-05-25', FALSE, 'fdn_rotation_estimated', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2021 lúa hè: tiếp tục phụ thuộc phân khoáng, nguồn seed_import = 2 kg N', 2, '2021-05-25 08:00:00'),
+    (13, 4, 1, 'IRRIGATION_WATER', 8.0000, '2021-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2021 lúa hè: tiếp tục phụ thuộc phân khoáng, nguồn irrigation_water = 8 kg N', 2, '2021-05-25 08:00:00'),
+    (14, 4, 1, 'SOIL_LEGACY', 3.0000, '2021-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2021 lúa hè: tiếp tục phụ thuộc phân khoáng, nguồn soil_legacy = 3 kg N', 2, '2021-05-25 08:00:00'),
+    (15, 5, 1, 'MINERAL_FERTILIZER', 150.0000, '2021-09-20', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2021 ngô thu đông: soil legacy thấp, nguồn mineral_fertilizer = 150 kg N', 2, '2021-09-20 08:00:00'),
+    (16, 5, 1, 'ORGANIC_FERTILIZER', 16.0000, '2021-09-20', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2021 ngô thu đông: soil legacy thấp, nguồn organic_fertilizer = 16 kg N', 2, '2021-09-20 08:00:00'),
+    (17, 5, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2021-09-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2021 ngô thu đông: soil legacy thấp, nguồn biological_fixation = 0 kg N', 2, '2021-09-20 08:00:00'),
+    (18, 5, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2021-09-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2021 ngô thu đông: soil legacy thấp, nguồn atmospheric_deposition = 4 kg N', 2, '2021-09-20 08:00:00'),
+    (19, 5, 1, 'SEED_IMPORT', 2.0000, '2021-09-20', FALSE, 'fdn_rotation_estimated', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2021 ngô thu đông: soil legacy thấp, nguồn seed_import = 2 kg N', 2, '2021-09-20 08:00:00'),
+    (20, 5, 1, 'IRRIGATION_WATER', 5.0000, '2021-09-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2021 ngô thu đông: soil legacy thấp, nguồn irrigation_water = 5 kg N', 2, '2021-09-20 08:00:00'),
+    (21, 5, 1, 'SOIL_LEGACY', 3.0000, '2021-09-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2021 ngô thu đông: soil legacy thấp, nguồn soil_legacy = 3 kg N', 2, '2021-09-20 08:00:00'),
+    (22, 6, 1, 'MINERAL_FERTILIZER', 170.0000, '2022-01-20', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2022 lúa đông xuân: không có nguồn N sinh học, nguồn mineral_fertilizer = 170 kg N', 2, '2022-01-20 08:00:00'),
+    (23, 6, 1, 'ORGANIC_FERTILIZER', 20.0000, '2022-01-20', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2022 lúa đông xuân: không có nguồn N sinh học, nguồn organic_fertilizer = 20 kg N', 2, '2022-01-20 08:00:00'),
+    (24, 6, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2022-01-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2022 lúa đông xuân: không có nguồn N sinh học, nguồn biological_fixation = 0 kg N', 2, '2022-01-20 08:00:00'),
+    (25, 6, 1, 'ATMOSPHERIC_DEPOSITION', 5.0000, '2022-01-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2022 lúa đông xuân: không có nguồn N sinh học, nguồn atmospheric_deposition = 5 kg N', 2, '2022-01-20 08:00:00'),
+    (26, 6, 1, 'SEED_IMPORT', 2.0000, '2022-01-20', FALSE, 'fdn_rotation_estimated', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2022 lúa đông xuân: không có nguồn N sinh học, nguồn seed_import = 2 kg N', 2, '2022-01-20 08:00:00'),
+    (27, 6, 1, 'IRRIGATION_WATER', 8.0000, '2022-01-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2022 lúa đông xuân: không có nguồn N sinh học, nguồn irrigation_water = 8 kg N', 2, '2022-01-20 08:00:00'),
+    (28, 6, 1, 'SOIL_LEGACY', 3.0000, '2022-01-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2022 lúa đông xuân: không có nguồn N sinh học, nguồn soil_legacy = 3 kg N', 2, '2022-01-20 08:00:00'),
+    (29, 7, 1, 'MINERAL_FERTILIZER', 155.0000, '2022-05-20', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2022 ngô hè thu: FDN vẫn cao, nguồn mineral_fertilizer = 155 kg N', 2, '2022-05-20 08:00:00'),
+    (30, 7, 1, 'ORGANIC_FERTILIZER', 15.0000, '2022-05-20', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2022 ngô hè thu: FDN vẫn cao, nguồn organic_fertilizer = 15 kg N', 2, '2022-05-20 08:00:00'),
+    (31, 7, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2022-05-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2022 ngô hè thu: FDN vẫn cao, nguồn biological_fixation = 0 kg N', 2, '2022-05-20 08:00:00'),
+    (32, 7, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2022-05-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2022 ngô hè thu: FDN vẫn cao, nguồn atmospheric_deposition = 4 kg N', 2, '2022-05-20 08:00:00'),
+    (33, 7, 1, 'SEED_IMPORT', 2.0000, '2022-05-20', FALSE, 'fdn_rotation_estimated', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2022 ngô hè thu: FDN vẫn cao, nguồn seed_import = 2 kg N', 2, '2022-05-20 08:00:00'),
+    (34, 7, 1, 'IRRIGATION_WATER', 5.0000, '2022-05-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2022 ngô hè thu: FDN vẫn cao, nguồn irrigation_water = 5 kg N', 2, '2022-05-20 08:00:00'),
+    (35, 7, 1, 'SOIL_LEGACY', 3.0000, '2022-05-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2022 ngô hè thu: FDN vẫn cao, nguồn soil_legacy = 3 kg N', 2, '2022-05-20 08:00:00'),
+    (36, 8, 1, 'MINERAL_FERTILIZER', 160.0000, '2022-09-15', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2022 lúa thu đông: baseline FDN cao kéo dài, nguồn mineral_fertilizer = 160 kg N', 2, '2022-09-15 08:00:00'),
+    (37, 8, 1, 'ORGANIC_FERTILIZER', 18.0000, '2022-09-15', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2022 lúa thu đông: baseline FDN cao kéo dài, nguồn organic_fertilizer = 18 kg N', 2, '2022-09-15 08:00:00'),
+    (38, 8, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2022-09-15', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2022 lúa thu đông: baseline FDN cao kéo dài, nguồn biological_fixation = 0 kg N', 2, '2022-09-15 08:00:00'),
+    (39, 8, 1, 'ATMOSPHERIC_DEPOSITION', 5.0000, '2022-09-15', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2022 lúa thu đông: baseline FDN cao kéo dài, nguồn atmospheric_deposition = 5 kg N', 2, '2022-09-15 08:00:00'),
+    (40, 8, 1, 'SEED_IMPORT', 2.0000, '2022-09-15', FALSE, 'fdn_rotation_estimated', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2022 lúa thu đông: baseline FDN cao kéo dài, nguồn seed_import = 2 kg N', 2, '2022-09-15 08:00:00'),
+    (41, 8, 1, 'IRRIGATION_WATER', 8.0000, '2022-09-15', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2022 lúa thu đông: baseline FDN cao kéo dài, nguồn irrigation_water = 8 kg N', 2, '2022-09-15 08:00:00'),
+    (42, 8, 1, 'SOIL_LEGACY', 3.0000, '2022-09-15', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2022 lúa thu đông: baseline FDN cao kéo dài, nguồn soil_legacy = 3 kg N', 2, '2022-09-15 08:00:00'),
+    (43, 9, 1, 'MINERAL_FERTILIZER', 150.0000, '2023-01-22', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2023 ngô xuân: năm thứ ba lúa/ngô liên tục, nguồn mineral_fertilizer = 150 kg N', 2, '2023-01-22 08:00:00'),
+    (44, 9, 1, 'ORGANIC_FERTILIZER', 15.0000, '2023-01-22', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2023 ngô xuân: năm thứ ba lúa/ngô liên tục, nguồn organic_fertilizer = 15 kg N', 2, '2023-01-22 08:00:00'),
+    (45, 9, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2023-01-22', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2023 ngô xuân: năm thứ ba lúa/ngô liên tục, nguồn biological_fixation = 0 kg N', 2, '2023-01-22 08:00:00'),
+    (46, 9, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2023-01-22', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2023 ngô xuân: năm thứ ba lúa/ngô liên tục, nguồn atmospheric_deposition = 4 kg N', 2, '2023-01-22 08:00:00'),
+    (47, 9, 1, 'SEED_IMPORT', 2.0000, '2023-01-22', FALSE, 'fdn_rotation_estimated', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2023 ngô xuân: năm thứ ba lúa/ngô liên tục, nguồn seed_import = 2 kg N', 2, '2023-01-22 08:00:00'),
+    (48, 9, 1, 'IRRIGATION_WATER', 5.0000, '2023-01-22', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2023 ngô xuân: năm thứ ba lúa/ngô liên tục, nguồn irrigation_water = 5 kg N', 2, '2023-01-22 08:00:00'),
+    (49, 9, 1, 'SOIL_LEGACY', 5.0000, '2023-01-22', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2023 ngô xuân: năm thứ ba lúa/ngô liên tục, nguồn soil_legacy = 5 kg N', 2, '2023-01-22 08:00:00'),
+    (50, 10, 1, 'MINERAL_FERTILIZER', 165.0000, '2023-05-25', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2023 lúa hè: baseline FDN cao để so sánh với 2026, nguồn mineral_fertilizer = 165 kg N', 2, '2023-05-25 08:00:00'),
+    (51, 10, 1, 'ORGANIC_FERTILIZER', 18.0000, '2023-05-25', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2023 lúa hè: baseline FDN cao để so sánh với 2026, nguồn organic_fertilizer = 18 kg N', 2, '2023-05-25 08:00:00'),
+    (52, 10, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2023-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2023 lúa hè: baseline FDN cao để so sánh với 2026, nguồn biological_fixation = 0 kg N', 2, '2023-05-25 08:00:00'),
+    (53, 10, 1, 'ATMOSPHERIC_DEPOSITION', 5.0000, '2023-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2023 lúa hè: baseline FDN cao để so sánh với 2026, nguồn atmospheric_deposition = 5 kg N', 2, '2023-05-25 08:00:00'),
+    (54, 10, 1, 'SEED_IMPORT', 2.0000, '2023-05-25', FALSE, 'fdn_rotation_estimated', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2023 lúa hè: baseline FDN cao để so sánh với 2026, nguồn seed_import = 2 kg N', 2, '2023-05-25 08:00:00'),
+    (55, 10, 1, 'IRRIGATION_WATER', 8.0000, '2023-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2023 lúa hè: baseline FDN cao để so sánh với 2026, nguồn irrigation_water = 8 kg N', 2, '2023-05-25 08:00:00'),
+    (56, 10, 1, 'SOIL_LEGACY', 2.0000, '2023-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2023 lúa hè: baseline FDN cao để so sánh với 2026, nguồn soil_legacy = 2 kg N', 2, '2023-05-25 08:00:00'),
+    (57, 11, 1, 'MINERAL_FERTILIZER', 150.0000, '2023-09-20', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2023 ngô thu đông: chốt giai đoạn FDN cao, nguồn mineral_fertilizer = 150 kg N', 2, '2023-09-20 08:00:00'),
+    (58, 11, 1, 'ORGANIC_FERTILIZER', 12.0000, '2023-09-20', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2023 ngô thu đông: chốt giai đoạn FDN cao, nguồn organic_fertilizer = 12 kg N', 2, '2023-09-20 08:00:00'),
+    (59, 11, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2023-09-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2023 ngô thu đông: chốt giai đoạn FDN cao, nguồn biological_fixation = 0 kg N', 2, '2023-09-20 08:00:00'),
+    (60, 11, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2023-09-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2023 ngô thu đông: chốt giai đoạn FDN cao, nguồn atmospheric_deposition = 4 kg N', 2, '2023-09-20 08:00:00'),
+    (61, 11, 1, 'SEED_IMPORT', 2.0000, '2023-09-20', FALSE, 'fdn_rotation_estimated', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2023 ngô thu đông: chốt giai đoạn FDN cao, nguồn seed_import = 2 kg N', 2, '2023-09-20 08:00:00'),
+    (62, 11, 1, 'IRRIGATION_WATER', 5.0000, '2023-09-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2023 ngô thu đông: chốt giai đoạn FDN cao, nguồn irrigation_water = 5 kg N', 2, '2023-09-20 08:00:00'),
+    (63, 11, 1, 'SOIL_LEGACY', 4.0000, '2023-09-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2023 ngô thu đông: chốt giai đoạn FDN cao, nguồn soil_legacy = 4 kg N', 2, '2023-09-20 08:00:00'),
+    (64, 12, 1, 'MINERAL_FERTILIZER', 25.0000, '2024-01-22', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2024 đậu nành xuân: bắt đầu biological fixation, nguồn mineral_fertilizer = 25 kg N', 2, '2024-01-22 08:00:00'),
+    (65, 12, 1, 'ORGANIC_FERTILIZER', 18.0000, '2024-01-22', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2024 đậu nành xuân: bắt đầu biological fixation, nguồn organic_fertilizer = 18 kg N', 2, '2024-01-22 08:00:00'),
+    (66, 12, 1, 'BIOLOGICAL_FIXATION', 90.0000, '2024-01-22', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2024 đậu nành xuân: bắt đầu biological fixation, nguồn biological_fixation = 90 kg N', 2, '2024-01-22 08:00:00'),
+    (67, 12, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2024-01-22', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2024 đậu nành xuân: bắt đầu biological fixation, nguồn atmospheric_deposition = 4 kg N', 2, '2024-01-22 08:00:00'),
+    (68, 12, 1, 'SEED_IMPORT', 2.0000, '2024-01-22', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2024 đậu nành xuân: bắt đầu biological fixation, nguồn seed_import = 2 kg N', 2, '2024-01-22 08:00:00'),
+    (69, 12, 1, 'IRRIGATION_WATER', 5.0000, '2024-01-22', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2024 đậu nành xuân: bắt đầu biological fixation, nguồn irrigation_water = 5 kg N', 2, '2024-01-22 08:00:00'),
+    (70, 12, 1, 'SOIL_LEGACY', 8.0000, '2024-01-22', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2024 đậu nành xuân: bắt đầu biological fixation, nguồn soil_legacy = 8 kg N', 2, '2024-01-22 08:00:00'),
+    (71, 13, 1, 'MINERAL_FERTILIZER', 90.0000, '2024-05-25', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2024 lúa sau đậu nành: hưởng soil legacy, giảm phân khoáng, nguồn mineral_fertilizer = 90 kg N', 2, '2024-05-25 08:00:00'),
+    (72, 13, 1, 'ORGANIC_FERTILIZER', 18.0000, '2024-05-25', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2024 lúa sau đậu nành: hưởng soil legacy, giảm phân khoáng, nguồn organic_fertilizer = 18 kg N', 2, '2024-05-25 08:00:00'),
+    (73, 13, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2024-05-25', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2024 lúa sau đậu nành: hưởng soil legacy, giảm phân khoáng, nguồn biological_fixation = 0 kg N', 2, '2024-05-25 08:00:00'),
+    (74, 13, 1, 'ATMOSPHERIC_DEPOSITION', 5.0000, '2024-05-25', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2024 lúa sau đậu nành: hưởng soil legacy, giảm phân khoáng, nguồn atmospheric_deposition = 5 kg N', 2, '2024-05-25 08:00:00'),
+    (75, 13, 1, 'SEED_IMPORT', 2.0000, '2024-05-25', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2024 lúa sau đậu nành: hưởng soil legacy, giảm phân khoáng, nguồn seed_import = 2 kg N', 2, '2024-05-25 08:00:00'),
+    (76, 13, 1, 'IRRIGATION_WATER', 8.0000, '2024-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2024 lúa sau đậu nành: hưởng soil legacy, giảm phân khoáng, nguồn irrigation_water = 8 kg N', 2, '2024-05-25 08:00:00'),
+    (77, 13, 1, 'SOIL_LEGACY', 30.0000, '2024-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2024 lúa sau đậu nành: hưởng soil legacy, giảm phân khoáng, nguồn soil_legacy = 30 kg N', 2, '2024-05-25 08:00:00'),
+    (78, 14, 1, 'MINERAL_FERTILIZER', 100.0000, '2024-09-20', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2024 ngô sau đậu nành: FDN giảm nhẹ, nguồn mineral_fertilizer = 100 kg N', 2, '2024-09-20 08:00:00'),
+    (79, 14, 1, 'ORGANIC_FERTILIZER', 15.0000, '2024-09-20', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2024 ngô sau đậu nành: FDN giảm nhẹ, nguồn organic_fertilizer = 15 kg N', 2, '2024-09-20 08:00:00'),
+    (80, 14, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2024-09-20', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2024 ngô sau đậu nành: FDN giảm nhẹ, nguồn biological_fixation = 0 kg N', 2, '2024-09-20 08:00:00'),
+    (81, 14, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2024-09-20', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2024 ngô sau đậu nành: FDN giảm nhẹ, nguồn atmospheric_deposition = 4 kg N', 2, '2024-09-20 08:00:00'),
+    (82, 14, 1, 'SEED_IMPORT', 2.0000, '2024-09-20', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2024 ngô sau đậu nành: FDN giảm nhẹ, nguồn seed_import = 2 kg N', 2, '2024-09-20 08:00:00'),
+    (83, 14, 1, 'IRRIGATION_WATER', 5.0000, '2024-09-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2024 ngô sau đậu nành: FDN giảm nhẹ, nguồn irrigation_water = 5 kg N', 2, '2024-09-20 08:00:00'),
+    (84, 14, 1, 'SOIL_LEGACY', 25.0000, '2024-09-20', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2024 ngô sau đậu nành: FDN giảm nhẹ, nguồn soil_legacy = 25 kg N', 2, '2024-09-20 08:00:00'),
+    (85, 15, 1, 'MINERAL_FERTILIZER', 18.0000, '2025-01-22', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2025 lạc xuân: cố định đạm sinh học cao, nguồn mineral_fertilizer = 18 kg N', 2, '2025-01-22 08:00:00'),
+    (86, 15, 1, 'ORGANIC_FERTILIZER', 22.0000, '2025-01-22', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2025 lạc xuân: cố định đạm sinh học cao, nguồn organic_fertilizer = 22 kg N', 2, '2025-01-22 08:00:00'),
+    (87, 15, 1, 'BIOLOGICAL_FIXATION', 80.0000, '2025-01-22', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2025 lạc xuân: cố định đạm sinh học cao, nguồn biological_fixation = 80 kg N', 2, '2025-01-22 08:00:00'),
+    (88, 15, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2025-01-22', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2025 lạc xuân: cố định đạm sinh học cao, nguồn atmospheric_deposition = 4 kg N', 2, '2025-01-22 08:00:00'),
+    (89, 15, 1, 'SEED_IMPORT', 2.0000, '2025-01-22', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2025 lạc xuân: cố định đạm sinh học cao, nguồn seed_import = 2 kg N', 2, '2025-01-22 08:00:00'),
+    (90, 15, 1, 'IRRIGATION_WATER', 5.0000, '2025-01-22', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2025 lạc xuân: cố định đạm sinh học cao, nguồn irrigation_water = 5 kg N', 2, '2025-01-22 08:00:00'),
+    (91, 15, 1, 'SOIL_LEGACY', 12.0000, '2025-01-22', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2025 lạc xuân: cố định đạm sinh học cao, nguồn soil_legacy = 12 kg N', 2, '2025-01-22 08:00:00'),
+    (92, 16, 1, 'MINERAL_FERTILIZER', 20.0000, '2025-05-25', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2025 đậu nành hè: tích lũy soil legacy, nguồn mineral_fertilizer = 20 kg N', 2, '2025-05-25 08:00:00'),
+    (93, 16, 1, 'ORGANIC_FERTILIZER', 20.0000, '2025-05-25', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2025 đậu nành hè: tích lũy soil legacy, nguồn organic_fertilizer = 20 kg N', 2, '2025-05-25 08:00:00'),
+    (94, 16, 1, 'BIOLOGICAL_FIXATION', 95.0000, '2025-05-25', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2025 đậu nành hè: tích lũy soil legacy, nguồn biological_fixation = 95 kg N', 2, '2025-05-25 08:00:00'),
+    (95, 16, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2025-05-25', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2025 đậu nành hè: tích lũy soil legacy, nguồn atmospheric_deposition = 4 kg N', 2, '2025-05-25 08:00:00'),
+    (96, 16, 1, 'SEED_IMPORT', 2.0000, '2025-05-25', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2025 đậu nành hè: tích lũy soil legacy, nguồn seed_import = 2 kg N', 2, '2025-05-25 08:00:00'),
+    (97, 16, 1, 'IRRIGATION_WATER', 5.0000, '2025-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2025 đậu nành hè: tích lũy soil legacy, nguồn irrigation_water = 5 kg N', 2, '2025-05-25 08:00:00'),
+    (98, 16, 1, 'SOIL_LEGACY', 15.0000, '2025-05-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2025 đậu nành hè: tích lũy soil legacy, nguồn soil_legacy = 15 kg N', 2, '2025-05-25 08:00:00'),
+    (99, 17, 1, 'MINERAL_FERTILIZER', 75.0000, '2025-09-25', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2025 ngô sau hai vụ họ đậu: giảm rõ phụ thuộc phân khoáng, nguồn mineral_fertilizer = 75 kg N', 2, '2025-09-25 08:00:00'),
+    (100, 17, 1, 'ORGANIC_FERTILIZER', 15.0000, '2025-09-25', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2025 ngô sau hai vụ họ đậu: giảm rõ phụ thuộc phân khoáng, nguồn organic_fertilizer = 15 kg N', 2, '2025-09-25 08:00:00'),
+    (101, 17, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2025-09-25', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2025 ngô sau hai vụ họ đậu: giảm rõ phụ thuộc phân khoáng, nguồn biological_fixation = 0 kg N', 2, '2025-09-25 08:00:00'),
+    (102, 17, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2025-09-25', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2025 ngô sau hai vụ họ đậu: giảm rõ phụ thuộc phân khoáng, nguồn atmospheric_deposition = 4 kg N', 2, '2025-09-25 08:00:00'),
+    (103, 17, 1, 'SEED_IMPORT', 2.0000, '2025-09-25', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2025 ngô sau hai vụ họ đậu: giảm rõ phụ thuộc phân khoáng, nguồn seed_import = 2 kg N', 2, '2025-09-25 08:00:00'),
+    (104, 17, 1, 'IRRIGATION_WATER', 5.0000, '2025-09-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2025 ngô sau hai vụ họ đậu: giảm rõ phụ thuộc phân khoáng, nguồn irrigation_water = 5 kg N', 2, '2025-09-25 08:00:00'),
+    (105, 17, 1, 'SOIL_LEGACY', 42.0000, '2025-09-25', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2025 ngô sau hai vụ họ đậu: giảm rõ phụ thuộc phân khoáng, nguồn soil_legacy = 42 kg N', 2, '2025-09-25 08:00:00'),
+    (106, 18, 1, 'MINERAL_FERTILIZER', 18.0000, '2026-01-22', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2026 đậu nành xuân: chốt cải tạo trước lúa, nguồn mineral_fertilizer = 18 kg N', 2, '2026-01-22 08:00:00'),
+    (107, 18, 1, 'ORGANIC_FERTILIZER', 20.0000, '2026-01-22', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2026 đậu nành xuân: chốt cải tạo trước lúa, nguồn organic_fertilizer = 20 kg N', 2, '2026-01-22 08:00:00'),
+    (108, 18, 1, 'BIOLOGICAL_FIXATION', 100.0000, '2026-01-22', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2026 đậu nành xuân: chốt cải tạo trước lúa, nguồn biological_fixation = 100 kg N', 2, '2026-01-22 08:00:00'),
+    (109, 18, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2026-01-22', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2026 đậu nành xuân: chốt cải tạo trước lúa, nguồn atmospheric_deposition = 4 kg N', 2, '2026-01-22 08:00:00'),
+    (110, 18, 1, 'SEED_IMPORT', 2.0000, '2026-01-22', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2026 đậu nành xuân: chốt cải tạo trước lúa, nguồn seed_import = 2 kg N', 2, '2026-01-22 08:00:00'),
+    (111, 18, 1, 'IRRIGATION_WATER', 5.0000, '2026-01-22', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf',
+     '2026 đậu nành xuân: chốt cải tạo trước lúa, nguồn irrigation_water = 5 kg N', 2, '2026-01-22 08:00:00'),
+    (112, 18, 1, 'SOIL_LEGACY', 18.0000, '2026-01-22', FALSE, 'fdn_rotation_estimated', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Soil Test Report.pdf',
+     '2026 đậu nành xuân: chốt cải tạo trước lúa, nguồn soil_legacy = 18 kg N', 2, '2026-01-22 08:00:00'),
+    (113, 19, 1, 'MINERAL_FERTILIZER', 30.0000, '2026-05-26', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Mineral Nitrogen Application Report.pdf',
+     '2026 lúa hè ngày 26/05: dùng dedicated nước tưới và đất để tính FDN, nguồn mineral_fertilizer = 30 kg N', 2, '2026-05-26 08:00:00'),
+    (114, 19, 1, 'ORGANIC_FERTILIZER', 10.0000, '2026-05-26', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Organic Fertilizer Application Log.pdf',
+     '2026 lúa hè ngày 26/05: dùng dedicated nước tưới và đất để tính FDN, nguồn organic_fertilizer = 10 kg N', 2, '2026-05-26 08:00:00'),
+    (115, 19, 1, 'BIOLOGICAL_FIXATION', 0.0000, '2026-05-26', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Biological Nitrogen Fixation Check.pdf',
+     '2026 lúa hè ngày 26/05: dùng dedicated nước tưới và đất để tính FDN, nguồn biological_fixation = 0 kg N', 2, '2026-05-26 08:00:00'),
+    (116, 19, 1, 'ATMOSPHERIC_DEPOSITION', 4.0000, '2026-05-26', TRUE, 'fdn_rotation_measured', 'LAB_MEASURED',
+     '/demo-evidence/fdn/Demo Atmospheric Nitrogen Deposition Report.pdf',
+     '2026 lúa hè ngày 26/05: dùng dedicated nước tưới và đất để tính FDN, nguồn atmospheric_deposition = 4 kg N', 2, '2026-05-26 08:00:00'),
+    (117, 19, 1, 'SEED_IMPORT', 2.0000, '2026-05-26', TRUE, 'fdn_rotation_measured', 'USER_ENTERED',
+     '/demo-evidence/fdn/Demo Seed Certificate and Nitrogen Import Record.pdf',
+     '2026 lúa hè ngày 26/05: dùng dedicated nước tưới và đất để tính FDN, nguồn seed_import = 2 kg N', 2, '2026-05-26 08:00:00');
 
 -- =========================================================
 -- 27. DEDICATED IRRIGATION WATER ANALYSES
@@ -1379,27 +1654,18 @@ INSERT INTO irrigation_water_analyses
      legacy_n_contribution_kg, legacy_event_id, legacy_derived, measured, source_type, source_document, lab_reference,
      note, created_by_user_id, created_at)
 VALUES
-    (1, 3, 1, '2025-02-02', 11.0000, 3.0000, NULL, 1400.0000,
-     NULL, NULL, FALSE, TRUE, 'LAB_MEASURED', 'https://example.com/lab/irrigation-a1-20250202.pdf', 'LAB-HCMC-IRR-250202',
-     'Mẫu nước tưới lô A1 - đợt 1', 2, '2025-02-02 10:30:00'),
-    (2, 3, 1, '2025-02-20', NULL, NULL, 12.0000, 800.0000,
-     NULL, NULL, FALSE, TRUE, 'USER_ENTERED', NULL, 'LAB-HCMC-IRR-250220',
-     'Bổ sung mẫu tổng N giữa vụ', 2, '2025-02-20 10:30:00'),
-    (3, 4, 2, '2025-02-01', 8.0000, 2.0000, NULL, 2200.0000,
-     NULL, NULL, FALSE, TRUE, 'USER_ENTERED', NULL, 'LAB-PADDYRICE-250201',
-     'Mẫu nước ruộng lúa nước A2', 2, '2025-02-01 09:00:00'),
-    (4, 5, 7, '2025-01-25', 6.0000, 1.0000, NULL, 900.0000,
-     NULL, NULL, FALSE, TRUE, 'USER_ENTERED', NULL, 'LAB-PEANUT-250125',
-     'Mẫu nước tưới lạc B2', 2, '2025-01-25 09:00:00'),
-    (5, 1, 1, '2024-10-20', NULL, NULL, NULL, 1000.0000,
-     9.0000, 16, TRUE, FALSE, 'USER_ENTERED', NULL, NULL,
-     'Backfill legacy IRRIGATION_WATER event #16', 2, '2024-10-20 09:10:00'),
-    (6, 17, 2, '2027-04-02', 7.5000, 1.5000, NULL, 1100.0000,
-     NULL, NULL, FALSE, TRUE, 'LAB_MEASURED', 'https://example.com/lab/irrigation-a2-20270402.pdf', 'LAB-ROT5Y-IRR-270402',
-     'Mẫu nước tưới vụ lạc năm 4', 2, '2027-04-02 10:00:00'),
-    (7, 18, 6, '2028-02-14', NULL, NULL, 10.5000, 950.0000,
-     NULL, NULL, FALSE, TRUE, 'USER_ENTERED', NULL, 'LAB-ROT5Y-IRR-280214',
-     'Mẫu tổng N nước tưới vụ ngô năm 5', 2, '2028-02-14 09:30:00');
+    (1, 10, 1, '2023-05-25', 9.0000, 2.5000, NULL, 1300.0000,
+     NULL, NULL, FALSE, TRUE, 'LAB_MEASURED', '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf', 'LAB-FDN-IRR-230525',
+     'Baseline 2023: mẫu nước tưới trước luân canh cây họ đậu, N từ nước chỉ đóng góp nhỏ so với phân bón', 2, '2023-05-25 11:00:00'),
+    (2, 13, 1, '2024-05-15', 7.0000, 2.0000, NULL, 1250.0000,
+     NULL, NULL, FALSE, TRUE, 'LAB_MEASURED', '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf', 'LAB-FDN-IRR-240515',
+     'Sau vụ đậu nành đầu tiên: nước tưới được đo để tránh phải dùng fallback estimation', 2, '2024-05-15 11:00:00'),
+    (3, 17, 1, '2025-09-15', 6.0000, 1.8000, NULL, 1150.0000,
+     NULL, NULL, FALSE, TRUE, 'LAB_MEASURED', '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf', 'LAB-FDN-IRR-250915',
+     'Ngô sau hai vụ họ đậu: dữ liệu nước tưới hỗ trợ giải thích FDN giảm', 2, '2025-09-15 11:00:00'),
+    (4, 19, 1, '2026-05-26', 4.5000, 2.0000, 6.5000, 1250.0000,
+     NULL, NULL, FALSE, TRUE, 'LAB_MEASURED', '/demo-evidence/fdn/Demo Irrigation Water Analysis Report.pdf', 'LAB-FDN-IRR-260526',
+     'Ngày bắt đầu vụ lúa 26/05/2026: nhập chỉ số nước tưới để tính N từ nước tưới bằng dữ liệu đo thực tế', 2, '2026-05-26 09:15:00');
 
 -- =========================================================
 -- 28. DEDICATED SOIL TESTS
@@ -1409,24 +1675,26 @@ INSERT INTO soil_tests
      legacy_n_contribution_kg, legacy_event_id, legacy_derived, measured, source_type, source_document, lab_reference,
      note, created_by_user_id, created_at)
 VALUES
-    (1, 3, 1, '2025-02-03', 3.2000, 11.0000, 14.0000, 4.0000,
-     NULL, NULL, FALSE, TRUE, 'LAB_MEASURED', 'https://example.com/lab/soil-a1-20250203.pdf', 'LAB-HCMC-SOIL-250203',
-     'Mẫu đất lô A1 - giai đoạn ra hoa', 2, '2025-02-03 14:00:00'),
-    (2, 4, 2, '2025-02-01', 2.4000, 15.0000, 12.0000, 5.0000,
-     NULL, NULL, FALSE, TRUE, 'LAB_MEASURED', 'https://example.com/lab/soil-a2-20250201.pdf', 'LAB-PADDYRICE-SOIL-250201',
-     'Mẫu đất ruộng lúa nước A2', 2, '2025-02-01 13:20:00'),
-    (3, 5, 7, '2025-01-25', 3.8000, 8.0000, 9.0000, 3.0000,
-     NULL, NULL, FALSE, TRUE, 'USER_ENTERED', NULL, 'LAB-PEANUT-SOIL-250125',
-     'Mẫu đất lạc B2', 2, '2025-01-25 15:20:00'),
-    (4, 1, 1, '2024-10-20', NULL, 0.0000, NULL, NULL,
-     22.0000, 17, TRUE, FALSE, 'USER_ENTERED', NULL, NULL,
-     'Backfill legacy SOIL_LEGACY event #17', 2, '2024-10-20 09:20:00'),
-    (5, 17, 2, '2027-04-03', 4.1000, 12.5000, 16.0000, 4.5000,
-     NULL, NULL, FALSE, TRUE, 'LAB_MEASURED', 'https://example.com/lab/soil-a2-20270403.pdf', 'LAB-ROT5Y-SOIL-270403',
-     'Mẫu đất vụ lạc cải tạo năm 4', 2, '2027-04-03 14:00:00'),
-    (6, 18, 6, '2028-02-15', 3.3000, 14.0000, 13.0000, 4.2000,
-     NULL, NULL, FALSE, TRUE, 'LAB_MEASURED', 'https://example.com/lab/soil-b1-20280215.pdf', 'LAB-ROT5Y-SOIL-280215',
-     'Mẫu đất vụ ngô năm 5 để kiểm tra duy trì soil legacy', 2, '2028-02-15 14:30:00');
+    (1, 10, 1, '2023-05-25', 2.1000, 8.0000, 10.0000, 3.0000,
+     2.0000, NULL, FALSE, TRUE, 'LAB_MEASURED', '/demo-evidence/fdn/Demo Soil Test Report.pdf', 'LAB-FDN-SOIL-230525',
+     'Baseline 2023: đất sau ba năm lúa/ngô liên tục, hữu cơ và mineral N thấp nên FDN cao', 2, '2023-05-25 14:00:00'),
+    (2, 13, 1, '2024-05-15', 2.8000, 12.0000, 14.0000, 4.0000,
+     30.0000, NULL, FALSE, TRUE, 'LAB_MEASURED', '/demo-evidence/fdn/Demo Soil Test Report.pdf', 'LAB-FDN-SOIL-240515',
+     'Sau vụ đậu nành đầu tiên: soil legacy tăng, bắt đầu giảm nhu cầu bón đạm khoáng cho lúa', 2, '2024-05-15 14:00:00'),
+    (3, 17, 1, '2025-09-15', 3.4000, 16.8000, 17.5000, 4.8000,
+     42.0000, NULL, FALSE, TRUE, 'LAB_MEASURED', '/demo-evidence/fdn/Demo Soil Test Report.pdf', 'LAB-FDN-SOIL-250915',
+     'Sau hai vụ họ đậu năm 2025: soil legacy đủ rõ để ngô giảm phân khoáng', 2, '2025-09-15 14:00:00'),
+    (4, 19, 1, '2026-05-26', 3.9000, 18.0000, 18.0000, 5.0000,
+     45.0000, NULL, FALSE, TRUE, 'LAB_MEASURED', '/demo-evidence/fdn/Demo Soil Test Report.pdf', 'LAB-FDN-SOIL-260526',
+     'Ngày bắt đầu vụ lúa 26/05/2026: chất lượng đất đã cải thiện sau đậu nành xuân, soil legacy giúp giảm FDN đầu vụ', 2, '2026-05-26 10:00:00');
+
+-- =========================================================
+-- 28.1 FDN HAPPY PATH GOLDEN DATASET
+-- Golden Path: 2023 baseline FDN cao -> 2026 lúa hè bắt đầu 26/05 có dữ liệu đo đủ
+-- Baseline season: 10 (2023 - Vụ Lúa Hè, lúa/ngô liên tục, FDN cao)
+-- Happy path season: 19 (2026 - Vụ Lúa Hè, sau đậu nành season 18)
+-- Ghi chú: dữ liệu đo của season 19 đã được nạp trực tiếp tại section 26, 27, 28 để tránh duplicate input.
+-- =========================================================
 
 -- =========================================================
 -- 29. LABOR MANAGEMENT SEED
@@ -1442,14 +1710,11 @@ INSERT INTO season_employees (id, season_id, employee_user_id, added_by_user_id,
 
 
 INSERT INTO task_progress_logs (id, task_id, employee_user_id, progress_percent, note, evidence_url, logged_at) VALUES
-    (1, 4, 2, 55, 'Hoàn thành khoảng 55% khối lượng bón thúc đợt 1', 'https://example.com/evidence/task-4-progress.jpg', '2025-02-06 11:00:00'),
-    (2, 12, 2, 60, 'Đã bón được 60% diện tích lô A2', 'https://example.com/evidence/task-12-progress.jpg', '2025-02-13 15:00:00'),
-    (3, 14, 2, 80, 'Duy trì tưới đều sáng chiều', 'https://example.com/evidence/task-14-progress.jpg', '2025-01-28 17:00:00'),
-    (4, 18, @employee_user_id, 40, 'Đã bón 40% diện tích', 'https://example.com/evidence/task-18-p40.jpg', '2026-03-16 11:00:00'),
-    (5, 18, @employee_user_id, 75, 'Cập nhật tiến độ sau bổ sung nhân lực', 'https://example.com/evidence/task-18-p75.jpg', '2026-03-18 14:30:00'),
-    (6, 20, @employee2_user_id, 15, 'Đã kiểm tra một phần đường ống', 'https://example.com/evidence/task-20-p15.jpg', '2026-03-06 16:00:00'),
-    (7, 17, @employee_user_id, 100, 'Hoàn tất làm đất', 'https://example.com/evidence/task-17-done.jpg', '2026-02-21 17:30:00'),
-    (8, 22, @employee_user_id, 100, 'Thu hoạch và bàn giao đầy đủ', 'https://example.com/evidence/task-22-done.jpg', '2026-02-14 18:30:00');
+    (1, 4, 2, 55, 'Hoàn thành khoảng 55% khối lượng bón thúc đợt 1', '/demo-evidence/evidence/ChecklistExample.jpg', '2025-02-06 11:00:00'),
+    (2, 12, 2, 60, 'Đã bón được 60% diện tích lô A2', '/demo-evidence/evidence/Ruong.jpg', '2025-02-13 15:00:00'),
+    (3, 14, 2, 80, 'Duy trì tưới đều sáng chiều', '/demo-evidence/evidence/ActivityField.jpg', '2025-01-28 17:00:00'),
+    (4, 18, @employee_user_id, 40, 'Đã bón 40% diện tích', '/demo-evidence/evidence/PhanBon.jpg', '2026-03-16 11:00:00');
+    
 
 
 INSERT INTO payroll_records (id, employee_user_id, season_id, period_start, period_end, total_assigned_tasks, total_completed_tasks, wage_per_task, total_amount, generated_at, note) VALUES
@@ -1535,37 +1800,37 @@ INSERT INTO product_warehouse_transactions (id, lot_id, transaction_type, quanti
 -- =========================================================
 INSERT INTO marketplace_products
     (id, version, slug, name, category, short_description, description, price, unit, stock_quantity, image_url, image_urls_json,
-     farmer_user_id, farm_id, season_id, lot_id, traceable, status, published_at, created_at, updated_at)
+     farmer_user_id, farm_id, season_id, lot_id, traceable, average_rating, rating_count, status, published_at, created_at, updated_at)
 VALUES
     (1, 0, 'dau-nanh-ags398-thu-nghiem', 'Dau nanh AGS398 thu nghiem', 'SOYBEAN', 'Draft listing for farmer create flow.', 'Used to test draft lifecycle and edit operations before review.', 155000.00, 'kg', 180.000,
      'https://loremflickr.com/1200/800/soybean,beans?lock=3981',
      '["https://loremflickr.com/1200/800/soybean,beans?lock=3981","https://loremflickr.com/1200/800/soybean,agriculture?lock=3982"]',
-     2, 1, 3, 1, TRUE, 'DRAFT', NULL, '2026-04-01 08:00:00', '2026-04-01 08:00:00'),
+     2, 1, 3, 1, TRUE, 0.0, 0, 'DRAFT', NULL, '2026-04-01 08:00:00', '2026-04-01 08:00:00'),
 
     (2, 0, 'gao-om5451-chon-loc', 'Gao OM5451 chon loc', 'RICE', 'Main published rice listing with complete traceability.', 'Used in buyer catalog, search, and order checkout scenarios.', 125000.00, 'kg', 600.000,
      'https://loremflickr.com/1200/800/rice,grain?lock=5451',
      '["https://loremflickr.com/1200/800/rice,grain?lock=5451","https://loremflickr.com/1200/800/rice,field?lock=5452"]',
-     2, 1, 4, 2, TRUE, 'PUBLISHED', '2026-04-02 08:00:00', '2026-04-02 08:00:00', '2026-04-20 08:00:00'),
+     2, 1, 4, 2, TRUE, 0.0, 0, 'PUBLISHED', '2026-04-02 08:00:00', '2026-04-02 08:00:00', '2026-04-20 08:00:00'),
 
     (3, 0, 'lac-tuoi-an-phat', 'Lac tuoi An Phat', 'PEANUT', 'Listing waiting admin review.', 'Used to test pending-review filters in farmer and admin dashboards.', 92000.00, 'kg', 120.000,
      'https://loremflickr.com/1200/800/peanut,nuts?lock=9201',
      '["https://loremflickr.com/1200/800/peanut,nuts?lock=9201","https://loremflickr.com/1200/800/peanut,agriculture?lock=9202"]',
-     2, 2, 5, 3, TRUE, 'PENDING_REVIEW', NULL, '2026-04-03 08:00:00', '2026-04-03 08:00:00'),
+     2, 2, 5, 3, TRUE, 0.0, 0, 'PENDING_REVIEW', NULL, '2026-04-03 08:00:00', '2026-04-03 08:00:00'),
 
     (4, 0, 'dau-den-cao-cap-tet-2026', 'Dau den cao cap Tet 2026', 'BLACK_BEAN', 'Hidden listing after campaign close.', 'Used to test hidden-status records in analytics and seller tables.', 98000.00, 'kg', 1500.000,
      'https://loremflickr.com/1200/800/blackbeans,beans?lock=20261',
      '["https://loremflickr.com/1200/800/blackbeans,beans?lock=20261","https://loremflickr.com/1200/800/blackbeans,food?lock=20262"]',
-     2, 2, 15, 4, TRUE, 'HIDDEN', '2026-03-01 08:00:00', '2026-03-01 08:00:00', '2026-04-05 08:00:00'),
+     2, 2, 15, 4, TRUE, 0.0, 0, 'HIDDEN', '2026-03-01 08:00:00', '2026-03-01 08:00:00', '2026-04-05 08:00:00'),
 
     (5, 0, 'dau-nanh-ags398-say-kho-2026', 'Dau nanh AGS398 say kho 2026', 'SOYBEAN', 'Published low-stock lot for seller dashboard alerts.', 'Used to test low stock KPI and reservation/release inventory flows.', 145000.00, 'kg', 8.000,
      'https://loremflickr.com/1200/800/soybeans,drybeans?lock=3985',
      '["https://loremflickr.com/1200/800/soybeans,drybeans?lock=3985","https://loremflickr.com/1200/800/soybean,harvest?lock=3986"]',
-     2, 1, 16, 5, TRUE, 'PUBLISHED', '2026-04-10 08:00:00', '2026-04-10 08:00:00', '2026-04-26 09:20:00'),
+     2, 1, 16, 5, TRUE, 5.0, 1, 'PUBLISHED', '2026-04-10 08:00:00', '2026-04-10 08:00:00', '2026-04-26 09:20:00'),
 
     (6, 0, 'ngo-ngot-cao-nguyen-xanh', 'Ngo ngot Cao Nguyen Xanh', 'CORN', 'Published listing owned by second seller.', 'Used for split-order, delivering flow, and multi-farm buyer filters.', 170000.00, 'kg', 820.000,
      'https://loremflickr.com/1200/800/corn,maize?lock=1701',
      '["https://loremflickr.com/1200/800/corn,maize?lock=1701","https://loremflickr.com/1200/800/cornfield,agriculture?lock=1702"]',
-     @farmer2_user_id, 4, 14, 6, TRUE, 'PUBLISHED', '2026-04-12 08:00:00', '2026-04-12 08:00:00', '2026-04-24 08:00:00');
+     @farmer2_user_id, 4, 14, 6, TRUE, 0.0, 0, 'PUBLISHED', '2026-04-12 08:00:00', '2026-04-12 08:00:00', '2026-04-24 08:00:00');
 
 INSERT INTO marketplace_carts (id, user_id, created_at, updated_at) VALUES
     (1, @buyer_user_id, '2026-04-20 10:00:00', '2026-04-22 16:00:00');
@@ -1575,10 +1840,10 @@ INSERT INTO marketplace_cart_items (id, cart_id, product_id, quantity, unit_pric
     (2, 1, 6, 1.500, 170000.00, '2026-04-22 16:00:00', '2026-04-22 16:00:00');
 
 INSERT INTO marketplace_addresses
-    (id, user_id, full_name, phone, province, district, ward, street, detail, label, is_default, created_at, updated_at)
+    (id, user_id, full_name, phone, province, district, ward, street, detail, label, is_default, created_at, updated_at, deleted_at)
 VALUES
-    (1, @buyer_user_id, 'Tran Thi Buyer', '0903234000', 'Đồng Tháp', 'Cao Lãnh', 'Mỹ An', '123 Đường Demo', 'Căn góc, gần trường học', 'home', TRUE, '2026-04-18 08:00:00', '2026-04-18 08:00:00'),
-    (2, @buyer_user_id, 'Tran Thi Buyer', '0903234000', 'Hồ Chí Minh', 'Quận 7', 'Tân Phú', '88 Đường Thử Nghiệm', 'Tòa nhà văn phòng', 'office', FALSE, '2026-04-18 08:05:00', '2026-04-18 08:05:00');
+    (1, @buyer_user_id, 'Tran Thi Buyer', '0903234000', 'Đồng Tháp', 'Cao Lãnh', 'Mỹ An', '123 Đường Demo', 'Căn góc, gần trường học', 'home', TRUE, '2026-04-18 08:00:00', '2026-04-18 08:00:00', NULL),
+    (2, @buyer_user_id, 'Tran Thi Buyer', '0903234000', 'Hồ Chí Minh', 'Quận 7', 'Tân Phú', '88 Đường Thử Nghiệm', 'Tòa nhà văn phòng', 'office', FALSE, '2026-04-18 08:05:00', '2026-04-18 08:05:00', NULL);
 
 INSERT INTO marketplace_order_groups
     (id, group_code, buyer_user_id, idempotency_key, request_fingerprint, created_at)
@@ -1601,96 +1866,97 @@ VALUES
      'proof-order-2.png', 'image/png', 'storage/marketplace/payment-proofs/order-2/proof-order-2.png', '2026-04-20 09:12:00',
      '2026-04-20 10:30:00', 1, 'Payment verified, order moved to preparing state.', 'Tran Thi Buyer', '0903234000',
      '123 Duong Demo, My An, Cao Lanh, Dong Thap', 'Preparing order used for admin payment verification workflow.', 212500.00, 20000.00, 232500.00, '2026-04-20 09:10:00', '2026-04-22 09:00:00'),
-    (3, 2, 'MPO-2026-0003', @buyer_user_id, 2, 'PENDING', 'BANK_TRANSFER', 'SUBMITTED',
+    (3, 2, 'MPO-2026-0003', @buyer_user_id, 2, 'PENDING_PAYMENT', 'BANK_TRANSFER', 'SUBMITTED',
      'proof-order-3.jpg', 'image/jpeg', 'storage/marketplace/payment-proofs/order-3/proof-order-3.jpg', '2026-04-22 11:05:00',
      NULL, NULL, 'Buyer submitted payment proof and waits for admin decision.', 'Tran Thi Buyer', '0903234000',
-     '123 Duong Demo, My An, Cao Lanh, Dong Thap', 'Pending order used to test SUBMITTED state.', 437500.00, 20000.00, 457500.00, '2026-04-22 11:00:00', '2026-04-22 11:05:00'),
+     '123 Duong Demo, My An, Cao Lanh, Dong Thap', 'Pending-payment order used to test SUBMITTED state.', 437500.00, 20000.00, 457500.00, '2026-04-22 11:00:00', '2026-04-22 11:05:00'),
     (4, 3, 'MPO-2026-0004', @buyer_user_id, 2, 'CONFIRMED', 'BANK_TRANSFER', 'AWAITING_PROOF',
      NULL, NULL, NULL, NULL,
      NULL, NULL, 'Order confirmed but waiting buyer to upload transfer proof.', 'Tran Thi Buyer', '0903234000',
      '88 Duong Thu Nghiem, Tan Phu, Quan 7, Ho Chi Minh', 'Confirmed status coverage with awaiting-proof payment state.', 250000.00, 20000.00, 270000.00, '2026-04-24 08:30:00', '2026-04-24 08:31:00'),
-    (5, 3, 'MPO-2026-0005', @buyer_user_id, @farmer2_user_id, 'DELIVERING', 'BANK_TRANSFER', 'VERIFIED',
+    (5, 3, 'MPO-2026-0005', @buyer_user_id, @farmer2_user_id, 'SHIPPED', 'BANK_TRANSFER', 'VERIFIED',
      'proof-order-5.png', 'image/png', 'storage/marketplace/payment-proofs/order-5/proof-order-5.png', '2026-04-24 12:20:00',
      '2026-04-24 14:00:00', 1, 'Verified then handed over to logistics.', 'Tran Thi Buyer', '0903234000',
-     '88 Duong Thu Nghiem, Tan Phu, Quan 7, Ho Chi Minh', 'Delivering status coverage for split-order scenario.', 306000.00, 20000.00, 326000.00, '2026-04-24 12:10:00', '2026-04-25 09:00:00'),
+     '88 Duong Thu Nghiem, Tan Phu, Quan 7, Ho Chi Minh', 'Shipped status coverage for split-order scenario.', 306000.00, 20000.00, 326000.00, '2026-04-24 12:10:00', '2026-04-25 09:00:00'),
     (6, 4, 'MPO-2026-0006', @buyer_user_id, 2, 'CANCELLED', 'BANK_TRANSFER', 'REJECTED',
      'proof-order-6.jpg', 'image/jpeg', 'storage/marketplace/payment-proofs/order-6/proof-order-6.jpg', '2026-04-26 10:00:00',
      '2026-04-26 10:30:00', 1, 'Payment proof rejected due mismatch; order cancelled.', 'Tran Thi Buyer', '0903234000',
      '123 Duong Demo, My An, Cao Lanh, Dong Thap', 'Cancelled order used to validate rejected-payment and cancelled-order filters.', 217500.00, 20000.00, 237500.00, '2026-04-26 09:45:00', '2026-04-26 10:35:00');
 
+
 INSERT INTO marketplace_order_items
     (id, order_id, product_id, product_name_snapshot, product_slug_snapshot, image_url_snapshot, unit_price_snapshot,
      quantity, line_total, traceable_snapshot, farm_id, season_id, lot_id)
 VALUES
-    (1, 1, 5, 'Dau nanh AGS398 say kho 2026', 'dau-nanh-ags398-say-kho-2026', 'https://loremflickr.com/1200/800/soybeans,drybeans?lock=3985',
+    (1, 1, 5, 'Dau nanh AGS398 say kho 2026', 'dau-nanh-ags398-say-kho-2026', '/demo-evidence/products/soybean.jpg',
      145000.00, 2.000, 290000.00, TRUE, 1, 16, 5),
-    (2, 2, 6, 'Ngo ngot Cao Nguyen Xanh', 'ngo-ngot-cao-nguyen-xanh', 'https://loremflickr.com/1200/800/corn,maize?lock=1701',
+    (2, 2, 6, 'Ngo ngot Cao Nguyen Xanh', 'ngo-ngot-cao-nguyen-xanh', '/demo-evidence/products/corn.jpg',
      170000.00, 1.250, 212500.00, TRUE, 4, 14, 6),
-    (3, 3, 2, 'Gao OM5451 chon loc', 'gao-om5451-chon-loc', 'https://loremflickr.com/1200/800/rice,grain?lock=5451',
+    (3, 3, 2, 'Gao OM5451 chon loc', 'gao-om5451-chon-loc', '/demo-evidence/products/rice grain.jpg',
      125000.00, 3.500, 437500.00, TRUE, 1, 4, 2),
-    (4, 4, 2, 'Gao OM5451 chon loc', 'gao-om5451-chon-loc', 'https://loremflickr.com/1200/800/rice,grain?lock=5451',
+    (4, 4, 2, 'Gao OM5451 chon loc', 'gao-om5451-chon-loc', '/demo-evidence/products/rice field.jpg',
      125000.00, 2.000, 250000.00, TRUE, 1, 4, 2),
-    (5, 5, 6, 'Ngo ngot Cao Nguyen Xanh', 'ngo-ngot-cao-nguyen-xanh', 'https://loremflickr.com/1200/800/corn,maize?lock=1701',
+    (5, 5, 6, 'Ngo ngot Cao Nguyen Xanh', 'ngo-ngot-cao-nguyen-xanh', '/demo-evidence/products/corn field.jpg',
      170000.00, 1.800, 306000.00, TRUE, 4, 14, 6),
-    (6, 6, 5, 'Dau nanh AGS398 say kho 2026', 'dau-nanh-ags398-say-kho-2026', 'https://loremflickr.com/1200/800/soybeans,drybeans?lock=3985',
+    (6, 6, 5, 'Dau nanh AGS398 say kho 2026', 'dau-nanh-ags398-say-kho-2026', '/demo-evidence/products/soybean field.jpg',
      145000.00, 1.500, 217500.00, TRUE, 1, 16, 5);
 
 INSERT INTO marketplace_product_reviews
-    (id, product_id, order_id, buyer_user_id, rating, comment, created_at)
+    (id, product_id, order_id, order_item_id, buyer_user_id, rating, comment, hidden, created_at, updated_at)
 VALUES
-    (1, 5, 1, @buyer_user_id, 5, 'Chất lượng đậu nành rất tốt, đóng gói gọn và giao đúng hẹn.', '2026-04-21 18:00:00');
+    (1, 5, 1, 1, @buyer_user_id, 5, 'Chất lượng đậu nành rất tốt, đóng gói gọn và giao đúng hẹn.', FALSE, '2026-04-21 18:00:00', '2026-04-21 18:00:00');
 
 
 
 -- =========================================================
 -- 34. ADMIN READ VIEWS
 -- =========================================================
-CREATE OR REPLACE VIEW vw_admin_season_risk AS
-SELECT
-    s.season_id AS season_id,
-    s.season_name AS season_name,
-    s.status AS season_status,
-    p.plot_id AS plot_id,
-    p.plot_name AS plot_name,
-    f.farm_id AS farm_id,
-    f.farm_name AS farm_name,
-    COALESCE(incident_agg.incident_count, 0) AS incident_count,
-    COALESCE(task_agg.overdue_task_count, 0) AS overdue_task_count,
-    (COALESCE(incident_agg.incident_count, 0) + COALESCE(task_agg.overdue_task_count, 0)) AS risk_score
-FROM seasons s
-JOIN plots p ON p.plot_id = s.plot_id
-JOIN farms f ON f.farm_id = p.farm_id
-LEFT JOIN (
-    SELECT i.season_id, COUNT(DISTINCT i.id) AS incident_count
-    FROM incidents i
-    GROUP BY i.season_id
-) incident_agg ON incident_agg.season_id = s.season_id
-LEFT JOIN (
-    SELECT t.season_id, COUNT(DISTINCT t.task_id) AS overdue_task_count
-    FROM tasks t
-    WHERE t.status = 'OVERDUE'
-    GROUP BY t.season_id
-) task_agg ON task_agg.season_id = s.season_id;
+-- Use dynamic CREATE-only view setup to avoid MySQL 8 SYSTEM_USER errors when
+-- stale demo views were created earlier by root or another privileged definer.
+SET @view_exists := (
+    SELECT COUNT(*)
+    FROM information_schema.views
+    WHERE table_schema = DATABASE()
+      AND table_name = 'vw_admin_season_risk'
+);
+SET @sql := IF(
+    @view_exists = 0,
+    'CREATE SQL SECURITY INVOKER VIEW vw_admin_season_risk AS SELECT s.season_id AS season_id, s.season_name AS season_name, s.status AS season_status, p.plot_id AS plot_id, p.plot_name AS plot_name, f.farm_id AS farm_id, f.farm_name AS farm_name, COALESCE(incident_agg.incident_count, 0) AS incident_count, COALESCE(task_agg.overdue_task_count, 0) AS overdue_task_count, (COALESCE(incident_agg.incident_count, 0) + COALESCE(task_agg.overdue_task_count, 0)) AS risk_score FROM seasons s JOIN plots p ON p.plot_id = s.plot_id JOIN farms f ON f.farm_id = p.farm_id LEFT JOIN (SELECT i.season_id, COUNT(DISTINCT i.id) AS incident_count FROM incidents i GROUP BY i.season_id) incident_agg ON incident_agg.season_id = s.season_id LEFT JOIN (SELECT t.season_id, COUNT(DISTINCT t.task_id) AS overdue_task_count FROM tasks t WHERE t.status = ''OVERDUE'' GROUP BY t.season_id) task_agg ON task_agg.season_id = s.season_id',
+    'DO 0'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
-CREATE OR REPLACE VIEW vw_admin_inventory_lot_farm AS
-SELECT DISTINCT
-    sm.supply_lot_id AS supply_lot_id,
-    w.farm_id AS farm_id
-FROM stock_movements sm
-JOIN warehouses w ON w.id = sm.warehouse_id
-WHERE sm.supply_lot_id IS NOT NULL
-  AND w.farm_id IS NOT NULL;
+SET @view_exists := (
+    SELECT COUNT(*)
+    FROM information_schema.views
+    WHERE table_schema = DATABASE()
+      AND table_name = 'vw_admin_inventory_lot_farm'
+);
+SET @sql := IF(
+    @view_exists = 0,
+    'CREATE SQL SECURITY INVOKER VIEW vw_admin_inventory_lot_farm AS SELECT DISTINCT sm.supply_lot_id AS supply_lot_id, w.farm_id AS farm_id FROM stock_movements sm JOIN warehouses w ON w.id = sm.warehouse_id WHERE sm.supply_lot_id IS NOT NULL AND w.farm_id IS NOT NULL',
+    'DO 0'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
-CREATE OR REPLACE VIEW vw_admin_inventory_lot_expiry_base AS
-SELECT
-    f.farm_id AS farm_id,
-    f.farm_name AS farm_name,
-    sl.id AS supply_lot_id,
-    sl.expiry_date AS expiry_date
-FROM supply_lots sl
-JOIN vw_admin_inventory_lot_farm lot_farm ON lot_farm.supply_lot_id = sl.id
-JOIN farms f ON f.farm_id = lot_farm.farm_id
-WHERE sl.expiry_date IS NOT NULL;
+SET @view_exists := (
+    SELECT COUNT(*)
+    FROM information_schema.views
+    WHERE table_schema = DATABASE()
+      AND table_name = 'vw_admin_inventory_lot_expiry_base'
+);
+SET @sql := IF(
+    @view_exists = 0,
+    'CREATE SQL SECURITY INVOKER VIEW vw_admin_inventory_lot_expiry_base AS SELECT f.farm_id AS farm_id, f.farm_name AS farm_name, sl.id AS supply_lot_id, sl.expiry_date AS expiry_date FROM supply_lots sl JOIN vw_admin_inventory_lot_farm lot_farm ON lot_farm.supply_lot_id = sl.id JOIN farms f ON f.farm_id = lot_farm.farm_id WHERE sl.expiry_date IS NOT NULL',
+    'DO 0'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 SET FOREIGN_KEY_CHECKS = 1;
 

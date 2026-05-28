@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -63,8 +64,9 @@ public class Task {
     LocalDate dueDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    TaskStatus status;
+    @Column(name = "status", nullable = false)
+    @Builder.Default
+    TaskStatus status = TaskStatus.PENDING;
 
     @Column(name = "actual_start_date")
     LocalDate actualStartDate;
@@ -77,4 +79,14 @@ public class Task {
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     LocalDateTime createdAt;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = TaskStatus.PENDING;
+        }
+    }
 }

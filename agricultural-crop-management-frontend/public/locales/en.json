@@ -2536,7 +2536,20 @@
         "preparing": "Preparing",
         "delivering": "Delivering",
         "completed": "Completed",
-        "cancelled": "Cancelled"
+        "cancelled": "Cancelled",
+        "PENDING_PAYMENT": "Pending payment",
+        "PAYMENT_SUBMITTED": "Payment submitted",
+        "PAYMENT_VERIFIED": "Payment verified",
+        "CONFIRMED": "Confirmed",
+        "PREPARING": "Preparing",
+        "SHIPPED": "Shipped",
+        "DELIVERED": "Delivered",
+        "COMPLETED": "Completed",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled",
+        "PENDING": "Pending payment",
+        "DELIVERING": "Shipped",
+        "unknown": "Unknown status ({{status}})"
       }
     },
     "table": {

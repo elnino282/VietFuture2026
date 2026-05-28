@@ -58,7 +58,6 @@ export function SeasonDetailView({
         formatDateRange={formatDateRange}
       />
 
-      {/* Main Content */}
       <div className="max-w-[1800px] mx-auto p-6 space-y-6">
         <SeasonKPICards season={season} />
         <SeasonTabs
@@ -68,30 +67,33 @@ export function SeasonDetailView({
           activities={activities}
         />
         <ActivityFeed activities={activities} />
-      </div>
 
-      {/* Sticky Footer */}
-      <div className="bg-card border-t border-border px-6 py-4 fixed bottom-0 left-0 right-0 shadow-lg">
-        <div className="max-w-[1800px] mx-auto flex items-center justify-between">
-          <Button variant="outline" onClick={onBack} className="acm-rounded-sm">
-            Cancel
-          </Button>
-          <div className="flex items-center gap-3">
+        <div className="bg-card border border-border rounded-lg px-6 py-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="outline"
-              onClick={handleExportCSV}
-              className="acm-rounded-sm border-border"
+              onClick={onBack}
+              className="acm-rounded-sm w-full sm:w-auto"
             >
-              <Download className="w-4 h-4 mr-2" />
-              Export Report
+              Cancel
             </Button>
-            <Button
-              className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm"
-              onClick={() => toast.success("Changes saved successfully")}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
-            </Button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button
+                variant="outline"
+                onClick={handleExportCSV}
+                className="acm-rounded-sm border-border w-full sm:w-auto"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export Report
+              </Button>
+              <Button
+                className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm w-full sm:w-auto"
+                onClick={() => toast.success("Changes saved successfully")}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </Button>
+            </div>
           </div>
         </div>
       </div>

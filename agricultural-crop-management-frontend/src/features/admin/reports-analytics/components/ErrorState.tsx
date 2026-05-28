@@ -1,7 +1,6 @@
 import React from 'react';
 import { AlertCircle, RefreshCw, WifiOff, ServerCrash } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button, Card, CardContent } from '@/shared/ui';
 
 // ═══════════════════════════════════════════════════════════════
 // ERROR STATE COMPONENT
@@ -82,7 +81,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
     const displayMessage = message ?? config.defaultMessage;
 
     return (
-        <Card className={`rounded-[18px] border-[#e0e0e0] bg-white shadow-sm ${className}`}>
+        <Card className={`rounded-[18px] border-border bg-card shadow-sm ${className}`}>
             <CardContent className="py-12 px-6">
                 <div className="flex flex-col items-center justify-center text-center space-y-4">
                     {/* Icon */}
@@ -91,12 +90,12 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-foreground">
                         {displayTitle}
                     </h3>
 
                     {/* Message */}
-                    <p className="text-sm text-gray-500 max-w-md">
+                    <p className="text-sm text-muted-foreground max-w-md">
                         {displayMessage}
                     </p>
 
@@ -134,10 +133,10 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
     isRetrying = false,
 }) => {
     return (
-        <div className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div className="flex items-center justify-between rounded-[14px] border border-destructive/30 bg-destructive/10 p-3">
             <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-500" />
-                <span className="text-sm text-red-700">{message}</span>
+                <AlertCircle className="w-4 h-4 text-destructive" />
+                <span className="text-sm text-destructive">{message}</span>
             </div>
             {onRetry && (
                 <Button
@@ -145,7 +144,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
                     disabled={isRetrying}
                     variant="ghost"
                     size="sm"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-100"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                 >
                     <RefreshCw className={`w-3 h-3 mr-1 ${isRetrying ? 'animate-spin' : ''}`} />
                     Retry

@@ -4,8 +4,9 @@ spring:
       on-profile: module-smoke
   main:
     lazy-initialization: true
-  flyway:
-    enabled: false
+  sql:
+    init:
+      mode: never
   jpa:
     show-sql: false
   datasource:

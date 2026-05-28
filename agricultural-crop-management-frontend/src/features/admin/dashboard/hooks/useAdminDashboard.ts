@@ -5,7 +5,7 @@ import {
   dashboardStatsKeys,
   type AdminPendingApprovalItem,
   type DashboardStats,
-} from '@/services/api.admin';
+} from '@/features/admin/shared/api';
 import {
   type RiskLevel,
   type RiskDataCoverage,

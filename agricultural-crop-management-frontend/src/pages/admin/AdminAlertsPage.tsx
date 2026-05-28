@@ -1,26 +1,35 @@
-﻿import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
+    Alert,
+    AlertDescription,
+    AlertTitle,
+    Badge,
+    Button,
+    CardContent,
+    CardHeader,
+    Input,
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import {
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { useI18n } from "@/hooks/useI18n";
-import type { AdminAlert } from "@/services/api.admin";
-import { adminAlertApi, adminInventoryApi } from "@/services/api.admin";
+} from "@/shared/ui";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
+import {
+  AdminContentCard,
+  AdminHeaderCard,
+  AdminPageContainer,
+} from "@/features/admin/shared/ui";
+import {
+  adminAlertApi,
+  adminInventoryApi,
+  type AdminAlert,
+} from "@/features/admin/shared/api";
 import { usePreferences } from "@/shared/contexts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, RefreshCw, Send, ShieldAlert } from "lucide-react";
@@ -221,18 +230,13 @@ export function AdminAlertsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold mb-1">
-          <b>{t('admin.alerts.title')}</b>
-        </h1>
-        <p className="text-muted-foreground">
-          {t('admin.alerts.subtitle')}
-        </p>
-      </div>
+    <AdminPageContainer>
+      <AdminHeaderCard
+        title={t('admin.alerts.title')}
+        description={t('admin.alerts.subtitle')}
+      />
 
-      <Card className="border-0 shadow-sm">
+      <AdminContentCard>
         <CardHeader className="space-y-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -240,7 +244,7 @@ export function AdminAlertsPage() {
                 value={String(windowDays)}
                 onValueChange={(value) => setWindowDays(Number(value))}
               >
-                <SelectTrigger className="h-9 w-full sm:w-[120px]">
+                <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -256,6 +260,7 @@ export function AdminAlertsPage() {
                 size="sm"
                 onClick={() => refreshMutation.mutate()}
                 disabled={refreshMutation.isPending}
+                className="rounded-[14px]"
               >
                 {refreshMutation.isPending ? (
                   <RefreshCw className="h-4 w-4 animate-spin" />
@@ -269,7 +274,7 @@ export function AdminAlertsPage() {
 
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <Select value={type} onValueChange={setType}>
-              <SelectTrigger className="h-9 w-full sm:w-[200px]">
+              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[200px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -282,7 +287,7 @@ export function AdminAlertsPage() {
             </Select>
 
             <Select value={severity} onValueChange={setSeverity}>
-              <SelectTrigger className="h-9 w-full sm:w-[160px]">
+              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -295,7 +300,7 @@ export function AdminAlertsPage() {
             </Select>
 
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="h-9 w-full sm:w-[160px]">
+              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -313,7 +318,7 @@ export function AdminAlertsPage() {
                 setFarmId(value === "all" ? null : Number(value))
               }
             >
-              <SelectTrigger className="h-9 w-full sm:w-[220px]">
+              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[220px]">
                 <SelectValue placeholder={t('admin.alerts.farms.all')} />
               </SelectTrigger>
               <SelectContent>
@@ -454,7 +459,7 @@ export function AdminAlertsPage() {
             </>
           )}
         </CardContent>
-      </Card>
+      </AdminContentCard>
 
       {detailOpen && selectedAlert && (
         <div
@@ -569,6 +574,6 @@ export function AdminAlertsPage() {
           </div>
         </div>
       )}
-    </div>
+    </AdminPageContainer>
   );
 }
