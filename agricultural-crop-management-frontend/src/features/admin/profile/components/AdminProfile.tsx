@@ -1,7 +1,4 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Button, CardContent, Label, Switch } from '@/shared/ui';
 import { useProfileMe } from '@/entities/user';
 import { useAuth } from '@/features/auth';
 import {
@@ -9,7 +6,12 @@ import {
   ProfileHeroCard,
   SectionCardHeader,
 } from '@/features/shared/profile';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
+import {
+  AdminContentCard,
+  AdminHeaderCard,
+  AdminPageContainer,
+} from '@/features/admin/shared/ui';
 import { Bell, Clock, Loader2, Shield, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type {
@@ -86,34 +88,34 @@ export function AdminProfile() {
 
   if (profileLoading && !hasSessionProfile) {
     return (
-      <div className="min-h-screen acm-main-content pb-20 flex items-center justify-center text-muted-foreground">
+      <AdminPageContainer className="flex items-center justify-center text-muted-foreground">
         <Loader2 className="w-6 h-6 animate-spin mr-2" />
         {t('profile.loading')}
-      </div>
+      </AdminPageContainer>
     );
   }
 
   return (
-    <div className="min-h-screen acm-main-content pb-20 bg-gradient-to-b from-slate-50 to-white">
-      <div className="space-y-6 p-4 sm:p-6 max-w-[1280px] mx-auto">
-        {/* Page Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-foreground">
-              {t('admin.profile.title', 'Admin Profile')}
-            </h1>
+    <AdminPageContainer>
+        <AdminHeaderCard
+          title={t('admin.profile.title', 'Admin Profile')}
+          metadata={
+            <>
             {isFetching && !profileLoading && (
               <Loader2 className="w-3 h-3 animate-spin text-primary" />
             )}
-          </div>
-          <Button
-            onClick={() => setEditDialogOpen(true)}
-            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <User className="w-4 h-4 mr-2" />
-            {t('profile.editProfile')}
-          </Button>
-        </div>
+            </>
+          }
+          actions={
+            <Button
+              onClick={() => setEditDialogOpen(true)}
+              className="w-full rounded-[14px] sm:w-auto"
+            >
+              <User className="w-4 h-4 mr-2" />
+              {t('profile.editProfile')}
+            </Button>
+          }
+        />
 
         <ProfileHeroCard
           displayName={profileData.displayName}
@@ -147,7 +149,7 @@ export function AdminProfile() {
         />
 
         {/* Recent Activity Card */}
-        <Card className="border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.06)]">
+        <AdminContentCard>
           <SectionCardHeader icon={Clock} title={t('profile.recentActivity.title')} />
           <CardContent className="px-6 pb-6 sm:px-8 sm:pb-8">
             {recentActivities.length === 0 ? (
@@ -175,10 +177,10 @@ export function AdminProfile() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </AdminContentCard>
 
         {/* Notifications Card */}
-        <Card className="border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.06)]">
+        <AdminContentCard>
           <SectionCardHeader icon={Bell} title={t('profile.notifications.title')} />
           <CardContent className="space-y-4 px-6 pb-6 sm:px-8 sm:pb-8">
             <div className="bg-muted border border-border rounded-2xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -225,14 +227,13 @@ export function AdminProfile() {
               />
             </div>
           </CardContent>
-        </Card>
+        </AdminContentCard>
 
         <EditProfileDialog
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
           profileData={profileData}
         />
-      </div>
-    </div>
+    </AdminPageContainer>
   );
 }

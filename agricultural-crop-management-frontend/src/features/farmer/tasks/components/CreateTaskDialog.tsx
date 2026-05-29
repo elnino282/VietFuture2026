@@ -147,43 +147,49 @@ export function CreateTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="acm-rounded-lg max-w-2xl">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{t("tasks.dialog.createTitle", "Create New Task")}</DialogTitle>
           <DialogDescription>
             {t("tasks.dialog.createDescription", "Add a new task to the workspace")}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-4 py-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
           {isFormDisabled && (
-            <div className="col-span-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <div className="sm:col-span-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
               {disabledReason || "This season is locked. Task write actions are disabled."}
             </div>
           )}
           {/* Task Title */}
-          <div className="col-span-2 space-y-2">
-            <Label>{t("tasks.form.title", "Task Title")} *</Label>
+          <div className="sm:col-span-2 space-y-2">
+            <Label htmlFor="task-title" required>{t("tasks.form.title", "Task Title")}</Label>
             <Input
+              id="task-title"
               placeholder={t("tasks.form.titlePlaceholder", "e.g., Irrigate Plot A3")}
-              className={`border-border acm-rounded-sm ${errors.title ? "border-destructive" : ""}`}
+              aria-invalid={!!errors.title}
+              aria-describedby={errors.title ? "task-title-error" : undefined}
               value={title}
               onChange={(event) => setTitle(event.target.value)}
             />
             {errors.title && (
-              <p className="text-sm text-destructive">{errors.title}</p>
+              <p id="task-title-error" className="text-sm text-destructive">{errors.title}</p>
             )}
           </div>
 
           {/* Season */}
           <div className="space-y-2">
-            <Label>{t("tasks.table.season", "Season")} *</Label>
+            <Label htmlFor="task-season" required>{t("tasks.table.season", "Season")}</Label>
             {hideSeasonSelector ? (
               <div className="rounded-md border border-border px-3 py-2 text-sm bg-muted/30">
                 {lockedSeasonLabel ?? (effectiveSeasonId ? `Mùa vụ #${effectiveSeasonId}` : t("tasks.form.selectSeason", "Select season"))}
               </div>
             ) : (
               <Select value={selectedSeason} onValueChange={setSelectedSeason}>
-                <SelectTrigger className={`border-border acm-rounded-sm ${errors.season ? "border-destructive" : ""}`}>
+                <SelectTrigger
+                  id="task-season"
+                  aria-invalid={!!errors.season}
+                  aria-describedby={errors.season ? "task-season-error" : undefined}
+                >
                   <SelectValue placeholder={t("tasks.form.selectSeason", "Select season")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -196,15 +202,15 @@ export function CreateTaskDialog({
               </Select>
             )}
             {errors.season && (
-              <p className="text-sm text-destructive">{errors.season}</p>
+              <p id="task-season-error" className="text-sm text-destructive">{errors.season}</p>
             )}
           </div>
 
           {/* Plot Selector */}
           <div className="space-y-2">
-            <Label>{t("tasks.table.plot", "Plot")}</Label>
+            <Label htmlFor="task-plot">{t("tasks.table.plot", "Plot")}</Label>
             <Select value={selectedPlot} onValueChange={setSelectedPlot}>
-              <SelectTrigger className="border-border acm-rounded-sm">
+              <SelectTrigger id="task-plot">
                 <SelectValue placeholder={t("tasks.form.selectPlot", "Select plot")} />
               </SelectTrigger>
               <SelectContent>
@@ -219,9 +225,9 @@ export function CreateTaskDialog({
 
           {/* Task Type */}
           <div className="space-y-2">
-            <Label>{t("tasks.table.type", "Task Type")}</Label>
+            <Label htmlFor="task-type">{t("tasks.table.type", "Task Type")}</Label>
             <Select value={taskType} onValueChange={setTaskType}>
-              <SelectTrigger className="border-border acm-rounded-sm">
+              <SelectTrigger id="task-type">
                 <SelectValue placeholder={t("tasks.form.selectType", "Select type")} />
               </SelectTrigger>
               <SelectContent>
@@ -236,9 +242,9 @@ export function CreateTaskDialog({
 
           {/* Assignee */}
           <div className="space-y-2">
-            <Label>{t("tasks.table.assignee", "Assignee")}</Label>
+            <Label htmlFor="task-assignee">{t("tasks.table.assignee", "Assignee")}</Label>
             <Select value={assignee} onValueChange={setAssignee}>
-              <SelectTrigger className="border-border acm-rounded-sm">
+              <SelectTrigger id="task-assignee">
                 <SelectValue placeholder={t("tasks.form.selectAssignee", "Select assignee")} />
               </SelectTrigger>
               <SelectContent>
@@ -253,24 +259,26 @@ export function CreateTaskDialog({
 
           {/* Due Date */}
           <div className="space-y-2">
-            <Label>{t("tasks.table.dueDate", "Due Date")} *</Label>
+            <Label htmlFor="task-due-date" required>{t("tasks.table.dueDate", "Due Date")}</Label>
             <Input
+              id="task-due-date"
               type="date"
-              className={`border-border acm-rounded-sm ${errors.dueDate ? "border-destructive" : ""}`}
+              aria-invalid={!!errors.dueDate}
+              aria-describedby={errors.dueDate ? "task-due-date-error" : undefined}
               value={dueDate}
               onChange={(event) => setDueDate(event.target.value)}
             />
             {errors.dueDate && (
-              <p className="text-sm text-destructive">{errors.dueDate}</p>
+              <p id="task-due-date-error" className="text-sm text-destructive">{errors.dueDate}</p>
             )}
           </div>
 
           {/* Notes */}
-          <div className="col-span-2 space-y-2">
-            <Label>{t("common.notes", "Notes")}</Label>
+          <div className="sm:col-span-2 space-y-2">
+            <Label htmlFor="task-notes">{t("common.notes", "Notes")}</Label>
             <Textarea
+              id="task-notes"
               placeholder={t("tasks.form.notesPlaceholder", "Additional task details...")}
-              className="border-border acm-rounded-sm"
               rows={3}
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
@@ -281,13 +289,11 @@ export function CreateTaskDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="acm-rounded-sm"
           >
             {t("common.cancel", "Cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground acm-rounded-sm"
             disabled={isFormDisabled}
             title={isFormDisabled ? disabledReason : undefined}
           >

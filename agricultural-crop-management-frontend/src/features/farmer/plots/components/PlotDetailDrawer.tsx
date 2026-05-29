@@ -20,12 +20,12 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/shared/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Label } from "@/shared/ui/label";
 import { Separator } from "@/shared/ui/separator";
@@ -33,7 +33,7 @@ import { Badge } from "@/shared/ui/badge";
 import { PlotStatusChip } from "./PlotStatusChip";
 import type { Plot } from "../types";
 
-interface PlotDetailDrawerProps {
+interface PlotDetailDialogProps {
   plot: Plot | null;
   isOpen: boolean;
   onClose: () => void;
@@ -45,11 +45,11 @@ interface PlotDetailDrawerProps {
 }
 
 /**
- * PlotDetailDrawer Component
+ * PlotDetailDialog Component
  *
- * Side drawer displaying detailed plot information with tabs for different data sections.
+ * Modal displaying detailed plot information with tabs for different data sections.
  */
-export function PlotDetailDrawer({
+export function PlotDetailDialog({
   plot,
   isOpen,
   onClose,
@@ -58,21 +58,21 @@ export function PlotDetailDrawer({
   onMarkDormant,
   onGenerateQR,
   onDelete,
-}: PlotDetailDrawerProps) {
+}: PlotDetailDialogProps) {
   if (!plot) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-2xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 text-foreground">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl sm:max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-foreground">
             <MapPin className="w-5 h-5 text-primary" />
             {plot.name}
-          </SheetTitle>
-          <SheetDescription>
+          </DialogTitle>
+          <DialogDescription>
             Plot ID: {plot.id} • {plot.area.toFixed(1)} hectares
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         <Tabs defaultValue="overview" className="mt-6">
           <TabsList className="grid w-full grid-cols-2 gap-1 rounded-xl p-1 sm:grid-cols-4">
@@ -393,11 +393,7 @@ export function PlotDetailDrawer({
             </Button>
           </TabsContent>
         </Tabs>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
-
-
-
-

@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
+import { useTranslation } from "react-i18next";
 
 interface CloseSeasonDialogProps {
   open: boolean;
@@ -25,41 +26,45 @@ export function CloseSeasonDialog({
   setCloseReason,
   onConfirm,
 }: CloseSeasonDialogProps) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="acm-rounded-lg">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Close Season</DialogTitle>
+          <DialogTitle>{t("seasons.dialog.closeTitle")}</DialogTitle>
           <DialogDescription>
-            Please provide a reason for closing this season. This will archive
-            the season and mark it as complete.
+            {t("seasons.dialog.closeDescription")}
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-          <Label htmlFor="close-reason">Reason for Closing</Label>
+        <div className="space-y-2 py-2">
+          <Label htmlFor="close-reason" required>{t("seasons.dialog.closeReasonLabel")}</Label>
           <Textarea
             id="close-reason"
             value={closeReason}
             onChange={(e) => setCloseReason(e.target.value)}
-            placeholder="e.g., Harvest completed, Season ended..."
-            className="mt-2 border-border acm-rounded-sm"
+            placeholder={t("seasons.dialog.closeReasonPlaceholder")}
+            aria-invalid={!closeReason.trim()}
+            aria-describedby={!closeReason.trim() ? "close-season-reason-error" : undefined}
             rows={4}
           />
+          {!closeReason.trim() && (
+            <p id="close-season-reason-error" className="text-sm text-destructive">
+              {t("seasons.dialog.closeReasonRequired")}
+            </p>
+          )}
         </div>
         <DialogFooter>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="acm-rounded-sm"
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={onConfirm}
             disabled={!closeReason.trim()}
-            className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm"
           >
-            Close Season
+            {t("seasons.dialog.closeConfirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

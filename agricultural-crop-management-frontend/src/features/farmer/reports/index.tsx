@@ -71,10 +71,10 @@ export function Reports({
 
     return (
         <PageContainer variant="default">
-            <div className="grid grid-cols-1 gap-0 lg:grid-cols-[240px_1fr]">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
                 <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
 
-                <main className="p-6">
+                <main className="min-w-0">
                     <HeaderBar
                         selectedSeason={selectedSeason}
                         onSeasonChange={setSelectedSeason}
@@ -87,7 +87,7 @@ export function Reports({
                         progressPercent={harvestProgressPercent}
                     />
                     {hasError && (
-                        <Card className="mb-4 border-destructive/20 bg-destructive/5">
+                        <Card className="mb-4 rounded-[18px] border-destructive/20 bg-destructive/5 shadow-sm">
                             <CardContent className="py-3 text-sm text-destructive">
                                 {t("reports.error.loadFailed")}
                             </CardContent>
@@ -100,12 +100,12 @@ export function Reports({
                         onTimeTasksPercent={kpiData.onTimeTasksPercent}
                     />
 
-                    <Card variant="content" className="rounded-2xl">
+                    <Card variant="content" className="rounded-[18px]">
                         <CardContent className="px-6 py-4">
                             <Tabs value={activeSection} onValueChange={(v: string) => setActiveSection(v as ReportSection)}>
                                 <TabsList className="mb-6 grid w-full grid-cols-2 p-1 md:grid-cols-4">
                                     {tabConfig.map(({ value, icon: Icon, label }) => (
-                                        <TabsTrigger key={value} value={value} className="rounded-lg data-[state=active]:text-primary">
+                                        <TabsTrigger key={value} value={value} className="rounded-[14px] data-[state=active]:text-primary">
                                             <Icon className="mr-2 h-4 w-4" />
                                             <span className="hidden sm:inline">{label}</span>
                                         </TabsTrigger>

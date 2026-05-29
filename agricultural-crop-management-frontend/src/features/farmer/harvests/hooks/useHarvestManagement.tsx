@@ -9,9 +9,9 @@ import {
   useHarvestSummary,
   type Harvest as ApiHarvest,
 } from "@/entities/harvest";
-import { useOptionalSeason, useWeightUnit } from "@/shared/contexts";
-import { convertWeightToKg, formatWeight } from "@/shared/lib";
+import { useOptionalSeason } from "@/shared/contexts";
 import type {
+  CropResidueHandling,
   HarvestBatch,
   HarvestFormData,
   HarvestGrade,
@@ -29,6 +29,7 @@ const INITIAL_FORM_DATA: HarvestFormData = {
   moisture: "",
   season: "",
   plot: "",
+  plotName: "",
   crop: "",
   warehouseId: "",
   locationId: "",
@@ -42,6 +43,8 @@ const INITIAL_FORM_DATA: HarvestFormData = {
   purity: "",
   foreignMatter: "",
   brokenGrains: "",
+  harvestLoss: "",
+  cropResidueHandling: "",
 };
 
 const parseSeasonId = (value?: string | number | null): number | undefined => {
@@ -55,6 +58,86 @@ const parseHarvestGrade = (value?: string | null): HarvestGrade | undefined => {
     return value;
   }
   return undefined;
+};
+
+const getSeasonStatusLabel = (status?: string | null): string => {
+  switch (status) {
+    case "PLANNED":
+      return "PLANNED";
+    case "ACTIVE":
+      return "ACTIVE";
+    case "COMPLETED":
+      return "COMPLETED";
+    case "CANCELLED":
+      return "CANCELLED";
+    case "ARCHIVED":
+      return "ARCHIVED";
+    default:
+      return "UNKNOWN";
+  }
+};
+
+const normalizeToken = (value: string, fallback: string): string => {
+  const normalized = value
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 10);
+  return normalized || fallback;
+};
+
+const resolveDateToken = (value?: string): string => {
+  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+    return value.replace(/-/g, "");
+  }
+  return new Date().toISOString().slice(0, 10).replace(/-/g, "");
+};
+
+const generateAutoLotCode = (
+  seasonId: number | undefined,
+  productName: string,
+  harvestDate: string,
+): string => {
+  const seasonToken = seasonId ? String(seasonId) : "GEN";
+  const productToken = normalizeToken(productName, "CROP");
+  const dateToken = resolveDateToken(harvestDate);
+  const suffix = Date.now().toString().slice(-4);
+  return `LOT-${seasonToken}-${productToken}-${dateToken}-${suffix}`;
+};
+
+const parseOptionalPercentage = (
+  rawValue: string,
+  label: string,
+): number | undefined => {
+  const normalized = rawValue.trim();
+  if (!normalized) {
+    return undefined;
+  }
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+    throw new Error(`${label} must be between 0 and 100`);
+  }
+  return parsed;
+};
+
+const appendMetadataToNote = (
+  note: string,
+  metadata: Record<string, string | number | undefined>,
+): string | undefined => {
+  const metadataLines = Object.entries(metadata)
+    .filter(([, value]) => value !== undefined)
+    .map(([key, value]) => `${key}=${value}`);
+
+  const trimmedNote = note.trim();
+  if (metadataLines.length === 0) {
+    return trimmedNote || undefined;
+  }
+
+  const metadataBlock = ["[harvest-metadata]", ...metadataLines].join("\n");
+  if (!trimmedNote) {
+    return metadataBlock;
+  }
+  return `${trimmedNote}\n\n${metadataBlock}`;
 };
 
 const escapeCsvCell = (value: unknown): string => {
@@ -91,7 +174,6 @@ const transformApiToFeature = (h: ApiHarvest): HarvestBatch => ({
 
 export function useHarvestManagement() {
   const seasonContext = useOptionalSeason();
-  const weightUnit = useWeightUnit();
 
   const [selectedSeason, setSelectedSeason] = useState<string>("all");
   const [isAddBatchOpen, setIsAddBatchOpen] = useState(false);
@@ -130,10 +212,7 @@ export function useHarvestManagement() {
   const createMutation = useCreateHarvest({
     onSuccess: (_created, variables) => {
       toast.success("Harvest Added", {
-        description: `${variables.data.lotCode} - ${formatWeight(
-          variables.data.quantity,
-          weightUnit
-        )}`,
+        description: `${variables.data.lotCode} - ${variables.data.quantity} kg`,
       });
       setIsAddBatchOpen(false);
       resetForm();
@@ -314,8 +393,7 @@ export function useHarvestManagement() {
       !formData.date ||
       !formData.quantity ||
       !formData.warehouseId ||
-      !formData.productName ||
-      !formData.lotCode
+      !formData.productName
     ) {
       toast.error("Missing Fields");
       return;
@@ -338,18 +416,45 @@ export function useHarvestManagement() {
     const selectedSeasonMeta = seasonContext?.seasons.find(
       (season) => season.id === seasonId
     );
+    const plotIdFromForm = Number(formData.plot);
+    const selectedPlotId =
+      Number.isFinite(plotIdFromForm) && plotIdFromForm > 0
+        ? plotIdFromForm
+        : selectedSeasonMeta?.plotId;
     const selectedSeasonStatus = selectedSeasonMeta?.status;
-    if (
-      selectedSeasonStatus &&
-      ["COMPLETED", "CANCELLED", "ARCHIVED"].includes(selectedSeasonStatus)
-    ) {
-      toast.error("Season is locked", {
-        description: "Harvest write actions are disabled for this season.",
+    if (selectedSeasonStatus !== "ACTIVE") {
+      toast.error("Season must be ACTIVE", {
+        description: `Current status: ${getSeasonStatusLabel(selectedSeasonStatus)}. Start the season before recording harvest.`,
       });
       return;
     }
 
-    const quantityKg = convertWeightToKg(quantityDisplay, weightUnit);
+    if (!selectedPlotId || !Number.isFinite(selectedPlotId) || selectedPlotId <= 0) {
+      toast.error("Harvest plot required", {
+        description: "Selected season is missing a valid plot link.",
+      });
+      return;
+    }
+
+    let moisturePercent: number | undefined;
+    let purityPercent: number | undefined;
+    let foreignMatterPercent: number | undefined;
+    let brokenGrainsPercent: number | undefined;
+    let harvestLossPercent: number | undefined;
+
+    try {
+      moisturePercent = parseOptionalPercentage(formData.moisture, "Moisture %");
+      purityPercent = parseOptionalPercentage(formData.purity, "Purity %");
+      foreignMatterPercent = parseOptionalPercentage(formData.foreignMatter, "Foreign Matter %");
+      brokenGrainsPercent = parseOptionalPercentage(formData.brokenGrains, "Broken Grains %");
+      harvestLossPercent = parseOptionalPercentage(formData.harvestLoss, "Harvest Loss %");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Percentage fields contain invalid values.";
+      toast.error(message);
+      return;
+    }
+
     const warehouseId = Number(formData.warehouseId);
     const locationId = formData.locationId
       ? Number(formData.locationId)
@@ -361,11 +466,28 @@ export function useHarvestManagement() {
       return;
     }
 
+    const residueHandling = formData.cropResidueHandling.trim() as CropResidueHandling | "";
+    const lotCode = formData.lotCode.trim() || generateAutoLotCode(
+      seasonId,
+      formData.productName,
+      formData.date,
+    );
+
+    const noteWithMetadata = appendMetadataToNote(formData.notes, {
+      harvestPlotId: selectedPlotId,
+      moisturePercent,
+      purityPercent,
+      foreignMatterPercent,
+      brokenGrainsPercent,
+      harvestLossPercent,
+      cropResidueHandling: residueHandling || undefined,
+    });
+
     createMutation.mutate({
       seasonId,
       data: {
         harvestDate: formData.date,
-        quantity: quantityKg,
+        quantity: quantityDisplay,
         unit: 1,
         warehouseId,
         locationId:
@@ -378,10 +500,10 @@ export function useHarvestManagement() {
             : undefined,
         productName: formData.productName.trim(),
         productVariant: formData.productVariant.trim() || undefined,
-        lotCode: formData.lotCode.trim(),
-        inventoryUnit: formData.inventoryUnit.trim() || undefined,
+        lotCode,
+        inventoryUnit: formData.inventoryUnit.trim() || "kg",
         grade: formData.grade,
-        note: formData.notes,
+        note: noteWithMetadata,
       },
     });
   }, [
@@ -389,7 +511,6 @@ export function useHarvestManagement() {
     formData,
     resolveSubmitSeasonId,
     seasonContext?.seasons,
-    weightUnit,
   ]);
 
   const handleDeleteBatch = useCallback(

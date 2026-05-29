@@ -1,4 +1,4 @@
-﻿import {
+import {
   DollarSign,
   Package,
   Plus,
@@ -12,6 +12,7 @@ import { AsyncState, Button, Card, CardContent, CardHeader, CardTitle, PageConta
 import { useMarketplaceFarmerDashboard, useMarketplaceFarmerProducts } from "@/features/marketplace/hooks";
 import { SellerMarketplaceTabs } from "@/features/marketplace/layout";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
+import { getMarketplaceOrderStatusLabel } from "@/features/marketplace/lib/orderStatus";
 
 type Translator = (key: string, optionsOrDefault?: Record<string, unknown> | string) => string;
 
@@ -47,22 +48,7 @@ function MetricCard({
 }
 
 function orderStatusLabel(status: string, t: Translator) {
-  switch (status) {
-    case "PENDING":
-      return t("marketplaceSeller.status.order.pending", "Pending");
-    case "CONFIRMED":
-      return t("marketplaceSeller.status.order.confirmed", "Confirmed");
-    case "PREPARING":
-      return t("marketplaceSeller.status.order.preparing", "Preparing");
-    case "DELIVERING":
-      return t("marketplaceSeller.status.order.delivering", "Delivering");
-    case "COMPLETED":
-      return t("marketplaceSeller.status.order.completed", "Completed");
-    case "CANCELLED":
-      return t("marketplaceSeller.status.order.cancelled", "Cancelled");
-    default:
-      return status;
-  }
+  return getMarketplaceOrderStatusLabel(status, t, "marketplaceSeller.status.order");
 }
 
 function unavailableReasonLabel(reason: MarketplaceStatsUnavailableReason, t: Translator) {
@@ -124,34 +110,7 @@ export function SellerDashboardPage() {
           onRetry={() => dashboardQuery.refetch()}
           loadingText={t("marketplaceSeller.dashboard.loading", "Loading marketplace dashboard...")}
         >
-          <Card variant="page-header">
-            <CardContent className="px-6 py-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex-shrink-0">
-                  <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
-                    <Store className="w-6 h-6 text-primary" />
-                    {t("marketplaceSeller.products.title", "Manage products")}
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t(
-                      "marketplaceSeller.products.subtitle",
-                      "List, moderate, and manage stock for your marketplace products.",
-                    )}
-                  </p>
-                </div>
 
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <Button
-                    className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm acm-button-shadow"
-                    onClick={() => navigate("/farmer/marketplace-products/new")}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    {t("marketplaceSeller.products.addProduct", "Add product")}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           {!hasProducts ? (
             <Card className="border-dashed border-border">

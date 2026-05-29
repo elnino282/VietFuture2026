@@ -1,25 +1,30 @@
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Button,
+  CardContent,
+  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
+  Skeleton,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { adminAuditLogApi } from "@/services/api.admin";
+} from "@/shared/ui";
+import { adminAuditLogApi } from "@/features/admin/shared/api";
+import {
+  AdminContentCard,
+  AdminHeaderCard,
+  AdminPageContainer,
+} from "@/features/admin/shared/ui";
 import { usePreferences } from "@/shared/contexts";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
@@ -101,19 +106,17 @@ export function AdminAuditLogsPage() {
   const totalPages = auditLogsQuery.data?.totalPages ?? 0;
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold mb-1">Audit Logs</h1>
-        <p className="text-muted-foreground">
-          View and filter sensitive data change trails.
-        </p>
-      </div>
+    <AdminPageContainer>
+      <AdminHeaderCard
+        title="Audit Logs"
+        description="View and filter sensitive data change trails."
+      />
 
-      <Card className="border-0 shadow-sm">
-        <CardContent className="space-y-4">
+      <AdminContentCard>
+        <CardContent className="space-y-4 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Select value={module} onValueChange={setModule}>
-              <SelectTrigger className="h-9 w-full sm:w-[180px]">
+              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[180px]">
                 <SelectValue placeholder="Module" />
               </SelectTrigger>
               <SelectContent>
@@ -126,31 +129,31 @@ export function AdminAuditLogsPage() {
             </Select>
 
             <Input
-              className="h-9 w-full sm:w-[190px]"
+              className="h-9 w-full rounded-[14px] sm:w-[190px]"
               placeholder="Entity type"
               value={entityType}
               onChange={(event) => setEntityType(event.target.value)}
             />
             <Input
-              className="h-9 w-full sm:w-[190px]"
+              className="h-9 w-full rounded-[14px] sm:w-[190px]"
               placeholder="Action"
               value={action}
               onChange={(event) => setAction(event.target.value)}
             />
             <Input
-              className="h-9 w-full sm:w-[190px]"
+              className="h-9 w-full rounded-[14px] sm:w-[190px]"
               placeholder="User"
               value={user}
               onChange={(event) => setUser(event.target.value)}
             />
             <Input
-              className="h-9 w-full sm:w-[210px]"
+              className="h-9 w-full rounded-[14px] sm:w-[210px]"
               type="datetime-local"
               value={from}
               onChange={(event) => setFrom(event.target.value)}
             />
             <Input
-              className="h-9 w-full sm:w-[210px]"
+              className="h-9 w-full rounded-[14px] sm:w-[210px]"
               type="datetime-local"
               value={to}
               onChange={(event) => setTo(event.target.value)}
@@ -247,7 +250,7 @@ export function AdminAuditLogsPage() {
             </>
           )}
         </CardContent>
-      </Card>
-    </div>
+      </AdminContentCard>
+    </AdminPageContainer>
   );
 }

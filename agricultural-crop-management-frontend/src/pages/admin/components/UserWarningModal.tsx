@@ -1,27 +1,25 @@
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useI18n } from "@/hooks/useI18n";
+  Textarea,
+} from "@/shared/ui";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
   adminUsersApi,
   type AdminUser,
   type AdminUserWarningDecision,
-} from "@/services/api.admin";
+} from "@/features/admin/shared/api";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -99,7 +97,7 @@ export function UserWarningModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg rounded-[18px] border-border bg-card shadow-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
@@ -112,7 +110,7 @@ export function UserWarningModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+          <div className="rounded-[14px] border border-border bg-muted/30 p-3 text-sm">
             <div className="font-medium text-foreground">
               {user?.username || "Unknown user"}
             </div>
@@ -134,7 +132,7 @@ export function UserWarningModal({
                 }))
               }
             >
-              <SelectTrigger id="warning-decision">
+              <SelectTrigger id="warning-decision" className="rounded-[14px]">
                 <SelectValue placeholder="Select a decision" />
               </SelectTrigger>
               <SelectContent>
@@ -163,7 +161,7 @@ export function UserWarningModal({
                   description: event.target.value,
                 }))
               }
-              className={errors.description ? "border-destructive" : ""}
+              className={`rounded-[14px] ${errors.description ? "border-destructive" : ""}`}
               rows={4}
             />
             {errors.description && (
@@ -173,10 +171,19 @@ export function UserWarningModal({
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={loading}
+            className="rounded-[14px]"
+          >
             {t("common.cancel")}
           </Button>
-          <Button onClick={handleSubmit} disabled={loading || !user}>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading || !user}
+            className="rounded-[14px]"
+          >
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

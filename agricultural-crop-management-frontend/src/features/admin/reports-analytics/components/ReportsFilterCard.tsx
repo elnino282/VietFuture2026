@@ -1,13 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
+  Button,
+  CardContent,
+  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui";
+import { AdminFilterCard } from "@/features/admin/shared/ui";
 
 export interface ReportFilters {
   dateFrom: string;
@@ -55,7 +56,7 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
   };
 
   return (
-    <Card className="!rounded-[18px] border-border bg-card shadow-sm">
+    <AdminFilterCard>
       <CardContent className="p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
           {/* Date Range - Inline */}
@@ -197,6 +198,6 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
           </div>
         </div>
       </CardContent>
-    </Card>
+    </AdminFilterCard>
   );
 };

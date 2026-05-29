@@ -50,7 +50,7 @@ export function FilterDrawer({
                                 onFiltersChange({ ...filters, plots: value === "all" ? [] : [value] })
                             }
                         >
-                            <SelectTrigger id="plot-filter" className="rounded-xl border-border">
+                            <SelectTrigger id="plot-filter" className="rounded-[14px] border-border">
                                 <SelectValue placeholder={t("reports.filter.selectPlots")} />
                             </SelectTrigger>
                             <SelectContent>
@@ -74,7 +74,7 @@ export function FilterDrawer({
                                 onFiltersChange({ ...filters, cropType: value })
                             }
                         >
-                            <SelectTrigger id="crop-filter" className="rounded-xl border-border">
+                            <SelectTrigger id="crop-filter" className="rounded-[14px] border-border">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -97,7 +97,7 @@ export function FilterDrawer({
                                 onFiltersChange({ ...filters, season: value })
                             }
                         >
-                            <SelectTrigger id="season-filter" className="rounded-xl border-border">
+                            <SelectTrigger id="season-filter" className="rounded-[14px] border-border">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -121,7 +121,7 @@ export function FilterDrawer({
                                 onFiltersChange({ ...filters, timeRange: value })
                             }
                         >
-                            <SelectTrigger id="time-filter" className="rounded-xl border-border">
+                            <SelectTrigger id="time-filter" className="rounded-[14px] border-border">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -149,10 +149,10 @@ export function FilterDrawer({
                 </div>
 
                 <div className="mt-8 flex gap-3">
-                    <Button variant="outline" className="flex-1 rounded-xl border-border" onClick={onClearFilters}>
+                    <Button variant="outline" className="flex-1 rounded-[14px] border-border" onClick={onClearFilters}>
                         {t("reports.filter.clear")}
                     </Button>
-                    <Button className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl" onClick={onApplyFilters}>
+                    <Button className="flex-1 rounded-[14px] bg-primary text-white hover:bg-primary/90" onClick={onApplyFilters}>
                         {t("reports.filter.apply")}
                     </Button>
                 </div>

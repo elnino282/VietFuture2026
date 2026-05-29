@@ -6,6 +6,8 @@
  */
 
 import { Loader2, MapPin, X } from "lucide-react";
+import { useId } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "../button";
 import { Label } from "../label";
 import {
@@ -77,9 +79,11 @@ export function AddressSelector({
   error,
   disabled = false,
   required = false,
-  label = "Address",
+  label,
   description,
 }: AddressSelectorProps) {
+  const { t } = useTranslation();
+  const errorId = useId();
   const {
     provinces,
     wards,
@@ -101,6 +105,7 @@ export function AddressSelector({
 
   const addressBreadcrumb = getAddressBreadcrumb();
   const hasSelection = selectedProvince !== null || selectedWard !== null;
+  const resolvedLabel = label ?? t("common.addressSelector.address");
 
   return (
     <div className="space-y-3">
@@ -108,7 +113,7 @@ export function AddressSelector({
       <div className="flex items-center justify-between">
         <Label>
           <MapPin className="inline-block w-4 h-4 mr-1.5 -mt-0.5" />
-          {label}
+          {resolvedLabel}
           {required && <span className="text-red-500 ml-1">*</span>}
         </Label>
 
@@ -122,7 +127,7 @@ export function AddressSelector({
             className="h-7 px-2 text-xs"
           >
             <X className="w-3 h-3 mr-1" />
-            Clear
+            {t("common.addressSelector.clear")}
           </Button>
         )}
       </div>
@@ -136,7 +141,7 @@ export function AddressSelector({
       {isLoadingInitial && (
         <div className="flex items-center gap-2 py-3 px-4 bg-blue-50 border border-blue-200 rounded-lg">
           <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-          <span className="text-sm text-blue-900">Loading address...</span>
+          <span className="text-sm text-blue-900">{t("common.loadingAddress")}</span>
         </div>
       )}
 
@@ -154,7 +159,7 @@ export function AddressSelector({
         {/* Province selector */}
         <div className="space-y-1.5">
           <Label htmlFor="province" className="text-xs text-gray-600">
-            Tỉnh / Thành phố
+            {t("common.addressSelector.province")}
             {required && <span className="text-red-500 ml-1">*</span>}
           </Label>
           <Select
@@ -167,18 +172,20 @@ export function AddressSelector({
             <SelectTrigger
               id="province"
               className={error ? "border-red-500" : ""}
+              aria-invalid={!!error}
+              aria-describedby={error ? errorId : undefined}
             >
-              <SelectValue placeholder="Chọn tỉnh hoặc thành phố" />
+              <SelectValue placeholder={t("common.addressSelector.provincePlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {isLoadingProvinces ? (
                 <div className="flex items-center justify-center py-4">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="ml-2 text-sm">Đang tải...</span>
+                  <span className="ml-2 text-sm">{t("common.loading")}</span>
                 </div>
               ) : provinces.length === 0 ? (
                 <div className="py-4 text-center text-sm text-gray-500">
-                  Không có tỉnh/thành phố
+                  {t("common.addressSelector.noProvinces")}
                 </div>
               ) : (
                 provinces.map((province) => (
@@ -194,7 +201,7 @@ export function AddressSelector({
         {/* Ward selector */}
         <div className="space-y-1.5">
           <Label htmlFor="ward" className="text-xs text-gray-600">
-            Xã / Phường
+            {t("common.addressSelector.ward")}
             {required && <span className="text-red-500 ml-1">*</span>}
           </Label>
           <Select
@@ -209,22 +216,27 @@ export function AddressSelector({
               isLoadingInitial
             }
           >
-            <SelectTrigger id="ward" className={error ? "border-red-500" : ""}>
-              <SelectValue placeholder="Chọn xã hoặc phường" />
+            <SelectTrigger
+              id="ward"
+              className={error ? "border-red-500" : ""}
+              aria-invalid={!!error}
+              aria-describedby={error ? errorId : undefined}
+            >
+              <SelectValue placeholder={t("common.addressSelector.wardPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {isLoadingWards ? (
                 <div className="flex items-center justify-center py-4">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="ml-2 text-sm">Đang tải...</span>
+                  <span className="ml-2 text-sm">{t("common.loading")}</span>
                 </div>
               ) : !selectedProvince ? (
                 <div className="py-4 text-center text-sm text-gray-500">
-                  Vui lòng chọn tỉnh/thành phố trước
+                  {t("common.addressSelector.selectProvinceFirst")}
                 </div>
               ) : wards.length === 0 ? (
                 <div className="py-4 text-center text-sm text-gray-500">
-                  Không có xã/phường
+                  {t("common.addressSelector.noWards")}
                 </div>
               ) : (
                 wards.map((ward) => (
@@ -239,7 +251,11 @@ export function AddressSelector({
       </div>
 
       {/* Error message */}
-      {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+      {error && (
+        <p id={errorId} className="text-sm text-destructive mt-1">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

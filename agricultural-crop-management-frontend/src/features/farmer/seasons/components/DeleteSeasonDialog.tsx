@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/shared/ui";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface DeleteSeasonDialogProps {
   open: boolean;
@@ -23,32 +24,37 @@ export function DeleteSeasonDialog({
   onConfirm,
   isDeleting,
 }: DeleteSeasonDialogProps) {
+  const { t } = useTranslation();
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (isDeleting && !nextOpen) return;
+    onOpenChange(nextOpen);
+  };
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="acm-rounded-lg">
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+      <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Season</AlertDialogTitle>
+          <AlertDialogTitle>{t("seasons.dialog.deleteTitle")}</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete this season? This action cannot be
-            undone.
+            {t("seasons.dialog.deleteDescription")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="acm-rounded-sm" disabled={isDeleting}>
-            Cancel
+          <AlertDialogCancel disabled={isDeleting}>
+            {t("common.cancel")}
           </AlertDialogCancel>
           <Button
             onClick={onConfirm}
-            className="bg-destructive hover:bg-destructive/90 text-white acm-rounded-sm"
+            variant="destructive"
             disabled={isDeleting}
           >
             {isDeleting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Deleting...
+                {t("common.deleting")}
               </>
             ) : (
-              "Delete Season"
+              t("seasons.dialog.deleteTitle")
             )}
           </Button>
         </AlertDialogFooter>

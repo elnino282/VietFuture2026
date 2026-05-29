@@ -4,6 +4,7 @@ import { SeasonGate } from '@/shared/components';
 // Routes that don't require a season to be selected
 const EXEMPT_ROUTES = [
   '/farmer/seasons',
+  '/farmer/farms',
   '/farmer/profile',
   '/farmer/settings',
   '/farmer/search',

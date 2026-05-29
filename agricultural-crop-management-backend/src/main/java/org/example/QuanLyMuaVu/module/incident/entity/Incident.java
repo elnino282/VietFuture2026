@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -63,8 +64,9 @@ public class Incident {
     String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 30)
-    IncidentStatus status;
+    @Column(name = "status", nullable = false, length = 30)
+    @Builder.Default
+    IncidentStatus status = IncidentStatus.OPEN;
 
     @Column(name = "deadline")
     LocalDate deadline;
@@ -74,5 +76,15 @@ public class Incident {
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     LocalDateTime createdAt;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = IncidentStatus.OPEN;
+        }
+    }
 }
 

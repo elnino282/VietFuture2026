@@ -34,6 +34,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -58,20 +59,20 @@ interface CreatePlotInFarmDialogProps {
 }
 
 const SOIL_TYPES = [
-  { value: "LOAM", label: "Loam" },
-  { value: "CLAY", label: "Clay" },
-  { value: "SANDY", label: "Sandy" },
-  { value: "SILT", label: "Silt" },
-  { value: "PEAT", label: "Peat" },
-  { value: "CHALK", label: "Chalk" },
+  { value: "FERRALSOLS", labelKey: "farms.soilTypes.FERRALSOLS" },
+  { value: "CHERNOZEMS", labelKey: "farms.soilTypes.CHERNOZEMS" },
+  { value: "FLUVISOLS", labelKey: "farms.soilTypes.FLUVISOLS" },
+  { value: "PODZOL", labelKey: "farms.soilTypes.PODZOL" },
+  { value: "PEAT", labelKey: "farms.soilTypes.PEAT" },
+  { value: "ARENOSOLS", labelKey: "farms.soilTypes.ARENOSOLS" },
 ];
 
 const PLOT_STATUSES = [
-  { value: "IN_USE", label: "In Use" },
-  { value: "IDLE", label: "Idle" },
-  { value: "AVAILABLE", label: "Available" },
-  { value: "FALLOW", label: "Fallow / Resting" },
-  { value: "MAINTENANCE", label: "Under Maintenance" },
+  { value: "IN_USE", labelKey: "farms.plotStatuses.IN_USE" },
+  { value: "IDLE", labelKey: "farms.plotStatuses.IDLE" },
+  { value: "AVAILABLE", labelKey: "farms.plotStatuses.AVAILABLE" },
+  { value: "FALLOW", labelKey: "farms.plotStatuses.FALLOW" },
+  { value: "MAINTENANCE", labelKey: "farms.plotStatuses.MAINTENANCE" },
 ];
 
 export function CreatePlotInFarmDialog({
@@ -81,6 +82,7 @@ export function CreatePlotInFarmDialog({
   farmName,
   onCreated,
 }: CreatePlotInFarmDialogProps) {
+  const { t } = useTranslation();
   const form = useForm<CreatePlotFormData>({
     resolver: zodResolver(CreatePlotFormSchema),
     defaultValues: {
@@ -193,10 +195,10 @@ export function CreatePlotInFarmDialog({
                     </FormControl>
                     <SelectContent>
                       {SOIL_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
+                          <SelectItem key={type.value} value={type.value}>
+                            {t(type.labelKey)}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -219,10 +221,10 @@ export function CreatePlotInFarmDialog({
                     </FormControl>
                     <SelectContent>
                       {PLOT_STATUSES.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
+                          <SelectItem key={status.value} value={status.value}>
+                            {t(status.labelKey)}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

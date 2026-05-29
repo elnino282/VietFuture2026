@@ -50,6 +50,24 @@ export const SupplyItemSchema = z.object({
 
 export type SupplyItem = z.infer<typeof SupplyItemSchema>;
 
+export const CreateSupplyItemRequestSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Supply item name is required")
+    .max(150, "Name must not exceed 150 characters"),
+  activeIngredient: z.string().max(150).optional().nullable(),
+  unit: z
+    .string()
+    .min(1, "Unit is required")
+    .max(20, "Unit must not exceed 20 characters"),
+  restrictedFlag: z.boolean().optional(),
+});
+
+export type CreateSupplyItemRequest = z.infer<typeof CreateSupplyItemRequestSchema>;
+
+export const UpdateSupplyItemRequestSchema = CreateSupplyItemRequestSchema;
+export type UpdateSupplyItemRequest = z.infer<typeof UpdateSupplyItemRequestSchema>;
+
 // ═══════════════════════════════════════════════════════════════
 // SUPPLY LOT
 // ═══════════════════════════════════════════════════════════════

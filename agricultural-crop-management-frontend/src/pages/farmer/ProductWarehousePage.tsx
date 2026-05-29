@@ -18,7 +18,6 @@ import {
 import { useFarms } from "@/entities/farm";
 import { usePlotsByFarm } from "@/entities/plot";
 import { useSeasons } from "@/entities/season";
-import { useI18n } from "@/hooks/useI18n";
 import { useDebounce } from "@/shared/lib";
 import {
   Badge,
@@ -27,14 +26,24 @@ import {
   CardContent,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Input,
+  Label,
   PageContainer,
   PageHeader,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
 } from "@/shared/ui";
 import { Boxes, History, MapPin, PackageCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import "./ProductWarehousePage.css";
@@ -67,7 +76,7 @@ const getLotStatusBadgeClassName = (status?: string | null): string => {
 };
 
 export function ProductWarehousePage() {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialWarehouseId = useMemo(
     () => parsePositiveInt(searchParams.get("warehouseId")),
@@ -103,8 +112,10 @@ export function ProductWarehousePage() {
     useState<ProductWarehouseLot | null>(null);
   const [adjustQuantityInput, setAdjustQuantityInput] = useState("");
   const [adjustNoteInput, setAdjustNoteInput] = useState("");
+  const [adjustDialogError, setAdjustDialogError] = useState("");
   const [stockOutQuantityInput, setStockOutQuantityInput] = useState("");
   const [stockOutNoteInput, setStockOutNoteInput] = useState("");
+  const [stockOutDialogError, setStockOutDialogError] = useState("");
   const [warehouseDialogMode, setWarehouseDialogMode] =
     useState<WarehouseDialogMode | null>(null);
   const [warehouseNameInput, setWarehouseNameInput] = useState("");
@@ -331,14 +342,19 @@ export function ProductWarehousePage() {
     if (!adjustingLot) return;
     const quantityDelta = Number(adjustQuantityInput);
     if (!Number.isFinite(quantityDelta) || quantityDelta === 0) {
-      toast.error(t("productWarehouse.validation.adjustNotZero"));
+      const message = t("productWarehouse.validation.adjustNotZero");
+      setAdjustDialogError(message);
+      toast.error(message);
       return;
     }
     if (!adjustNoteInput.trim()) {
-      toast.error(t("productWarehouse.validation.adjustNoteRequired"));
+      const message = t("productWarehouse.validation.adjustNoteRequired");
+      setAdjustDialogError(message);
+      toast.error(message);
       return;
     }
 
+    setAdjustDialogError("");
     try {
       await adjustMutation.mutateAsync({
         lotId: adjustingLot.id,
@@ -351,10 +367,12 @@ export function ProductWarehousePage() {
       setAdjustingLot(null);
       setAdjustQuantityInput("");
       setAdjustNoteInput("");
+      setAdjustDialogError("");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : t("productWarehouse.toast.error"),
-      );
+      const message =
+        error instanceof Error ? error.message : t("productWarehouse.toast.error");
+      setAdjustDialogError(message);
+      toast.error(message);
     }
   };
 
@@ -362,10 +380,13 @@ export function ProductWarehousePage() {
     if (!stockingOutLot) return;
     const quantity = Number(stockOutQuantityInput);
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      toast.error(t("productWarehouse.validation.stockOutPositive"));
+      const message = t("productWarehouse.validation.stockOutPositive");
+      setStockOutDialogError(message);
+      toast.error(message);
       return;
     }
 
+    setStockOutDialogError("");
     try {
       await stockOutMutation.mutateAsync({
         lotId: stockingOutLot.id,
@@ -378,12 +399,17 @@ export function ProductWarehousePage() {
       setStockingOutLot(null);
       setStockOutQuantityInput("");
       setStockOutNoteInput("");
+      setStockOutDialogError("");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : t("productWarehouse.toast.error"),
-      );
+      const message =
+        error instanceof Error ? error.message : t("productWarehouse.toast.error");
+      setStockOutDialogError(message);
+      toast.error(message);
     }
   };
+
+  const isWarehouseSubmitting =
+    createWarehouseMutation.isPending || updateWarehouseMutation.isPending;
 
   return (
     <PageContainer variant="wide">
@@ -803,6 +829,7 @@ export function ProductWarehousePage() {
                                 setAdjustingLot(lot);
                                 setAdjustQuantityInput("");
                                 setAdjustNoteInput("");
+                                setAdjustDialogError("");
                               }}
                             >
                               {t("productWarehouse.actions.adjust")}
@@ -814,6 +841,7 @@ export function ProductWarehousePage() {
                                 setStockingOutLot(lot);
                                 setStockOutQuantityInput("");
                                 setStockOutNoteInput("");
+                                setStockOutDialogError("");
                               }}
                             >
                               {t("productWarehouse.actions.stockOut")}
@@ -1044,96 +1072,113 @@ export function ProductWarehousePage() {
 
       <Dialog
         open={warehouseDialogMode !== null}
-        onOpenChange={(open) => !open && closeWarehouseDialog()}
+        onOpenChange={(open) => !open && !isWarehouseSubmitting && closeWarehouseDialog()}
       >
-        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
+        <DialogContent className="sm:max-w-[500px]" closeDisabled={isWarehouseSubmitting}>
           <DialogHeader>
             <DialogTitle>
               {warehouseDialogMode === "create"
                 ? t("productWarehouse.dialog.addWarehouseTitle")
                 : t("productWarehouse.dialog.editWarehouseTitle")}
             </DialogTitle>
-          </DialogHeader>
-          <div className="dialog-content-grid">
-            <p className="dialog-hint">
+            <DialogDescription>
               {t("productWarehouse.dialog.warehouseHint")}
-            </p>
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitWarehouseDialog();
+            }}
+          >
             {warehouseFormError && (
-              <div className="warehouse-form-error">{warehouseFormError}</div>
+              <p id="product-warehouse-form-error" role="alert" className="text-sm text-destructive">
+                {warehouseFormError}
+              </p>
             )}
 
-            <label htmlFor="warehouse-name">{t("productWarehouse.form.warehouseNameLabel")}</label>
-            <input
-              id="warehouse-name"
-              type="text"
-              value={warehouseNameInput}
-              maxLength={150}
-              onChange={(event) => setWarehouseNameInput(event.target.value)}
-              placeholder={t("productWarehouse.form.warehouseNamePlaceholder")}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="warehouse-name" required>
+                {t("productWarehouse.form.warehouseNameLabel")}
+              </Label>
+              <Input
+                id="warehouse-name"
+                type="text"
+                value={warehouseNameInput}
+                maxLength={150}
+                onChange={(event) => setWarehouseNameInput(event.target.value)}
+                placeholder={t("productWarehouse.form.warehouseNamePlaceholder")}
+                aria-invalid={!!warehouseFormError}
+                aria-describedby={warehouseFormError ? "product-warehouse-form-error" : undefined}
+                disabled={isWarehouseSubmitting}
+              />
+            </div>
 
-            <label htmlFor="warehouse-farm">{t("productWarehouse.form.farmLabel")}</label>
-            <select
-              id="warehouse-farm"
-              value={warehouseFarmIdInput ?? ""}
-              onChange={(event) =>
-                setWarehouseFarmIdInput(
-                  event.target.value ? Number(event.target.value) : undefined,
-                )
-              }
-              disabled={warehouseDialogMode === "edit"}
-            >
-              <option value="">{t("productWarehouse.form.selectFarm")}</option>
-              {farmOptions.map((farm) => (
-                <option key={farm.id} value={farm.id}>
-                  {farm.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={closeWarehouseDialog}
-              disabled={
-                createWarehouseMutation.isPending || updateWarehouseMutation.isPending
-              }
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              onClick={submitWarehouseDialog}
-              disabled={
-                createWarehouseMutation.isPending || updateWarehouseMutation.isPending
-              }
-            >
-              {createWarehouseMutation.isPending || updateWarehouseMutation.isPending
-                ? t("common.processing")
-                : t("common.save")}
-            </Button>
-          </DialogFooter>
+            <div className="space-y-2">
+              <Label htmlFor="warehouse-farm" required>
+                {t("productWarehouse.form.farmLabel")}
+              </Label>
+              <Select
+                value={warehouseFarmIdInput ? String(warehouseFarmIdInput) : undefined}
+                onValueChange={(value) => setWarehouseFarmIdInput(Number(value))}
+                disabled={warehouseDialogMode === "edit" || isWarehouseSubmitting}
+              >
+                <SelectTrigger
+                  id="warehouse-farm"
+                  aria-invalid={!!warehouseFormError}
+                  aria-describedby={warehouseFormError ? "product-warehouse-form-error" : undefined}
+                >
+                  <SelectValue placeholder={t("productWarehouse.form.selectFarm")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {farmOptions.map((farm) => (
+                    <SelectItem key={farm.id} value={String(farm.id)}>
+                      {farm.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeWarehouseDialog}
+                disabled={isWarehouseSubmitting}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button type="submit" disabled={isWarehouseSubmitting}>
+                {isWarehouseSubmitting ? t("common.processing") : t("common.save")}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
       <Dialog
         open={showDeleteWarehouseDialog && !!selectedWarehouse}
-        onOpenChange={(open) => !open && setShowDeleteWarehouseDialog(false)}
+        onOpenChange={(open) =>
+          !open && !deleteWarehouseMutation.isPending && setShowDeleteWarehouseDialog(false)
+        }
       >
-        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
+        <DialogContent className="sm:max-w-[500px]" closeDisabled={deleteWarehouseMutation.isPending}>
           <DialogHeader>
             <DialogTitle>{t("productWarehouse.dialog.deleteWarehouseTitle")}</DialogTitle>
-          </DialogHeader>
-          <div className="dialog-content-grid">
-            <p className="dialog-hint">
+            <DialogDescription>
               {t("productWarehouse.dialog.deleteWarehouseDescription", { warehouseName: selectedWarehouse?.name })}
-            </p>
-            <p className="dialog-hint">
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
               {t("productWarehouse.dialog.deleteWarehouseHint")}
             </p>
           </div>
           <DialogFooter>
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => setShowDeleteWarehouseDialog(false)}
               disabled={deleteWarehouseMutation.isPending}
             >
@@ -1150,92 +1195,164 @@ export function ProductWarehousePage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!adjustingLot} onOpenChange={(open) => !open && setAdjustingLot(null)}>
-        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
+      <Dialog
+        open={!!adjustingLot}
+        onOpenChange={(open) => {
+          if (!open && !adjustMutation.isPending) {
+            setAdjustingLot(null);
+            setAdjustDialogError("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[500px]" closeDisabled={adjustMutation.isPending}>
           <DialogHeader>
             <DialogTitle>{t("productWarehouse.dialog.adjustTitle")}</DialogTitle>
-          </DialogHeader>
-          <div className="dialog-content-grid">
-            <p className="dialog-hint">
+            <DialogDescription>
               {adjustingLot?.lotCode} - {adjustingLot?.productName}
-            </p>
-            <label htmlFor="adjust-qty">
-              {t("productWarehouse.dialog.adjustQuantity")}
-            </label>
-            <input
-              id="adjust-qty"
-              type="number"
-              value={adjustQuantityInput}
-              onChange={(event) => setAdjustQuantityInput(event.target.value)}
-              placeholder={t("productWarehouse.dialog.adjustQuantityPlaceholder")}
-            />
-            <label htmlFor="adjust-note">
-              {t("productWarehouse.dialog.adjustNote")}
-            </label>
-            <textarea
-              id="adjust-note"
-              value={adjustNoteInput}
-              onChange={(event) => setAdjustNoteInput(event.target.value)}
-              placeholder={t("productWarehouse.dialog.adjustNotePlaceholder")}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setAdjustingLot(null)}>
-              {t("common.cancel")}
-            </Button>
-            <Button onClick={submitAdjust} disabled={adjustMutation.isPending}>
-              {adjustMutation.isPending
-                ? t("common.processing")
-                : t("productWarehouse.dialog.adjustConfirm")}
-            </Button>
-          </DialogFooter>
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitAdjust();
+            }}
+          >
+            {adjustDialogError && (
+              <p id="product-warehouse-adjust-error" role="alert" className="text-sm text-destructive">
+                {adjustDialogError}
+              </p>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="adjust-qty" required>
+                {t("productWarehouse.dialog.adjustQuantity")}
+              </Label>
+              <Input
+                id="adjust-qty"
+                type="number"
+                value={adjustQuantityInput}
+                onChange={(event) => setAdjustQuantityInput(event.target.value)}
+                placeholder={t("productWarehouse.dialog.adjustQuantityPlaceholder")}
+                aria-invalid={!!adjustDialogError}
+                aria-describedby={adjustDialogError ? "product-warehouse-adjust-error" : undefined}
+                disabled={adjustMutation.isPending}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="adjust-note" required>
+                {t("productWarehouse.dialog.adjustNote")}
+              </Label>
+              <Textarea
+                id="adjust-note"
+                value={adjustNoteInput}
+                onChange={(event) => setAdjustNoteInput(event.target.value)}
+                placeholder={t("productWarehouse.dialog.adjustNotePlaceholder")}
+                aria-invalid={!!adjustDialogError}
+                aria-describedby={adjustDialogError ? "product-warehouse-adjust-error" : undefined}
+                disabled={adjustMutation.isPending}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setAdjustingLot(null);
+                  setAdjustDialogError("");
+                }}
+                disabled={adjustMutation.isPending}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button type="submit" disabled={adjustMutation.isPending}>
+                {adjustMutation.isPending
+                  ? t("common.processing")
+                  : t("productWarehouse.dialog.adjustConfirm")}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!stockingOutLot} onOpenChange={(open) => !open && setStockingOutLot(null)}>
-        <DialogContent className="farmer-product-warehouse-dialog w-[92vw] max-w-[480px]">
+      <Dialog
+        open={!!stockingOutLot}
+        onOpenChange={(open) => {
+          if (!open && !stockOutMutation.isPending) {
+            setStockingOutLot(null);
+            setStockOutDialogError("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[500px]" closeDisabled={stockOutMutation.isPending}>
           <DialogHeader>
             <DialogTitle>{t("productWarehouse.dialog.stockOutTitle")}</DialogTitle>
-          </DialogHeader>
-          <div className="dialog-content-grid">
-            <p className="dialog-hint">
+            <DialogDescription>
               {stockingOutLot?.lotCode} - {stockingOutLot?.productName}
-            </p>
-            <label htmlFor="stockout-qty">
-              {t("productWarehouse.dialog.stockOutQuantity")}
-            </label>
-            <input
-              id="stockout-qty"
-              type="number"
-              min={0}
-              value={stockOutQuantityInput}
-              onChange={(event) => setStockOutQuantityInput(event.target.value)}
-              placeholder={t("productWarehouse.dialog.stockOutQuantityPlaceholder")}
-            />
-            <label htmlFor="stockout-note">
-              {t("productWarehouse.dialog.stockOutNote")}
-            </label>
-            <textarea
-              id="stockout-note"
-              value={stockOutNoteInput}
-              onChange={(event) => setStockOutNoteInput(event.target.value)}
-              placeholder={t("productWarehouse.dialog.stockOutNotePlaceholder")}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setStockingOutLot(null)}>
-              {t("common.cancel")}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={submitStockOut}
-              disabled={stockOutMutation.isPending}
-            >
-              {stockOutMutation.isPending
-                ? t("common.processing")
-                : t("productWarehouse.dialog.stockOutConfirm")}
-            </Button>
-          </DialogFooter>
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitStockOut();
+            }}
+          >
+            {stockOutDialogError && (
+              <p id="product-warehouse-stockout-error" role="alert" className="text-sm text-destructive">
+                {stockOutDialogError}
+              </p>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="stockout-qty" required>
+                {t("productWarehouse.dialog.stockOutQuantity")}
+              </Label>
+              <Input
+                id="stockout-qty"
+                type="number"
+                min={0}
+                value={stockOutQuantityInput}
+                onChange={(event) => setStockOutQuantityInput(event.target.value)}
+                placeholder={t("productWarehouse.dialog.stockOutQuantityPlaceholder")}
+                aria-invalid={!!stockOutDialogError}
+                aria-describedby={stockOutDialogError ? "product-warehouse-stockout-error" : undefined}
+                disabled={stockOutMutation.isPending}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="stockout-note">
+                {t("productWarehouse.dialog.stockOutNote")}
+              </Label>
+              <Textarea
+                id="stockout-note"
+                value={stockOutNoteInput}
+                onChange={(event) => setStockOutNoteInput(event.target.value)}
+                placeholder={t("productWarehouse.dialog.stockOutNotePlaceholder")}
+                disabled={stockOutMutation.isPending}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setStockingOutLot(null);
+                  setStockOutDialogError("");
+                }}
+                disabled={stockOutMutation.isPending}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                type="submit"
+                variant="destructive"
+                disabled={stockOutMutation.isPending}
+              >
+                {stockOutMutation.isPending
+                  ? t("common.processing")
+                  : t("productWarehouse.dialog.stockOutConfirm")}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </PageContainer>

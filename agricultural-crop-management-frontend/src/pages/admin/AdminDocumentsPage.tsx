@@ -4,19 +4,24 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useI18n } from "@/hooks/useI18n";
+  CardContent,
+} from "@/shared/ui";
+import {
+  AdminContentCard,
+  AdminFilterCard,
+  AdminHeaderCard,
+  AdminPageContainer,
+} from "@/features/admin/shared/ui";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
   adminDocumentApi,
   type AdminDocument,
   type AdminDocumentCreateRequest,
-} from "@/services/api.admin";
+} from "@/features/admin/shared/api";
 import {
   AlertCircle,
   AlertTriangle,
@@ -361,28 +366,27 @@ export function AdminDocumentsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">Documents</h1>
-        <p className="text-muted-foreground">
-          Manage system-wide documents and references
-        </p>
-      </div>
+    <AdminPageContainer>
+      <AdminHeaderCard
+        title="Documents"
+        description="Manage system-wide documents and references"
+      />
 
       {/* Filters & Actions */}
-      <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:flex-wrap sm:items-center">
-        {/* Search */}
-        <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:max-w-[300px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={debouncedSearch}
-            onChange={(e) => setDebouncedSearch(e.target.value)}
-            placeholder="Search by title (min 2 chars)"
-            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
+      <AdminFilterCard>
+        <CardContent className="p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            {/* Search */}
+            <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:max-w-[300px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={debouncedSearch}
+                onChange={(e) => setDebouncedSearch(e.target.value)}
+                placeholder="Search by title (min 2 chars)"
+                className="w-full pl-10 pr-4 py-2 border border-border rounded-[14px] bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
 
         {/* Type Filter */}
         <select
@@ -391,7 +395,7 @@ export function AdminDocumentsPage() {
             setFilterType(e.target.value);
             setPage(0);
           }}
-          className="w-full sm:w-auto px-3 py-2 border border-border rounded-lg bg-background text-sm"
+          className="w-full sm:w-auto px-3 py-2 border border-border rounded-[14px] bg-card text-sm"
         >
           <option value="">All Types</option>
           {DOCUMENT_TYPES.map((t) => (
@@ -408,7 +412,7 @@ export function AdminDocumentsPage() {
             setFilterStatus(e.target.value);
             setPage(0);
           }}
-          className="w-full sm:w-auto px-3 py-2 border border-border rounded-lg bg-background text-sm"
+          className="w-full sm:w-auto px-3 py-2 border border-border rounded-[14px] bg-card text-sm"
         >
           <option value="">All Statuses</option>
           {DOCUMENT_STATUSES.map((s) => (
@@ -433,7 +437,7 @@ export function AdminDocumentsPage() {
         {/* Create Button */}
         <button
           onClick={() => openForm()}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Create Document
@@ -442,22 +446,25 @@ export function AdminDocumentsPage() {
         {/* Refresh */}
         <button
           onClick={fetchDocuments}
-          className="w-full sm:w-auto p-2 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+          className="w-full sm:w-auto p-2 border border-border rounded-[14px] hover:bg-muted/50 transition-colors"
           title="Refresh"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
         </button>
-      </div>
+          </div>
+        </CardContent>
+      </AdminFilterCard>
 
       {/* Stats */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-4">
         <span className="text-sm text-muted-foreground">
           {totalElements} document{totalElements !== 1 ? "s" : ""} found
         </span>
       </div>
 
       {/* Table */}
-      <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
+      <AdminContentCard>
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[840px]">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
@@ -627,7 +634,8 @@ export function AdminDocumentsPage() {
             )}
           </tbody>
         </table>
-      </div>
+        </div>
+      </AdminContentCard>
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -938,7 +946,7 @@ export function AdminDocumentsPage() {
           </button>
         </div>
       )}
-    </div>
+    </AdminPageContainer>
   );
 }
 

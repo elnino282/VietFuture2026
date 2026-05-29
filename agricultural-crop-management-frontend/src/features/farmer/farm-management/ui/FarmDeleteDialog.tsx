@@ -1,15 +1,17 @@
-import { AlertCircle, Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+    AlertDialog,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
     Button,
 } from '@/shared/ui';
 import { useDeleteFarm } from '@/entities/farm';
+import { useTranslation } from 'react-i18next';
 
 interface FarmDeleteDialogProps {
     open: boolean;
@@ -29,14 +31,15 @@ export function FarmDeleteDialog({
     farmName,
     onDeleteSuccess,
 }: FarmDeleteDialogProps) {
+    const { t } = useTranslation();
     const deleteMutation = useDeleteFarm({
         onSuccess: () => {
-            toast.success('Farm deleted successfully');
+            toast.success(t('farms.toast.deleteSuccess'));
             onOpenChange(false);
             onDeleteSuccess?.();
         },
         onError: (error: Error) => {
-            const errorMessage = error.message || 'Failed to delete farm';
+            const errorMessage = error.message || t('farms.toast.deleteError');
             toast.error(errorMessage);
         },
     });
@@ -45,27 +48,24 @@ export function FarmDeleteDialog({
         deleteMutation.mutate({ id: farmId, name: farmName });
     };
 
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (deleteMutation.isPending && !nextOpen) return;
+        onOpenChange(nextOpen);
+    };
+
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-red-600">
-                        <AlertCircle className="w-5 h-5" />
-                        Delete Farm
-                    </DialogTitle>
-                    <DialogDescription>
-                        Are you sure you want to delete the farm "{farmName}"? 
-                        This will deactivate the farm and mark it as deleted.
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button
-                        variant="outline"
-                        onClick={() => onOpenChange(false)}
-                        disabled={deleteMutation.isPending}
-                    >
-                        Cancel
-                    </Button>
+        <AlertDialog open={open} onOpenChange={handleOpenChange}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{t('farms.dialog.deleteFarmTitle')}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {t('farms.dialog.deleteFarmConfirmDescription', { name: farmName })}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel disabled={deleteMutation.isPending}>
+                        {t('common.cancel')}
+                    </AlertDialogCancel>
                     <Button
                         variant="destructive"
                         onClick={handleConfirm}
@@ -74,18 +74,18 @@ export function FarmDeleteDialog({
                         {deleteMutation.isPending ? (
                             <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Deleting...
+                                {t('common.deleting')}
                             </>
                         ) : (
                             <>
                                 <Trash2 className="w-4 h-4 mr-2" />
-                                Delete
+                                {t('common.delete')}
                             </>
                         )}
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
 }
 

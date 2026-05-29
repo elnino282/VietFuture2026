@@ -51,7 +51,7 @@ export function FarmToolbar({
     const hasActiveFilters = searchQuery || activeFilter !== null;
 
     return (
-        <>
+        <div className="space-y-6">
         <Card variant="page-header">
             <CardContent className="px-6 py-4">
                 {/* Header Row: Title + Actions */}
@@ -130,6 +130,6 @@ export function FarmToolbar({
                 </div>
             </CardContent>
         </Card>
-        </>
+        </div>
     );
 }

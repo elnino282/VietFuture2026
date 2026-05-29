@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,9 @@ export function DueDateDialog({
   disabled = false,
   disabledReason,
 }: DueDateDialogProps) {
+  const { t } = useTranslation();
   const [dueDate, setDueDate] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -36,48 +39,65 @@ export function DueDateDialog({
     }
   }, [open]);
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (isSubmitting && !nextOpen) return;
+    onOpenChange(nextOpen);
+  };
+
+  const handleSubmit = async () => {
+    if (!dueDate || disabled) return;
+    setIsSubmitting(true);
+    try {
+      await onChangeDueDate(dueDate);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="acm-rounded-lg">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[500px]" closeDisabled={isSubmitting}>
         <DialogHeader>
-          <DialogTitle>Change Due Date</DialogTitle>
+          <DialogTitle>{t("tasks.dialog.bulkDueDateTitle")}</DialogTitle>
           <DialogDescription>
-            Update due date for {selectedCount} selected tasks
+            {t("tasks.dialog.bulkDueDateDescription", { count: selectedCount })}
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-2">
+        <div className="space-y-4">
           {disabled && (
             <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              {disabledReason || "This season is locked. Due date updates are disabled."}
+              {disabledReason || t("tasks.dialog.bulkDueDateLocked")}
             </div>
           )}
-          <Label htmlFor="bulk-due-date-input">New Due Date</Label>
-          <Input
-            id="bulk-due-date-input"
-            data-testid="bulk-due-date-input"
-            type="date"
-            value={dueDate}
-            onChange={(event) => setDueDate(event.target.value)}
-            disabled={disabled}
-            className="border-border acm-rounded-sm"
-          />
+          <div className="space-y-2">
+            <Label htmlFor="bulk-due-date-input" required>
+              {t("tasks.form.dueDate")}
+            </Label>
+            <Input
+              id="bulk-due-date-input"
+              data-testid="bulk-due-date-input"
+              type="date"
+              value={dueDate}
+              onChange={(event) => setDueDate(event.target.value)}
+              disabled={disabled || isSubmitting}
+            />
+          </div>
         </div>
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="acm-rounded-sm"
+            onClick={() => handleOpenChange(false)}
+            disabled={isSubmitting}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
-            onClick={() => onChangeDueDate(dueDate)}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground acm-rounded-sm"
-            disabled={disabled || !dueDate}
+            onClick={handleSubmit}
+            disabled={disabled || !dueDate || isSubmitting}
             title={disabled ? disabledReason : undefined}
             data-testid="submit-bulk-due-date"
           >
-            Update Due Date
+            {isSubmitting ? t("common.saving") : t("tasks.dialog.bulkDueDateSubmit")}
           </Button>
         </DialogFooter>
       </DialogContent>

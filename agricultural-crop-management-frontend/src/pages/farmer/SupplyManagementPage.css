@@ -1,0 +1,931 @@
+/* ═══════════════════════════════════════════════════════════════
+   SUPPLY MANAGEMENT PAGE STYLES
+   Merged from SuppliersSuppliesPage.css & InventoryPage.css
+   Root class: .farmer-supply-management-page
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ---------------------------------------------------------------
+   1. PAGE CONTAINER
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .supplies-page {
+    /* Removed redundant padding, max-width, and margin to defer to PageContainer */
+}
+
+/* ---------------------------------------------------------------
+   2. HEADER (from Suppliers & Supplies)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .supplies-header {
+    margin-bottom: 16px;
+    padding: 16px 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.farmer-supply-management-page .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.farmer-supply-management-page .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.farmer-supply-management-page .header-icon {
+    width: 32px;
+    height: 32px;
+    color: #2F9E44;
+}
+
+.farmer-supply-management-page .supplies-header h1 {
+    margin: 0;
+    font-size: var(--text-page-title);
+    font-weight: var(--font-weight-bold);
+    color: var(--foreground);
+}
+
+.farmer-supply-management-page .supplies-header .subtitle {
+    margin: 4px 0 0;
+    color: var(--muted-foreground);
+    font-size: var(--text-body);
+}
+
+/* ---------------------------------------------------------------
+   3. PRIMARY BUTTON (from Suppliers & Supplies)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #2F9E44 0%, #1a7a30 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.farmer-supply-management-page .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(47, 158, 68, 0.3);
+}
+
+.farmer-supply-management-page .btn-primary svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ---------------------------------------------------------------
+   4. TABS (unified as .supply-management-tabs)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .supply-management-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid var(--border);
+}
+
+.farmer-supply-management-page .supply-management-tabs .tab {
+    position: relative;
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    color: var(--muted-foreground);
+    font-size: var(--text-body, 1rem);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.farmer-supply-management-page .supply-management-tabs .tab:hover {
+    color: #2F9E44;
+}
+
+.farmer-supply-management-page .supply-management-tabs .tab.active {
+    color: #2F9E44;
+}
+
+.farmer-supply-management-page .supply-management-tabs .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #2F9E44;
+}
+
+/* ---------------------------------------------------------------
+   5. SUPPLIES TOOLBAR & FILTERS (from Suppliers & Supplies)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .supplies-toolbar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.farmer-supply-management-page .supplies-filters {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.farmer-supply-management-page .search-input {
+    width: 320px;
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: var(--text-body);
+    background: var(--input-background);
+    color: var(--foreground);
+}
+
+.farmer-supply-management-page .search-input:focus {
+    outline: none;
+    border-color: #2F9E44;
+    box-shadow: 0 0 0 3px rgba(47, 158, 68, 0.1);
+}
+
+.farmer-supply-management-page .filter-select {
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: var(--text-body);
+    width: 180px;
+    background: var(--input-background);
+    color: var(--foreground);
+}
+
+.farmer-supply-management-page .filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: var(--text-body);
+    color: var(--muted-foreground);
+}
+
+.farmer-supply-management-page .filter-checkbox input {
+    width: 16px;
+    height: 16px;
+    accent-color: #2F9E44;
+}
+
+/* ---------------------------------------------------------------
+   6. INVENTORY CONTROLS & TOOLBAR (from Inventory)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .inventory-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 16px;
+}
+
+.farmer-supply-management-page .inventory-warehouse-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.farmer-supply-management-page .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 220px;
+}
+
+.farmer-supply-management-page .control-group--search {
+    min-width: 320px;
+    flex: 1 1 320px;
+}
+
+.farmer-supply-management-page .control-group label {
+    font-size: 12px;
+    font-weight: var(--font-weight-semibold);
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.farmer-supply-management-page .control-group select,
+.farmer-supply-management-page .control-group input[type="text"],
+.farmer-supply-management-page .control-group input[type="date"],
+.farmer-supply-management-page .control-group input[type="number"],
+.farmer-supply-management-page .control-group textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--input-background);
+    color: var(--foreground);
+    font-size: var(--text-body, 0.95rem);
+}
+
+.farmer-supply-management-page .control-group textarea {
+    min-height: 88px;
+    resize: vertical;
+}
+
+/* Focus states for inventory controls */
+.farmer-supply-management-page .control-group select:focus,
+.farmer-supply-management-page .control-group input:focus,
+.farmer-supply-management-page .control-group textarea:focus,
+.farmer-supply-management-page .action-btn:focus-visible,
+.farmer-supply-management-page .pagination button:focus-visible,
+.farmer-supply-management-page .tab:focus-visible,
+.farmer-supply-management-page .btn-cancel:focus-visible,
+.farmer-supply-management-page .btn-submit:focus-visible {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 165, 93, 0.16);
+}
+
+/* ---------------------------------------------------------------
+   7. CONTENT AREA (unified as .supply-management-content)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .supply-management-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+/* ---------------------------------------------------------------
+   8. TABLE CONTAINER
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .table-container {
+    overflow-x: auto;
+}
+
+/* ---------------------------------------------------------------
+   9. SUPPLIES TABLE (from Suppliers & Supplies)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .supplies-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.farmer-supply-management-page .supplies-table th {
+    text-align: left;
+    padding: 14px 16px;
+    background: var(--muted);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-body-sm);
+    color: var(--foreground);
+    border-bottom: 1px solid var(--border);
+}
+
+.farmer-supply-management-page .supplies-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: var(--text-body);
+}
+
+.farmer-supply-management-page .supplies-table tr:hover {
+    background: var(--muted);
+}
+
+.farmer-supply-management-page .supplies-table .name-cell {
+    font-weight: var(--font-weight-medium);
+    color: var(--foreground);
+}
+
+.farmer-supply-management-page .supplies-table .batch-cell {
+    font-family: var(--font-family-mono);
+    font-size: var(--text-body);
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+.farmer-supply-management-page .supplies-table .numeric-cell {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+/* ---------------------------------------------------------------
+   10. INVENTORY TABLE (from Inventory)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .inventory-table {
+    width: 100%;
+    min-width: 920px;
+    border-collapse: collapse;
+}
+
+.farmer-supply-management-page .inventory-table th {
+    text-align: left;
+    padding: 14px 16px;
+    background: var(--muted);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-body-sm, 0.875rem);
+    color: var(--foreground);
+    border-bottom: 1px solid var(--border);
+}
+
+.farmer-supply-management-page .inventory-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: var(--text-body, 0.95rem);
+    color: var(--foreground);
+    vertical-align: middle;
+}
+
+.farmer-supply-management-page .inventory-table tr:hover {
+    background: var(--muted);
+}
+
+.farmer-supply-management-page .inventory-table .quantity {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    font-weight: var(--font-weight-semibold);
+}
+
+.farmer-supply-management-page .inventory-table .note {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------
+   11. ACTION BUTTONS (from Inventory)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .actions-cell {
+    text-align: center;
+    width: 92px;
+}
+
+.farmer-supply-management-page .action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.farmer-supply-management-page .action-btn:hover {
+    background: var(--muted);
+    color: var(--foreground);
+}
+
+/* ---------------------------------------------------------------
+   12. BADGES (from Suppliers & Supplies)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: var(--text-body-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+}
+
+.farmer-supply-management-page .badge-restricted {
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffe0b2;
+}
+
+.farmer-supply-management-page .badge-normal {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+/* ---------------------------------------------------------------
+   13. STATUS & TYPE BADGES (merged from both)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .status-badge,
+.farmer-supply-management-page .type-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: var(--text-body-xs, 0.75rem);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+}
+
+/* Supplies status badges */
+.farmer-supply-management-page .status-badge.in_stock {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.farmer-supply-management-page .status-badge.pending,
+.farmer-supply-management-page .status-badge.reserved,
+.farmer-supply-management-page .status-badge.hold {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.farmer-supply-management-page .status-badge.depleted,
+.farmer-supply-management-page .status-badge.expired,
+.farmer-supply-management-page .status-badge.archived {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* Inventory status badges */
+.farmer-supply-management-page .status-in-stock {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.farmer-supply-management-page .status-low-stock,
+.farmer-supply-management-page .status-hold,
+.farmer-supply-management-page .movement-adjust {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.farmer-supply-management-page .status-expired,
+.farmer-supply-management-page .movement-out {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.farmer-supply-management-page .status-out-of-stock,
+.farmer-supply-management-page .status-neutral {
+    background: #eceff1;
+    color: #455a64;
+}
+
+.farmer-supply-management-page .movement-in {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.farmer-supply-management-page .ml-2 {
+    margin-left: 8px;
+}
+
+/* ---------------------------------------------------------------
+   14. EXPIRY WARNINGS (from Suppliers & Supplies)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .expiring-soon {
+    color: #e65100;
+}
+
+.farmer-supply-management-page .expiry-warning {
+    margin-left: 8px;
+    font-size: var(--text-body-sm);
+}
+
+/* ---------------------------------------------------------------
+   15. LOADING & EMPTY STATES (deduplicated)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .loading-state,
+.farmer-supply-management-page .empty-state {
+    padding: 48px;
+    text-align: center;
+    color: var(--muted-foreground);
+    font-size: var(--text-body);
+}
+
+/* ---------------------------------------------------------------
+   16. PAGINATION (deduplicated — kept inventory version with
+       min-height & border-radius: 8px)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.farmer-supply-management-page .pagination button {
+    min-height: 40px;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--foreground);
+    cursor: pointer;
+    font-size: var(--text-body);
+    transition: all 0.2s ease;
+}
+
+.farmer-supply-management-page .pagination button:hover:not(:disabled) {
+    background: var(--muted);
+}
+
+.farmer-supply-management-page .pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.farmer-supply-management-page .pagination span {
+    color: var(--muted-foreground);
+    font-size: var(--text-body, 0.95rem);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODAL STYLES (deduplicated — merged from both pages)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ---------------------------------------------------------------
+   17. MODAL OVERLAY & CONTENT
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.farmer-supply-management-page .modal-content {
+    background: var(--card);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.farmer-supply-management-page .modal-content h2 {
+    margin: 0 0 8px;
+    font-size: var(--text-section-title, 1.25rem);
+    color: var(--foreground);
+}
+
+.farmer-supply-management-page .modal-subtitle {
+    margin: 0 0 12px;
+    font-size: var(--text-body, 0.95rem);
+    color: var(--muted-foreground);
+}
+
+/* ---------------------------------------------------------------
+   18. STOCK-IN MODAL (from Suppliers & Supplies)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .stock-in-modal {
+    padding: 24px;
+}
+
+.farmer-supply-management-page .stock-in-modal h2 {
+    margin: 0 0 24px;
+    font-size: var(--text-section-title);
+    color: var(--foreground);
+}
+
+/* ---------------------------------------------------------------
+   19. STEPPER (from Suppliers & Supplies)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    padding: 0 20px;
+}
+
+.farmer-supply-management-page .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.farmer-supply-management-page .step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--muted);
+    color: var(--muted-foreground);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-body);
+    transition: all 0.3s ease;
+}
+
+.farmer-supply-management-page .step.active .step-number {
+    background: #2F9E44;
+    color: white;
+}
+
+.farmer-supply-management-page .step.completed .step-number {
+    background: #2F9E44;
+    color: white;
+}
+
+.farmer-supply-management-page .step-label {
+    font-size: var(--text-body-xs);
+    color: var(--muted-foreground);
+    white-space: nowrap;
+}
+
+.farmer-supply-management-page .step.active .step-label {
+    color: #2F9E44;
+    font-weight: var(--font-weight-medium);
+}
+
+.farmer-supply-management-page .step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin: 0 12px;
+    margin-bottom: 24px;
+}
+
+/* ---------------------------------------------------------------
+   20. STEP CONTENT
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .step-content {
+    margin-bottom: 24px;
+}
+
+/* ---------------------------------------------------------------
+   21. FORM GROUP (deduplicated — kept suppliers version with
+       textarea min-height & full input/select/textarea styles)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .form-group {
+    margin-bottom: 16px;
+}
+
+.farmer-supply-management-page .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: var(--font-weight-medium);
+    font-size: var(--text-body-sm, 0.875rem);
+    color: var(--foreground);
+}
+
+.farmer-supply-management-page .form-group input,
+.farmer-supply-management-page .form-group select,
+.farmer-supply-management-page .form-group textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: var(--text-body);
+    transition: all 0.2s ease;
+    background: var(--input-background);
+    color: var(--foreground);
+}
+
+.farmer-supply-management-page .form-group input:focus,
+.farmer-supply-management-page .form-group select:focus,
+.farmer-supply-management-page .form-group textarea:focus {
+    outline: none;
+    border-color: #2F9E44;
+    box-shadow: 0 0 0 3px rgba(47, 158, 68, 0.1);
+}
+
+.farmer-supply-management-page .form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.farmer-supply-management-page .form-group .preview {
+    margin-top: 8px;
+    font-size: var(--text-body-sm, 0.875rem);
+    color: var(--muted-foreground);
+}
+
+.farmer-supply-management-page .form-group .preview .negative {
+    color: #c62828;
+}
+
+/* ---------------------------------------------------------------
+   22. ON-HAND INFO (from Inventory)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .on-hand-info {
+    margin: 0 0 16px;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--muted);
+    color: var(--foreground);
+    font-size: var(--text-body, 0.95rem);
+}
+
+/* ---------------------------------------------------------------
+   23. WARNING BANNER & CONFIRM CHECKBOX (from Suppliers & Supplies)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .warning-banner {
+    background: #fff3e0;
+    border: 1px solid #ffe0b2;
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 16px;
+}
+
+.farmer-supply-management-page .warning-banner strong {
+    display: block;
+    color: #e65100;
+    margin-bottom: 6px;
+}
+
+.farmer-supply-management-page .warning-banner p {
+    margin: 0 0 12px;
+    color: #e65100;
+    font-size: var(--text-body);
+}
+
+.farmer-supply-management-page .warning-banner.small {
+    padding: 10px;
+    margin-top: 8px;
+}
+
+.farmer-supply-management-page .warning-banner.small strong {
+    margin-bottom: 4px;
+    font-size: var(--text-body-sm);
+}
+
+.farmer-supply-management-page .confirm-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: var(--text-body);
+    color: #e65100;
+}
+
+.farmer-supply-management-page .confirm-checkbox input {
+    width: 16px;
+    height: 16px;
+    accent-color: #2F9E44;
+    flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------
+   24. ERROR MESSAGE (deduplicated)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .error-message {
+    background: #ffebee;
+    color: #c62828;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: var(--text-body-sm, 0.875rem);
+}
+
+/* ---------------------------------------------------------------
+   25. MODAL ACTIONS
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.farmer-supply-management-page .action-group {
+    display: flex;
+    gap: 12px;
+}
+
+/* ---------------------------------------------------------------
+   26. BUTTONS — CANCEL, SECONDARY, SUBMIT (merged from both)
+   --------------------------------------------------------------- */
+.farmer-supply-management-page .btn-cancel {
+    min-height: 40px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted-foreground);
+    font-size: var(--text-body, 0.95rem);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.farmer-supply-management-page .btn-cancel:hover:not(:disabled) {
+    background: var(--muted);
+}
+
+.farmer-supply-management-page .btn-secondary {
+    padding: 10px 20px;
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--foreground);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.farmer-supply-management-page .btn-secondary:hover {
+    background: var(--accent);
+}
+
+.farmer-supply-management-page .btn-submit {
+    min-height: 40px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: var(--text-body, 0.95rem);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.farmer-supply-management-page .btn-submit:hover:not(:disabled) {
+    filter: brightness(0.94);
+}
+
+.farmer-supply-management-page .btn-submit.btn-submit-danger {
+    background: #e74c3c;
+}
+
+.farmer-supply-management-page .btn-submit:disabled,
+.farmer-supply-management-page .btn-cancel:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.farmer-supply-management-page .modal-actions .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE MEDIA QUERIES
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+    .farmer-supply-management-page .control-group,
+    .farmer-supply-management-page .control-group--search {
+        min-width: 240px;
+        flex: 1 1 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    .farmer-supply-management-page .supplies-page {
+        padding: 16px;
+    }
+
+    .farmer-supply-management-page .inventory-controls {
+        gap: 12px;
+    }
+
+    .farmer-supply-management-page .inventory-warehouse-toolbar {
+        width: 100%;
+        gap: 8px;
+    }
+
+    .farmer-supply-management-page .inventory-warehouse-toolbar [data-slot="button"] {
+        flex: 1 1 calc(33.333% - 8px);
+        min-width: 140px;
+    }
+
+    .farmer-supply-management-page .control-group,
+    .farmer-supply-management-page .control-group--search {
+        min-width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .farmer-supply-management-page .supply-management-tabs .tab {
+        padding: 10px 14px;
+    }
+
+    .farmer-supply-management-page .loading-state,
+    .farmer-supply-management-page .empty-state {
+        padding: 28px 16px;
+    }
+
+    .farmer-supply-management-page .modal-content {
+        padding: 18px;
+    }
+}

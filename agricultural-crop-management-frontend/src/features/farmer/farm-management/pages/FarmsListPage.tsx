@@ -142,7 +142,8 @@ export function FarmsListPage() {
         : undefined;
     
     return (
-        <PageContainer variant="wide" className="space-y-6">
+        <PageContainer variant="wide">
+            <div className="space-y-6">
             {/* Page Header with Create Button */}
             <FarmToolbar
                 searchQuery={searchQuery}
@@ -221,6 +222,7 @@ export function FarmsListPage() {
                     onDeleteSuccess={handleDeleteConfirm}
                 />
             )}
+            </div>
         </PageContainer>
     );
 }

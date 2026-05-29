@@ -1,4 +1,5 @@
 import { AlertCircle, Calendar as CalendarIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
     Card,
     CardContent,
@@ -16,6 +17,7 @@ interface UpcomingPayablesProps {
 }
 
 export function UpcomingPayables({ pendingExpenses }: UpcomingPayablesProps) {
+    const { t } = useTranslation();
     const { preferences } = usePreferences();
     const items = pendingExpenses.slice(0, 5);
 
@@ -24,16 +26,16 @@ export function UpcomingPayables({ pendingExpenses }: UpcomingPayablesProps) {
             <CardHeader className="pb-3">
                 <CardTitle className="text-base text-foreground flex items-center gap-2">
                     <AlertCircle className="w-5 h-5 text-destructive" />
-                    Pending Expenses
+                    {t("expenses.overview.pendingExpenses")}
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground">
-                    <span className="numeric">{pendingExpenses.length}</span> expenses awaiting payment
+                    <span className="numeric">{pendingExpenses.length}</span> {t("expenses.overview.awaitingPayment")}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
                 {items.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-                        No pending expenses.
+                        {t("expenses.overview.noPending")}
                     </div>
                 ) : (
                     items.map((expense) => (

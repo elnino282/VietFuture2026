@@ -42,7 +42,7 @@ export function PerformanceTab({ data }: PerformanceTabProps) {
 
             <div className="mt-6">
                 <h4 className="text-sm text-foreground mb-4">{t("reports.performance.taskStatusBreakdown")}</h4>
-                <div className="overflow-x-auto rounded-xl border border-border">
+                <div className="overflow-x-auto rounded-[14px] border border-border">
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-muted hover:bg-muted">

@@ -68,6 +68,7 @@ public class Farm {
     /**
      * Soft-delete flag. Active farms have active = true.
      */
+    @Builder.Default
     @Column(name = "active", nullable = false)
-    Boolean active;
+    Boolean active = Boolean.TRUE;
 }

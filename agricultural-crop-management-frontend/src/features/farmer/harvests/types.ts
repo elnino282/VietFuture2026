@@ -1,5 +1,11 @@
 export type HarvestStatus = "stored" | "sold" | "processing";
 export type HarvestGrade = "A" | "B" | "C" | "Premium";
+export type CropResidueHandling =
+    | "RETURNED_TO_SOIL"
+    | "REMOVED_FROM_FIELD"
+    | "BURNED"
+    | "USED_AS_FEED_OR_COMPOST"
+    | "UNKNOWN";
 
 export interface QCMetrics {
     purity: number;
@@ -37,6 +43,7 @@ export interface HarvestFormData {
     moisture: string;
     season: string;
     plot: string;
+    plotName: string;
     crop: string;
     warehouseId: string;
     locationId: string;
@@ -50,6 +57,8 @@ export interface HarvestFormData {
     purity: string;
     foreignMatter: string;
     brokenGrains: string;
+    harvestLoss: string;
+    cropResidueHandling: CropResidueHandling | "";
 }
 
 export interface ChartDataPoint {

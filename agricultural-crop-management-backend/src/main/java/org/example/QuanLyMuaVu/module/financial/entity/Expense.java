@@ -100,8 +100,15 @@ public class Expense {
     @Column(name = "expense_date", nullable = false)
     LocalDate expenseDate;
 
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "created_at", nullable = false, updatable = false)
     LocalDateTime createdAt;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 
     /**
      * Get effective amount (uses amount if set, otherwise totalCost or calculated).

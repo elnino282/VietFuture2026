@@ -1,8 +1,4 @@
-.farmer-product-warehouse-page .product-warehouse-page {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 1.5rem;
-}
+/* Removed redundant wrapper styles to defer to PageContainer */
 
 .farmer-product-warehouse-page .product-warehouse-summary-grid {
   display: grid;

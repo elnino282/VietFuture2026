@@ -42,7 +42,6 @@ export const portalConfig: Record<PortalType, PortalConfig> = {
             { id: 'farms', label: 'Farms & Plots', icon: MapPin },
             { id: 'seasons', label: 'Seasons', icon: Calendar },
             { id: 'suppliers-supplies', label: 'Suppliers & Supplies', icon: Package },
-            { id: 'inventory', label: 'Supply Warehouse', icon: Warehouse },
             { id: 'product-warehouse', label: 'Product Warehouse', icon: Package },
             { id: 'documents', label: 'Documents', icon: FileText },
             { id: 'ai-assistant', label: 'AI Assistant', icon: Sprout },
@@ -66,7 +65,7 @@ export const portalConfig: Record<PortalType, PortalConfig> = {
     },
     EMPLOYEE: {
         name: 'Employee Portal',
-        color: '#0F766E',
+        color: '#3BA55D',
         icon: ClipboardList,
         emoji: '🧑‍🌾',
         navigation: [

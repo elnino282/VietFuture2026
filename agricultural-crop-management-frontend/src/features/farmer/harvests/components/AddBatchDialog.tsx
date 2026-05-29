@@ -1,4 +1,4 @@
-import { ClipboardCheck, Loader2, Plus, Save, X } from "lucide-react";
+import { AlertTriangle, ClipboardCheck, Loader2, Plus, Save, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,15 +19,21 @@ import {
 } from "@/shared/ui/select";
 import { Textarea } from "@/shared/ui/textarea";
 import { Separator } from "@/shared/ui/separator";
-import type { HarvestFormData, HarvestGrade } from "../types";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/shared/ui/accordion";
+import { Badge } from "@/shared/ui/badge";
+import type { CropResidueHandling, HarvestFormData, HarvestGrade } from "../types";
 import { GRADE_OPTIONS } from "../constants";
 import { useSeasons } from "@/entities/season";
 import { useMyWarehouses, useLocations } from "@/entities/inventory";
 import { useHarvestStockContext } from "@/entities/harvest";
 import { useProductWarehouseLots } from "@/entities/product-warehouse";
-import { usePreferences } from "@/shared/contexts";
-import { getWeightUnitLabel } from "@/shared/lib";
-import { useMemo } from "react";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
+import { useEffect, useMemo, useState } from "react";
 
 interface AddBatchDialogProps {
   open: boolean;
@@ -45,6 +51,59 @@ interface AddBatchDialogProps {
   isSubmitting?: boolean;
 }
 
+const LEGUME_ROTATION_KEYWORDS = [
+  "bean",
+  "soy",
+  "pea",
+  "peanut",
+  "clover",
+  "legume",
+  "dau",
+  "lac",
+] as const;
+
+const toAlphaNumericToken = (value: string, fallback: string): string => {
+  const token = value
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 10);
+  return token || fallback;
+};
+
+const resolveDateToken = (dateValue: string): string => {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue.trim())) {
+    return dateValue.replace(/-/g, "");
+  }
+  return new Date().toISOString().slice(0, 10).replace(/-/g, "");
+};
+
+const buildBatchPreview = (dateValue: string): string =>
+  `HRV-${resolveDateToken(dateValue)}-001`;
+
+const buildLotSuggestion = (
+  seasonValue: string,
+  cropValue: string,
+  dateValue: string,
+): string => {
+  const seasonToken = toAlphaNumericToken(seasonValue, "GEN");
+  const cropToken = toAlphaNumericToken(cropValue, "CROP");
+  const dateToken = resolveDateToken(dateValue);
+  return `LOT-${seasonToken}-${cropToken}-${dateToken}`;
+};
+
+const isLegumeCropName = (cropName?: string | null): boolean => {
+  if (!cropName) return false;
+  const normalized = cropName.toLowerCase();
+  return LEGUME_ROTATION_KEYWORDS.some((keyword) => normalized.includes(keyword));
+};
+
+const toSafeTime = (value?: string | null): number | null => {
+  if (!value) return null;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 export function AddBatchDialog({
   open,
   onOpenChange,
@@ -60,14 +119,70 @@ export function AddBatchDialog({
   onCancel,
   isSubmitting = false,
 }: AddBatchDialogProps) {
-  const { preferences } = usePreferences();
-  const weightUnitLabel = getWeightUnitLabel(preferences.weightUnit);
+  const { t } = useI18n();
+  const [advancedSectionValue, setAdvancedSectionValue] = useState<string>("");
 
-  const { data: seasonsData } = useSeasons();
+  const { data: seasonsData } = useSeasons({ page: 0, size: 200 });
   const { data: warehousesData } = useMyWarehouses("OUTPUT");
 
   const selectedWarehouseId = Number(formData.warehouseId);
   const hasWarehouse = Number.isFinite(selectedWarehouseId) && selectedWarehouseId > 0;
+
+  const selectedSeasonIdFromForm = Number(formData.season);
+  const selectedSeasonId = seasonId
+    ?? (Number.isFinite(selectedSeasonIdFromForm) && selectedSeasonIdFromForm > 0
+      ? selectedSeasonIdFromForm
+      : undefined);
+
+  const selectedSeason = useMemo(
+    () =>
+      seasonsData?.items?.find((season) => season.id === selectedSeasonId) ?? null,
+    [seasonsData?.items, selectedSeasonId],
+  );
+
+  useEffect(() => {
+    if (!open) {
+      setAdvancedSectionValue("");
+      return;
+    }
+
+    if (!selectedSeason) return;
+
+    const nextPlot = selectedSeason.plotId && selectedSeason.plotId > 0
+      ? String(selectedSeason.plotId)
+      : "";
+    const nextPlotName = selectedSeason.plotName ?? "";
+    const nextCrop = selectedSeason.cropName ?? "";
+
+    let hasChanges = false;
+    const nextData: HarvestFormData = { ...formData };
+
+    if (nextData.plot !== nextPlot) {
+      nextData.plot = nextPlot;
+      hasChanges = true;
+    }
+    if (nextData.plotName !== nextPlotName) {
+      nextData.plotName = nextPlotName;
+      hasChanges = true;
+    }
+    if (nextData.crop !== nextCrop) {
+      nextData.crop = nextCrop;
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
+      onFormChange(nextData);
+    }
+  }, [formData, onFormChange, open, selectedSeason]);
+
+  const hasValidSeason = !!selectedSeasonId && selectedSeasonId > 0;
+
+  const selectedPlotIdFromForm = Number(formData.plot);
+  const selectedPlotId = Number.isFinite(selectedPlotIdFromForm) && selectedPlotIdFromForm > 0
+    ? selectedPlotIdFromForm
+    : selectedSeason?.plotId;
+  const hasPlotLink = !!selectedPlotId && selectedPlotId > 0;
+  const resolvedPlotName = formData.plotName.trim() || selectedSeason?.plotName || "";
 
   const { data: locationsData } = useLocations(hasWarehouse ? selectedWarehouseId : undefined);
   const { data: lotsData } = useProductWarehouseLots({
@@ -82,7 +197,7 @@ export function AddBatchDialog({
         value: String(season.id),
         label: season.seasonName,
       })) ?? [],
-    [seasonsData]
+    [seasonsData],
   );
 
   const warehouseOptions = useMemo(
@@ -91,14 +206,11 @@ export function AddBatchDialog({
         value: String(warehouse.id),
         label: warehouse.name,
       })),
-    [warehousesData]
+    [warehousesData],
   );
+
   const hasOutputWarehouse = warehouseCount > 0 || warehouseOptions.length > 0;
   const isFormDisabled = isWriteLocked || isSubmitting;
-  const selectedSeasonId = seasonId
-    ?? (Number.isFinite(Number(formData.season)) ? Number(formData.season) : undefined);
-  const hasValidSeason = !!selectedSeasonId && selectedSeasonId > 0;
-  const canSubmit = !isFormDisabled && hasOutputWarehouse && hasValidSeason;
 
   const locationOptions = useMemo(
     () =>
@@ -106,7 +218,7 @@ export function AddBatchDialog({
         value: String(location.id),
         label: location.label ?? `Location #${location.id}`,
       })),
-    [locationsData]
+    [locationsData],
   );
 
   const productOptions = useMemo(() => {
@@ -129,18 +241,32 @@ export function AddBatchDialog({
 
   const productMapByName = useMemo(
     () => new Map(productOptions.map((option) => [option.productName, option])),
-    [productOptions]
+    [productOptions],
+  );
+
+  const lotCodeSuggestion = useMemo(
+    () => buildLotSuggestion(
+      selectedSeasonId ? String(selectedSeasonId) : "GEN",
+      formData.productName || selectedSeason?.cropName || formData.crop || "CROP",
+      formData.date,
+    ),
+    [formData.crop, formData.date, formData.productName, selectedSeason?.cropName, selectedSeasonId],
   );
 
   const lotCodeOptions = useMemo(() => {
     const lotSet = new Set<string>();
+    if (lotCodeSuggestion) {
+      lotSet.add(lotCodeSuggestion);
+    }
+
     (lotsData?.items ?? []).forEach((lot) => {
       if (!lot.lotCode) return;
       if (formData.productName && lot.productName !== formData.productName) return;
       lotSet.add(lot.lotCode);
     });
+
     return Array.from(lotSet).sort((a, b) => a.localeCompare(b));
-  }, [formData.productName, lotsData]);
+  }, [formData.productName, lotCodeSuggestion, lotsData]);
 
   const contextSeasonId = selectedSeasonId;
   const stockContextQuery = useHarvestStockContext(contextSeasonId, {
@@ -148,6 +274,71 @@ export function AddBatchDialog({
     productName: formData.productName.trim() || undefined,
     lotCode: formData.lotCode.trim() || undefined,
   });
+
+  const hasRequiredQuickEntry =
+    !!formData.date
+    && Number(formData.quantity) > 0
+    && !!formData.productName.trim()
+    && !!formData.warehouseId;
+  const canSubmit =
+    !isFormDisabled
+    && hasOutputWarehouse
+    && hasValidSeason
+    && hasPlotLink
+    && hasRequiredQuickEntry;
+
+  const previousLegumeSeason = useMemo(() => {
+    if (!selectedSeason?.plotId || !selectedSeason?.startDate) {
+      return null;
+    }
+
+    const currentStartTime = toSafeTime(selectedSeason.startDate);
+    if (!currentStartTime) {
+      return null;
+    }
+
+    const candidate = (seasonsData?.items ?? [])
+      .filter((item) => item.id !== selectedSeason.id && item.plotId === selectedSeason.plotId)
+      .map((item) => ({ season: item, startTime: toSafeTime(item.startDate) }))
+      .filter((item): item is { season: NonNullable<typeof selectedSeason>; startTime: number } =>
+        item.startTime !== null && item.startTime < currentStartTime,
+      )
+      .sort((left, right) => right.startTime - left.startTime)[0];
+
+    if (!candidate?.season?.cropName) {
+      return null;
+    }
+
+    return isLegumeCropName(candidate.season.cropName) ? candidate.season : null;
+  }, [seasonsData?.items, selectedSeason]);
+
+  const cropResidueOptions = useMemo(
+    () => [
+      {
+        value: "RETURNED_TO_SOIL",
+        label: t("harvests.addBatch.cropResidue.returnedToSoil", "Returned to soil"),
+      },
+      {
+        value: "REMOVED_FROM_FIELD",
+        label: t("harvests.addBatch.cropResidue.removedFromField", "Removed from field"),
+      },
+      {
+        value: "BURNED",
+        label: t("harvests.addBatch.cropResidue.burned", "Burned"),
+      },
+      {
+        value: "USED_AS_FEED_OR_COMPOST",
+        label: t("harvests.addBatch.cropResidue.usedAsFeedOrCompost", "Used as feed/compost"),
+      },
+      {
+        value: "UNKNOWN",
+        label: t("harvests.addBatch.cropResidue.unknown", "Unknown"),
+      },
+    ],
+    [t],
+  );
+
+  const batchIdPreview = formData.batchId.trim() || buildBatchPreview(formData.date);
 
   return (
     <Dialog
@@ -157,403 +348,583 @@ export function AddBatchDialog({
         onOpenChange(nextOpen);
       }}
     >
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[720px]" closeDisabled={isSubmitting}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground text-xl">
             <Plus className="w-5 h-5 text-primary" />
-            Add Harvest Batch
+            {t("harvests.addBatch.title", "Add Harvest Batch")}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Record harvest and link directly to warehouse stock lots.
+            {t(
+              "harvests.addBatch.description",
+              "Quickly record harvest output and keep inventory links in sync.",
+            )}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-5 py-3">
           {isWriteLocked && (
             <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              {writeLockReason || "This season is locked. Harvest write actions are disabled."}
+              {writeLockReason || t("harvests.addBatch.alerts.seasonLocked", "This season is locked. Harvest write actions are disabled.")}
             </div>
           )}
           {!hasOutputWarehouse && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              No output warehouse found. Create an output warehouse first to link harvest with inventory.
+              {t(
+                "harvests.addBatch.alerts.noOutputWarehouse",
+                "No output warehouse found. Create one before recording harvest.",
+              )}
             </div>
           )}
           {!hasValidSeason && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              Select a valid season before saving a harvest batch.
+              {t(
+                "harvests.addBatch.alerts.invalidSeason",
+                "Select a valid season before saving a harvest batch.",
+              )}
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="batchId" className="text-foreground">
-                Batch ID
-              </Label>
-              <Input
-                id="batchId"
-                placeholder="HRV-2025-XXX"
-                value={formData.batchId}
-                onChange={(e) => onFormChange({ ...formData, batchId: e.target.value })}
-                className="rounded-xl border-border focus:border-primary"
-                disabled={isFormDisabled}
-              />
+          <div className="rounded-2xl border border-border bg-muted/15 p-4 space-y-4">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">
+                {t("harvests.addBatch.quickEntryTitle", "Quick Entry")}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "harvests.addBatch.quickEntryDescription",
+                  "Record essential harvest details first. Open advanced settings only when needed.",
+                )}
+              </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="date" className="text-foreground">
-                Harvest Date <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="date"
-                type="date"
-                value={formData.date}
-                onChange={(e) => onFormChange({ ...formData, date: e.target.value })}
-                className="rounded-xl border-border focus:border-primary"
-                disabled={isFormDisabled}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="quantity" className="text-foreground">
-                Quantity ({weightUnitLabel}) <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="quantity"
-                type="number"
-                placeholder="0"
-                value={formData.quantity}
-                onChange={(e) => onFormChange({ ...formData, quantity: e.target.value })}
-                className="rounded-xl border-border focus:border-primary"
-                disabled={isFormDisabled}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="grade" className="text-foreground">
-                Grade <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.grade}
-                onValueChange={(value: HarvestGrade) => onFormChange({ ...formData, grade: value })}
-                disabled={isFormDisabled}
-              >
-                <SelectTrigger className="rounded-xl border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {GRADE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="moisture" className="text-foreground">
-                Moisture %
-              </Label>
-              <Input
-                id="moisture"
-                type="number"
-                step="0.1"
-                placeholder="0.0"
-                value={formData.moisture}
-                onChange={(e) => onFormChange({ ...formData, moisture: e.target.value })}
-                className="rounded-xl border-border focus:border-primary"
-                disabled={isFormDisabled}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="season" className="text-foreground">Season</Label>
-              {isSeasonLocked ? (
-                <div className="rounded-xl border border-border px-3 py-2 text-sm bg-muted/30">
-                  {lockedSeasonLabel || "Current season"}
-                </div>
-              ) : (
-                <Select
-                  value={formData.season}
-                  onValueChange={(value: string) => onFormChange({ ...formData, season: value })}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date" className="text-foreground">
+                  {t("harvests.addBatch.fields.harvestDate", "Harvest Date")} <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(event) => onFormChange({ ...formData, date: event.target.value })}
+                  className="rounded-xl border-border focus:border-primary"
                   disabled={isFormDisabled}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="season" className="text-foreground">
+                  {t("harvests.addBatch.fields.season", "Season")}
+                </Label>
+                {isSeasonLocked ? (
+                  <div className="rounded-xl border border-border px-3 py-2 text-sm bg-muted/30">
+                    {lockedSeasonLabel || selectedSeason?.seasonName || t("harvests.addBatch.currentSeason", "Current season")}
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.season}
+                    onValueChange={(value: string) =>
+                      onFormChange({ ...formData, season: value })
+                    }
+                    disabled={isFormDisabled}
+                  >
+                    <SelectTrigger className="rounded-xl border-border">
+                      <SelectValue placeholder={t("harvests.addBatch.placeholders.selectSeason", "Select season")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {seasonOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-foreground">
+                  {t("harvests.addBatch.fields.harvestFromPlot", "Harvest From Plot")} <span className="text-destructive">*</span>
+                </Label>
+                <div className={`rounded-xl border px-3 py-2 text-sm ${
+                  hasPlotLink
+                    ? "border-border bg-muted/30 text-foreground"
+                    : "border-destructive/40 bg-destructive/5 text-destructive"
+                }`}>
+                  {hasPlotLink
+                    ? resolvedPlotName || t("harvests.addBatch.placeholders.plotLinked", "Plot linked from season")
+                    : t("harvests.addBatch.plotMissing", "This season is missing a valid plot link.")}
+                </div>
+              </div>
+            </div>
+
+            {previousLegumeSeason && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-emerald-600 text-white border-emerald-700">
+                    {t("harvests.addBatch.legumeBadge.title", "Previous legume rotation detected")}
+                  </Badge>
+                  <span>
+                    {t(
+                      "harvests.addBatch.legumeBadge.subtitle",
+                      "Potential soil nitrogen carry-over improved.",
+                    )}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="space-y-2 md:col-span-2 xl:col-span-1">
+                <Label htmlFor="productName" className="text-foreground">
+                  {t("harvests.addBatch.fields.cropProduct", "Crop / Product")} <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="productName"
+                  list="harvest-product-name-options"
+                  placeholder={t("harvests.addBatch.placeholders.enterProduct", "Enter product name")}
+                  value={formData.productName}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    const matched = productMapByName.get(value);
+                    onFormChange({
+                      ...formData,
+                      productName: value,
+                      productId:
+                        matched?.productId && Number.isFinite(matched.productId)
+                          ? String(matched.productId)
+                          : "",
+                      productVariant:
+                        matched?.productVariant && !formData.productVariant
+                          ? matched.productVariant
+                          : formData.productVariant,
+                    });
+                  }}
+                  className="rounded-xl border-border focus:border-primary"
+                  disabled={isFormDisabled}
+                />
+                <datalist id="harvest-product-name-options">
+                  {productOptions.map((option) => (
+                    <option key={option.productName} value={option.productName} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="quantity" className="text-foreground">
+                  {t("harvests.addBatch.fields.quantityKg", "Quantity (kg)")} <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  placeholder="0"
+                  value={formData.quantity}
+                  onChange={(event) => onFormChange({ ...formData, quantity: event.target.value })}
+                  className="rounded-xl border-border focus:border-primary"
+                  disabled={isFormDisabled}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="warehouse" className="text-foreground">
+                  {t("harvests.addBatch.fields.warehouse", "Warehouse")} <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={formData.warehouseId}
+                  onValueChange={(value: string) =>
+                    onFormChange({ ...formData, warehouseId: value, locationId: "" })
+                  }
+                  disabled={isFormDisabled || !hasOutputWarehouse}
                 >
                   <SelectTrigger className="rounded-xl border-border">
-                    <SelectValue placeholder="Select season" />
+                    <SelectValue placeholder={t("harvests.addBatch.placeholders.selectWarehouse", "Select warehouse")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {seasonOptions.map((option) => (
+                    {warehouseOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="warehouse" className="text-foreground">
-                Warehouse <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.warehouseId}
-                onValueChange={(value: string) =>
-                  onFormChange({ ...formData, warehouseId: value, locationId: "" })
-                }
-                disabled={isFormDisabled || !hasOutputWarehouse}
-              >
-                <SelectTrigger className="rounded-xl border-border">
-                  <SelectValue placeholder="Select warehouse" />
-                </SelectTrigger>
-                <SelectContent>
-                  {warehouseOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="location" className="text-foreground">Location (Optional)</Label>
-              <Select
-                value={formData.locationId}
-                onValueChange={(value: string) => onFormChange({ ...formData, locationId: value })}
-                disabled={isFormDisabled || !hasWarehouse}
-              >
-                <SelectTrigger className="rounded-xl border-border">
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locationOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="productName" className="text-foreground">
-                Product <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="productName"
-                list="harvest-product-name-options"
-                placeholder="Enter product name"
-                value={formData.productName}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const matched = productMapByName.get(value);
-                  onFormChange({
-                    ...formData,
-                    productName: value,
-                    productId:
-                      matched?.productId && Number.isFinite(matched.productId)
-                        ? String(matched.productId)
-                        : "",
-                    productVariant:
-                      matched?.productVariant && !formData.productVariant
-                        ? matched.productVariant
-                        : formData.productVariant,
-                  });
-                }}
-                className="rounded-xl border-border focus:border-primary"
-                disabled={isFormDisabled}
-              />
-              <datalist id="harvest-product-name-options">
-                {productOptions.map((option) => (
-                  <option key={option.productName} value={option.productName} />
-                ))}
-              </datalist>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="lotCode" className="text-foreground">
-                Lot Number <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="lotCode"
-                list="harvest-lot-options"
-                placeholder="Enter or select lot number"
-                value={formData.lotCode}
-                onChange={(e) => onFormChange({ ...formData, lotCode: e.target.value })}
-                className="rounded-xl border-border focus:border-primary"
-                disabled={isFormDisabled}
-              />
-              <datalist id="harvest-lot-options">
-                {lotCodeOptions.map((lotCode) => (
-                  <option key={lotCode} value={lotCode} />
-                ))}
-              </datalist>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="productVariant" className="text-foreground">Product Variant</Label>
-              <Input
-                id="productVariant"
-                placeholder="Optional"
-                value={formData.productVariant}
-                onChange={(e) => onFormChange({ ...formData, productVariant: e.target.value })}
-                className="rounded-xl border-border focus:border-primary"
-                disabled={isFormDisabled}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="inventoryUnit" className="text-foreground">Inventory Unit</Label>
-              <Input
-                id="inventoryUnit"
-                placeholder="kg"
-                value={formData.inventoryUnit}
-                onChange={(e) => onFormChange({ ...formData, inventoryUnit: e.target.value })}
-                className="rounded-xl border-border focus:border-primary"
-                disabled={isFormDisabled}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="productId" className="text-foreground">Product ID (Optional)</Label>
-              <Input
-                id="productId"
-                type="number"
-                placeholder="Auto-filled if matched"
-                value={formData.productId}
-                onChange={(e) => onFormChange({ ...formData, productId: e.target.value })}
-                className="rounded-xl border-border focus:border-primary"
-                disabled={isFormDisabled}
-              />
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
-            <p className="text-sm font-medium text-foreground">Current lot stock context</p>
-            {!contextSeasonId || !hasWarehouse || !formData.productName || !formData.lotCode ? (
-              <p className="text-xs text-muted-foreground mt-1">
-                Select warehouse, product, and lot to preview current stock context.
-              </p>
-            ) : stockContextQuery.isLoading ? (
-              <p className="text-xs text-muted-foreground mt-1">Loading stock context...</p>
-            ) : stockContextQuery.data ? (
-              <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
-                <div className="rounded-md border border-border bg-card px-3 py-2">
-                  Warehouse: <span className="font-medium">{stockContextQuery.data.warehouseName || "-"}</span>
-                </div>
-                <div className="rounded-md border border-border bg-card px-3 py-2">
-                  Matching lots: <span className="font-medium">{stockContextQuery.data.matchingLots}</span>
-                </div>
-                <div className="rounded-md border border-border bg-card px-3 py-2">
-                  On-hand: <span className="font-medium">{stockContextQuery.data.onHandQuantity} {stockContextQuery.data.unit || ""}</span>
-                </div>
               </div>
-            ) : (
-              <p className="text-xs text-muted-foreground mt-1">No stock context found.</p>
-            )}
-          </div>
 
-          <Separator className="bg-border" />
-
-          <div>
-            <h4 className="text-sm text-foreground mb-4 flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-primary" />
-              Quality Control Metrics (Optional)
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="purity" className="text-foreground">Purity %</Label>
+                <Label htmlFor="grade" className="text-foreground">
+                  {t("harvests.addBatch.fields.grade", "Grade")}
+                </Label>
+                <Select
+                  value={formData.grade}
+                  onValueChange={(value: HarvestGrade) => onFormChange({ ...formData, grade: value })}
+                  disabled={isFormDisabled}
+                >
+                  <SelectTrigger className="rounded-xl border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GRADE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="moisture" className="text-foreground">
+                  {t("harvests.addBatch.fields.moisture", "Moisture %")}
+                </Label>
                 <Input
-                  id="purity"
+                  id="moisture"
                   type="number"
+                  min="0"
+                  max="100"
                   step="0.1"
-                  placeholder="0.0"
-                  value={formData.purity}
-                  onChange={(e) => onFormChange({ ...formData, purity: e.target.value })}
+                  placeholder={t("harvests.addBatch.placeholders.optionalPercent", "Optional")}
+                  value={formData.moisture}
+                  onChange={(event) => onFormChange({ ...formData, moisture: event.target.value })}
                   className="rounded-xl border-border focus:border-primary"
                   disabled={isFormDisabled}
                 />
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="foreignMatter" className="text-foreground">Foreign Matter %</Label>
-                <Input
-                  id="foreignMatter"
-                  type="number"
-                  step="0.1"
-                  placeholder="0.0"
-                  value={formData.foreignMatter}
-                  onChange={(e) => onFormChange({ ...formData, foreignMatter: e.target.value })}
-                  className="rounded-xl border-border focus:border-primary"
-                  disabled={isFormDisabled}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="brokenGrains" className="text-foreground">Broken Grains %</Label>
-                <Input
-                  id="brokenGrains"
-                  type="number"
-                  step="0.1"
-                  placeholder="0.0"
-                  value={formData.brokenGrains}
-                  onChange={(e) => onFormChange({ ...formData, brokenGrains: e.target.value })}
-                  className="rounded-xl border-border focus:border-primary"
+                <Label htmlFor="notes" className="text-foreground">
+                  {t("harvests.addBatch.fields.notes", "Notes")}
+                </Label>
+                <Textarea
+                  id="notes"
+                  placeholder={t("harvests.addBatch.placeholders.notes", "Add any additional notes...")}
+                  value={formData.notes}
+                  onChange={(event) => onFormChange({ ...formData, notes: event.target.value })}
+                  className="rounded-xl border-border focus:border-primary min-h-[92px]"
                   disabled={isFormDisabled}
                 />
               </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes" className="text-foreground">Notes</Label>
-            <Textarea
-              id="notes"
-              placeholder="Add any additional notes about this harvest batch..."
-              value={formData.notes}
-              onChange={(e) => onFormChange({ ...formData, notes: e.target.value })}
-              className="rounded-xl border-border focus:border-primary min-h-[100px]"
-              disabled={isFormDisabled}
-            />
-          </div>
+          <Accordion
+            type="single"
+            collapsible
+            value={advancedSectionValue}
+            onValueChange={setAdvancedSectionValue}
+            className="w-full"
+          >
+            <AccordionItem value="advanced" className="rounded-2xl border border-border px-4 bg-card">
+              <AccordionTrigger className="py-3 hover:no-underline">
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-foreground">
+                    {t("harvests.addBatch.fields.advancedInventoryQuality", "Advanced Inventory & Quality")}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t(
+                      "harvests.addBatch.advancedDescription",
+                      "Lot controls, quality metrics, and optional sustainability attributes.",
+                    )}
+                  </p>
+                </div>
+              </AccordionTrigger>
+
+              <AccordionContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="batchIdPreview" className="text-foreground">
+                      {t("harvests.addBatch.fields.batchIdPreview", "Batch ID Preview")}
+                    </Label>
+                    <Input
+                      id="batchIdPreview"
+                      value={batchIdPreview}
+                      readOnly
+                      className="rounded-xl border-border bg-muted/30"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="lotCode" className="text-foreground">
+                      {t("harvests.addBatch.fields.lotNumber", "Lot Number")}
+                    </Label>
+                    <Input
+                      id="lotCode"
+                      list="harvest-lot-options"
+                      placeholder={lotCodeSuggestion}
+                      value={formData.lotCode}
+                      onChange={(event) => onFormChange({ ...formData, lotCode: event.target.value })}
+                      className="rounded-xl border-border focus:border-primary"
+                      disabled={isFormDisabled}
+                    />
+                    <datalist id="harvest-lot-options">
+                      {lotCodeOptions.map((lotCode) => (
+                        <option key={lotCode} value={lotCode} />
+                      ))}
+                    </datalist>
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "harvests.addBatch.lotHint",
+                        "If left blank, lot number will be auto-generated when saving.",
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="productVariant" className="text-foreground">
+                      {t("harvests.addBatch.fields.productVariant", "Product Variant")}
+                    </Label>
+                    <Input
+                      id="productVariant"
+                      placeholder={t("harvests.addBatch.placeholders.optional", "Optional")}
+                      value={formData.productVariant}
+                      onChange={(event) => onFormChange({ ...formData, productVariant: event.target.value })}
+                      className="rounded-xl border-border focus:border-primary"
+                      disabled={isFormDisabled}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="text-foreground">
+                      {t("harvests.addBatch.fields.locationOptional", "Location (Optional)")}
+                    </Label>
+                    <Select
+                      value={formData.locationId}
+                      onValueChange={(value: string) => onFormChange({ ...formData, locationId: value })}
+                      disabled={isFormDisabled || !hasWarehouse}
+                    >
+                      <SelectTrigger className="rounded-xl border-border">
+                        <SelectValue placeholder={t("harvests.addBatch.placeholders.selectLocation", "Select location")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locationOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="inventoryUnit" className="text-foreground">
+                      {t("harvests.addBatch.fields.inventoryUnit", "Inventory Unit")}
+                    </Label>
+                    <Input
+                      id="inventoryUnit"
+                      value="kg"
+                      readOnly
+                      className="rounded-xl border-border bg-muted/30"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="productId" className="text-foreground">
+                      {t("harvests.addBatch.fields.productIdReadonly", "Product ID (Readonly)")}
+                    </Label>
+                    <Input
+                      id="productId"
+                      type="number"
+                      value={formData.productId}
+                      readOnly
+                      className="rounded-xl border-border bg-muted/30"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="harvestLoss" className="text-foreground">
+                      {t("harvests.addBatch.fields.harvestLoss", "Harvest Loss %")}
+                    </Label>
+                    <Input
+                      id="harvestLoss"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      placeholder={t("harvests.addBatch.placeholders.optionalPercent", "Optional")}
+                      value={formData.harvestLoss}
+                      onChange={(event) => onFormChange({ ...formData, harvestLoss: event.target.value })}
+                      className="rounded-xl border-border focus:border-primary"
+                      disabled={isFormDisabled}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cropResidueHandling" className="text-foreground">
+                      {t("harvests.addBatch.fields.cropResidueHandling", "Crop Residue Handling")}
+                    </Label>
+                    <Select
+                      value={formData.cropResidueHandling}
+                      onValueChange={(value: CropResidueHandling) =>
+                        onFormChange({ ...formData, cropResidueHandling: value })
+                      }
+                      disabled={isFormDisabled}
+                    >
+                      <SelectTrigger id="cropResidueHandling" className="rounded-xl border-border">
+                        <SelectValue placeholder={t("harvests.addBatch.placeholders.optional", "Optional")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cropResidueOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Separator className="bg-border" />
+
+                <div>
+                  <h4 className="text-sm text-foreground mb-3 flex items-center gap-2">
+                    <ClipboardCheck className="w-4 h-4 text-primary" />
+                    {t("harvests.addBatch.fields.qualityControlMetrics", "Quality Control Metrics (Optional)")}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="purity" className="text-foreground">
+                        {t("harvests.addBatch.fields.purity", "Purity %")}
+                      </Label>
+                      <Input
+                        id="purity"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        placeholder={t("harvests.addBatch.placeholders.optionalPercent", "Optional")}
+                        value={formData.purity}
+                        onChange={(event) => onFormChange({ ...formData, purity: event.target.value })}
+                        className="rounded-xl border-border focus:border-primary"
+                        disabled={isFormDisabled}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="foreignMatter" className="text-foreground">
+                        {t("harvests.addBatch.fields.foreignMatter", "Foreign Matter %")}
+                      </Label>
+                      <Input
+                        id="foreignMatter"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        placeholder={t("harvests.addBatch.placeholders.optionalPercent", "Optional")}
+                        value={formData.foreignMatter}
+                        onChange={(event) => onFormChange({ ...formData, foreignMatter: event.target.value })}
+                        className="rounded-xl border-border focus:border-primary"
+                        disabled={isFormDisabled}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="brokenGrains" className="text-foreground">
+                        {t("harvests.addBatch.fields.brokenGrains", "Broken Grains %")}
+                      </Label>
+                      <Input
+                        id="brokenGrains"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        placeholder={t("harvests.addBatch.placeholders.optionalPercent", "Optional")}
+                        value={formData.brokenGrains}
+                        onChange={(event) => onFormChange({ ...formData, brokenGrains: event.target.value })}
+                        className="rounded-xl border-border focus:border-primary"
+                        disabled={isFormDisabled}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
+                  <p className="text-sm font-medium text-foreground">
+                    {t("harvests.addBatch.fields.currentLotStockContext", "Current lot stock context")}
+                  </p>
+                  {!contextSeasonId || !hasWarehouse || !formData.productName || !formData.lotCode ? (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t(
+                        "harvests.addBatch.stockContextHint",
+                        "Select warehouse, product, and lot to preview current stock context.",
+                      )}
+                    </p>
+                  ) : stockContextQuery.isLoading ? (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t("harvests.addBatch.loadingStockContext", "Loading stock context...")}
+                    </p>
+                  ) : stockContextQuery.data ? (
+                    <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                      <div className="rounded-md border border-border bg-card px-3 py-2">
+                        {t("harvests.addBatch.fields.warehouse", "Warehouse")}:{" "}
+                        <span className="font-medium">{stockContextQuery.data.warehouseName || "-"}</span>
+                      </div>
+                      <div className="rounded-md border border-border bg-card px-3 py-2">
+                        {t("harvests.addBatch.matchingLots", "Matching lots")}:{" "}
+                        <span className="font-medium">{stockContextQuery.data.matchingLots}</span>
+                      </div>
+                      <div className="rounded-md border border-border bg-card px-3 py-2">
+                        {t("harvests.addBatch.onHand", "On-hand")}:{" "}
+                        <span className="font-medium">
+                          {stockContextQuery.data.onHandQuantity} {stockContextQuery.data.unit || ""}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t("harvests.addBatch.noStockContext", "No stock context found.")}
+                    </p>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
+          {!hasPlotLink && hasValidSeason && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 mt-0.5" />
+              <span>
+                {t(
+                  "harvests.addBatch.plotRequiredForSustainability",
+                  "Harvest must be linked to a valid plot to keep NUE/FDN analytics reliable.",
+                )}
+              </span>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
           <Button
             variant="outline"
             onClick={onCancel}
-            className="rounded-xl border-border"
             disabled={isSubmitting}
-            disabledHint="Harvest batch is being saved"
+            disabledHint={t("harvests.addBatch.savingHint", "Harvest batch is being saved")}
           >
             <X className="w-4 h-4 mr-2" />
-            Cancel
+            {t("common.cancel", "Cancel")}
           </Button>
           <Button
             onClick={onSubmit}
-            className="rounded-xl"
             disabled={!canSubmit}
-            disabledHint={isSubmitting ? "Harvest batch is being saved" : undefined}
+            disabledHint={isSubmitting ? t("harvests.addBatch.savingHint", "Harvest batch is being saved") : undefined}
           >
             {isSubmitting ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            {isSubmitting ? "Saving..." : "Save Batch"}
+            {isSubmitting
+              ? t("harvests.addBatch.saving", "Saving...")
+              : t("harvests.addBatch.saveButton", "Save Batch")}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-
-

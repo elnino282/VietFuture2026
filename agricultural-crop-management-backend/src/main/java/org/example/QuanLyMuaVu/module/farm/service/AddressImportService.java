@@ -41,11 +41,14 @@ public class AddressImportService {
     ProvinceRepository provinceRepository;
     WardRepository wardRepository;
 
+    private static final long MIN_EXPECTED_PROVINCES = 30;
+    private static final long MIN_EXPECTED_WARDS = 1000;
+
     // Regex patterns for parsing SQL INSERT statements
     private static final Pattern PROVINCE_VALUES = Pattern.compile(
-            "\\((\\d+),\\s*'([^']*)',\\s*'([^']*)',\\s*'([^']*)',\\s*'([^']*)'\\)");
+            "\\((\\d+),\\s*['\"]([^'\"]*)['\"],\\s*['\"]([^'\"]*)['\"],\\s*['\"]([^'\"]*)['\"],\\s*['\"]([^'\"]*)['\"]\\)");
     private static final Pattern WARD_VALUES = Pattern.compile(
-            "\\((\\d+),\\s*\"([^\"]*)\",\\s*\"([^\"]*)\",\\s*\"([^\"]*)\",\\s*\"([^\"]*)\",\\s*(\\d+)\\)");
+            "\\((\\d+),\\s*['\"]([^'\"]*)['\"],\\s*['\"]([^'\"]*)['\"],\\s*['\"]([^'\"]*)['\"],\\s*['\"]([^'\"]*)['\"],\\s*(\\d+)\\)");
 
     /**
      * Automatically import address data on application startup if tables are empty.
@@ -57,18 +60,27 @@ public class AddressImportService {
     @Transactional
     public void importOnStartupIfEmpty() {
         try {
-            if (provinceRepository.count() == 0 || wardRepository.count() == 0) {
-                log.info("Address tables are empty. Starting automatic import from loc.sql...");
+            long provinceCount = provinceRepository.count();
+            long wardCount = wardRepository.count();
+
+            boolean shouldSyncAddressData = provinceCount < MIN_EXPECTED_PROVINCES || wardCount < MIN_EXPECTED_WARDS;
+            if (shouldSyncAddressData) {
+                log.info(
+                        "Address tables are incomplete (provinces={}, wards={}). Starting synchronization from loc.sql...",
+                        provinceCount,
+                        wardCount);
                 ClassPathResource resource = new ClassPathResource("loc.sql");
                 if (resource.exists()) {
                     ImportResult result = doImportFromSqlFile(resource.getInputStream());
-                    log.info("Address import completed: {} provinces, {} wards",
+                    log.info("Address synchronization completed: +{} provinces, +{} wards",
                             result.getProvincesImported(), result.getWardsImported());
                 } else {
                     log.warn("loc.sql not found in classpath. Skipping automatic import.");
                 }
             } else {
-                log.info("Address tables already populated. Skipping automatic import.");
+                log.info("Address tables already complete (provinces={}, wards={}). Skipping automatic import.",
+                        provinceCount,
+                        wardCount);
             }
         } catch (Exception e) {
             log.error("Failed to import address data on startup: {}", e.getMessage(), e);
@@ -92,6 +104,9 @@ public class AddressImportService {
      */
     private ImportResult doImportFromSqlFile(InputStream inputStream) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            long provinceCountBefore = provinceRepository.count();
+            long wardCountBefore = wardRepository.count();
+
             StringBuilder sql = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
@@ -99,28 +114,17 @@ public class AddressImportService {
             }
             String sqlContent = sql.toString();
 
-            int provincesImported = 0;
-            int wardsImported = 0;
+            List<Province> provinces = parseProvinces(sqlContent);
+            provinceRepository.saveAll(provinces);
 
-            // Import provinces
             Map<Integer, Province> provinceMap = new HashMap<>();
-            if (provinceRepository.count() == 0) {
-                List<Province> provinces = parseProvinces(sqlContent);
-                provinceRepository.saveAll(provinces);
-                provincesImported = provinces.size();
-                provinces.forEach(p -> provinceMap.put(p.getId(), p));
-                log.debug("Imported {} provinces", provincesImported);
-            } else {
-                provinceRepository.findAll().forEach(p -> provinceMap.put(p.getId(), p));
-            }
+            provinceRepository.findAll().forEach(p -> provinceMap.put(p.getId(), p));
 
-            // Import wards
-            if (wardRepository.count() == 0) {
-                List<Ward> wards = parseWards(sqlContent, provinceMap);
-                wardRepository.saveAll(wards);
-                wardsImported = wards.size();
-                log.debug("Imported {} wards", wardsImported);
-            }
+            List<Ward> wards = parseWards(sqlContent, provinceMap);
+            wardRepository.saveAll(wards);
+
+            int provincesImported = (int) Math.max(0, provinceRepository.count() - provinceCountBefore);
+            int wardsImported = (int) Math.max(0, wardRepository.count() - wardCountBefore);
 
             return ImportResult.builder()
                     .provincesImported(provincesImported)

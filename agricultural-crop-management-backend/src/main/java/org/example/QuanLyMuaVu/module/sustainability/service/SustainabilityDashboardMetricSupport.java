@@ -390,7 +390,9 @@ public class SustainabilityDashboardMetricSupport {
         }
         return weightSum.compareTo(ZERO) > 0 ? weighted.divide(weightSum, 2, RoundingMode.HALF_UP) : ZERO;
     }
-
+//File phụ trợ hiển thị/label: File này chủ yếu map label như 
+// Needs optimization, Fair, Good, Excellent và build metric response, 
+// không phải nơi chính tính công thức.
     String mapScoreLabel(BigDecimal score) {
         if (score == null || score.compareTo(BigDecimal.valueOf(50)) < 0) {
             return localize("Needs optimization", "Cần tối ưu");

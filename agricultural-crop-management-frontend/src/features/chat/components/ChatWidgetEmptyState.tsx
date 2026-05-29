@@ -23,7 +23,7 @@ export function ChatWidgetEmptyState() {
         </div>
       </div>
 
-      <h3>Chào mừng bạn đến với FarmTrace Chat</h3>
+      <h3>Chào mừng bạn đến với FarmACM Chat</h3>
       <p>Bắt đầu trò chuyện với nông trại và nhà cung cấp ngay!</p>
     </div>
   );

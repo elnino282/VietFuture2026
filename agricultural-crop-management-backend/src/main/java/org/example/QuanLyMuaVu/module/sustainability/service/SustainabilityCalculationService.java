@@ -118,7 +118,7 @@ public class SustainabilityCalculationService {
                 .anyMatch(note -> note.contains("default crop N concentration")
                         || note.contains("hàm lượng N mặc định của cây trồng"));
         BigDecimal nOutputKg = yieldObserved ? harvestQuantityKg.multiply(nContent) : null;
-
+//FDN Total / Mineral / Organic
         BigDecimal fdnTotal = percent(
                 inputKg.get(NutrientInputSource.MINERAL_FERTILIZER)
                         .add(inputKg.get(NutrientInputSource.ORGANIC_FERTILIZER)),
@@ -126,6 +126,7 @@ public class SustainabilityCalculationService {
         );
         BigDecimal fdnMineral = percent(inputKg.get(NutrientInputSource.MINERAL_FERTILIZER), totalInputsKg);
         BigDecimal fdnOrganic = percent(inputKg.get(NutrientInputSource.ORGANIC_FERTILIZER), totalInputsKg);
+     //NUE
         BigDecimal nue = percent(nOutputKg, totalInputsKg);
         BigDecimal nSurplusKg = nOutputKg != null ? totalInputsKg.subtract(nOutputKg) : null;
 
@@ -565,7 +566,7 @@ public class SustainabilityCalculationService {
         ));
         return safe(est.getDefaultCropNContentKgPerKgYield());
     }
-
+//Phân loại FDN low/medium/high
     private String resolveAlertLevel(BigDecimal fdnTotal, AppProperties.AlertThresholds thresholds) {
         if (fdnTotal == null) {
             return "medium";
@@ -662,7 +663,7 @@ public class SustainabilityCalculationService {
     private double unavailablePenalty(NutrientInputSource source) {
         return source == NutrientInputSource.SOIL_LEGACY ? 0.04 : 0.10;
     }
-
+//Thành phần điểm bền vững
     private Map<String, BigDecimal> buildComponentScores(
             BigDecimal fdnTotal,
             BigDecimal nue,
@@ -706,7 +707,7 @@ public class SustainabilityCalculationService {
         BigDecimal penalty = nSurplusKg.multiply(new BigDecimal("1.5"));
         return clampPercent(HUNDRED.subtract(penalty));
     }
-
+//Công thức cộng trọng số ra
     private BigDecimal computeScore(Map<String, BigDecimal> components, AppProperties.ScoreWeights weights) {
         Map<String, BigDecimal> w = toWeightMap(weights);
         BigDecimal weightSum = w.values().stream().reduce(ZERO, BigDecimal::add);

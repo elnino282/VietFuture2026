@@ -1,10 +1,11 @@
-﻿import { Card, CardContent } from "@/components/ui/card";
 import {
+  Card,
+  CardContent,
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/shared/ui";
 import { usePreferences } from "@/shared/contexts";
 import {
   convertCostPerKg,
@@ -194,10 +195,20 @@ export const ReportsSummaryCards: React.FC<ReportsSummaryCardsProps> = ({
                 onDrilldown(card.id);
               }
             };
+            const handleKeyDown = (
+              event: React.KeyboardEvent<HTMLDivElement>,
+            ) => {
+              if (!isClickable || !card.id) return;
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onDrilldown(card.id);
+              }
+            };
             return (
               <Card
                 key={index}
                 onClick={handleClick}
+                onKeyDown={isClickable ? handleKeyDown : undefined}
                 role={isClickable ? "button" : undefined}
                 tabIndex={isClickable ? 0 : undefined}
                 aria-disabled={!isClickable && card.id ? true : undefined}

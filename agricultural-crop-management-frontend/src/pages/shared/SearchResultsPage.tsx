@@ -12,7 +12,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/ui";
-import { useDebounce } from "@/shared/lib";
+import { cn, useDebounce } from "@/shared/lib";
 import { useGlobalSearch, type SearchEntityType } from "@/entities/search";
 
 type PortalKind = "admin" | "farmer";
@@ -34,13 +34,18 @@ const TYPE_ORDER: Record<PortalKind, SearchEntityType[]> = {
 
 type SearchResultsPageProps = {
   portal: PortalKind;
+  variant?: "default" | "admin";
 };
 
-export function SearchResultsPage({ portal }: SearchResultsPageProps) {
+export function SearchResultsPage({
+  portal,
+  variant = "default",
+}: SearchResultsPageProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") ?? "";
   const [query, setQuery] = useState(initialQuery);
+  const isAdminVariant = variant === "admin";
 
   const debouncedQuery = useDebounce(query, 300);
   const normalizedQuery = debouncedQuery.trim();
@@ -115,39 +120,87 @@ export function SearchResultsPage({ portal }: SearchResultsPageProps) {
   };
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Search Results</h1>
-        <p className="text-muted-foreground">
-          {normalizedQuery
-            ? `Showing results for "${normalizedQuery}"`
-            : "Type a keyword to search."}
-        </p>
-      </div>
+    <div
+      className={cn(
+        "space-y-6",
+        isAdminVariant
+          ? "min-h-full p-4 sm:p-6"
+          : "mx-auto max-w-[1400px] p-6",
+      )}
+    >
+      {isAdminVariant ? (
+        <Card className="rounded-[18px] border-border bg-card shadow-sm">
+          <CardContent className="p-4 sm:p-5">
+            <h1 className="text-2xl font-bold">Search Results</h1>
+            <p className="text-muted-foreground">
+              {normalizedQuery
+                ? `Showing results for "${normalizedQuery}"`
+                : "Type a keyword to search."}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div>
+          <h1 className="text-2xl font-bold">Search Results</h1>
+          <p className="text-muted-foreground">
+            {normalizedQuery
+              ? `Showing results for "${normalizedQuery}"`
+              : "Type a keyword to search."}
+          </p>
+        </div>
+      )}
 
-      <Card className="border-0 shadow-sm">
-        <CardContent className="space-y-4">
+      <Card
+        className={cn(
+          isAdminVariant
+            ? "overflow-hidden rounded-[18px] border-border bg-card shadow-sm"
+            : "border-0 shadow-sm",
+        )}
+      >
+        <CardContent className={cn("space-y-4", isAdminVariant && "p-4")}>
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search across the platform"
-                className="pl-9 h-9"
+                className={cn("h-9 pl-9", isAdminVariant && "rounded-[14px]")}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
             </div>
 
-            <Tabs value={activeType} onValueChange={updateType}>
-              <TabsList className="h-9">
-                <TabsTrigger value="ALL" className="text-xs">
+            <Tabs
+              value={activeType}
+              onValueChange={updateType}
+              className={cn(isAdminVariant && "max-w-full overflow-x-auto")}
+            >
+              <TabsList
+                className={cn(
+                  "h-9",
+                  isAdminVariant && "h-10 w-max rounded-[18px] bg-muted p-1",
+                )}
+              >
+                <TabsTrigger
+                  value="ALL"
+                  className={cn(
+                    "text-xs",
+                    isAdminVariant && "h-8 rounded-[14px] px-3",
+                  )}
+                >
                   All
                   <Badge variant="secondary" className="ml-2 text-[10px]">
                     {totalCount}
                   </Badge>
                 </TabsTrigger>
                 {allowedTypes.map((type) => (
-                  <TabsTrigger key={type} value={type} className="text-xs">
+                  <TabsTrigger
+                    key={type}
+                    value={type}
+                    className={cn(
+                      "text-xs",
+                      isAdminVariant && "h-8 rounded-[14px] px-3",
+                    )}
+                  >
                     {TYPE_LABELS[type]}
                     <Badge variant="secondary" className="ml-2 text-[10px]">
                       {groupedCounts[type] ?? 0}
@@ -173,7 +226,12 @@ export function SearchResultsPage({ portal }: SearchResultsPageProps) {
           )}
 
           {searchEnabled && isError && (
-            <div className="rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+            <div
+              className={cn(
+                "border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive",
+                isAdminVariant ? "rounded-[14px]" : "rounded-md",
+              )}
+            >
               Search failed. Please try again.
             </div>
           )}
@@ -189,7 +247,10 @@ export function SearchResultsPage({ portal }: SearchResultsPageProps) {
                   {filteredResults.map((item) => (
                     <div
                       key={`${item.type}-${item.id}-${item.title}`}
-                      className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3"
+                      className={cn(
+                        "flex items-center justify-between border border-border bg-card px-4 py-3",
+                        isAdminVariant ? "rounded-[14px]" : "rounded-lg",
+                      )}
                     >
                       <div>
                         <div className="text-sm font-medium">{item.title}</div>
@@ -205,6 +266,9 @@ export function SearchResultsPage({ portal }: SearchResultsPageProps) {
                       <Button
                         variant="outline"
                         size="sm"
+                        className={cn(isAdminVariant && "rounded-[14px]")}
+                        disabled={!item.route}
+                        disabledHint="No route available"
                         onClick={() => item.route && navigate(item.route)}
                       >
                         Open

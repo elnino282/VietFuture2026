@@ -12,12 +12,12 @@ export const soilTypeApi = {
      */
     listAll: async (): Promise<SoilTypeArrayResponse> => {
         const data: SoilTypeArrayResponse = [
-            { id: 1, soilName: 'Loam', description: 'Balanced sand, silt, and clay' },
-            { id: 2, soilName: 'Sandy', description: 'Fast drainage with low nutrient retention' },
-            { id: 3, soilName: 'Clay', description: 'High nutrient retention, slow drainage' },
-            { id: 4, soilName: 'Silt', description: 'Fine particles, retains moisture well' },
-            { id: 5, soilName: 'Peaty', description: 'High organic matter, acidic' },
-            { id: 6, soilName: 'Chalky', description: 'Alkaline soil with visible stones' },
+            { id: 1, soilName: 'Ferralsols', description: 'Highly weathered tropical soils rich in iron and aluminum oxides' },
+            { id: 2, soilName: 'Chernozems', description: 'Dark, humus-rich grassland soils with high natural fertility' },
+            { id: 3, soilName: 'Fluvisols', description: 'Young alluvial soils found on floodplains and river deposits' },
+            { id: 4, soilName: 'Podzol', description: 'Acidic, leached soils with organic and iron-rich subsurface layers' },
+            { id: 5, soilName: 'Peat', description: 'Organic soils formed from partially decomposed plant material' },
+            { id: 6, soilName: 'Arenosols', description: 'Coarse-textured soils with low water retention' },
         ];
         return SoilTypeArrayResponseSchema.parse(data);
     },

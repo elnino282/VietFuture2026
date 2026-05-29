@@ -19,11 +19,11 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
     const { t } = useI18n();
 
     return (
-        <aside className="bg-card border-r border-border min-h-screen sticky top-0 hidden lg:block">
+        <aside className="sticky top-6 hidden self-start overflow-hidden rounded-[18px] border border-border bg-card shadow-sm lg:block">
             <div className="p-6">
                 <div className="flex items-center gap-3 mb-6">
                     <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
                         style={{
                             background: "linear-gradient(to bottom right, var(--primary), var(--chart-4))",
                         }}
@@ -47,7 +47,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
                             <button
                                 key={item.id}
                                 onClick={() => onSectionChange(item.id)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all relative ${isActive
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-[18px] text-sm transition-all relative ${isActive
                                         ? "bg-primary/10 text-primary"
                                         : "text-muted-foreground hover:bg-muted"
                                     }`}

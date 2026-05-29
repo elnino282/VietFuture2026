@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { useTranslation } from "react-i18next";
 import { Progress } from "@/shared/ui/progress";
 import { Button } from "@/shared/ui/button";
 import { DollarSign, TrendingUp, TrendingDown, Wallet } from "lucide-react";
@@ -23,6 +24,7 @@ export function BudgetTracker({
     unpaidExpenses,
     budgetAmount,
 }: BudgetTrackerProps) {
+    const { t } = useTranslation();
     const { preferences } = usePreferences();
 
     const budgetSet = budgetAmount !== null && budgetAmount > 0;
@@ -39,23 +41,23 @@ export function BudgetTracker({
             <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold">
                     <Wallet className="w-5 h-5 text-primary" />
-                    Budget Tracker
+                    {t("expenses.overview.budgetTracker")}
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
                 {!budgetSet ? (
                     <div className="space-y-3">
                         <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-                            Budget not set for this season.
+                            {t("expenses.overview.budgetNotSet")}
                         </div>
                         <Button asChild variant="outline" className="w-full">
-                            <Link to="/farmer/seasons">Set budget in Season settings</Link>
+                            <Link to="/farmer/seasons">{t("expenses.overview.setBudget")}</Link>
                         </Button>
                     </div>
                 ) : (
                     <div className="space-y-3">
                         <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Budget Usage</span>
+                            <span className="text-muted-foreground">{t("expenses.overview.budgetUsage")}</span>
                             <span className={`font-semibold ${getStatusColor(usagePercent)}`}>
                                 {usagePercent.toFixed(1)}%
                             </span>
@@ -65,8 +67,8 @@ export function BudgetTracker({
                             className="h-3 rounded-full"
                         />
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>Used: {formatMoney(convertToDisplayCurrency(totalExpenses, preferences.currency), preferences.currency, preferences.locale)}</span>
-                            <span>Remaining: {formatMoney(convertToDisplayCurrency(remainingBudget ?? 0, preferences.currency), preferences.currency, preferences.locale)}</span>
+                            <span>{t("expenses.overview.used")} {formatMoney(convertToDisplayCurrency(totalExpenses, preferences.currency), preferences.currency, preferences.locale)}</span>
+                            <span>{t("expenses.overview.remaining")} {formatMoney(convertToDisplayCurrency(remainingBudget ?? 0, preferences.currency), preferences.currency, preferences.locale)}</span>
                         </div>
                     </div>
                 )}
@@ -77,7 +79,7 @@ export function BudgetTracker({
                             <div className="p-2 rounded-lg bg-primary/10">
                                 <DollarSign className="w-4 h-4 text-primary" />
                             </div>
-                            <span className="text-xs text-muted-foreground">Total</span>
+                            <span className="text-xs text-muted-foreground">{t("expenses.overview.total")}</span>
                         </div>
                         <p className="text-lg font-bold">
                             {formatMoney(convertToDisplayCurrency(totalExpenses, preferences.currency), preferences.currency, preferences.locale)}
@@ -89,7 +91,7 @@ export function BudgetTracker({
                             <div className="p-2 rounded-lg bg-emerald-500/10">
                                 <Wallet className="w-4 h-4 text-emerald-500" />
                             </div>
-                            <span className="text-xs text-muted-foreground">Remaining</span>
+                            <span className="text-xs text-muted-foreground">{t("expenses.overview.remaining")}</span>
                         </div>
                         <p className="text-lg font-bold text-emerald-600">
                             {formatMoney(convertToDisplayCurrency(remainingBudget ?? 0, preferences.currency), preferences.currency, preferences.locale)}
@@ -101,7 +103,7 @@ export function BudgetTracker({
                             <div className="p-2 rounded-lg bg-green-500/10">
                                 <TrendingUp className="w-4 h-4 text-green-500" />
                             </div>
-                            <span className="text-xs text-muted-foreground">Paid</span>
+                            <span className="text-xs text-muted-foreground">{t("expenses.overview.paid")}</span>
                         </div>
                         <p className="text-lg font-bold text-green-600">
                             {formatMoney(convertToDisplayCurrency(paidExpenses, preferences.currency), preferences.currency, preferences.locale)}
@@ -113,7 +115,7 @@ export function BudgetTracker({
                             <div className="p-2 rounded-lg bg-amber-500/10">
                                 <TrendingDown className="w-4 h-4 text-amber-500" />
                             </div>
-                            <span className="text-xs text-muted-foreground">Unpaid</span>
+                            <span className="text-xs text-muted-foreground">{t("expenses.overview.unpaid")}</span>
                         </div>
                         <p className="text-lg font-bold text-amber-600">
                             {formatMoney(convertToDisplayCurrency(unpaidExpenses, preferences.currency), preferences.currency, preferences.locale)}

@@ -1,16 +1,37 @@
 import { Fragment, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Package, AlertCircle, AlertTriangle, RefreshCw } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { adminDashboardApi } from '@/services/api.admin';
+import { Package, AlertCircle, AlertTriangle, MoreVertical, RefreshCw } from 'lucide-react';
+import {
+    Alert,
+    AlertDescription,
+    AlertTitle,
+    Badge,
+    Button,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    Skeleton,
+    Switch,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/shared/ui';
+import { AdminContentCard } from '@/features/admin/shared/ui';
+import { adminDashboardApi } from '@/features/admin/shared/api';
 import { usePreferences } from '@/shared/contexts';
 
 const WINDOW_OPTIONS = ['7', '14', '30', '60', '90'];
@@ -58,7 +79,7 @@ export function InventoryHealthCards() {
     };
 
     return (
-        <Card className="border-0 shadow-sm">
+        <AdminContentCard>
             <CardHeader className="space-y-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
@@ -235,13 +256,26 @@ export function InventoryHealthCards() {
                                                         : formatNumber(Number(farm.qtyAtRisk))}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => navigate(buildInventoryUrl(farm.farmId))}
-                                                    >
-                                                        View
-                                                    </Button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 rounded-[14px]"
+                                                                aria-label={`Actions for ${farm.farmName}`}
+                                                            >
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-44">
+                                                            <DropdownMenuItem
+                                                                onSelect={() => navigate(buildInventoryUrl(farm.farmId))}
+                                                            >
+                                                                Open inventory
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </TableCell>
                                             </TableRow>
                                             {topLots.length > 0 && (
@@ -264,6 +298,6 @@ export function InventoryHealthCards() {
                     </div>
                 )}
             </CardContent>
-        </Card>
+        </AdminContentCard>
     );
 }

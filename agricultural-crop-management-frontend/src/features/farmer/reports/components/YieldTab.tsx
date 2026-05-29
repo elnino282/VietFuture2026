@@ -56,7 +56,7 @@ export function YieldTab({ yieldViewMode, onViewModeChange, chartData }: YieldTa
                     <p className="text-sm text-muted-foreground">{t("reports.yield.subtitle")}</p>
                 </div>
                 <Select value={yieldViewMode} onValueChange={onViewModeChange}>
-                    <SelectTrigger className="w-[160px] rounded-xl border-border"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-[160px] rounded-[14px] border-border"><SelectValue /></SelectTrigger>
                     <SelectContent>
                         {viewOptions.map((o) => (
                             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>

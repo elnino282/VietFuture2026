@@ -7,11 +7,11 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/shared/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/ui/dialog";
 import { Textarea } from "@/shared/ui/textarea";
 import { usePreferences } from "@/shared/contexts";
 import { convertToDisplayCurrency, formatMoney } from "@/shared/lib";
@@ -19,7 +19,7 @@ import { ExternalLink, FileText, Link as LinkIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Expense, ExpenseStatus } from "../types";
 
-interface ExpenseDetailDrawerProps {
+interface ExpenseDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   expense: Expense | null;
@@ -29,12 +29,12 @@ interface ExpenseDetailDrawerProps {
   ) => void;
 }
 
-export function ExpenseDetailDrawer({
+export function ExpenseDetailDialog({
   open,
   onOpenChange,
   expense,
   onQuickUpdate,
-}: ExpenseDetailDrawerProps) {
+}: ExpenseDetailDialogProps) {
   const { preferences } = usePreferences();
   const [status, setStatus] = useState<ExpenseStatus>("PENDING");
   const [notes, setNotes] = useState("");
@@ -50,14 +50,14 @@ export function ExpenseDetailDrawer({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-full sm:max-w-lg sm:max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-primary" />
             Expense Details
-          </SheetTitle>
-        </SheetHeader>
+          </DialogTitle>
+        </DialogHeader>
 
         <div className="mt-6 space-y-4 text-sm">
           <div className="grid grid-cols-2 gap-4">
@@ -161,7 +161,7 @@ export function ExpenseDetailDrawer({
             Save Changes
           </Button>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

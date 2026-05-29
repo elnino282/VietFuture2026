@@ -72,9 +72,13 @@ public class FarmService {
     @Transactional
     public FarmResponse createFarm(FarmCreateRequest request) {
         org.example.QuanLyMuaVu.module.identity.entity.User currentUser = getCurrentUser();
+        String farmName = request.getFarmName() != null ? request.getFarmName().trim() : null;
+        if (farmName == null || farmName.isEmpty()) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
 
         // Check if active farm with same name exists
-        if (farmRepository.existsByUserAndNameIgnoreCaseAndActiveTrue(currentUser, request.getFarmName())) {
+        if (farmRepository.existsByUserAndNameIgnoreCaseAndActiveTrue(currentUser, farmName)) {
             throw new AppException(ErrorCode.FARM_NAME_EXISTS);
         }
 
@@ -84,16 +88,16 @@ public class FarmService {
         Ward ward = wardRepository.findById(request.getWardId())
                 .orElseThrow(() -> new AppException(ErrorCode.WARD_NOT_FOUND));
 
-        if (!ward.getProvince().getId().equals(province.getId())) {
+        if (ward.getProvince() == null || !ward.getProvince().getId().equals(province.getId())) {
             throw new AppException(ErrorCode.WARD_NOT_IN_PROVINCE);
         }
 
         Farm farm = Farm.builder()
-                .name(request.getFarmName())
+                .name(farmName)
                 .area(request.getArea())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
-                .active(request.getActive())
+                .active(request.getActive() != null ? request.getActive() : Boolean.TRUE)
                 .user(currentUser)
                 .province(province)
                 .ward(ward)
@@ -189,10 +193,10 @@ public class FarmService {
         return FarmResponse.builder()
                 .id(farm.getId())
                 .farmName(farm.getName())
-                .provinceId(farm.getProvince().getId())
-                .provinceName(farm.getProvince().getName())
-                .wardId(farm.getWard().getId())
-                .wardName(farm.getWard().getName())
+                .provinceId(farm.getProvince() != null ? farm.getProvince().getId() : null)
+                .provinceName(farm.getProvince() != null ? farm.getProvince().getName() : null)
+                .wardId(farm.getWard() != null ? farm.getWard().getId() : null)
+                .wardName(farm.getWard() != null ? farm.getWard().getName() : null)
                 .area(farm.getArea())
                 .latitude(farm.getLatitude())
                 .longitude(farm.getLongitude())

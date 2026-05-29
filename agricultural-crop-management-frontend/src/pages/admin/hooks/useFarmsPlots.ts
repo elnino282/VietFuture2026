@@ -4,7 +4,7 @@ import {
   adminPlotApi,
   adminKeys,
   type AdminFarmDetail,
-} from "@/services/api.admin";
+} from "@/features/admin/shared/api";
 
 // Re-export keys so page components don't need the restricted @/services import
 export const adminFarmsPlotsKeys = {

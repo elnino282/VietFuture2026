@@ -30,6 +30,7 @@ public class RoleService {
         return roleRepository.findAll().stream().map(roleMapper::toRoleResponse).toList();
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteRoleByCode(String roleCode) {
         roleRepository.deleteByCode(roleCode);
     }

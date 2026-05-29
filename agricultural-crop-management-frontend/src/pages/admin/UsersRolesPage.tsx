@@ -4,10 +4,16 @@ import {
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-// eslint-disable-next-line no-restricted-imports -- Existing page still uses legacy i18n hook until migration is completed.
-import { useI18n } from "@/hooks/useI18n";
-// eslint-disable-next-line no-restricted-imports -- Existing page still relies on legacy admin service module during FSD migration.
+    CardContent,
+} from "@/shared/ui";
+import {
+    AdminContentCard,
+    AdminFilterCard,
+    AdminHeaderCard,
+    AdminPageContainer,
+    adminTabsListClass,
+} from "@/features/admin/shared/ui";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
     adminBuyerApi,
     adminFarmerApi,
@@ -15,7 +21,7 @@ import {
     adminUsersApi,
     type AdminUser,
     type Role,
-} from "@/services/api.admin";
+} from "@/features/admin/shared/api";
 import {
     AlertCircle,
     AlertTriangle,
@@ -35,6 +41,7 @@ import {
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { cn } from "@/shared/lib";
 import { RoleFormModal } from "./components/RoleFormModal";
 import { UserFormModal } from "./components/UserFormModal";
 import { UserWarningModal } from "./components/UserWarningModal";
@@ -283,46 +290,51 @@ export function UsersRolesPage() {
 
   const renderUsers = () => (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder={t('admin.users.searchPlaceholder')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-sm w-full sm:w-64"
-            />
+      <AdminFilterCard>
+        <CardContent className="p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder={t('admin.users.searchPlaceholder')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  className="pl-10 pr-4 py-2 border border-border rounded-[14px] bg-card text-sm w-full sm:w-64"
+                />
+              </div>
+              <button
+                onClick={handleSearch}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+              >
+                <Search className="h-4 w-4" />
+                {t('admin.users.searchButton')}
+              </button>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+              <button
+                onClick={handleAddUser}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90"
+              >
+                <Plus className="h-4 w-4" />
+                {t('admin.users.addUser')}
+              </button>
+              <button
+                onClick={() => { void fetchUsers(); }}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                {t('admin.users.refresh')}
+              </button>
+            </div>
           </div>
-          <button
-            onClick={handleSearch}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
-          >
-            <Search className="h-4 w-4" />
-            {t('admin.users.searchButton')}
-          </button>
-        </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
-          <button
-            onClick={handleAddUser}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            {t('admin.users.addUser')}
-          </button>
-          <button
-            onClick={() => { void fetchUsers(); }}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            {t('admin.users.refresh')}
-          </button>
-        </div>
-      </div>
+        </CardContent>
+      </AdminFilterCard>
 
-      <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
+      <AdminContentCard>
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[820px]">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
@@ -475,7 +487,8 @@ export function UsersRolesPage() {
             )}
           </tbody>
         </table>
-      </div>
+        </div>
+      </AdminContentCard>
 
       {totalPages > 1 && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -546,24 +559,29 @@ export function UsersRolesPage() {
 
   const renderRoles = () => (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
-        <button
-          onClick={handleAddRole}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" />
-          {t('admin.roles.addRole')}
-        </button>
-        <button
-          onClick={() => { void fetchRoles(); }}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          {t('admin.roles.refresh')}
-        </button>
-      </div>
+      <AdminFilterCard>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
+            <button
+              onClick={handleAddRole}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              {t('admin.roles.addRole')}
+            </button>
+            <button
+              onClick={() => { void fetchRoles(); }}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              {t('admin.roles.refresh')}
+            </button>
+          </div>
+        </CardContent>
+      </AdminFilterCard>
 
-      <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
+      <AdminContentCard>
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[700px]">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
@@ -662,7 +680,8 @@ export function UsersRolesPage() {
             )}
           </tbody>
         </table>
-      </div>
+        </div>
+      </AdminContentCard>
     </div>
   );
 
@@ -671,26 +690,26 @@ export function UsersRolesPage() {
   );
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">{t('admin.users.title')}</h1>
-        <p className="text-muted-foreground">
-          {t('admin.users.subtitle')}
-        </p>
-      </div>
+    <AdminPageContainer>
+      <AdminHeaderCard
+        title={t('admin.users.title')}
+        description={t('admin.users.subtitle')}
+      />
 
       {/* Tab Navigation */}
-      <div className="flex overflow-x-auto border-b border-border mb-6">
+      <div className="overflow-x-auto pb-1">
+        <div className={adminTabsListClass}>
         <button
           onClick={() => {
             setActiveTab("users");
             setPage(0);
           }}
-          className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 -mb-px ${
+          className={cn(
+            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
             activeTab === "users"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
         >
           <Users className="inline-block h-4 w-4 mr-2" />
           {t('admin.users.tabs.users')}
@@ -700,15 +719,17 @@ export function UsersRolesPage() {
             setActiveTab("roles");
             setPage(0);
           }}
-          className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 -mb-px ${
+          className={cn(
+            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
             activeTab === "roles"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
         >
           <Shield className="inline-block h-4 w-4 mr-2" />
           {t('admin.users.tabs.roles')}
         </button>
+        </div>
       </div>
 
       {/* Tab Content */}
@@ -845,6 +866,6 @@ export function UsersRolesPage() {
         role={editingRole}
         onSuccess={handleRoleFormSuccess}
       />
-    </div>
+    </AdminPageContainer>
   );
 }

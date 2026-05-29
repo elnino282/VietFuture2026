@@ -87,7 +87,7 @@ export function SignInForm({
                     <button
                         type="button"
                         onClick={onToggleShowPassword}
-                        className="absolute right-3 top-1/2 rounded-full p-2 text-[#7b9082] transition-colors hover:bg-[#ecf9f1] hover:text-[#267241] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3BA55D]/30"
+                        className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-full p-2 text-[#7b9082] transition-colors hover:bg-[#ecf9f1] hover:text-[#267241] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3BA55D]/30"
                         aria-pressed={showPassword}
                         aria-label={showPassword ? t("auth.signIn.hidePassword") : t("auth.signIn.showPassword")}
                         disabled={isLoading}

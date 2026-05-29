@@ -20,45 +20,50 @@ import {
 import { useMarketplaceFarmerOrders } from "@/features/marketplace/hooks";
 import { SellerMarketplaceTabs } from "@/features/marketplace/layout";
 import { formatDate, formatVnd } from "@/features/marketplace/lib/format";
+import {
+  getMarketplaceOrderStatusLabel,
+  getMarketplaceOrderStatusTone,
+  type CanonicalMarketplaceOrderStatus,
+} from "@/features/marketplace/lib/orderStatus";
 
 type Translator = (key: string, optionsOrDefault?: Record<string, unknown> | string) => string;
 
-function orderStatusLabel(status: MarketplaceOrderStatus, t: Translator) {
-  switch (status) {
-    case "PENDING":
-      return t("marketplaceSeller.status.order.pending", "Pending");
-    case "CONFIRMED":
-      return t("marketplaceSeller.status.order.confirmed", "Confirmed");
-    case "PREPARING":
-      return t("marketplaceSeller.status.order.preparing", "Preparing");
-    case "DELIVERING":
-      return t("marketplaceSeller.status.order.delivering", "Delivering");
-    case "COMPLETED":
-      return t("marketplaceSeller.status.order.completed", "Completed");
-    case "CANCELLED":
-      return t("marketplaceSeller.status.order.cancelled", "Cancelled");
+const SELLER_ORDER_FILTER_STATUSES: CanonicalMarketplaceOrderStatus[] = [
+  "PENDING_PAYMENT",
+  "PAYMENT_SUBMITTED",
+  "PAYMENT_VERIFIED",
+  "CONFIRMED",
+  "PREPARING",
+  "SHIPPED",
+  "DELIVERED",
+  "COMPLETED",
+  "REJECTED",
+  "CANCELLED",
+];
+
+function statusBadgeVariant(status: MarketplaceOrderStatus) {
+  switch (getMarketplaceOrderStatusTone(status)) {
+    case "warning":
+      return "warning" as const;
+    case "info":
+      return "info" as const;
+    case "success":
+      return "success" as const;
+    case "destructive":
+      return "destructive" as const;
+    case "neutral":
+      return "outline" as const;
     default:
-      return status;
+      return "secondary" as const;
   }
 }
 
+function orderStatusLabel(status: MarketplaceOrderStatus, t: Translator) {
+  return getMarketplaceOrderStatusLabel(status, t, "marketplaceSeller.status.order");
+}
+
 function statusBadge(status: MarketplaceOrderStatus, t: Translator) {
-  switch (status) {
-    case "PENDING":
-      return <Badge variant="warning">{orderStatusLabel(status, t)}</Badge>;
-    case "CONFIRMED":
-      return <Badge variant="secondary">{orderStatusLabel(status, t)}</Badge>;
-    case "PREPARING":
-      return <Badge variant="secondary">{orderStatusLabel(status, t)}</Badge>;
-    case "DELIVERING":
-      return <Badge variant="default">{orderStatusLabel(status, t)}</Badge>;
-    case "COMPLETED":
-      return <Badge variant="success">{orderStatusLabel(status, t)}</Badge>;
-    case "CANCELLED":
-      return <Badge variant="destructive">{orderStatusLabel(status, t)}</Badge>;
-    default:
-      return <Badge variant="secondary">{status}</Badge>;
-  }
+  return <Badge variant={statusBadgeVariant(status)}>{orderStatusLabel(status, t)}</Badge>;
 }
 
 export function SellerOrdersPage() {
@@ -67,12 +72,10 @@ export function SellerOrdersPage() {
 
   const statusOptions: Array<{ value: "ALL" | MarketplaceOrderStatus; label: string }> = [
     { value: "ALL", label: t("marketplaceSeller.orders.filters.all", "All") },
-    { value: "PENDING", label: t("marketplaceSeller.status.order.pending", "Pending") },
-    { value: "CONFIRMED", label: t("marketplaceSeller.status.order.confirmed", "Confirmed") },
-    { value: "PREPARING", label: t("marketplaceSeller.status.order.preparing", "Preparing") },
-    { value: "DELIVERING", label: t("marketplaceSeller.status.order.delivering", "Delivering") },
-    { value: "COMPLETED", label: t("marketplaceSeller.status.order.completed", "Completed") },
-    { value: "CANCELLED", label: t("marketplaceSeller.status.order.cancelled", "Cancelled") },
+    ...SELLER_ORDER_FILTER_STATUSES.map((value) => ({
+      value,
+      label: orderStatusLabel(value, t),
+    })),
   ];
   const ordersQuery = useMarketplaceFarmerOrders({
     page: 0,
@@ -82,7 +85,8 @@ export function SellerOrdersPage() {
   const orders = ordersQuery.data?.items ?? [];
 
   return (
-    <PageContainer variant="wide" className="space-y-6">
+    <PageContainer variant="wide">
+      <div className="space-y-6">
       <SellerMarketplaceTabs />
 
       <Card variant="page-header">
@@ -230,6 +234,7 @@ export function SellerOrdersPage() {
           </TableBody>
         </Table>
       </Card>
+      </div>
     </PageContainer>
   );
 }

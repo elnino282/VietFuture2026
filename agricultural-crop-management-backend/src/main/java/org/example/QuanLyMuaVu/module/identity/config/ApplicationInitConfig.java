@@ -52,8 +52,11 @@ public class ApplicationInitConfig {
     static final String BUYER_PHONE = "0903234000";
 
     @Bean
-    ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository) {
-        log.info("Dang khoi tao du lieu mac dinh (vai tro va nguoi dung)...");
+    ApplicationRunner applicationRunner(
+            UserRepository userRepository,
+            RoleRepository roleRepository,
+            @org.springframework.beans.factory.annotation.Value("${dev.bootstrap-admin.enabled:false}") boolean bootstrapAdminEnabled) {
+        log.info("Dang khoi tao vai tro he thong mac dinh...");
         return args -> {
             // 1. Ensure default roles exist
             org.example.QuanLyMuaVu.module.identity.entity.Role adminRole = ensureRoleExists(
@@ -77,6 +80,11 @@ public class ApplicationInitConfig {
                     "Buyer user",
                     roleRepository);
 
+            if (!bootstrapAdminEnabled) {
+                log.info("Bo qua tao user demo mac dinh (dev.bootstrap-admin.enabled=false).");
+                return;
+            }
+
             // 2. Ensure default admin user exists with role
             ensureUserExistsWithRole(ADMIN_USER_NAME, ADMIN_EMAIL, ADMIN_PASSWORD,
                     ADMIN_FULL_NAME, ADMIN_PHONE, adminRole, userRepository);
@@ -93,7 +101,7 @@ public class ApplicationInitConfig {
             ensureUserExistsWithRole(BUYER_USER_NAME, BUYER_EMAIL, BUYER_PASSWORD,
                     BUYER_FULL_NAME, BUYER_PHONE, buyerRole, userRepository);
 
-            log.info("Khoi tao du lieu mac dinh hoan tat.");
+            log.info("Khoi tao user demo mac dinh hoan tat.");
         };
     }
 

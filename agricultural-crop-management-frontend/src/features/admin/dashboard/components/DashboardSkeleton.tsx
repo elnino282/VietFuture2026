@@ -1,5 +1,5 @@
-import { Skeleton } from '@/shared/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { CardContent, CardHeader, Skeleton } from '@/shared/ui';
+import { AdminContentCard, AdminPageContainer } from '@/features/admin/shared/ui';
 
 /**
  * DashboardSkeleton - Loading state for Admin Dashboard
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
  */
 export function DashboardSkeleton() {
     return (
-        <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+        <AdminPageContainer>
             {/* Header Skeleton */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="space-y-2">
@@ -25,7 +25,7 @@ export function DashboardSkeleton() {
             {/* KPI Cards Skeleton - 4 cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[...Array(4)].map((_, i) => (
-                    <Card key={i} className="border-0 shadow-sm">
+                    <AdminContentCard key={i}>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div className="space-y-2">
@@ -35,13 +35,13 @@ export function DashboardSkeleton() {
                                 <Skeleton className="h-12 w-12 rounded-lg" />
                             </div>
                         </CardContent>
-                    </Card>
+                    </AdminContentCard>
                 ))}
             </div>
 
             {/* Charts Skeleton - 2 columns */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 border-0 shadow-sm">
+                <AdminContentCard className="lg:col-span-2">
                     <CardHeader>
                         <Skeleton className="h-6 w-40" />
                         <Skeleton className="h-4 w-56" />
@@ -49,8 +49,8 @@ export function DashboardSkeleton() {
                     <CardContent>
                         <Skeleton className="h-[300px] w-full rounded-lg" />
                     </CardContent>
-                </Card>
-                <Card className="border-0 shadow-sm">
+                </AdminContentCard>
+                <AdminContentCard>
                     <CardHeader>
                         <Skeleton className="h-6 w-40" />
                         <Skeleton className="h-4 w-48" />
@@ -58,13 +58,13 @@ export function DashboardSkeleton() {
                     <CardContent>
                         <Skeleton className="h-[300px] w-full rounded-full mx-auto max-w-[200px]" />
                     </CardContent>
-                </Card>
+                </AdminContentCard>
             </div>
 
             {/* Tables Skeleton - 2 columns */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {[...Array(2)].map((_, i) => (
-                    <Card key={i} className="border-0 shadow-sm">
+                    <AdminContentCard key={i}>
                         <CardHeader>
                             <Skeleton className="h-6 w-40" />
                             <Skeleton className="h-4 w-56" />
@@ -74,9 +74,9 @@ export function DashboardSkeleton() {
                                 <Skeleton key={j} className="h-12 w-full" />
                             ))}
                         </CardContent>
-                    </Card>
+                    </AdminContentCard>
                 ))}
             </div>
-        </div>
+        </AdminPageContainer>
     );
 }

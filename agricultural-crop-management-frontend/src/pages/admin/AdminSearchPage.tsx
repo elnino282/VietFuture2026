@@ -1,7 +1,7 @@
 import { SearchResultsPage } from "@/pages/shared/SearchResultsPage";
 
 export function AdminSearchPage() {
-  return <SearchResultsPage portal="admin" />;
+  return <SearchResultsPage portal="admin" variant="admin" />;
 }
 
 export default AdminSearchPage;

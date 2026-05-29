@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -68,7 +69,8 @@ public class Season {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    SeasonStatus status;
+    @Builder.Default
+    SeasonStatus status = SeasonStatus.PLANNED;
 
     @Column(name = "initial_plant_count", nullable = false)
     Integer initialPlantCount;
@@ -89,4 +91,14 @@ public class Season {
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     LocalDateTime createdAt;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = SeasonStatus.PLANNED;
+        }
+    }
 }

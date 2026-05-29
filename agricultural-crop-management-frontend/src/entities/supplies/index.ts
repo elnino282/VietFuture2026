@@ -3,6 +3,7 @@
 
 // Types
 export type {
+  CreateSupplyItemRequest,
   CreateSupplierRequest,
   StockInRequest,
   StockInResponse,
@@ -12,17 +13,20 @@ export type {
   SupplyItemsParams,
   SupplyLot,
   SupplyLotsParams,
+  UpdateSupplyItemRequest,
   UpdateSupplierRequest,
 } from "./model/types";
 
 // Schemas (for validation)
 export {
+  CreateSupplyItemRequestSchema,
   CreateSupplierRequestSchema,
   StockInRequestSchema,
   StockInResponseSchema,
   SupplierSchema,
   SupplyItemSchema,
   SupplyLotSchema,
+  UpdateSupplyItemRequestSchema,
   UpdateSupplierRequestSchema,
 } from "./model/schemas";
 
@@ -36,11 +40,14 @@ export { suppliesApi } from "./api/client";
 export {
   useAllSuppliers,
   useAllSupplyItems,
+  useCreateSupplyItem,
   useCreateSupplier,
+  useDeleteSupplyItem,
   useDeleteSupplier,
   useStockIn,
   useSuppliers,
   useSupplyItems,
   useSupplyLots,
+  useUpdateSupplyItem,
   useUpdateSupplier,
 } from "./api/hooks";

@@ -143,8 +143,10 @@ const FieldLogsPage = lazy(() =>
 const DiseaseTrackingPage = lazy(() =>
   import('@/pages/farmer/DiseaseTrackingPage').then((m) => ({ default: m.DiseaseTrackingPage }))
 );
-const InventoryPage = lazy(() =>
-  import('@/pages/farmer/InventoryPage').then((m) => ({ default: m.InventoryPage }))
+const SupplyManagementPage = lazy(() =>
+  import('@/pages/farmer/SupplyManagementPage').then((m) => ({
+    default: m.SupplyManagementPage,
+  }))
 );
 const ProductWarehousePage = lazy(() =>
   import('@/pages/farmer/ProductWarehousePage').then((m) => ({
@@ -153,11 +155,6 @@ const ProductWarehousePage = lazy(() =>
 );
 const AiAssistantPage = lazy(() =>
   import('@/pages/farmer/AiAssistantPage').then((m) => ({ default: m.AiAssistantPage }))
-);
-const SuppliersSuppliesPage = lazy(() =>
-  import('@/pages/farmer/SuppliersSuppliesPage').then((m) => ({
-    default: m.SuppliersSuppliesPage,
-  }))
 );
 const NotificationsPage = lazy(() =>
   import('@/pages/farmer/NotificationsPage').then((m) => ({
@@ -490,12 +487,12 @@ export function AppRoutes() {
           <Route path="crops" element={<CropManagement />} />
           <Route path="expenses" element={<LegacySeasonModuleRedirect modulePath="expenses" />} />
           <Route path="harvest" element={<LegacySeasonModuleRedirect modulePath="harvest" />} />
-          <Route path="suppliers-supplies" element={<SuppliersSuppliesPage />} />
+          <Route path="suppliers-supplies" element={<SupplyManagementPage />} />
           <Route path="labor-management" element={<LegacySeasonModuleRedirect modulePath="labor-management" />} />
           <Route path="reports" element={<LegacySeasonModuleRedirect modulePath="reports" />} />
           <Route path="documents" element={<Documents />} />
           <Route path="field-logs" element={<LegacySeasonModuleRedirect modulePath="field-logs" />} />
-          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="inventory" element={<Navigate to="/farmer/suppliers-supplies" replace />} />
           <Route path="product-warehouse" element={<ProductWarehousePage />} />
 
           <Route path="notifications" element={<NotificationsPage />} />

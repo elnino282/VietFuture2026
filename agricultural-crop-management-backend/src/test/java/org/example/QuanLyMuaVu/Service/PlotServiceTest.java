@@ -83,7 +83,7 @@ public class PlotServiceTest {
                                 .farm(testFarm)
                                 .user(testUser)
                                 .area(BigDecimal.valueOf(10))
-                                .soilType("Loam")
+                                .soilType("Ferralsols")
                                 .status(PlotStatus.IDLE.getCode())
                                 .build();
         }
@@ -95,7 +95,7 @@ public class PlotServiceTest {
                 PlotRequest request = PlotRequest.builder()
                                 .plotName("New Plot")
                                 .area(BigDecimal.valueOf(5))
-                                .soilType("Clay")
+                                .soilType("Chernozems")
                                 .status(PlotStatus.IDLE)
                                 .build();
 

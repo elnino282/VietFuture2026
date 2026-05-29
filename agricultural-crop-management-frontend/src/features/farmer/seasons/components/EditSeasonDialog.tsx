@@ -27,6 +27,7 @@ import {
 } from "@/shared/ui";
 import { Edit } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Season } from "../types";
 
 interface EditSeasonDialogProps {
@@ -52,6 +53,7 @@ export function EditSeasonDialog({
   onSubmit,
   isSubmitting = false,
 }: EditSeasonDialogProps) {
+  const { t } = useTranslation();
   const { preferences } = usePreferences();
   const unitLabel = getWeightUnitLabel(preferences.weightUnit);
   const weightStep = preferences.weightUnit === "G" ? "1" : "0.01";
@@ -159,52 +161,56 @@ export function EditSeasonDialog({
 
     onSubmit(id, payload);
   };
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (isSubmitting && !nextOpen) return;
+    onOpenChange(nextOpen);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[600px]" closeDisabled={isSubmitting}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Edit className="w-5 h-5 text-primary" />
-            Edit Season
+            {t("seasons.dialog.editTitle")}
           </DialogTitle>
           <DialogDescription>
-            Update the details of this season. Crop and plot are read-only.
+            {t("seasons.dialog.editDescription")}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 py-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Farm</Label>
-              <Input value={farmLabel} disabled className="border-border" />
+              <Label>{t("seasons.table.farm")}</Label>
+              <Input value={farmLabel} disabled />
             </div>
             <div className="space-y-2">
-              <Label>Plot</Label>
-              <Input value={plotLabel} disabled className="border-border" />
+              <Label>{t("seasons.table.plot")}</Label>
+              <Input value={plotLabel} disabled />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Crop</Label>
-              <Input value={cropLabel} disabled className="border-border" />
+              <Label>{t("seasons.table.crop")}</Label>
+              <Input value={cropLabel} disabled />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="varietyId">Variety (Optional)</Label>
+              <Label htmlFor="varietyId">{t("seasons.form.variety")}</Label>
               <Select
                 value={varietyId}
                 onValueChange={setVarietyId}
-                disabled={!cropId || varieties.length === 0}
+                disabled={isSubmitting || !cropId || varieties.length === 0}
               >
-                <SelectTrigger className="border-border focus:border-primary">
+                <SelectTrigger id="varietyId">
                   <SelectValue
                     placeholder={
                       !cropId
-                        ? "Select a crop first"
+                        ? t("seasons.form.selectCropFirst")
                         : varieties.length === 0
-                          ? "No varieties available"
-                          : "Select variety"
+                          ? t("seasons.form.noVarietiesAvailable")
+                          : t("seasons.form.selectVariety")
                     }
                   />
                 </SelectTrigger>
@@ -220,55 +226,55 @@ export function EditSeasonDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="seasonName">Season Name *</Label>
+            <Label htmlFor="seasonName" required>{t("seasons.form.seasonName")}</Label>
             <Input
               id="seasonName"
               value={seasonName}
               onChange={(e) => setSeasonName(e.target.value)}
               required
-              className="border-border focus:border-primary"
+              disabled={isSubmitting}
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date *</Label>
+              <Label htmlFor="startDate" required>{t("seasons.table.startDate")}</Label>
               <Input
                 id="startDate"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
-                className="border-border focus:border-primary"
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="plannedHarvestDate">Planned Harvest</Label>
+              <Label htmlFor="plannedHarvestDate">{t("seasons.form.plannedHarvestDate")}</Label>
               <Input
                 id="plannedHarvestDate"
                 type="date"
                 value={plannedHarvestDate}
                 onChange={(e) => setPlannedHarvestDate(e.target.value)}
                 min={startDate}
-                className="border-border focus:border-primary"
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
+              <Label htmlFor="endDate">{t("seasons.table.endDate")}</Label>
               <Input
                 id="endDate"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 min={startDate}
-                className="border-border focus:border-primary"
+                disabled={isSubmitting}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="currentPlantCount">Current Plant Count *</Label>
+              <Label htmlFor="currentPlantCount" required>{t("seasons.form.currentPlantCount")}</Label>
               <Input
                 id="currentPlantCount"
                 type="number"
@@ -276,12 +282,19 @@ export function EditSeasonDialog({
                 value={currentPlantCount}
                 onChange={(e) => setCurrentPlantCount(e.target.value)}
                 required
-                className="border-border focus:border-primary"
+                aria-invalid={!hasValidPlantCount}
+                aria-describedby={!hasValidPlantCount ? "edit-season-plant-count-error" : undefined}
+                disabled={isSubmitting}
               />
+              {!hasValidPlantCount && (
+                <p id="edit-season-plant-count-error" className="text-sm text-destructive">
+                  {t("seasons.dialog.currentPlantCountInvalid")}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="expectedYieldKg">
-                Expected Yield ({unitLabel})
+                {t("seasons.form.expectedYield", { unit: unitLabel })}
               </Label>
               <Input
                 id="expectedYieldKg"
@@ -290,11 +303,11 @@ export function EditSeasonDialog({
                 step={weightStep}
                 value={expectedYieldKg}
                 onChange={(e) => setExpectedYieldKg(e.target.value)}
-                className="border-border focus:border-primary"
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="actualYieldKg">Actual Yield ({unitLabel})</Label>
+              <Label htmlFor="actualYieldKg">{t("seasons.dialog.actualYieldLabel", { unit: unitLabel })}</Label>
               <Input
                 id="actualYieldKg"
                 type="number"
@@ -302,14 +315,14 @@ export function EditSeasonDialog({
                 step={weightStep}
                 value={actualYieldKg}
                 onChange={(e) => setActualYieldKg(e.target.value)}
-                className="border-border focus:border-primary"
+                disabled={isSubmitting}
               />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="budgetAmount">
-              Season Budget ({preferences.currency})
+              {t("seasons.form.budget", { currency: preferences.currency })}
             </Label>
             <Input
               id="budgetAmount"
@@ -318,18 +331,18 @@ export function EditSeasonDialog({
               step="0.01"
               value={budgetAmount}
               onChange={(e) => setBudgetAmount(e.target.value)}
-              className="border-border focus:border-primary"
+              disabled={isSubmitting}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t("common.notes")}</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="border-border focus:border-primary"
+              disabled={isSubmitting}
             />
           </div>
         </div>
@@ -340,14 +353,13 @@ export function EditSeasonDialog({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
-            className="bg-primary hover:bg-primary/90 text-white"
             disabled={!isFormValid || isSubmitting}
           >
-            {isSubmitting ? "Saving..." : "Save Changes"}
+            {isSubmitting ? t("common.saving") : t("common.saveChanges")}
           </Button>
         </DialogFooter>
       </DialogContent>

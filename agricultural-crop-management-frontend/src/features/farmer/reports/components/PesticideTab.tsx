@@ -34,7 +34,7 @@ export function PesticideTab({ records, getPesticideStatusBadge }: PesticideTabP
                 </Badge>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-border">
+            <div className="overflow-x-auto rounded-[14px] border border-border">
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-muted hover:bg-muted">
@@ -95,7 +95,7 @@ export function PesticideTab({ records, getPesticideStatusBadge }: PesticideTabP
                 </Table>
             </div>
 
-            <div className="bg-accent/5 border border-accent/20 rounded-xl p-4">
+            <div className="rounded-[14px] border border-accent/20 bg-accent/5 p-4">
                 <div className="flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-accent mt-0.5" />
                     <div>

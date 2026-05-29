@@ -89,7 +89,7 @@ export function KPICards({
         return (
           <Card
             key={kpi.title}
-            className="border-border rounded-2xl shadow-sm overflow-hidden"
+            className="overflow-hidden rounded-[18px] border-border shadow-sm"
           >
             <div
               className="h-1"
@@ -100,7 +100,7 @@ export function KPICards({
             />
             <CardContent className="px-6 py-4">
               <div className="flex items-start justify-between mb-3">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <Icon className="w-6 h-6 text-primary" />
                 </div>
                 <div className={`flex items-center gap-1 ${trendColor}`}>

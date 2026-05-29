@@ -70,7 +70,7 @@ export function CreatePlotModal({ open, onOpenChange, onSubmit }: CreatePlotModa
                         <Input 
                             id="soilType" 
                             {...register('soilType')} 
-                            placeholder="e.g., Red Basalt, Sandy Loam"
+                            placeholder="e.g., Ferralsols, Arenosols"
                         />
                     </div>
 

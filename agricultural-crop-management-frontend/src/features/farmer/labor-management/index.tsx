@@ -40,7 +40,7 @@ import {
   TabsTrigger,
   PageContainer,
 } from "@/shared/ui";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { Calendar, RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -432,7 +432,7 @@ export function LaborManagementPage() {
                     onValueChange={setSelectedDirectoryEmployeeId}
                     disabled={!canMutateSeason}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm shadow-sm data-[placeholder]:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20">
                       <SelectValue placeholder={t("laborWorkspace.fields.selectEmployeePlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
@@ -454,6 +454,7 @@ export function LaborManagementPage() {
                     onChange={(event) => setWagePerTask(event.target.value)}
                     placeholder={t("laborWorkspace.fields.wagePerTaskPlaceholder")}
                     disabled={!canMutateSeason}
+                    className="h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm shadow-sm placeholder:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20"
                   />
                 </div>
 
@@ -493,7 +494,8 @@ export function LaborManagementPage() {
                     <Button
                       type="button"
                       size="sm"
-                      variant="ghost"
+                      variant="outline"
+                      className="rounded-xl border-slate-300 bg-white shadow-sm hover:border-slate-400 hover:bg-white focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20"
                       onClick={() => setSelectedBulkEmployeeIds([])}
                       disabled={selectedBulkEmployeeIds.length === 0}
                     >

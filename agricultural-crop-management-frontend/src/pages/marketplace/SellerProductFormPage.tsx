@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { MarketplaceFarmerProductUpsertRequest, MarketplaceProductStatus } from "@/shared/api";
 import {
   Button,
@@ -55,6 +55,15 @@ const EMPTY_FORM: ProductFormState = {
   selectedSeasonId: "",
   selectedLotId: "",
 };
+
+const FORM_INPUT_CLASS_NAME =
+  "h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm shadow-sm placeholder:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20";
+
+const FORM_SELECT_TRIGGER_CLASS_NAME =
+  "h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm shadow-sm data-[placeholder]:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20";
+
+const FORM_TEXTAREA_CLASS_NAME =
+  "rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm placeholder:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20";
 
 function nextStatusActionLabel(status: MarketplaceProductStatus, t: Translator): string {
   switch (status) {
@@ -433,6 +442,7 @@ export function SellerProductFormPage() {
                     "Example: Premium jasmine rice from harvest lot 2026",
                   )}
                   required
+                  className={FORM_INPUT_CLASS_NAME}
                 />
               </div>
 
@@ -443,6 +453,7 @@ export function SellerProductFormPage() {
                   value={form.category}
                   onChange={(event) => updateForm({ category: event.target.value })}
                   placeholder={t("marketplaceSeller.productForm.placeholders.category", "Grain, vegetable, fruit...")}
+                  className={FORM_INPUT_CLASS_NAME}
                 />
               </div>
 
@@ -456,6 +467,7 @@ export function SellerProductFormPage() {
                   value={form.price}
                   onChange={(event) => updateForm({ price: event.target.value })}
                   required
+                  className={FORM_INPUT_CLASS_NAME}
                 />
               </div>
 
@@ -473,6 +485,7 @@ export function SellerProductFormPage() {
                   value={form.stockQuantity}
                   onChange={(event) => updateForm({ stockQuantity: event.target.value })}
                   required
+                  className={FORM_INPUT_CLASS_NAME}
                 />
                 {selectedLot ? (
                   <p className="text-xs text-muted-foreground">
@@ -492,6 +505,7 @@ export function SellerProductFormPage() {
                   value={form.imageUrl}
                   onChange={(event) => updateForm({ imageUrl: event.target.value })}
                   placeholder="https://..."
+                  className={FORM_INPUT_CLASS_NAME}
                 />
               </div>
             </CardContent>
@@ -514,6 +528,7 @@ export function SellerProductFormPage() {
                     "marketplaceSeller.productForm.placeholders.shortDescription",
                     "A short summary buyers can scan quickly",
                   )}
+                  className={FORM_INPUT_CLASS_NAME}
                 />
               </div>
 
@@ -529,7 +544,7 @@ export function SellerProductFormPage() {
                     "marketplaceSeller.productForm.placeholders.fullDescription",
                     "Add packaging notes, harvest quality, shipping notes, or handling instructions",
                   )}
-                  className="min-h-36"
+                  className={`${FORM_TEXTAREA_CLASS_NAME} min-h-36`}
                 />
               </div>
             </CardContent>
@@ -545,7 +560,7 @@ export function SellerProductFormPage() {
               <div className="space-y-2">
                 <Label id="product-farm-label">{t("marketplaceSeller.productForm.fields.farm", "Farm")}</Label>
                 <Select value={form.selectedFarmId} onValueChange={handleFarmChange}>
-                  <SelectTrigger aria-labelledby="product-farm-label">
+                  <SelectTrigger aria-labelledby="product-farm-label" className={FORM_SELECT_TRIGGER_CLASS_NAME}>
                     <SelectValue placeholder={t("marketplaceSeller.productForm.placeholders.selectFarm", "Choose your farm")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -565,7 +580,7 @@ export function SellerProductFormPage() {
                   onValueChange={handleSeasonChange}
                   disabled={!form.selectedFarmId}
                 >
-                  <SelectTrigger aria-labelledby="product-season-label">
+                  <SelectTrigger aria-labelledby="product-season-label" className={FORM_SELECT_TRIGGER_CLASS_NAME}>
                     <SelectValue
                       placeholder={
                         form.selectedFarmId
@@ -591,7 +606,7 @@ export function SellerProductFormPage() {
                   onValueChange={handleLotChange}
                   disabled={!form.selectedFarmId}
                 >
-                  <SelectTrigger aria-labelledby="product-lot-label">
+                  <SelectTrigger aria-labelledby="product-lot-label" className={FORM_SELECT_TRIGGER_CLASS_NAME}>
                     <SelectValue
                       placeholder={
                         form.selectedFarmId

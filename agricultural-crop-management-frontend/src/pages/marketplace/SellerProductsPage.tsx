@@ -117,7 +117,8 @@ export function SellerProductsPage() {
   const products = productsQuery.data?.items ?? [];
 
   return (
-    <PageContainer variant="wide" className="space-y-6">
+    <PageContainer variant="wide">
+      <div className="space-y-6">
       <SellerMarketplaceTabs />
 
       <Card variant="page-header">
@@ -260,6 +261,7 @@ export function SellerProductsPage() {
           </TableBody>
         </Table>
       </Card>
+      </div>
     </PageContainer>
   );
 }

@@ -174,7 +174,7 @@ SET @demo_farm_id := (
 );
 
 INSERT INTO plots (farm_id, plot_name, area, soil_type, status, created_by)
-SELECT @demo_farm_id, 'Plot A1', 4.20, 'LOAM', 'IN_USE', @farmer_user_id
+SELECT @demo_farm_id, 'Plot A1', 4.20, 'FERRALSOLS', 'IN_USE', @farmer_user_id
 WHERE @demo_farm_id IS NOT NULL
   AND NOT EXISTS (
       SELECT 1 FROM plots

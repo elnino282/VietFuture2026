@@ -71,19 +71,19 @@ export function SeasonHeader({
       selectedSeason.startDate;
 
     return (
-      <div className="max-w-[1800px] mx-auto px-6 pt-6 mb-4">
+      <div className="mb-6">
         <Card variant="page-header">
           <CardContent className="px-6 py-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+              <div className="flex min-w-0 items-center gap-4">
                 <BackButton
                   iconOnly
                   onClick={onBack}
                   className="acm-rounded-sm"
                 />
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl">{selectedSeason.name}</h1>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h1 className="min-w-0 text-2xl break-words">{selectedSeason.name}</h1>
                     <Badge
                       className={`${getStatusColor(selectedSeason.status)} acm-rounded-sm`}
                     >
@@ -99,7 +99,7 @@ export function SeasonHeader({
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Button
                   variant="outline"
                   onClick={onEdit}
@@ -158,7 +158,7 @@ export function SeasonHeader({
   }
 
   return (
-    <div className="max-w-[1800px] mx-auto px-6 pt-6 mb-4">
+    <div className="mb-6">
       <Card variant="page-header">
         <CardContent className="px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
