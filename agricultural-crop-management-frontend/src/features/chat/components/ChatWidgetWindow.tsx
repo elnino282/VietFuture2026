@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
-import { useState } from "react";
-import { ArrowLeft, Bell, ChevronDown, Flag, MoreVertical, UserRound } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Bell, ChevronDown, Flag, MoreVertical, Store, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ChatWidgetConversation, ChatWidgetMessage } from "../model/widgetTypes";
 import { ChatWidgetEmptyState } from "./ChatWidgetEmptyState";
@@ -28,7 +29,30 @@ export function ChatWidgetWindow({
   onSend,
   bottomRef,
 }: ChatWidgetWindowProps) {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isMenuOpen &&
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(event.target as Node)
+      ) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
 
   if (!conversation) {
     return (
@@ -56,6 +80,7 @@ export function ChatWidgetWindow({
 
           <div className="min-w-0">
             <button
+              ref={triggerRef}
               type="button"
               className="chat-widget-thread-header__name"
               aria-expanded={isMenuOpen}
@@ -78,7 +103,7 @@ export function ChatWidgetWindow({
           
 
           {isMenuOpen ? (
-            <div className="chat-widget-profile-menu" role="menu">
+            <div ref={menuRef} className="chat-widget-profile-menu" role="menu">
               <div className="chat-widget-profile-menu__profile">
                 <div className="chat-widget-avatar" aria-hidden="true">
                   {conversation.avatarUrl ? (
@@ -104,10 +129,20 @@ export function ChatWidgetWindow({
                 </span>
                 <ChevronDown className="h-4 w-4 -rotate-90" aria-hidden="true" />
               </button>
-              <button type="button" role="menuitem">
+              <button
+                type="button"
+                role="menuitem"
+                disabled={!conversation.farm?.id}
+                onClick={() => {
+                  if (conversation.farm?.id) {
+                    setIsMenuOpen(false);
+                    navigate(`/marketplace/farms/${conversation.farm.id}`);
+                  }
+                }}
+              >
                 <span>
-                  <UserRound className="h-4 w-4" aria-hidden="true" />
-                  Xem thông tin cá nhân
+                  <Store className="h-4 w-4" aria-hidden="true" />
+                  Xem trang nông trại
                 </span>
                 <ChevronDown className="h-4 w-4 -rotate-90" aria-hidden="true" />
               </button>

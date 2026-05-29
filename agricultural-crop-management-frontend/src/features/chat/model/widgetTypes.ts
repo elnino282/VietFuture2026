@@ -25,6 +25,13 @@ export type ChatWidgetContext = {
   quantity?: string;
 };
 
+export type ChatWidgetFarm = {
+  id: number;
+  name: string;
+  avatarUrl?: string;
+  isVerified?: boolean;
+};
+
 export type ChatWidgetConversation = {
   id: string;
   farmName: string;
@@ -36,6 +43,8 @@ export type ChatWidgetConversation = {
   unreadCount: number;
   status: ChatWidgetConversationStatus;
   context: ChatWidgetContext;
+  /** Optional farm metadata — enables navigation to the farm store page. */
+  farm?: ChatWidgetFarm;
 };
 
 export type ChatWidgetMessage = {

@@ -67,6 +67,9 @@ const MarketplaceProductListPage = lazy(() =>
 const MarketplaceProductDetailPage = lazy(() =>
   import('@/pages/marketplace').then((m) => ({ default: m.ProductDetailPage }))
 );
+const MarketplaceFarmStorePage = lazy(() =>
+  import('@/pages/marketplace').then((m) => ({ default: m.FarmStorePage }))
+);
 
 const CartPage = lazy(() =>
   import('@/pages/marketplace').then((m) => ({ default: m.CartPage }))
@@ -382,6 +385,7 @@ export function AppRoutes() {
             <Route index element={<MarketHomePage />} />
             <Route path="products" element={<MarketplaceProductListPage />} />
             <Route path="products/:slug" element={<MarketplaceProductDetailPage />} />
+            <Route path="farms/:farmId" element={<MarketplaceFarmStorePage />} />
             <Route
               path="cart"
               element={(

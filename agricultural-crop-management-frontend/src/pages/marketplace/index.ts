@@ -1,6 +1,7 @@
 export { MarketHomePage } from "./MarketHomePage";
 export { ProductListPage } from "./ProductListPage";
 export { ProductDetailPage } from "./ProductDetailPage";
+export { FarmStorePage } from "./FarmStorePage";
 
 export { CartPage } from "./CartPage";
 export { CheckoutPage } from "./CheckoutPage";

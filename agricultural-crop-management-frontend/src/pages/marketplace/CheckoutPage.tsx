@@ -265,19 +265,19 @@ export function CheckoutPage() {
               request: payload,
             });
 
-      toast.success('─É├ú l╞░u ─æß╗ïa chß╗ë giao h├áng.');
+      toast.success('Đã lưu địa chỉ giao hàng.');
       setSelectedAddressId(saved.id);
       setAddressMode("saved");
       setEditingAddressId(null);
       setAddressForm(emptyAddressForm());
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Kh├┤ng thß╗â ho├án tß║Ñt thao t├íc.');
+      toast.error(error instanceof Error ? error.message : 'Không thể hoàn tất thao tác.');
     }
   }
 
   return (
     <div className="max-w-[1800px] mx-auto px-6 pt-6">
-      <h1 className="mb-10 text-3xl font-bold text-foreground">Thanh to├ín</h1>
+      <h1 className="mb-10 text-3xl font-bold text-foreground">{t("marketplaceBuyer.checkout.title")}</h1>
 
       <div className="flex flex-col gap-10 lg:flex-row">
         <div className="flex-1 space-y-8">
@@ -285,7 +285,7 @@ export function CheckoutPage() {
             <CardHeader className="border-b border-border/50">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <CardTitle className="text-lg font-semibold text-foreground">Th├┤ng tin giao h├áng</CardTitle>
+                  <CardTitle className="text-lg font-semibold text-foreground">{t("marketplaceBuyer.checkout.shippingAddressTitle")}</CardTitle>
                   <p className="mt-1.5 text-sm text-muted-foreground">{t("marketplaceBuyer.checkout.shippingAddressDesc")}</p>
                 </div>
                 <div className="flex gap-2">
@@ -299,7 +299,7 @@ export function CheckoutPage() {
                       setAddressFormMessage(null);
                     }}
                   >
-                    ─Éß╗ïa chß╗ë ─æ├ú l╞░u
+                    {t("marketplaceBuyer.checkout.savedAddresses")}
                   </Button>
                   <Button
                     variant={addressMode === "new" ? "default" : "outline"}
@@ -312,7 +312,7 @@ export function CheckoutPage() {
                     }}
                   >
                     <Plus size={16} />
-                    ─Éß╗ïa chß╗ë mß╗¢i
+                    {t("marketplaceBuyer.checkout.newAddress")}
                   </Button>
                 </div>
               </div>
@@ -323,7 +323,7 @@ export function CheckoutPage() {
                   {addressesQuery.data && addressesQuery.data.length > 0 ? (
                     <>
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-foreground">Chß╗ìn ─æß╗ïa chß╗ë giao h├áng</label>
+                        <label className="mb-2 block text-sm font-medium text-foreground">Chọn địa chỉ giao hàng</label>
                         <select
                           className="h-11 w-full rounded-lg border border-border bg-card px-4 text-sm shadow-sm transition-colors hover:border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                           value={selectedAddress?.id ?? ""}
@@ -377,7 +377,7 @@ export function CheckoutPage() {
                                 }}
                               >
                                 <Pencil size={16} />
-                                Sß╗¡a
+                                {t("marketplaceBuyer.checkout.editAddress")}
                               </Button>
                               <Button
                                 variant="destructive"
@@ -389,7 +389,7 @@ export function CheckoutPage() {
                                 }}
                               >
                                 <Trash2 size={16} />
-                                X├│a
+                                {t("marketplaceBuyer.checkout.deleteAddress")}
                               </Button>
                             </div>
                           </div>
@@ -409,7 +409,7 @@ export function CheckoutPage() {
                 <div className="space-y-5 rounded-lg border border-border bg-muted/50 p-5">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-foreground">Hß╗ì t├¬n</label>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">{t("marketplaceBuyer.checkout.addressForm.recipientName")}</label>
                       <Input
                         className="border-border"
                         value={addressForm.fullName}
@@ -419,7 +419,7 @@ export function CheckoutPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-foreground">Sß╗æ ─æiß╗çn thoß║íi</label>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">{t("marketplaceBuyer.checkout.addressForm.phone")}</label>
                       <Input
                         className="border-border"
                         value={addressForm.phone}
@@ -429,7 +429,7 @@ export function CheckoutPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-foreground">Tß╗ënh / Th├ánh</label>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">{t("marketplaceBuyer.checkout.addressForm.province")}</label>
                       <Input
                         className="border-border"
                         value={addressForm.province}
@@ -439,7 +439,7 @@ export function CheckoutPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-foreground">Quß║¡n / Huyß╗çn</label>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">{t("marketplaceBuyer.checkout.addressForm.district")}</label>
                       <Input
                         className="border-border"
                         value={addressForm.district}
@@ -449,7 +449,7 @@ export function CheckoutPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-foreground">Ph╞░ß╗¥ng / X├ú</label>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">{t("marketplaceBuyer.checkout.addressForm.ward")}</label>
                       <Input
                         className="border-border"
                         value={addressForm.ward}
@@ -459,7 +459,7 @@ export function CheckoutPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-foreground">─É╞░ß╗¥ng</label>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">{t("marketplaceBuyer.checkout.addressForm.street")}</label>
                       <Input
                         className="border-border"
                         value={addressForm.street}
@@ -471,10 +471,10 @@ export function CheckoutPage() {
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-foreground">Chi tiß║┐t th├¬m</label>
+                    <label className="mb-1.5 block text-sm font-medium text-foreground">{t("marketplaceBuyer.checkout.addressForm.detail")}</label>
                     <Input
                       className="border-border"
-                      placeholder="Sß╗æ nh├á, t├¬n t├▓a nh├á, v.v."
+                      placeholder="Số nhà, tên tòa nhà, v.v."
                       value={addressForm.detail ?? ""}
                       onChange={(event) =>
                         setAddressForm((current) => ({ ...current, detail: event.target.value }))
@@ -484,7 +484,7 @@ export function CheckoutPage() {
 
                   <div className="grid gap-4 sm:grid-cols-[180px_1fr] sm:items-center">
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-foreground">Loß║íi ─æß╗ïa chß╗ë</label>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">Loại địa chỉ</label>
                       <select
                         value={addressForm.label ?? "home"}
                         onChange={(event) =>
@@ -495,9 +495,9 @@ export function CheckoutPage() {
                         }
                         className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm shadow-sm transition-colors hover:border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                       >
-                        <option value="home">Nh├á ri├¬ng</option>
-                        <option value="office">V─ân ph├▓ng</option>
-                        <option value="other">Kh├íc</option>
+                        <option value="home">{t("marketplaceBuyer.checkout.addressForm.labelHome")}</option>
+                        <option value="office">{t("marketplaceBuyer.checkout.addressForm.labelOffice")}</option>
+                        <option value="other">{t("marketplaceBuyer.checkout.addressForm.labelOther")}</option>
                       </select>
                     </div>
                     <label className="flex items-center gap-2.5 text-sm text-foreground">
@@ -512,7 +512,7 @@ export function CheckoutPage() {
                         }
                         className="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary/20"
                       />
-                      ─Éß║╖t l├ám ─æß╗ïa chß╗ë mß║╖c ─æß╗ïnh
+                      {t("marketplaceBuyer.checkout.addressForm.setDefault")}
                     </label>
                   </div>
 
@@ -524,8 +524,8 @@ export function CheckoutPage() {
                       {currentAddressMutation.isPending
                         ? t("marketplaceBuyer.checkout.addressForm.saving")
                         : editingAddressId == null
-                          ? "L╞░u ─æß╗ïa chß╗ë"
-                          : "Cß║¡p nhß║¡t ─æß╗ïa chß╗ë"}
+                          ? t("marketplaceBuyer.checkout.addressForm.saveAddress")
+                          : t("marketplaceBuyer.checkout.addressForm.updateAddress")}
                     </Button>
                     <Button
                       variant="outline"
@@ -536,7 +536,7 @@ export function CheckoutPage() {
                         setAddressFormMessage(null);
                       }}
                     >
-                      Hß╗ºy
+                      {t("marketplaceBuyer.checkout.addressForm.cancel")}
                     </Button>
                   </div>
                 </div>
@@ -567,7 +567,7 @@ export function CheckoutPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-foreground">Ghi ch├║</label>
+                <label className="mb-2 block text-sm font-medium text-foreground">Ghi chú</label>
                 <Input
                   className="border-border"
                   placeholder={t("marketplaceBuyer.checkout.orderNote")}
@@ -580,7 +580,7 @@ export function CheckoutPage() {
 
           <Card>
             <CardHeader className="border-b border-border/50">
-              <CardTitle className="text-lg font-semibold text-foreground">Ph╞░╞íng thß╗⌐c thanh to├ín</CardTitle>
+              <CardTitle className="text-lg font-semibold text-foreground">{t("marketplaceBuyer.checkout.paymentMethodTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <label
@@ -641,7 +641,7 @@ export function CheckoutPage() {
         <div className="w-full shrink-0 lg:w-96">
           <Card className="sticky top-24 border-2 border-border shadow-lg">
             <CardHeader className="border-b border-border/50">
-              <CardTitle className="text-lg font-semibold text-foreground">─É╞ín h├áng cß╗ºa bß║ín</CardTitle>
+              <CardTitle className="text-lg font-semibold text-foreground">{t("marketplaceBuyer.checkout.orderSummaryTitle")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="mb-6 space-y-4">
@@ -689,12 +689,12 @@ export function CheckoutPage() {
 
               {splitOrderGroups.length > 1 ? (
                 <div className="mb-5 rounded-xl border border-emerald-100 bg-emerald-50/40 p-4">
-                  <p className="text-sm font-semibold text-emerald-900">─É╞ín h├áng sß║╜ ─æ╞░ß╗úc t├ích theo ng╞░ß╗¥i b├ín</p>
+                  <p className="text-sm font-semibold text-emerald-900">Đơn hàng sẽ được tách theo người bán</p>
                   <div className="mt-3 space-y-2">
                     {splitOrderGroups.map((group, index) => (
                       <div key={group.farmerUserId} className="rounded-lg bg-card p-3 text-sm text-foreground">
-                        <div className="font-medium text-foreground">─É╞ín {index + 1}</div>
-                        <div>{group.items.length} sß║ún phß║⌐m ┬╖ {formatVnd(group.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0))}</div>
+                        <div className="font-medium text-foreground">Đơn {index + 1}</div>
+                        <div>{group.items.length} sản phẩm · {formatVnd(group.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0))}</div>
                       </div>
                     ))}
                   </div>
@@ -740,7 +740,7 @@ export function CheckoutPage() {
                       idempotencyKey: checkoutIdempotencyKey,
                     });
 
-                    toast.success('─Éß║╖t h├áng th├ánh c├┤ng.');
+                    toast.success('Đặt hàng thành công.');
                     const firstOrderId = result.orders[0]?.id;
                     if (firstOrderId) {
                       navigate(`/marketplace/orders/${firstOrderId}`);
@@ -748,7 +748,7 @@ export function CheckoutPage() {
                     }
                     navigate("/marketplace/orders");
                   } catch (error) {
-                    toast.error(error instanceof Error ? error.message : 'Kh├┤ng thß╗â ho├án tß║Ñt thao t├íc.');
+                    toast.error(error instanceof Error ? error.message : 'Không thể hoàn tất thao tác.');
                   }
                 }}
               >

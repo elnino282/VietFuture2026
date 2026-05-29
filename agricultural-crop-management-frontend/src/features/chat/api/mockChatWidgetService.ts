@@ -26,6 +26,7 @@ const initialConversations: ChatWidgetConversation[] = [
       price: "2.500.000₫",
       quantity: "50kg",
     },
+    farm: { id: 1, name: "Nông trại An Phú", isVerified: true },
   },
   {
     id: "conv-greenfarm",
@@ -46,6 +47,7 @@ const initialConversations: ChatWidgetConversation[] = [
       price: "850.000₫",
       quantity: "10kg",
     },
+    farm: { id: 2, name: "GreenFarm Organic", isVerified: true },
   },
   {
     id: "conv-dalat-fresh",
@@ -66,6 +68,7 @@ const initialConversations: ChatWidgetConversation[] = [
       price: "1.200.000₫",
       quantity: "25kg",
     },
+    farm: { id: 3, name: "Dalat Farm Fresh" },
   },
   {
     id: "conv-biogarden",
@@ -86,6 +89,7 @@ const initialConversations: ChatWidgetConversation[] = [
       price: "650.000₫",
       quantity: "5kg",
     },
+    farm: { id: 4, name: "BioGarden", isVerified: true },
   },
   {
     id: "conv-mekong",
@@ -106,6 +110,7 @@ const initialConversations: ChatWidgetConversation[] = [
       price: "3.000.000₫",
       quantity: "100kg",
     },
+    farm: { id: 5, name: "Mekong Delta Farm" },
   },
 ];
 

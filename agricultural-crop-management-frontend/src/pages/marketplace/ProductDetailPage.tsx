@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, Calendar, MapPin, Minus, Package, Plus, ShieldCheck, ShoppingCart, Star } from "lucide-react";
+import { MapPin, MessageCircle, Minus, Package, Plus, ShieldCheck, ShoppingCart, Star, Store } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/features/auth";
-import { Badge, Button } from "@/shared/ui";
 import {
   useMarketplaceAddToCart,
   useMarketplaceProductDetail,
@@ -10,13 +9,14 @@ import {
   useMarketplaceTraceability,
 } from "@/features/marketplace/hooks";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
+import "./ProductDetailPage.css";
 
 function StarRating({ rating }: { rating?: number }) {
   const score = Math.min(Math.max(Math.round(rating ?? 5), 1), 5);
   return (
-    <div className="flex items-center gap-0.5 text-base">
+    <div className="pdp__review-stars">
       {Array.from({ length: 5 }, (_, index) => (
-        <span key={index} className={index < score ? "text-amber-400" : "text-slate-200"}>
+        <span key={index} className={index < score ? "pdp__review-star--filled" : "pdp__review-star--empty"}>
           ★
         </span>
       ))}
@@ -30,11 +30,25 @@ export function ProductDetailPage() {
   const { isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [imageFailed, setImageFailed] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<"description" | "reviews">("description");
   const { addToCart, isAdding } = useMarketplaceAddToCart();
 
   const productQuery = useMarketplaceProductDetail(slug);
   const product = productQuery.data;
-  const primaryImage = product ? (product.imageUrls[0] ?? product.imageUrl) : null;
+
+  const allImages = useMemo(() => {
+    if (!product) return [];
+    const urls: string[] = [];
+    if (product.imageUrls?.length) {
+      urls.push(...product.imageUrls);
+    } else if (product.imageUrl) {
+      urls.push(product.imageUrl);
+    }
+    return urls;
+  }, [product]);
+
+  const primaryImage = allImages[activeImageIndex] ?? null;
 
   const reviewsQuery = useMarketplaceProductReviews(product?.id, { page: 0, size: 5 });
   const traceabilityQuery = useMarketplaceTraceability(product?.traceable ? product.id : null);
@@ -50,22 +64,26 @@ export function ProductDetailPage() {
     ? Math.min(Math.max(quantity, 1), Math.max(product.availableQuantity, 1))
     : quantity;
 
+  const reviewCount = reviewsQuery.data?.items?.length ?? 0;
+
+  // ── Loading state ───────────────────────────────────────────
   if (productQuery.isLoading) {
     return (
-      <div className="max-w-[1800px] mx-auto px-6 pt-6">
-        <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+      <div className="pdp__state-box">
+        <div className="pdp__state-card">
           Đang tải chi tiết sản phẩm...
         </div>
       </div>
     );
   }
 
+  // ── Error / not-found state ─────────────────────────────────
   if (productQuery.isError || !product) {
     return (
-      <div className="max-w-[1800px] mx-auto px-6 pt-6">
-        <div className="space-y-3 rounded-xl border border-dashed border-destructive/30 bg-card p-8 text-center text-sm text-destructive">
+      <div className="pdp__state-box">
+        <div className="pdp__state-card pdp__state-card--error">
           <p>Sản phẩm không tồn tại hoặc chưa được công khai.</p>
-          <Link to="/marketplace/products" className="text-primary hover:underline">
+          <Link to="/marketplace/products">
             Quay lại danh sách sản phẩm
           </Link>
         </div>
@@ -73,127 +91,163 @@ export function ProductDetailPage() {
     );
   }
 
-  return (
-    <div className="max-w-[1800px] mx-auto px-6 pt-6">
-      <div className="max-w-[1800px] mx-auto">
-        <Link
-          to="/marketplace/products"
-          className="mb-4 inline-flex items-center gap-1 text-sm text-primary hover:underline"
-        >
-          <ArrowLeft size={15} /> Quay lại danh sách sản phẩm
-        </Link>
+  const farmInitial = (product.farmName ?? product.farmerDisplayName ?? "F").charAt(0).toUpperCase();
 
-        <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="overflow-hidden rounded-xl bg-card border border-border shadow-sm">
-            <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+  return (
+    <div className="pdp">
+      <div className="pdp__container">
+        {/* ── Breadcrumb ───────────────────────────────────────── */}
+        <nav className="pdp__breadcrumb">
+          <Link to="/marketplace">Trang chủ</Link>
+          <span className="pdp__breadcrumb-sep">›</span>
+          <Link to="/marketplace/products">Sản phẩm</Link>
+          <span className="pdp__breadcrumb-sep">›</span>
+          {product.category && (
+            <>
+              <Link to={`/marketplace/products?category=${encodeURIComponent(product.category)}`}>
+                {product.category}
+              </Link>
+              <span className="pdp__breadcrumb-sep">›</span>
+            </>
+          )}
+          <span className="pdp__breadcrumb-current">{product.name}</span>
+        </nav>
+
+        {/* ═══ MAIN 2-COLUMN LAYOUT ═══════════════════════════ */}
+        <div className="pdp__main">
+          {/* ── Image Gallery (left) ──────────────────────────── */}
+          <div className="pdp__gallery">
+            <div className="pdp__gallery-main">
               {primaryImage && !imageFailed ? (
                 <img
                   src={primaryImage}
                   alt={product.name}
-                  className="h-full w-full object-cover"
                   referrerPolicy="no-referrer"
                   onError={() => setImageFailed(true)}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <div className="text-center">
-                    <Package className="mx-auto h-24 w-24 text-muted-foreground/40" strokeWidth={1.5} />
-                    <p className="mt-2 text-sm text-muted-foreground/60">Không có hình ảnh</p>
-                  </div>
+                <div className="pdp__gallery-fallback">
+                  <Package strokeWidth={1.5} />
+                  <span>Không có hình ảnh</span>
                 </div>
               )}
+              {allImages.length > 1 && (
+                <span className="pdp__gallery-counter">
+                  {activeImageIndex + 1} / {allImages.length}
+                </span>
+              )}
             </div>
+
+            {allImages.length > 1 && (
+              <div className="pdp__gallery-thumbs">
+                {allImages.map((url, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className={`pdp__gallery-thumb${index === activeImageIndex ? " pdp__gallery-thumb--active" : ""}`}
+                    onClick={() => {
+                      setActiveImageIndex(index);
+                      setImageFailed(false);
+                    }}
+                  >
+                    <img src={url} alt={`${product.name} ${index + 1}`} referrerPolicy="no-referrer" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-col space-y-6">
-            <div>
-              <div className="mb-3 flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  {product.category}
+          {/* ── Right Info Panel ──────────────────────────────── */}
+          <div className="pdp__info">
+            {/* Badges */}
+            <div className="pdp__badges">
+              <span className="pdp__category-badge">{product.category}</span>
+              {product.traceable && (
+                <span className="pdp__trace-badge">
+                  <ShieldCheck /> Có truy xuất
                 </span>
-                {product.traceable && (
-                  <Badge variant="success" className="gap-1 text-xs">
-                    <ShieldCheck size={12} /> Có truy xuất
-                  </Badge>
-                )}
-              </div>
-
-              <h1 className="mb-4 text-3xl font-bold text-foreground leading-tight">{product.name}</h1>
-
-              <div className="mb-4 flex items-center gap-3 text-sm">
-                <div className="flex items-center gap-1">
-                  <Star className="fill-yellow-400 text-yellow-400" size={16} />
-                  <span className="font-semibold text-foreground">
-                    {product.ratingAverage ? product.ratingAverage.toFixed(1) : "5.0"}
-                  </span>
-                </div>
-                <span className="text-muted-foreground/40">|</span>
-                <span className="text-muted-foreground">{product.ratingCount} đánh giá</span>
-                <span className="text-muted-foreground/40">|</span>
-                <span className="text-muted-foreground">Đã bán {product.ratingCount > 100 ? `${(product.ratingCount / 100).toFixed(1)}k` : product.ratingCount}</span>
-              </div>
-
-              <div className="mb-6">
-                <div className="text-4xl font-bold text-primary">
-                  {formatVnd(product.price)}
-                  <span className="ml-2 text-lg font-normal text-muted-foreground">/ {product.unit}</span>
-                </div>
-              </div>
-
-              {product.shortDescription && (
-                <p className="mb-6 text-sm leading-relaxed text-muted-foreground">{product.shortDescription}</p>
               )}
             </div>
 
-            <div>
-              <label className="mb-3 block text-sm font-medium text-foreground">Số lượng</label>
+            {/* Product name */}
+            <h1 className="pdp__name">{product.name}</h1>
+
+            {/* Rating / reviews / sold */}
+            <div className="pdp__rating-row">
+              <div className="pdp__rating-stars">
+                <Star className="pdp__review-star--filled" size={14} style={{ fill: "#f59e0b" }} />
+                <span className="pdp__rating-score">
+                  {product.ratingAverage ? product.ratingAverage.toFixed(1) : "5.0"}
+                </span>
+              </div>
+              <span className="pdp__rating-divider">|</span>
+              <span>{product.ratingCount} đánh giá</span>
+              <span className="pdp__rating-divider">|</span>
+              <span>Đã bán {product.ratingCount > 100 ? `${(product.ratingCount / 100).toFixed(1)}k` : product.ratingCount}</span>
+            </div>
+
+            {/* Price */}
+            <div className="pdp__price-block">
+              <span className="pdp__price">
+                {formatVnd(product.price)}
+                <span className="pdp__price-unit">/ {product.unit}</span>
+              </span>
+            </div>
+
+            {/* Short description */}
+            {product.shortDescription && (
+              <p className="pdp__short-desc">{product.shortDescription}</p>
+            )}
+
+            {/* Quantity selector */}
+            <div className="pdp__qty-section">
+              <span className="pdp__qty-label">Số lượng</span>
               {isAuthenticated ? (
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center rounded-xl border border-border bg-card">
+                <div className="pdp__qty-row">
+                  <div className="pdp__qty-control">
                     <button
-                      className="h-9 w-9 flex items-center justify-center text-muted-foreground transition-colors hover:bg-muted/50"
+                      className="pdp__qty-btn"
                       onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
                       type="button"
                     >
-                      <Minus size={16} />
+                      <Minus />
                     </button>
-                    <span className="min-w-12 text-center text-sm font-medium text-foreground">{quantityValue}</span>
+                    <span className="pdp__qty-value">{quantityValue}</span>
                     <button
-                      className="h-9 w-9 flex items-center justify-center text-muted-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="pdp__qty-btn"
                       onClick={() => setQuantity((prev) => prev + 1)}
                       disabled={!canIncrease}
                       type="button"
                     >
-                      <Plus size={16} />
+                      <Plus />
                     </button>
                   </div>
-                  <span className="text-sm text-muted-foreground">{product.availableQuantity} sản phẩm có sẵn</span>
+                  <span className="pdp__qty-stock">{product.availableQuantity} sản phẩm có sẵn</span>
                 </div>
               ) : (
-                <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+                <div className="pdp__auth-notice">
                   Hãy đăng nhập để thêm sản phẩm vào giỏ hàng hoặc đặt mua ngay.
                 </div>
               )}
             </div>
 
-            <div className="flex gap-3">
+            {/* CTA Buttons */}
+            <div className="pdp__cta-group">
               {isAuthenticated ? (
                 <>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="flex-1 border border-border text-foreground hover:bg-muted acm-rounded-sm"
+                  <button
+                    type="button"
+                    className="pdp__cta-btn pdp__cta-btn--cart"
                     disabled={isAdding || product.availableQuantity <= 0}
                     onClick={async () => {
                       await addToCart(product.id, quantity);
                     }}
                   >
-                    <ShoppingCart size={18} />
-                    Thêm vào giỏ
-                  </Button>
-                  <Button
-                    size="lg"
-                    className="flex-1 bg-primary hover:bg-primary/90 text-white acm-rounded-sm acm-button-shadow"
+                    <ShoppingCart /> Thêm vào giỏ
+                  </button>
+                  <button
+                    type="button"
+                    className="pdp__cta-btn pdp__cta-btn--buy"
                     disabled={isAdding || product.availableQuantity <= 0}
                     onClick={async () => {
                       const mode = await addToCart(product.id, quantity);
@@ -203,144 +257,209 @@ export function ProductDetailPage() {
                     }}
                   >
                     {isAdding ? "Đang xử lý..." : "Mua ngay"}
-                  </Button>
+                  </button>
                 </>
               ) : (
                 <>
-                  <Button asChild variant="outline" size="lg" className="flex-1 border border-border acm-rounded-sm">
-                    <Link to="/sign-in">Đăng nhập</Link>
-                  </Button>
-                  <Button asChild size="lg" className="flex-1">
-                    <Link to="/sign-up">Tạo tài khoản</Link>
-                  </Button>
+                  <Link to="/sign-in" className="pdp__cta-btn pdp__cta-btn--outline">
+                    Đăng nhập
+                  </Link>
+                  <Link to="/sign-up" className="pdp__cta-btn pdp__cta-btn--buy">
+                    Tạo tài khoản
+                  </Link>
                 </>
               )}
             </div>
+
+            {/* ── Farm Card ──────────────────────────────────── */}
+            <div className="pdp__farm-card">
+              <div className="pdp__farm-card-header">
+                <div className="pdp__farm-avatar">{farmInitial}</div>
+                <div className="pdp__farm-meta">
+                  <div className="pdp__farm-name-row">
+                    <h3 className="pdp__farm-name">
+                      {product.farmName ?? product.farmerDisplayName}
+                    </h3>
+                    {product.traceable && (
+                      <span className="pdp__farm-verified">
+                        <ShieldCheck /> Xác minh
+                      </span>
+                    )}
+                  </div>
+                  <div className="pdp__farm-stats">
+                    {product.region && (
+                      <span className="pdp__farm-stat">
+                        <MapPin /> {product.region}
+                      </span>
+                    )}
+                    <span className="pdp__farm-stat">
+                      <Star style={{ fill: "#f59e0b", color: "#f59e0b" }} />
+                      {product.ratingAverage ? product.ratingAverage.toFixed(1) : "5.0"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="pdp__farm-actions">
+                <button type="button" className="pdp__farm-btn pdp__farm-btn--outline">
+                  <MessageCircle /> Nhắn tin
+                </button>
+                {product.farmId ? (
+                  <Link to={`/marketplace/farms/${product.farmId}`} className="pdp__farm-btn pdp__farm-btn--primary">
+                    <Store /> Xem nông trại
+                  </Link>
+                ) : (
+                  <button type="button" className="pdp__farm-btn pdp__farm-btn--primary" disabled>
+                    <Store /> Xem nông trại
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {product.traceable ? (
-          <div className="mb-6">
-            <div className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
-              <ShieldCheck className="text-primary" size={24} />
-              Thông tin truy xuất nguồn gốc
-            </div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-                <h3 className="mb-4 text-base font-bold text-primary">Thông tin Nông trại</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tên nông trại:</span>
-                    <span className="font-semibold text-foreground text-right">
-                      {traceabilityQuery.data?.farm?.name ?? product.farmName ?? product.farmerDisplayName}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Khu vực:</span>
-                    <span className="flex items-center gap-1 font-semibold text-foreground">
-                      <MapPin size={14} className="text-primary" />
-                      {traceabilityQuery.data?.farm?.region ?? product.region ?? "Đang cập nhật"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Địa chỉ:</span>
-                    <span className="max-w-[250px] text-right font-semibold text-foreground">
-                      {traceabilityQuery.data?.farm?.address ?? "Đang cập nhật"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-                <h3 className="mb-4 text-base font-bold text-primary">Thông tin lô hàng</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Mã lô:</span>
-                    <span className="font-semibold text-foreground">
-                      {traceabilityQuery.data?.lot?.lotCode ?? product.traceabilityCode ?? "Đang cập nhật"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Mùa vụ:</span>
-                    <span className="font-semibold text-foreground">
-                      {traceabilityQuery.data?.season?.name ?? product.seasonName ?? "Đang cập nhật"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ngày thu hoạch:</span>
-                    <span className="flex items-center gap-1 font-semibold text-foreground">
-                      <Calendar size={14} className="text-primary" />
-                      {traceabilityQuery.data?.lot?.harvestedAt ?? "Đang cập nhật"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* ═══ TABS ═══════════════════════════════════════════ */}
+        <div className="pdp__tabs-section">
+          <div className="pdp__tabs-nav">
+            <button
+              type="button"
+              className={`pdp__tab-btn${activeTab === "description" ? " pdp__tab-btn--active" : ""}`}
+              onClick={() => setActiveTab("description")}
+            >
+              Mô tả
+            </button>
+            <button
+              type="button"
+              className={`pdp__tab-btn${activeTab === "reviews" ? " pdp__tab-btn--active" : ""}`}
+              onClick={() => setActiveTab("reviews")}
+            >
+              Đánh giá ({product.ratingCount})
+            </button>
           </div>
-        ) : null}
 
-        {product.description && (
-          <div className="mb-6">
-            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-bold text-foreground">Mô tả sản phẩm</h2>
-              <div className="text-sm leading-relaxed text-foreground">
-                <p>{product.description}</p>
-                <p className="mt-4 text-xs text-muted-foreground/60">Cập nhật lần cuối: {formatDateTime(product.updatedAt)}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-base font-bold text-foreground">Thông tin bổ sung</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-border bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground mb-1">Người bán</p>
-                <p className="text-sm font-semibold text-foreground truncate">{product.farmerDisplayName}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground mb-1">Tồn kho</p>
-                <p className="text-sm font-semibold text-foreground">
-                  {product.availableQuantity} {product.unit}
+          <div className="pdp__tab-content">
+            {/* ── Description Tab ─────────────────────────────── */}
+            {activeTab === "description" && (
+              <>
+                {product.description && (
+                  <p className="pdp__desc-text">{product.description}</p>
+                )}
+                <p className="pdp__desc-updated">
+                  Cập nhật lần cuối: {formatDateTime(product.updatedAt)}
                 </p>
-              </div>
-              {product.region && (
-                <div className="col-span-2 rounded-xl border border-border bg-muted/50 p-3">
-                  <p className="text-xs text-muted-foreground mb-1">Khu vực</p>
-                  <p className="text-sm font-semibold text-foreground flex items-center gap-1">
-                    <MapPin size={14} className="text-primary" /> {product.region}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
 
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-base font-bold text-foreground">Đánh giá gần đây</h2>
-            {reviewsQuery.isLoading ? (
-              <p className="text-sm text-muted-foreground">Đang tải đánh giá...</p>
-            ) : reviewsQuery.isError ? (
-              <p className="text-sm text-destructive">Không thể tải đánh giá.</p>
-            ) : reviewsQuery.data && reviewsQuery.data.items.length > 0 ? (
-              <div className="space-y-3">
-                {reviewsQuery.data.items.map((review) => (
-                  <div key={review.id} className="rounded-xl border border-border bg-muted/50 p-3">
-                    <div className="mb-1 flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-foreground">{review.buyerDisplayName}</p>
-                      <StarRating rating={(review as { rating?: number }).rating} />
-                    </div>
-                    <p className="text-xs text-muted-foreground/60 mb-1">{formatDateTime(review.createdAt)}</p>
-                    <p className="text-sm text-muted-foreground">{review.comment}</p>
+                {/* Inline traceability section */}
+                {product.traceable && (
+                  <div className="pdp__trace-section">
+                    <h3 className="pdp__trace-title">
+                      <ShieldCheck /> Thông tin lô hàng
+                    </h3>
+                    <table className="pdp__trace-table">
+                      <tbody>
+                        <tr>
+                          <th>Nông trại</th>
+                          <td>
+                            {traceabilityQuery.data?.farm?.name ?? product.farmName ?? product.farmerDisplayName}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Khu vực</th>
+                          <td>
+                            {traceabilityQuery.data?.farm?.region ?? product.region ?? "Đang cập nhật"}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Địa chỉ</th>
+                          <td>
+                            {traceabilityQuery.data?.farm?.address ?? "Đang cập nhật"}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Mã lô</th>
+                          <td>
+                            {traceabilityQuery.data?.lot?.lotCode ?? product.traceabilityCode ?? "Đang cập nhật"}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Mùa vụ</th>
+                          <td>
+                            {traceabilityQuery.data?.season?.name ?? product.seasonName ?? "Đang cập nhật"}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Ngày thu hoạch</th>
+                          <td>
+                            {traceabilityQuery.data?.lot?.harvestedAt ?? "Đang cập nhật"}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Chưa có đánh giá nào cho sản phẩm này.</p>
+                )}
+              </>
+            )}
+
+            {/* ── Reviews Tab ─────────────────────────────────── */}
+            {activeTab === "reviews" && (
+              <>
+                {reviewsQuery.isLoading ? (
+                  <p className="pdp__reviews-loading">Đang tải đánh giá...</p>
+                ) : reviewsQuery.isError ? (
+                  <p className="pdp__reviews-error">Không thể tải đánh giá.</p>
+                ) : reviewsQuery.data && reviewsQuery.data.items.length > 0 ? (
+                  <div className="pdp__reviews-list">
+                    {reviewsQuery.data.items.map((review) => (
+                      <div key={review.id} className="pdp__review-item">
+                        <div className="pdp__review-header">
+                          <span className="pdp__review-name">{review.buyerDisplayName}</span>
+                          <StarRating rating={(review as { rating?: number }).rating} />
+                        </div>
+                        <p className="pdp__review-date">{formatDateTime(review.createdAt)}</p>
+                        <p className="pdp__review-comment">{review.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="pdp__reviews-empty">Chưa có đánh giá nào cho sản phẩm này.</p>
+                )}
+              </>
             )}
           </div>
         </div>
+
+        {/* ═══ RELATED PRODUCTS ═══════════════════════════════ */}
+        {/* NOTE: No existing related-products hook/data — rendered only if
+            farmId exists so users can navigate. Placeholder section ready for
+            future integration without adding new API calls. */}
       </div>
+
+      {/* ═══ MOBILE STICKY CTA ═══════════════════════════════ */}
+      {isAuthenticated && (
+        <div className="pdp__sticky-cta">
+          <button
+            type="button"
+            className="pdp__cta-btn pdp__cta-btn--cart"
+            disabled={isAdding || product.availableQuantity <= 0}
+            onClick={async () => {
+              await addToCart(product.id, quantity);
+            }}
+          >
+            <ShoppingCart /> Giỏ hàng
+          </button>
+          <button
+            type="button"
+            className="pdp__cta-btn pdp__cta-btn--buy"
+            disabled={isAdding || product.availableQuantity <= 0}
+            onClick={async () => {
+              const mode = await addToCart(product.id, quantity);
+              if (mode === "server") {
+                navigate("/marketplace/cart");
+              }
+            }}
+          >
+            {isAdding ? "Đang xử lý..." : "Mua ngay"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

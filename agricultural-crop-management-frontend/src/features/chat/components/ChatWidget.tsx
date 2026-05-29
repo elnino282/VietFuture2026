@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, Minus, X } from "lucide-react";
+import { Minus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/lib";
 import { useChatWidget } from "../hooks/useChatWidget";
@@ -103,16 +103,6 @@ export function ChatWidget({
           <span aria-label={`${totalUnreadLabel} unread messages`}>({totalUnreadLabel})</span>
         </div>
         <div className="chat-widget-header__actions">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="Expand chat"
-            onClick={onExpand}
-            title="Open full chat page"
-          >
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          </Button>
           <Button
             type="button"
             variant="ghost"
