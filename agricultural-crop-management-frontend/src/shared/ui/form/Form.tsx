@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as LabelPrimitive from "@radix-ui/react-label";
+import type * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
 import {
     Controller,
@@ -87,18 +87,23 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
 
 function FormLabel({
     className,
+    required = false,
+    children,
     ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+}: React.ComponentProps<typeof LabelPrimitive.Root> & { required?: boolean }) {
     const { error, formItemId } = useFormField();
 
     return (
         <Label
             data-slot="form-label"
             data-error={!!error}
+            required={required}
             className={cn("data-[error=true]:text-destructive", className)}
             htmlFor={formItemId}
             {...props}
-        />
+        >
+            {children}
+        </Label>
     );
 }
 

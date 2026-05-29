@@ -1,5 +1,6 @@
 // Re-export types from schemas
 export type {
+  CreateSupplyItemRequest,
   CreateSupplierRequest,
   StockInRequest,
   StockInResponse,
@@ -9,5 +10,6 @@ export type {
   SupplyItemsParams,
   SupplyLot,
   SupplyLotsParams,
+  UpdateSupplyItemRequest,
   UpdateSupplierRequest,
 } from "./schemas";

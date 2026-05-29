@@ -282,7 +282,7 @@ function MarketplaceFooter() {
               <div className="rounded-md bg-emerald-600 p-1.5 text-white">
                 <Package size={24} />
               </div>
-              <span className="text-xl font-bold text-white">FarmTrace</span>
+              <span className="text-xl font-bold text-white">Farm ACM</span>
             </Link>
             <p className="mb-4 text-sm text-gray-400">
               Nền tảng giao dịch nông sản minh bạch, kết nối trực tiếp từ nông
@@ -527,7 +527,7 @@ export function MarketplacePublicLayout() {
                 <Package size={24} />
               </div>
               <span className="marketplace-header__brand-text text-xl font-bold text-white">
-                FarmTrace
+                FarmACM
               </span>
             </Link>
 

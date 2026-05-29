@@ -71,7 +71,7 @@ export function SeasonHeader({
       selectedSeason.startDate;
 
     return (
-      <div className="max-w-[1800px] mx-auto px-6 pt-6 mb-4">
+      <div className="mb-6">
         <Card variant="page-header">
           <CardContent className="px-6 py-4">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -158,7 +158,7 @@ export function SeasonHeader({
   }
 
   return (
-    <div className="max-w-[1800px] mx-auto px-6 pt-6 mb-4">
+    <div className="mb-6">
       <Card variant="page-header">
         <CardContent className="px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

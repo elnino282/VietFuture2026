@@ -8,7 +8,6 @@ const mocks = vi.hoisted(() => ({
   useCreateHarvest: vi.fn(),
   useDeleteHarvest: vi.fn(),
   useOptionalSeason: vi.fn(),
-  useWeightUnit: vi.fn(),
   createMutate: vi.fn(),
   deleteMutateAsync: vi.fn(),
   refetch: vi.fn(),
@@ -25,7 +24,6 @@ vi.mock("@/entities/harvest", () => ({
 
 vi.mock("@/shared/contexts", () => ({
   useOptionalSeason: mocks.useOptionalSeason,
-  useWeightUnit: mocks.useWeightUnit,
 }));
 
 vi.mock("sonner", () => ({
@@ -56,9 +54,8 @@ describe("useHarvestManagement", () => {
 
     mocks.useOptionalSeason.mockReturnValue({
       selectedSeasonId: 11,
-      seasons: [{ id: 11, status: "ACTIVE", seasonName: "Spring 2026" }],
+      seasons: [{ id: 11, status: "ACTIVE", seasonName: "Spring 2026", plotId: 21 }],
     });
-    mocks.useWeightUnit.mockReturnValue("kg");
     mocks.useAllFarmerHarvests.mockReturnValue({
       data: {
         items: apiHarvestRows,
@@ -135,6 +132,91 @@ describe("useHarvestManagement", () => {
     );
   });
 
+  it("rejects non-positive quantity before create mutation", () => {
+    const { result } = renderHook(() => useHarvestManagement());
+
+    act(() => {
+      result.current.setFormData((previous) => ({
+        ...previous,
+        date: "2026-05-10",
+        quantity: "0",
+        warehouseId: "3",
+        productName: "Rice",
+        lotCode: "LOT-100",
+      }));
+    });
+
+    act(() => {
+      result.current.handleAddBatch();
+    });
+
+    expect(mocks.createMutate).not.toHaveBeenCalled();
+    expect(mocks.toastError).toHaveBeenCalledWith("Invalid quantity");
+  });
+
+  it("rejects submit when selected season has no valid plot", () => {
+    mocks.useOptionalSeason.mockReturnValue({
+      selectedSeasonId: 11,
+      seasons: [{ id: 11, status: "ACTIVE", seasonName: "Spring 2026", plotId: undefined }],
+    });
+
+    const { result } = renderHook(() => useHarvestManagement());
+
+    act(() => {
+      result.current.setFormData((previous) => ({
+        ...previous,
+        date: "2026-05-10",
+        quantity: "50",
+        warehouseId: "3",
+        productName: "Rice",
+      }));
+    });
+
+    act(() => {
+      result.current.handleAddBatch();
+    });
+
+    expect(mocks.createMutate).not.toHaveBeenCalled();
+    expect(mocks.toastError).toHaveBeenCalledWith(
+      "Harvest plot required",
+      expect.objectContaining({
+        description: expect.stringContaining("missing a valid plot"),
+      }),
+    );
+  });
+
+  it("rejects submit when selected season is not ACTIVE", () => {
+    mocks.useOptionalSeason.mockReturnValue({
+      selectedSeasonId: 11,
+      seasons: [{ id: 11, status: "PLANNED", seasonName: "Spring 2026", plotId: 21 }],
+    });
+
+    const { result } = renderHook(() => useHarvestManagement());
+
+    act(() => {
+      result.current.setFormData((previous) => ({
+        ...previous,
+        date: "2026-05-10",
+        quantity: "50",
+        warehouseId: "3",
+        productName: "Rice",
+        lotCode: "LOT-100",
+      }));
+    });
+
+    act(() => {
+      result.current.handleAddBatch();
+    });
+
+    expect(mocks.createMutate).not.toHaveBeenCalled();
+    expect(mocks.toastError).toHaveBeenCalledWith(
+      "Season must be ACTIVE",
+      expect.objectContaining({
+        description: expect.stringContaining("Current status: PLANNED"),
+      }),
+    );
+  });
+
   it("calls create mutation with validated payload for valid season", () => {
     const { result } = renderHook(() => useHarvestManagement());
 
@@ -145,11 +227,11 @@ describe("useHarvestManagement", () => {
         quantity: "50",
         warehouseId: "3",
         productName: "Rice",
-        productVariant: "Premium",
-        lotCode: "LOT-100",
-        inventoryUnit: "kg",
-        notes: "note",
-      }));
+          productVariant: "Premium",
+          lotCode: "LOT-100",
+          inventoryUnit: "kg",
+          notes: "note",
+        }));
     });
 
     act(() => {
@@ -167,10 +249,41 @@ describe("useHarvestManagement", () => {
           productVariant: "Premium",
           lotCode: "LOT-100",
           inventoryUnit: "kg",
-          note: "note",
+          note: expect.stringContaining("note"),
         }),
       })
     );
+    expect(mocks.createMutate.mock.calls[0][0].data.note).toContain("harvestPlotId=21");
+  });
+
+  it("does not inject optional numeric metadata when user leaves fields empty", () => {
+    const { result } = renderHook(() => useHarvestManagement());
+
+    act(() => {
+      result.current.setFormData((previous) => ({
+        ...previous,
+        date: "2026-05-10",
+        quantity: "50",
+        warehouseId: "3",
+        productName: "Rice",
+        lotCode: "LOT-100",
+        moisture: "",
+        purity: "",
+        foreignMatter: "",
+        brokenGrains: "",
+        harvestLoss: "",
+      }));
+    });
+
+    act(() => {
+      result.current.handleAddBatch();
+    });
+
+    const payload = mocks.createMutate.mock.calls[0][0].data;
+    expect(payload.note).toContain("harvestPlotId=21");
+    expect(payload.note).not.toContain("moisturePercent=");
+    expect(payload.note).not.toContain("purityPercent=");
+    expect(payload.note).not.toContain("harvestLossPercent=");
   });
 
   it("calls delete mutation for a real batch", async () => {

@@ -7,7 +7,7 @@ import { usePlotManagement } from "./hooks/usePlotManagement";
 import { PlotToolbar } from "./components/PlotToolbar";
 import { PlotListView } from "./components/PlotListView";
 import { PlotMapView } from "./components/PlotMapView";
-import { PlotDetailDrawer } from "./components/PlotDetailDrawer";
+import { PlotDetailDialog } from "./components/PlotDetailDrawer";
 import { AddPlotDialog } from "./components/AddPlotDialog";
 import { MergePlotsWizard } from "./components/MergePlotsWizard";
 import { DeletePlotDialog } from "./components/DeletePlotDialog";
@@ -193,8 +193,8 @@ export function PlotManagement() {
         </Button>
       </div>
 
-      {/* Plot Detail Drawer */}
-      <PlotDetailDrawer
+      {/* Plot Detail Dialog */}
+      <PlotDetailDialog
         plot={selectedPlot}
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}

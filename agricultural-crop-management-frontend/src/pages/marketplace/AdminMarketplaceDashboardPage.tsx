@@ -90,7 +90,7 @@ export function AdminMarketplaceDashboardPage() {
       <AdminHeaderCard
         title="Marketplace dashboard"
         description="Live marketplace metrics only. Empty states are shown when product, order, or revenue data is not available yet."
-        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">FarmTrace Admin</span>}
+        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">FarmACM Admin</span>}
         actions={
           <div className="flex flex-wrap gap-3 text-sm">
           <Link

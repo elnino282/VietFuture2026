@@ -57,7 +57,7 @@ export function ExportModal({
                                     <button
                                         key={option.value}
                                         onClick={() => onExportFormatChange(option.value)}
-                                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                                        className={`flex flex-col items-center gap-2 rounded-[14px] border-2 p-4 transition-all ${
                                             exportFormat === option.value
                                                 ? "border-primary bg-primary/5"
                                                 : "border-border hover:border-primary/50"
@@ -92,10 +92,10 @@ export function ExportModal({
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl border-border" disabled={isExporting}>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-[14px] border-border" disabled={isExporting}>
                         {t("reports.export.cancel")}
                     </Button>
-                    <Button onClick={onExport} className="bg-primary hover:bg-primary/90 text-white rounded-xl" disabled={isExporting}>
+                    <Button onClick={onExport} className="rounded-[14px] bg-primary text-white hover:bg-primary/90" disabled={isExporting}>
                         {isExporting ? (
                             <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

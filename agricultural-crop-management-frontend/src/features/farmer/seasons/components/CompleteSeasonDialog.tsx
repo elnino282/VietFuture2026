@@ -14,6 +14,7 @@ import {
 } from "@/shared/ui";
 import { CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Season } from "../types";
 
 interface CompleteSeasonDialogProps {
@@ -35,6 +36,7 @@ export function CompleteSeasonDialog({
   onConfirm,
   isSubmitting = false,
 }: CompleteSeasonDialogProps) {
+  const { t } = useTranslation();
   const { preferences } = usePreferences();
   const unitLabel = getWeightUnitLabel(preferences.weightUnit);
   const weightStep = preferences.weightUnit === "G" ? "1" : "0.01";
@@ -60,6 +62,7 @@ export function CompleteSeasonDialog({
       : convertWeightToKg(actualYieldInput, preferences.weightUnit);
 
   const canSubmit = Boolean(endDate) && hasValidYield && !isSubmitting;
+  const yieldError = hasValidYield ? undefined : t("seasons.dialog.actualYieldInvalid");
 
   const handleSubmit = () => {
     if (!season || !canSubmit) return;
@@ -69,35 +72,41 @@ export function CompleteSeasonDialog({
       forceComplete,
     });
   };
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (isSubmitting && !nextOpen) return;
+    onOpenChange(nextOpen);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="acm-rounded-lg">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[500px]" closeDisabled={isSubmitting}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-primary" />
-            Complete Season
+            {t("seasons.dialog.completeTitle")}
           </DialogTitle>
           <DialogDescription>
-            Finalize this season by setting the end date and actual yield.
+            {t("seasons.dialog.completeDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="endDate">End Date *</Label>
+            <Label htmlFor="endDate" required>{t("seasons.dialog.endDateLabel")}</Label>
             <Input
               id="endDate"
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               min={season?.startDate}
-              className="border-border acm-rounded-sm"
+              disabled={isSubmitting}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="actualYieldKg">Actual Yield ({unitLabel})</Label>
+            <Label htmlFor="actualYieldKg">
+              {t("seasons.dialog.actualYieldLabel", { unit: unitLabel })}
+            </Label>
             <Input
               id="actualYieldKg"
               type="number"
@@ -105,22 +114,31 @@ export function CompleteSeasonDialog({
               step={weightStep}
               value={actualYieldKg}
               onChange={(e) => setActualYieldKg(e.target.value)}
-              placeholder="e.g., 5200"
-              className="border-border acm-rounded-sm"
+              placeholder={t("seasons.dialog.actualYieldPlaceholder")}
+              aria-invalid={!!yieldError}
+              aria-describedby={yieldError ? "complete-season-yield-error" : "complete-season-yield-help"}
+              disabled={isSubmitting}
             />
-            <p className="text-xs text-muted-foreground">
-              Leave blank to auto-calculate from harvest records.
-            </p>
+            {yieldError ? (
+              <p id="complete-season-yield-error" className="text-sm text-destructive">
+                {yieldError}
+              </p>
+            ) : (
+              <p id="complete-season-yield-help" className="text-xs text-muted-foreground">
+                {t("seasons.dialog.actualYieldHelp")}
+              </p>
+            )}
           </div>
 
           <div className="flex items-start gap-3">
             <Checkbox
               checked={forceComplete}
               onCheckedChange={(checked) => setForceComplete(Boolean(checked))}
+              disabled={isSubmitting}
               className="mt-1"
             />
             <div className="text-sm text-muted-foreground">
-              Force complete even if there are pending or in-progress tasks.
+              {t("seasons.dialog.forceCompleteHelp")}
             </div>
           </div>
         </div>
@@ -130,16 +148,14 @@ export function CompleteSeasonDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
-            className="acm-rounded-sm"
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm"
           >
-            {isSubmitting ? "Completing..." : "Complete Season"}
+            {isSubmitting ? t("seasons.dialog.completing") : t("seasons.dialog.completeConfirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

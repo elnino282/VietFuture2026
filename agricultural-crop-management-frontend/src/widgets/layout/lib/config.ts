@@ -65,7 +65,7 @@ export const portalConfig: Record<PortalType, PortalConfig> = {
     },
     EMPLOYEE: {
         name: 'Employee Portal',
-        color: '#0F766E',
+        color: '#3BA55D',
         icon: ClipboardList,
         emoji: '🧑‍🌾',
         navigation: [

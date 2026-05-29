@@ -7,7 +7,7 @@ import { HarvestTable } from "./components/HarvestTable";
 import { HarvestCharts } from "./components/HarvestCharts";
 import { QuickActionsPanel } from "./components/QuickActionsPanel";
 import { AddBatchDialog } from "./components/AddBatchDialog";
-import { HarvestDetailsDrawer } from "./components/HarvestDetailsDrawer";
+import { HarvestDetailsDialog } from "./components/HarvestDetailsDrawer";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
@@ -112,12 +112,10 @@ export function HarvestManagement() {
     return seasonsData.items.find((season) => season.id === parsedSeasonId)?.status ?? null;
   }, [effectiveSeasonId, isWorkspaceScoped, seasonsData?.items, selectedSeason, workspaceSeasonId]);
 
-  const isSeasonWriteLocked =
-    selectedSeasonStatus === "COMPLETED"
-    || selectedSeasonStatus === "CANCELLED"
-    || selectedSeasonStatus === "ARCHIVED";
-  const seasonWriteLockReason = isSeasonWriteLocked
-    ? "Season is locked. Harvest write actions are disabled."
+  const isHarvestWriteLocked =
+    selectedSeasonStatus !== null && selectedSeasonStatus !== "ACTIVE";
+  const seasonWriteLockReason = isHarvestWriteLocked
+    ? `Harvest write actions require an ACTIVE season. Current status: ${selectedSeasonStatus}.`
     : undefined;
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -169,7 +167,7 @@ export function HarvestManagement() {
       <div className="max-w-[1920px] mx-auto p-4 md:p-6">
         <HarvestHeader
           onAddBatch={() => {
-            if (isSeasonWriteLocked) {
+            if (isHarvestWriteLocked) {
               toast.error(seasonWriteLockReason);
               return;
             }
@@ -180,18 +178,41 @@ export function HarvestManagement() {
               return;
             }
             resetForm();
-            const nextSeasonValue = isWorkspaceScoped
+            let nextSeasonValue = isWorkspaceScoped
               ? String(workspaceSeasonId)
               : (selectedSeason !== "all"
                   ? selectedSeason
                   : (effectiveSeasonId ? String(effectiveSeasonId) : ""));
+            let nextSeasonId = Number(nextSeasonValue);
+            let nextSeasonMeta = Number.isFinite(nextSeasonId) && nextSeasonId > 0
+              ? seasonsData?.items?.find((season) => season.id === nextSeasonId)
+              : undefined;
+            if (!isWorkspaceScoped && selectedSeason === "all" && nextSeasonMeta?.status !== "ACTIVE") {
+              const firstActiveSeason = seasonsData?.items?.find((season) => season.status === "ACTIVE");
+              if (firstActiveSeason) {
+                nextSeasonValue = String(firstActiveSeason.id);
+                nextSeasonId = firstActiveSeason.id;
+                nextSeasonMeta = firstActiveSeason;
+                setSelectedSeason(nextSeasonValue);
+              }
+            }
+            if (!nextSeasonMeta || nextSeasonMeta.status !== "ACTIVE") {
+              toast.error("Harvest requires an ACTIVE season", {
+                description: "Select or start an ACTIVE season before adding a harvest batch.",
+              });
+              return;
+            }
             setFormData((prev) => ({
               ...prev,
               season: nextSeasonValue,
+              plot: nextSeasonMeta?.plotId ? String(nextSeasonMeta.plotId) : "",
+              plotName: nextSeasonMeta?.plotName ?? "",
+              crop: nextSeasonMeta?.cropName ?? "",
+              productName: nextSeasonMeta?.cropName ?? prev.productName,
             }));
             setIsAddBatchOpen(true);
           }}
-          addDisabled={isSeasonWriteLocked}
+          addDisabled={isHarvestWriteLocked}
           lockMessage={seasonWriteLockReason}
         />
 
@@ -306,7 +327,7 @@ export function HarvestManagement() {
               onPrint={handlePrint}
               getStatusBadge={getStatusBadge}
               getGradeBadge={getGradeBadge}
-              disableMutations={isSeasonWriteLocked}
+              disableMutations={isHarvestWriteLocked}
             />
 
             <HarvestCharts
@@ -331,7 +352,7 @@ export function HarvestManagement() {
         seasonId={effectiveSeasonId}
         isSeasonLocked={isWorkspaceScoped}
         lockedSeasonLabel={scopedSeasonLabel}
-        isWriteLocked={isSeasonWriteLocked}
+        isWriteLocked={isHarvestWriteLocked}
         warehouseCount={outputWarehouses.length}
         writeLockReason={seasonWriteLockReason}
         isSubmitting={isCreating}
@@ -341,7 +362,7 @@ export function HarvestManagement() {
         }}
       />
 
-      <HarvestDetailsDrawer
+      <HarvestDetailsDialog
         batch={selectedBatch}
         open={isDetailsDrawerOpen}
         onOpenChange={setIsDetailsDrawerOpen}
@@ -352,4 +373,3 @@ export function HarvestManagement() {
     </div>
   );
 }
-

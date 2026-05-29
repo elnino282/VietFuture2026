@@ -230,7 +230,7 @@ export function AdminMarketplaceProductsPage() {
       <AdminHeaderCard
         title="Moderate marketplace products"
         description="Review product listings while keeping current moderation mutations and filters."
-        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">FarmTrace Admin</span>}
+        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">FarmACM Admin</span>}
       />
 
       <AdminFilterCard>

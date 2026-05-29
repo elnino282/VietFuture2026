@@ -30,6 +30,7 @@ import {
 import type { Expense, ExpenseFormData, ExpenseStatus, TaskOption } from "../types";
 import { usePreferences } from "@/shared/contexts";
 import { formatMoney } from "@/shared/lib";
+import { useTranslation } from "react-i18next";
 
 interface ExpenseFormModalProps {
     isOpen: boolean;
@@ -68,16 +69,17 @@ export function ExpenseFormModal({
     lockedSeasonLabel,
     isSubmitting = false,
 }: ExpenseFormModalProps) {
+    const { t } = useTranslation();
     const { preferences } = usePreferences();
     const amountValue = Number(formData.amount);
     const amountInvalid = !Number.isFinite(amountValue) || amountValue <= 0;
-    const dateError = showValidationErrors && !formData.date ? "Date is required." : undefined;
-    const categoryError = showValidationErrors && !formData.category ? "Category is required." : undefined;
-    const seasonError = showValidationErrors && !formData.linkedSeasonId ? "Season is required." : undefined;
+    const dateError = showValidationErrors && !formData.date ? t("expenses.form.dateRequired") : undefined;
+    const categoryError = showValidationErrors && !formData.category ? t("expenses.form.categoryRequired") : undefined;
+    const seasonError = showValidationErrors && !formData.linkedSeasonId ? t("expenses.form.seasonRequired") : undefined;
     const amountError = showValidationErrors && (formData.amount === "" || amountInvalid)
-        ? "Enter a valid amount greater than 0."
+        ? t("expenses.form.amountRequired")
         : undefined;
-    const statusError = showValidationErrors && !formData.status ? "Status is required." : undefined;
+    const statusError = showValidationErrors && !formData.status ? t("expenses.form.statusRequired") : undefined;
     const isFormDisabled = isSubmitting;
 
     const handleClose = () => {
@@ -136,33 +138,32 @@ export function ExpenseFormModal({
                 setIsOpen(open);
             }}
         >
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[720px]" closeDisabled={isSubmitting}>
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-foreground text-xl">
+                    <DialogTitle className="flex items-center gap-2 text-foreground">
                         {selectedExpense ? (
                             <>
                                 <Edit className="w-5 h-5 text-secondary" />
-                                Edit Expense
+                                {t("expenses.dialog.editTitle")}
                             </>
                         ) : (
                             <>
                                 <Plus className="w-5 h-5 text-primary" />
-                                Add New Expense
+                                {t("expenses.dialog.createTitle")}
                             </>
                         )}
                     </DialogTitle>
-                    <DialogDescription className="text-sm text-muted-foreground">
-                        Fill in the expense details below. Fields marked with * are
-                        required.
+                    <DialogDescription>
+                        {t("expenses.dialog.description")}
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-6 py-4">
+                <div className="space-y-6 py-2">
                     {/* Date & Category */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="date" className="text-foreground">
-                                Date <span className="text-destructive">*</span>
+                                {t("expenses.form.date")} <span className="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="date"
@@ -173,16 +174,17 @@ export function ExpenseFormModal({
                                 }
                                 className={`rounded-xl border-border focus:border-primary ${dateError ? "border-destructive" : ""}`}
                                 aria-invalid={!!dateError}
+                                aria-describedby={dateError ? "expense-date-error" : undefined}
                                 disabled={isFormDisabled}
                             />
                             {dateError && (
-                                <p className="text-xs text-destructive">{dateError}</p>
+                                <p id="expense-date-error" className="text-xs text-destructive">{dateError}</p>
                             )}
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="category" className="text-foreground">
-                                Category <span className="text-destructive">*</span>
+                                {t("expenses.form.category")} <span className="text-destructive">*</span>
                             </Label>
                             <Select
                                 value={formData.category}
@@ -191,8 +193,12 @@ export function ExpenseFormModal({
                                 }
                                 disabled={isFormDisabled}
                             >
-                                <SelectTrigger className={`rounded-xl border-border ${categoryError ? "border-destructive" : ""}`} aria-invalid={!!categoryError}>
-                                    <SelectValue placeholder="Select category" />
+                                <SelectTrigger
+                                    className={`rounded-xl border-border ${categoryError ? "border-destructive" : ""}`}
+                                    aria-invalid={!!categoryError}
+                                    aria-describedby={categoryError ? "expense-category-error" : undefined}
+                                >
+                                    <SelectValue placeholder={t("expenses.form.selectCategory")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Fertilizer">Fertilizer</SelectItem>
@@ -207,7 +213,7 @@ export function ExpenseFormModal({
                                 </SelectContent>
                             </Select>
                             {categoryError && (
-                                <p className="text-xs text-destructive">{categoryError}</p>
+                                <p id="expense-category-error" className="text-xs text-destructive">{categoryError}</p>
                             )}
                         </div>
                     </div>
@@ -215,11 +221,11 @@ export function ExpenseFormModal({
                     {/* Description */}
                     <div className="space-y-2">
                         <Label htmlFor="description" className="text-foreground">
-                            Description
+                            {t("expenses.form.description")}
                         </Label>
                         <Input
                             id="description"
-                            placeholder="e.g., NPK Fertilizer 20-20-20"
+                            placeholder={t("expenses.form.descriptionPlaceholder")}
                             value={formData.description}
                             onChange={(e) =>
                                 setFormData({ ...formData, description: e.target.value })
@@ -232,7 +238,7 @@ export function ExpenseFormModal({
                     {/* Vendor */}
                     <div className="space-y-2">
                         <Label htmlFor="vendor" className="text-foreground">
-                            Vendor/Supplier
+                            {t("expenses.form.vendor")}
                         </Label>
                         <Select
                             value={formData.vendorId ? String(formData.vendorId) : "none"}
@@ -240,10 +246,10 @@ export function ExpenseFormModal({
                             disabled={isFormDisabled}
                         >
                             <SelectTrigger className="rounded-xl border-border">
-                                <SelectValue placeholder="Select supplier" />
+                                <SelectValue placeholder={t("expenses.form.selectVendor")} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="none">No supplier</SelectItem>
+                                <SelectItem value="none">{t("expenses.form.noVendor")}</SelectItem>
                                 {supplierOptions.map((option) => (
                                     <SelectItem key={option.value} value={option.value}>
                                         {option.label}
@@ -260,7 +266,7 @@ export function ExpenseFormModal({
                             <Label htmlFor="linkedTask" className="text-foreground">
                                 <div className="flex items-center gap-2">
                                     <ListTodo className="w-4 h-4" />
-                                    Linked Task
+                                    {t("expenses.form.linkedTask")}
                                 </div>
                             </Label>
                             <Select
@@ -281,15 +287,15 @@ export function ExpenseFormModal({
                                 <SelectTrigger className="rounded-xl border-border">
                                     <SelectValue placeholder={
                                         isLoadingTasks
-                                            ? "Loading tasks..."
+                                            ? t("expenses.form.loadingTasks")
                                             : taskOptions.length === 0
-                                                ? "No tasks available"
-                                                : "Select task (optional)"
+                                                ? t("expenses.form.noTasks")
+                                                : t("expenses.form.selectTask")
                                     } />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="none">
-                                        <span className="text-muted-foreground">No linked task</span>
+                                        <span className="text-muted-foreground">{t("expenses.form.noLinkedTask")}</span>
                                     </SelectItem>
                                     {taskOptions.map((task) => (
                                         <SelectItem key={task.value} value={task.value}>
@@ -300,7 +306,7 @@ export function ExpenseFormModal({
                             </Select>
                             {taskOptions.length === 0 && !isLoadingTasks && (
                                 <p className="text-xs text-muted-foreground">
-                                    No tasks found for this season
+                                    {t("expenses.form.noTasksFound")}
                                 </p>
                             )}
                         </div>
@@ -308,11 +314,11 @@ export function ExpenseFormModal({
                         {/* LINKED SEASON */}
                         <div className="space-y-2">
                             <Label htmlFor="linkedSeason" className="text-foreground">
-                                Linked Season <span className="text-destructive">*</span>
+                                {t("expenses.form.linkedSeason")} <span className="text-destructive">*</span>
                             </Label>
                             {isSeasonLocked ? (
                                 <div className={`rounded-xl border border-border px-3 py-2 text-sm bg-muted/30 ${seasonError ? "border-destructive" : ""}`}>
-                                    {lockedSeasonLabel ?? formData.linkedSeason ?? "Mùa vụ hiện tại"}
+                                    {lockedSeasonLabel ?? formData.linkedSeason ?? t("expenses.form.currentSeason")}
                                 </div>
                             ) : (
                                 <Select
@@ -320,8 +326,12 @@ export function ExpenseFormModal({
                                     onValueChange={handleSeasonSelection}
                                     disabled={isFormDisabled}
                                 >
-                                    <SelectTrigger className={`rounded-xl border-border ${seasonError ? "border-destructive" : ""}`} aria-invalid={!!seasonError}>
-                                        <SelectValue placeholder="Select season" />
+                                    <SelectTrigger
+                                        className={`rounded-xl border-border ${seasonError ? "border-destructive" : ""}`}
+                                        aria-invalid={!!seasonError}
+                                        aria-describedby={seasonError ? "expense-season-error" : undefined}
+                                    >
+                                        <SelectValue placeholder={t("expenses.form.selectSeason")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {seasonOptions.map((option) => (
@@ -333,7 +343,7 @@ export function ExpenseFormModal({
                                 </Select>
                             )}
                             {seasonError && (
-                                <p className="text-xs text-destructive">{seasonError}</p>
+                                <p id="expense-season-error" className="text-xs text-destructive">{seasonError}</p>
                             )}
                         </div>
                     </div>
@@ -342,7 +352,7 @@ export function ExpenseFormModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="amount" className="text-foreground">
-                                Amount ({preferences.currency}) <span className="text-destructive">*</span>
+                                {t("expenses.form.amount", { currency: preferences.currency })} <span className="text-destructive">*</span>
                             </Label>
                             <div className="relative">
                                 <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -357,17 +367,18 @@ export function ExpenseFormModal({
                                     }
                                     className={`pl-10 rounded-xl border-border focus:border-primary ${amountError ? "border-destructive" : ""}`}
                                     aria-invalid={!!amountError}
+                                    aria-describedby={amountError ? "expense-amount-error" : undefined}
                                     disabled={isFormDisabled}
                                 />
                             </div>
                             {amountError && (
-                                <p className="text-xs text-destructive">{amountError}</p>
+                                <p id="expense-amount-error" className="text-xs text-destructive">{amountError}</p>
                             )}
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="status" className="text-foreground">
-                                Payment Status <span className="text-destructive">*</span>
+                                {t("expenses.form.paymentStatus")} <span className="text-destructive">*</span>
                             </Label>
                             <Select
                                 value={formData.status}
@@ -376,17 +387,21 @@ export function ExpenseFormModal({
                                 }
                                 disabled={isFormDisabled}
                             >
-                                <SelectTrigger className={`rounded-xl border-border ${statusError ? "border-destructive" : ""}`} aria-invalid={!!statusError}>
+                                <SelectTrigger
+                                    className={`rounded-xl border-border ${statusError ? "border-destructive" : ""}`}
+                                    aria-invalid={!!statusError}
+                                    aria-describedby={statusError ? "expense-status-error" : undefined}
+                                >
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="PAID">Paid</SelectItem>
-                                    <SelectItem value="PENDING">Pending</SelectItem>
-                                    <SelectItem value="UNPAID">Unpaid</SelectItem>
+                                    <SelectItem value="PAID">{t("expenses.overview.paid")}</SelectItem>
+                                    <SelectItem value="PENDING">{t("expenses.status.pending")}</SelectItem>
+                                    <SelectItem value="UNPAID">{t("expenses.overview.unpaid")}</SelectItem>
                                 </SelectContent>
                             </Select>
                             {statusError && (
-                                <p className="text-xs text-destructive">{statusError}</p>
+                                <p id="expense-status-error" className="text-xs text-destructive">{statusError}</p>
                             )}
                         </div>
                     </div>
@@ -394,14 +409,14 @@ export function ExpenseFormModal({
                     {/* Upload Attachment */}
                     <div className="space-y-2">
                         <Label className="text-foreground">
-                            Attachment (Receipt/Invoice)
+                            {t("expenses.form.attachment")}
                         </Label>
                         <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary hover:bg-primary/5 transition-colors">
                             <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                             <p className="text-sm text-foreground mb-1">
-                                Click to upload or drag and drop
+                                {t("expenses.form.uploadHint")}
                             </p>
-                            <p className="text-xs text-muted-foreground">PDF, JPG, PNG (max 5MB)</p>
+                            <p className="text-xs text-muted-foreground">{t("expenses.form.uploadLimits")}</p>
                             <Input
                                 type="file"
                                 accept=".pdf,.jpg,.jpeg,.png"
@@ -417,12 +432,12 @@ export function ExpenseFormModal({
                             />
                             {formData.attachmentFile && (
                                 <p className="text-xs text-muted-foreground mt-2">
-                                    Selected: {formData.attachmentFile.name}
+                                    {t("expenses.form.selectedFile")} {formData.attachmentFile.name}
                                 </p>
                             )}
                             {!formData.attachmentFile && formData.attachmentUrl && (
                                 <p className="text-xs text-muted-foreground mt-2">
-                                    Existing: {formData.attachmentName ?? "Receipt attached"}
+                                    {t("expenses.form.existingFile")} {formData.attachmentName ?? t("expenses.form.receiptAttached")}
                                 </p>
                             )}
                         </div>
@@ -431,11 +446,11 @@ export function ExpenseFormModal({
                     {/* Notes */}
                     <div className="space-y-2">
                         <Label htmlFor="notes" className="text-foreground">
-                            Additional Notes
+                            {t("expenses.form.notes")}
                         </Label>
                         <Textarea
                             id="notes"
-                            placeholder="Add any additional information..."
+                            placeholder={t("expenses.form.notesPlaceholder")}
                             value={formData.notes}
                             onChange={(e) =>
                                 setFormData({ ...formData, notes: e.target.value })
@@ -451,7 +466,7 @@ export function ExpenseFormModal({
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <DollarSign className="w-5 h-5 text-primary" />
-                                    <span className="text-foreground">Total Amount:</span>
+                                    <span className="text-foreground">{t("expenses.form.totalAmount")}</span>
                                 </div>
                                 <span className="text-2xl numeric text-primary">
                                     {formatMoney(Number(formData.amount), preferences.currency, preferences.locale)}
@@ -465,25 +480,27 @@ export function ExpenseFormModal({
                     <Button
                         variant="outline"
                         onClick={handleClose}
-                        className="rounded-xl border-border"
                         disabled={isSubmitting}
-                        disabledHint="Expense is being saved"
+                        disabledHint={t("expenses.dialog.savingHint")}
                     >
                         <X className="w-4 h-4 mr-2" />
-                        Cancel
+                        {t("common.cancel")}
                     </Button>
                     <Button
                         onClick={handleAddExpense}
-                        className="rounded-xl"
                         disabled={isSubmitting}
-                        disabledHint="Expense is being saved"
+                        disabledHint={t("expenses.dialog.savingHint")}
                     >
                         {isSubmitting ? (
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : (
                             <Save className="w-4 h-4 mr-2" />
                         )}
-                        {isSubmitting ? "Saving..." : `${selectedExpense ? "Update" : "Save"} Expense`}
+                        {isSubmitting
+                            ? t("common.saving")
+                            : selectedExpense
+                                ? t("expenses.dialog.updateButton")
+                                : t("expenses.dialog.saveButton")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

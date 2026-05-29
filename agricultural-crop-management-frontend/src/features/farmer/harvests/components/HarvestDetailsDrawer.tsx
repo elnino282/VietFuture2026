@@ -8,12 +8,12 @@ import {
     FileText,
 } from "lucide-react";
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetDescription,
-} from "@/shared/ui/sheet";
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/shared/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
@@ -21,7 +21,7 @@ import type { HarvestBatch, HarvestGrade, HarvestStatus } from "../types";
 import { usePreferences } from "@/shared/contexts";
 import { formatWeight } from "@/shared/lib";
 
-interface HarvestDetailsDrawerProps {
+interface HarvestDetailsDialogProps {
     batch: HarvestBatch | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -30,32 +30,31 @@ interface HarvestDetailsDrawerProps {
     getGradeBadge: (grade?: HarvestGrade | null) => JSX.Element;
 }
 
-export function HarvestDetailsDrawer({
+export function HarvestDetailsDialog({
     batch,
     open,
     onOpenChange,
     onAction,
     getStatusBadge,
     getGradeBadge,
-}: HarvestDetailsDrawerProps) {
+}: HarvestDetailsDialogProps) {
     if (!batch) return null;
     const { preferences } = usePreferences();
 
     return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent
-                side="right"
-                className="w-[500px] sm:max-w-[500px] overflow-y-auto"
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent
+                className="w-full sm:max-w-[500px] sm:max-h-[85vh] overflow-y-auto"
             >
-                <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2 text-foreground">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-foreground">
                         <Wheat className="w-5 h-5 text-primary" />
                         Batch Details
-                    </SheetTitle>
-                    <SheetDescription className="text-sm text-muted-foreground">
+                    </DialogTitle>
+                    <DialogDescription className="text-sm text-muted-foreground">
                         {batch.batchId}
-                    </SheetDescription>
-                </SheetHeader>
+                    </DialogDescription>
+                </DialogHeader>
 
                 <div className="mt-6 space-y-6">
                     {/* Photo Placeholder */}
@@ -200,10 +199,7 @@ export function HarvestDetailsDrawer({
                         </Button>
                     </div>
                 </div>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
-
-
-

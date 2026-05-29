@@ -26,6 +26,7 @@ import {
 } from "@/shared/ui";
 import { Calendar, Check } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface NewSeasonDialogProps {
   open: boolean;
@@ -57,6 +58,7 @@ export function NewSeasonDialog({
   onSubmit,
   isSubmitting = false,
 }: NewSeasonDialogProps) {
+  const { t } = useTranslation();
   const { preferences } = usePreferences();
   const unitLabel = getWeightUnitLabel(preferences.weightUnit);
   const weightStep = preferences.weightUnit === "G" ? "1" : "0.01";
@@ -152,6 +154,7 @@ export function NewSeasonDialog({
   };
 
   const handleClose = () => {
+    if (isSubmitting) return;
     resetForm();
     onOpenChange(false);
   };
@@ -180,42 +183,43 @@ export function NewSeasonDialog({
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
+        if (isSubmitting && !isOpen) return;
         if (!isOpen) handleClose();
         else onOpenChange(isOpen);
       }}
     >
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px]" closeDisabled={isSubmitting}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Calendar className="w-5 h-5 text-primary" />
-            Create New Season
+            {t("seasons.dialog.createTitle")}
           </DialogTitle>
           <DialogDescription>
-            Set up a new growing season with crop details and timeline
+            {t("seasons.dialog.createDescription")}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-2">
           {/* Season Name - Full Width */}
           <div className="space-y-2">
-            <Label htmlFor="seasonName">Season Name *</Label>
+            <Label htmlFor="seasonName" required>{t("seasons.form.seasonName")}</Label>
             <Input
               id="seasonName"
               value={seasonName}
               onChange={(e) => setSeasonName(e.target.value)}
-              placeholder="e.g., Spring 2025 - Corn"
+              placeholder={t("seasons.form.seasonNamePlaceholder")}
               required
-              className="border-border focus:border-primary"
+              disabled={isSubmitting}
             />
           </div>
 
           {/* Farm and Plot Selection */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="farmId">Farm *</Label>
-              <Select value={farmId} onValueChange={setFarmId}>
-                <SelectTrigger className="border-border focus:border-primary">
-                  <SelectValue placeholder="Select farm" />
+              <Label htmlFor="farmId" required>{t("seasons.table.farm")}</Label>
+              <Select value={farmId} onValueChange={setFarmId} disabled={isSubmitting}>
+                <SelectTrigger id="farmId">
+                  <SelectValue placeholder={t("seasons.form.selectFarm")} />
                 </SelectTrigger>
                 <SelectContent>
                   {farms.map((farm) => (
@@ -228,20 +232,20 @@ export function NewSeasonDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="plotId">Plot *</Label>
+              <Label htmlFor="plotId" required>{t("seasons.table.plot")}</Label>
               <Select
                 value={plotId}
                 onValueChange={setPlotId}
-                disabled={!farmId || plots.length === 0}
+                disabled={isSubmitting || !farmId || plots.length === 0}
               >
-                <SelectTrigger className="border-border focus:border-primary">
+                <SelectTrigger id="plotId">
                   <SelectValue
                     placeholder={
                       !farmId
-                        ? "Select farm first"
+                        ? t("seasons.form.selectFarmFirst")
                         : plots.length === 0
-                          ? "No plots available"
-                          : "Select plot"
+                          ? t("seasons.form.noPlotsAvailable")
+                          : t("seasons.form.selectPlot")
                     }
                   />
                 </SelectTrigger>
@@ -257,12 +261,12 @@ export function NewSeasonDialog({
           </div>
 
           {/* Crop and Variety Selection */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="cropId">Crop *</Label>
-              <Select value={cropId} onValueChange={setCropId}>
-                <SelectTrigger className="border-border focus:border-primary">
-                  <SelectValue placeholder="Select crop" />
+              <Label htmlFor="cropId" required>{t("seasons.table.crop")}</Label>
+              <Select value={cropId} onValueChange={setCropId} disabled={isSubmitting}>
+                <SelectTrigger id="cropId">
+                  <SelectValue placeholder={t("seasons.form.selectCrop")} />
                 </SelectTrigger>
                 <SelectContent>
                   {crops.map((crop) => (
@@ -275,20 +279,20 @@ export function NewSeasonDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="varietyId">Variety (Optional)</Label>
+              <Label htmlFor="varietyId">{t("seasons.form.variety")}</Label>
               <Select
                 value={varietyId}
                 onValueChange={setVarietyId}
-                disabled={!cropId || varieties.length === 0}
+                disabled={isSubmitting || !cropId || varieties.length === 0}
               >
-                <SelectTrigger className="border-border focus:border-primary">
+                <SelectTrigger id="varietyId">
                   <SelectValue
                     placeholder={
                       !cropId
-                        ? "Select a crop first"
+                        ? t("seasons.form.selectCropFirst")
                         : varieties.length === 0
-                          ? "No varieties available"
-                          : "Select variety"
+                          ? t("seasons.form.noVarietiesAvailable")
+                          : t("seasons.form.selectVariety")
                     }
                   />
                 </SelectTrigger>
@@ -304,66 +308,66 @@ export function NewSeasonDialog({
           </div>
 
           {/* Dates Section */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date *</Label>
+              <Label htmlFor="startDate" required>{t("seasons.table.startDate")}</Label>
               <Input
                 id="startDate"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
-                className="border-border focus:border-primary"
+                disabled={isSubmitting}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="plannedHarvestDate">Planned Harvest</Label>
+              <Label htmlFor="plannedHarvestDate">{t("seasons.form.plannedHarvestDate")}</Label>
               <Input
                 id="plannedHarvestDate"
                 type="date"
                 value={plannedHarvestDate}
                 onChange={(e) => setPlannedHarvestDate(e.target.value)}
                 min={startDate}
-                className="border-border focus:border-primary"
+                disabled={isSubmitting}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
+              <Label htmlFor="endDate">{t("seasons.table.endDate")}</Label>
               <Input
                 id="endDate"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 min={startDate}
-                className="border-border focus:border-primary"
+                disabled={isSubmitting}
               />
             </div>
           </div>
 
           {/* Plant Count and Yield */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="initialPlantCount">Initial Plant Count *</Label>
+              <Label htmlFor="initialPlantCount" required>{t("seasons.form.initialPlantCount")}</Label>
               <Input
                 id="initialPlantCount"
                 type="number"
                 min="1"
                 value={initialPlantCount}
                 onChange={(e) => setInitialPlantCount(e.target.value)}
-                placeholder="e.g., 1000"
+                placeholder={t("seasons.form.initialPlantCountPlaceholder")}
                 required
-                className="border-border focus:border-primary"
+                disabled={isSubmitting}
               />
               <p className="text-xs text-muted-foreground">
-                Number of plants at the start of the season (at least 1)
+                {t("seasons.form.initialPlantCountHelp")}
               </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="expectedYieldKg">
-                Expected Yield ({unitLabel})
+                {t("seasons.form.expectedYield", { unit: unitLabel })}
               </Label>
               <Input
                 id="expectedYieldKg"
@@ -372,18 +376,18 @@ export function NewSeasonDialog({
                 step={weightStep}
                 value={expectedYieldKg}
                 onChange={(e) => setExpectedYieldKg(e.target.value)}
-                placeholder="e.g., 5000"
-                className="border-border focus:border-primary"
+                placeholder={t("seasons.form.expectedYieldPlaceholder")}
+                disabled={isSubmitting}
               />
               <p className="text-xs text-muted-foreground">
-                Optional estimated harvest amount
+                {t("seasons.form.expectedYieldHelp")}
               </p>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="budgetAmount">
-              Season Budget ({preferences.currency})
+              {t("seasons.form.budget", { currency: preferences.currency })}
             </Label>
             <Input
               id="budgetAmount"
@@ -392,24 +396,24 @@ export function NewSeasonDialog({
               step="0.01"
               value={budgetAmount}
               onChange={(e) => setBudgetAmount(e.target.value)}
-              placeholder="e.g., 20000"
-              className="border-border focus:border-primary"
+              placeholder={t("seasons.form.budgetPlaceholder")}
+              disabled={isSubmitting}
             />
             <p className="text-xs text-muted-foreground">
-              Optional budget for tracking expenses
+              {t("seasons.form.budgetHelp")}
             </p>
           </div>
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t("common.notes")}</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Additional information about this growing season..."
+              placeholder={t("seasons.form.notesPlaceholder")}
               rows={3}
-              className="border-border focus:border-primary"
+              disabled={isSubmitting}
             />
           </div>
         </div>
@@ -420,22 +424,21 @@ export function NewSeasonDialog({
             onClick={handleClose}
             disabled={isSubmitting}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
-            className="bg-primary hover:bg-primary/90 text-white"
             disabled={!isFormValid || isSubmitting}
           >
             {isSubmitting ? (
               <>
                 <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Creating...
+                {t("common.creating")}
               </>
             ) : (
               <>
                 <Check className="w-4 h-4 mr-2" />
-                Create Season
+                {t("seasons.dialog.createTitle")}
               </>
             )}
           </Button>

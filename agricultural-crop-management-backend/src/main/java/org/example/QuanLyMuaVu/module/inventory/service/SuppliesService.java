@@ -110,6 +110,51 @@ public class SuppliesService {
         return PageResponse.of(page, items);
     }
 
+    public SupplyItemResponse createSupplyItem(
+            org.example.QuanLyMuaVu.module.inventory.dto.request.CreateSupplyItemRequest request) {
+        String normalizedName = normalizeSupplyItemName(request.getName());
+        if (supplyItemRepository.existsByNameIgnoreCase(normalizedName)) {
+            throw new AppException(ErrorCode.DUPLICATE_RESOURCE);
+        }
+
+        SupplyItem item = SupplyItem.builder()
+                .name(normalizedName)
+                .activeIngredient(request.getActiveIngredient())
+                .unit(normalizeRequired(request.getUnit()))
+                .restrictedFlag(Boolean.TRUE.equals(request.getRestrictedFlag()))
+                .build();
+        item = supplyItemRepository.save(item);
+        return toSupplyItemResponse(item);
+    }
+
+    public SupplyItemResponse updateSupplyItem(
+            Integer id,
+            org.example.QuanLyMuaVu.module.inventory.dto.request.UpdateSupplyItemRequest request) {
+        SupplyItem item = supplyItemRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.SUPPLY_ITEM_NOT_FOUND));
+        String normalizedName = normalizeSupplyItemName(request.getName());
+        if (!item.getName().equalsIgnoreCase(normalizedName)
+                && supplyItemRepository.existsByNameIgnoreCase(normalizedName)) {
+            throw new AppException(ErrorCode.DUPLICATE_RESOURCE);
+        }
+
+        item.setName(normalizedName);
+        item.setActiveIngredient(request.getActiveIngredient());
+        item.setUnit(normalizeRequired(request.getUnit()));
+        item.setRestrictedFlag(Boolean.TRUE.equals(request.getRestrictedFlag()));
+        item = supplyItemRepository.save(item);
+        return toSupplyItemResponse(item);
+    }
+
+    public void deleteSupplyItem(Integer id) {
+        SupplyItem item = supplyItemRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.SUPPLY_ITEM_NOT_FOUND));
+        if (supplyLotRepository.existsBySupplyItem_Id(id)) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+        supplyItemRepository.delete(item);
+    }
+
     // ============================================
     // CATALOG: SUPPLY LOTS
     // ============================================
@@ -237,6 +282,29 @@ public class SuppliesService {
                 .restrictedFlag(
                         lot.getSupplyItem() != null && Boolean.TRUE.equals(lot.getSupplyItem().getRestrictedFlag()))
                 .build();
+    }
+
+    private String normalizeSupplyItemName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+        return name.trim().replaceAll("\\s+", " ");
+    }
+
+    private String normalizeOptional(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeRequired(String value) {
+        String normalized = normalizeOptional(value);
+        if (normalized == null) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+        return normalized;
     }
 
 }

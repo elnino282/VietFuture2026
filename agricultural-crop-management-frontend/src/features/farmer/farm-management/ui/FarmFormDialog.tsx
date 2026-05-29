@@ -15,6 +15,8 @@ import { useCreateFarm } from '../hooks/useCreateFarm';
 import { useUpdateFarm } from '../hooks/useUpdateFarm';
 import type { Farm, FarmDetailResponse } from '@/entities/farm';
 import { Controller, useWatch } from 'react-hook-form';
+import { useId } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type FarmFormInitialData = Pick<FarmDetailResponse, 'name' | 'provinceId' | 'wardId' | 'area' | 'active'> | Farm;
 
@@ -38,6 +40,9 @@ export function FarmFormDialog({
     farmId,
     onCreated,
 }: FarmFormDialogProps) {
+    const { t } = useTranslation();
+    const nameErrorId = useId();
+    const areaErrorId = useId();
     const isCreate = mode === 'create';
 
     // Pass dialog close callback to create hook for immediate close after success
@@ -50,30 +55,38 @@ export function FarmFormDialog({
     // Render separate forms to avoid type conflicts
     if (isCreate) {
         const { form, handleSubmit, isSubmitting } = createHook;
+        const nameError = form.formState.errors.name?.message;
+        const areaError = form.formState.errors.area?.message;
+        const handleCreateOpenChange = (nextOpen: boolean) => {
+            if (isSubmitting && !nextOpen) return;
+            onOpenChange(nextOpen);
+        };
 
         return (
-            <Dialog open={open} onOpenChange={onOpenChange}>
-                <DialogContent className="sm:max-w-[500px]">
+            <Dialog open={open} onOpenChange={handleCreateOpenChange}>
+                <DialogContent className="sm:max-w-[500px]" closeDisabled={isSubmitting}>
                     <DialogHeader>
-                        <DialogTitle>Create Farm</DialogTitle>
+                        <DialogTitle>{t('farms.dialog.createFarmTitle')}</DialogTitle>
                         <DialogDescription>
-                            Enter the details for your new farm.
+                            {t('farms.dialog.createFarmDescription')}
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="name">
-                                Farm Name <span className="text-red-500">*</span>
+                            <Label htmlFor="name" required>
+                                {t('farms.form.farmName')}
                             </Label>
                             <Input
                                 id="name"
                                 {...form.register('name')}
-                                placeholder="Enter farm name"
+                                placeholder={t('farms.form.farmNamePlaceholder')}
                                 maxLength={255}
+                                aria-invalid={!!nameError}
+                                aria-describedby={nameError ? nameErrorId : undefined}
                             />
-                            {form.formState.errors.name && (
-                                <p className="text-sm text-red-500">
-                                    {form.formState.errors.name.message}
+                            {nameError && (
+                                <p id={nameErrorId} className="text-sm text-destructive">
+                                    {nameError}
                                 </p>
                             )}
                         </div>
@@ -102,8 +115,8 @@ export function FarmFormDialog({
                                         }}
                                         error={combinedError}
                                         disabled={isSubmitting}
-                                        label="Farm Address"
-                                        description="Select the location of your farm"
+                                        label={t('farms.form.farmAddress')}
+                                        description={t('farms.form.farmAddressCreateDescription')}
                                         required
                                     />
                                 );
@@ -111,7 +124,7 @@ export function FarmFormDialog({
                         />
 
                         <div className="space-y-2">
-                            <Label htmlFor="area">Area (hectares)</Label>
+                            <Label htmlFor="area">{t('farms.form.areaHectares')}</Label>
                             <Input
                                 id="area"
                                 type="number"
@@ -119,11 +132,13 @@ export function FarmFormDialog({
                                 {...form.register('area', {
                                     setValueAs: (v: string) => (v === '' || v === null ? null : Number(v)),
                                 })}
-                                placeholder="Enter area in hectares"
+                                placeholder={t('farms.form.areaHectaresPlaceholder')}
+                                aria-invalid={!!areaError}
+                                aria-describedby={areaError ? areaErrorId : undefined}
                             />
-                            {form.formState.errors.area && (
-                                <p className="text-sm text-red-500">
-                                    {form.formState.errors.area.message}
+                            {areaError && (
+                                <p id={areaErrorId} className="text-sm text-destructive">
+                                    {areaError}
                                 </p>
                             )}
                         </div>
@@ -135,10 +150,10 @@ export function FarmFormDialog({
                                 onClick={() => onOpenChange(false)}
                                 disabled={isSubmitting}
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? 'Creating...' : 'Create'}
+                                {isSubmitting ? t('common.creating') : t('common.create')}
                             </Button>
                         </DialogFooter>
                     </form>
@@ -149,30 +164,38 @@ export function FarmFormDialog({
 
     // Edit mode
     const { form, handleSubmit, isSubmitting } = updateHook;
+    const nameError = form.formState.errors.name?.message;
+    const areaError = form.formState.errors.area?.message;
+    const handleEditOpenChange = (nextOpen: boolean) => {
+        if (isSubmitting && !nextOpen) return;
+        onOpenChange(nextOpen);
+    };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px]">
+        <Dialog open={open} onOpenChange={handleEditOpenChange}>
+            <DialogContent className="sm:max-w-[500px]" closeDisabled={isSubmitting}>
                 <DialogHeader>
-                    <DialogTitle>Edit Farm</DialogTitle>
+                    <DialogTitle>{t('farms.dialog.editFarmTitle')}</DialogTitle>
                     <DialogDescription>
-                        Update the farm information.
+                        {t('farms.dialog.editFarmDescription')}
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="name">
-                            Farm Name <span className="text-red-500">*</span>
+                        <Label htmlFor="name" required>
+                            {t('farms.form.farmName')}
                         </Label>
                         <Input
                             id="name"
                             {...form.register('name')}
-                            placeholder="Enter farm name"
+                            placeholder={t('farms.form.farmNamePlaceholder')}
                             maxLength={255}
+                            aria-invalid={!!nameError}
+                            aria-describedby={nameError ? nameErrorId : undefined}
                         />
-                        {form.formState.errors.name && (
-                            <p className="text-sm text-red-500">
-                                {form.formState.errors.name.message}
+                        {nameError && (
+                            <p id={nameErrorId} className="text-sm text-destructive">
+                                {nameError}
                             </p>
                         )}
                     </div>
@@ -197,15 +220,15 @@ export function FarmFormDialog({
                                     }}
                                     error={combinedError}
                                     disabled={isSubmitting}
-                                    label="Farm Address"
-                                    description="Update the location of your farm"
+                                    label={t('farms.form.farmAddress')}
+                                    description={t('farms.form.farmAddressEditDescription')}
                                 />
                             );
                         }}
                     />
 
                     <div className="space-y-2">
-                        <Label htmlFor="area">Area (hectares)</Label>
+                        <Label htmlFor="area">{t('farms.form.areaHectares')}</Label>
                         <Input
                             id="area"
                             type="number"
@@ -213,11 +236,13 @@ export function FarmFormDialog({
                             {...form.register('area', {
                                 setValueAs: (v: string) => (v === '' || v === null ? null : Number(v)),
                             })}
-                            placeholder="Enter area in hectares"
+                            placeholder={t('farms.form.areaHectaresPlaceholder')}
+                            aria-invalid={!!areaError}
+                            aria-describedby={areaError ? areaErrorId : undefined}
                         />
-                        {form.formState.errors.area && (
-                            <p className="text-sm text-red-500">
-                                {form.formState.errors.area.message}
+                        {areaError && (
+                            <p id={areaErrorId} className="text-sm text-destructive">
+                                {areaError}
                             </p>
                         )}
                     </div>
@@ -227,13 +252,13 @@ export function FarmFormDialog({
                             type="button"
                             variant="outline"
                             onClick={() => onOpenChange(false)}
-                            disabled={isSubmitting}
-                        >
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Updating...' : 'Update'}
-                        </Button>
+                        disabled={isSubmitting}
+                    >
+                        {t('common.cancel')}
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? t('common.updating') : t('common.update')}
+                    </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

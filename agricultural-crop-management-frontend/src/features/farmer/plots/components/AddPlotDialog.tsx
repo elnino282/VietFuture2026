@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import {
@@ -49,6 +50,7 @@ export function AddPlotDialog({
   onSubmit,
   isSubmitting = false
 }: AddPlotDialogProps) {
+  const { t } = useTranslation();
   // Fetch soil types from API
   const { data: soilTypes, isLoading: soilTypesLoading } = useSoilTypes();
 
@@ -60,30 +62,43 @@ export function AddPlotDialog({
   const [areaValue, setAreaValue] = useState("");
   const [soilTypeId, setSoilTypeId] = useState<string>("");
   const [plotStatusId, setPlotStatusId] = useState<string>("1"); // Default to Active
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const resetForm = () => {
     setPlotName("");
     setAreaValue("");
     setSoilTypeId("");
     setPlotStatusId("1");
+    setErrors({});
   };
 
   const handleClose = () => {
+    if (isSubmitting) return;
     resetForm();
     onClose();
+  };
+
+  const handleDialogOpenChange = (nextOpen: boolean) => {
+    if (isSubmitting && !nextOpen) return;
+    if (!nextOpen) handleClose();
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Validate required fields
+    const nextErrors: Record<string, string> = {};
     if (!plotName.trim()) {
-      return;
+      nextErrors.plotName = t("farms.validation.plotNameRequired", "Plot name is required");
     }
     if (!areaValue || parseFloat(areaValue) <= 0) {
-      return;
+      nextErrors.area = t("farms.validation.areaPositive", "Area must be greater than 0");
     }
     if (!soilTypeId) {
+      nextErrors.soilType = t("farms.validation.soilTypeRequired", "Soil type is required");
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
@@ -113,55 +128,87 @@ export function AddPlotDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
+      <DialogContent className="sm:max-w-[560px]" closeDisabled={isSubmitting}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Plus className="w-5 h-5 text-primary" />
-            Add New Plot
+            {t("farms.dialog.createPlotTitle")}
           </DialogTitle>
           <DialogDescription>
-            Create a new agricultural plot by entering the details below
+            {t("farms.dialog.createStandalonePlotDescription", "Create a new agricultural plot by entering the details below.")}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
             {/* Plot Name */}
             <div className="space-y-2">
-              <Label htmlFor="plotName">Plot Name *</Label>
+              <Label htmlFor="plotName" required>{t("farms.form.plotName")}</Label>
               <Input
                 id="plotName"
                 value={plotName}
-                onChange={(e) => setPlotName(e.target.value)}
-                placeholder="e.g., North Field"
+                onChange={(e) => {
+                  setPlotName(e.target.value);
+                  setErrors((prev) => ({ ...prev, plotName: "" }));
+                }}
+                placeholder={t("farms.form.plotNameExample")}
                 required
-                className="border-border focus:border-primary"
+                aria-invalid={!!errors.plotName}
+                aria-describedby={errors.plotName ? "add-plot-name-error" : undefined}
+                disabled={isSubmitting}
               />
+              {errors.plotName && (
+                <p id="add-plot-name-error" className="text-sm text-destructive">
+                  {errors.plotName}
+                </p>
+              )}
             </div>
 
             {/* Area */}
             <div className="space-y-2">
-              <Label htmlFor="areaValue">Area (hectares) *</Label>
+              <Label htmlFor="areaValue" required>{t("farms.form.areaHectares")}</Label>
               <Input
                 id="areaValue"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
                 value={areaValue}
-                onChange={(e) => setAreaValue(e.target.value)}
-                placeholder="e.g., 5.2"
+                onChange={(e) => {
+                  setAreaValue(e.target.value);
+                  setErrors((prev) => ({ ...prev, area: "" }));
+                }}
+                placeholder={t("farms.form.areaExample")}
                 required
-                className="border-border focus:border-primary"
+                aria-invalid={!!errors.area}
+                aria-describedby={errors.area ? "add-plot-area-error" : undefined}
+                disabled={isSubmitting}
               />
+              {errors.area && (
+                <p id="add-plot-area-error" className="text-sm text-destructive">
+                  {errors.area}
+                </p>
+              )}
             </div>
 
             {/* Soil Type */}
             <div className="space-y-2">
-              <Label htmlFor="soilType">Soil Type *</Label>
-              <Select value={soilTypeId} onValueChange={setSoilTypeId} required disabled={soilTypesLoading}>
-                <SelectTrigger className="border-border focus:border-primary">
-                  <SelectValue placeholder={soilTypesLoading ? "Loading..." : "Select soil type"} />
+              <Label htmlFor="soilType" required>{t("farms.form.soilType")}</Label>
+              <Select
+                value={soilTypeId}
+                onValueChange={(value) => {
+                  setSoilTypeId(value);
+                  setErrors((prev) => ({ ...prev, soilType: "" }));
+                }}
+                required
+                disabled={isSubmitting || soilTypesLoading}
+              >
+                <SelectTrigger
+                  id="soilType"
+                  aria-invalid={!!errors.soilType}
+                  aria-describedby={errors.soilType ? "add-plot-soil-type-error" : undefined}
+                >
+                  <SelectValue placeholder={soilTypesLoading ? t("common.loading") : t("farms.form.selectSoilType")} />
                 </SelectTrigger>
                 <SelectContent>
                   {soilTypes?.map((soil) => (
@@ -171,14 +218,19 @@ export function AddPlotDialog({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.soilType && (
+                <p id="add-plot-soil-type-error" className="text-sm text-destructive">
+                  {errors.soilType}
+                </p>
+              )}
             </div>
 
             {/* Plot Status */}
             <div className="space-y-2">
-              <Label htmlFor="plotStatus">Status *</Label>
-              <Select value={plotStatusId} onValueChange={setPlotStatusId} required disabled={plotStatusesLoading}>
-                <SelectTrigger className="border-border focus:border-primary">
-                  <SelectValue placeholder={plotStatusesLoading ? "Loading..." : "Select status"} />
+              <Label htmlFor="plotStatus" required>{t("common.status")}</Label>
+              <Select value={plotStatusId} onValueChange={setPlotStatusId} required disabled={isSubmitting || plotStatusesLoading}>
+                <SelectTrigger id="plotStatus">
+                  <SelectValue placeholder={plotStatusesLoading ? t("common.loading") : t("farms.form.selectStatus")} />
                 </SelectTrigger>
                 <SelectContent>
                   {plotStatuses?.map((status) => (
@@ -198,22 +250,21 @@ export function AddPlotDialog({
               onClick={handleClose}
               disabled={isSubmitting}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
-              className="bg-primary hover:bg-primary/90 text-white"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <>
                   <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Adding...
+                  {t("common.creating")}
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4 mr-2" />
-                  Add Plot
+                  {t("farms.dialog.createPlotTitle")}
                 </>
               )}
             </Button>

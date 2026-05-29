@@ -14,6 +14,7 @@ import {
 import { useEmployeeDirectory } from "@/entities/labor";
 import { Play } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Season } from "../types";
 
 interface StartSeasonDialogProps {
@@ -35,6 +36,7 @@ export function StartSeasonDialog({
   onConfirm,
   isSubmitting = false,
 }: StartSeasonDialogProps) {
+  const { t } = useTranslation();
   const [actualStartDate, setActualStartDate] = useState("");
   const [currentPlantCount, setCurrentPlantCount] = useState("");
   const [syncPlantCount, setSyncPlantCount] = useState(false);
@@ -78,35 +80,38 @@ export function StartSeasonDialog({
       employeeUserIds: selectedEmployeeIds.length > 0 ? selectedEmployeeIds : undefined,
     });
   };
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (isSubmitting && !nextOpen) return;
+    onOpenChange(nextOpen);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="acm-rounded-lg">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[560px]" closeDisabled={isSubmitting}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Play className="w-5 h-5 text-primary" />
-            Start Season
+            {t("seasons.dialog.startTitle")}
           </DialogTitle>
           <DialogDescription>
-            Activate this planned season. Leave fields empty to keep existing
-            values.
+            {t("seasons.dialog.startDetailedDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="actualStartDate">
-              Actual Start Date (Optional)
+              {t("seasons.dialog.actualStartDateLabel")}
             </Label>
             <Input
               id="actualStartDate"
               type="date"
               value={actualStartDate}
               onChange={(e) => setActualStartDate(e.target.value)}
-              className="border-border acm-rounded-sm"
+              disabled={isSubmitting}
             />
             <p className="text-xs text-muted-foreground">
-              Leave blank to keep the planned start date.
+              {t("seasons.dialog.actualStartDateHelp")}
             </p>
           </div>
 
@@ -114,11 +119,12 @@ export function StartSeasonDialog({
             <Checkbox
               checked={syncPlantCount}
               onCheckedChange={(checked) => setSyncPlantCount(Boolean(checked))}
+              disabled={isSubmitting}
               className="mt-1"
             />
             <div className="space-y-2 flex-1">
               <Label htmlFor="currentPlantCount">
-                Current Plant Count (Optional)
+                {t("seasons.dialog.currentPlantCountLabel")}
               </Label>
               <Input
                 id="currentPlantCount"
@@ -126,19 +132,26 @@ export function StartSeasonDialog({
                 min="1"
                 value={currentPlantCount}
                 onChange={(e) => setCurrentPlantCount(e.target.value)}
-                placeholder="e.g., 1200"
-                disabled={!syncPlantCount}
-                className="border-border acm-rounded-sm"
+                placeholder={t("seasons.dialog.currentPlantCountPlaceholder")}
+                disabled={isSubmitting || !syncPlantCount}
+                aria-invalid={!hasValidPlantCount}
+                aria-describedby={!hasValidPlantCount ? "start-season-plant-count-error" : "start-season-plant-count-help"}
               />
-              <p className="text-xs text-muted-foreground">
-                Enable to update the current plant count when the season starts.
-              </p>
+              {!hasValidPlantCount ? (
+                <p id="start-season-plant-count-error" className="text-sm text-destructive">
+                  {t("seasons.dialog.currentPlantCountInvalid")}
+                </p>
+              ) : (
+                <p id="start-season-plant-count-help" className="text-xs text-muted-foreground">
+                  {t("seasons.dialog.currentPlantCountHelp")}
+                </p>
+              )}
             </div>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <Label>Bulk Assign Employees (Optional)</Label>
+              <Label>{t("seasons.dialog.bulkAssignEmployeesLabel")}</Label>
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
@@ -149,7 +162,7 @@ export function StartSeasonDialog({
                   }
                   disabled={isSubmitting || employeeOptions.length === 0}
                 >
-                  Select all
+                  {t("common.selectAll", "Select all")}
                 </Button>
                 <Button
                   type="button"
@@ -158,21 +171,21 @@ export function StartSeasonDialog({
                   onClick={() => setSelectedEmployeeIds([])}
                   disabled={isSubmitting || selectedEmployeeIds.length === 0}
                 >
-                  Clear
+                  {t("common.clear", "Clear")}
                 </Button>
               </div>
             </div>
             {isEmployeeDirectoryLoading ? (
-              <p className="text-xs text-muted-foreground">Loading employee catalog...</p>
+              <p className="text-xs text-muted-foreground">{t("seasons.dialog.loadingEmployees")}</p>
             ) : employeeOptions.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No employees in catalog.</p>
+              <p className="text-xs text-muted-foreground">{t("seasons.dialog.noEmployees")}</p>
             ) : (
               <ScrollArea className="h-36 rounded-md border border-border p-2">
                 <div className="space-y-2">
                   {employeeOptions.map((employee) => {
                     const checked = selectedEmployeeIds.includes(employee.userId);
                     const label =
-                      employee.fullName || employee.username || employee.email || `Employee #${employee.userId}`;
+                      employee.fullName || employee.username || employee.email || t("seasonWorkspace.employeeFallback", { id: employee.userId });
                     return (
                       <label
                         key={employee.userId}
@@ -207,16 +220,14 @@ export function StartSeasonDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
-            className="acm-rounded-sm"
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm"
           >
-            {isSubmitting ? "Starting..." : "Start Season"}
+            {isSubmitting ? t("seasons.dialog.starting") : t("seasons.dialog.startConfirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

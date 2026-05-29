@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { AIOptimizationTips } from "./components/AIOptimizationTips";
 import { BudgetTracker } from "./components/BudgetTracker";
 import { ExpenseAnalytics } from "./components/ExpenseAnalytics";
-import { ExpenseDetailDrawer } from "./components/ExpenseDetailDrawer";
+import { ExpenseDetailDialog } from "./components/ExpenseDetailDrawer";
 import { ExpenseFilters } from "./components/ExpenseFilters";
 import { ExpenseFormModal } from "./components/ExpenseFormModal";
 import { ExpenseRemindersPanel } from "./components/ExpenseRemindersPanel";
@@ -93,7 +93,7 @@ export function ExpenseManagement() {
         || selectedSeasonStatus === "CANCELLED"
         || selectedSeasonStatus === "ARCHIVED";
     const seasonWriteLockReason = isSeasonWriteLocked
-        ? "Season is locked. Expense write actions are disabled."
+        ? t("expenses.lockedReason")
         : undefined;
     const [isRemindersOpen, setIsRemindersOpen] = useState(false);
     const [detailExpense, setDetailExpense] = useState<Expense | null>(null);
@@ -111,9 +111,9 @@ export function ExpenseManagement() {
             <PageContainer>
                 <Card className="mb-6 border border-destructive/30 bg-destructive/5 rounded-xl">
                     <CardContent className="px-6 py-5 text-sm text-destructive space-y-3">
-                        <div>Invalid season id in workspace route.</div>
+                        <div>{t("expenses.invalidSeason")}</div>
                         <Button variant="outline" asChild>
-                            <Link to="/farmer/seasons">Back to Seasons</Link>
+                            <Link to="/farmer/seasons">{t("expenses.backToSeasons")}</Link>
                         </Button>
                     </CardContent>
                 </Card>
@@ -344,7 +344,7 @@ export function ExpenseManagement() {
                 isSubmitting={isCreating || isUpdating}
             />
 
-            <ExpenseDetailDrawer
+            <ExpenseDetailDialog
                 open={!!detailExpense}
                 onOpenChange={handleDetailOpenChange}
                 expense={detailExpense}

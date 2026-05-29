@@ -24,13 +24,17 @@ import {
 import {
   useAllSuppliers,
   useAllSupplyItems,
+  useCreateSupplyItem,
   useCreateSupplier,
+  useDeleteSupplyItem,
   useDeleteSupplier,
   useStockIn,
   useSuppliers,
   useSupplyItems,
   useSupplyLots,
+  useUpdateSupplyItem,
   useUpdateSupplier,
+  type CreateSupplyItemRequest,
   type CreateSupplierRequest,
   type StockInRequest,
   type Supplier,
@@ -39,7 +43,6 @@ import {
 } from "@/entities/supplies";
 import { useFarms } from "@/entities/farm";
 import type { WeightUnit } from "@/entities/preferences";
-import { useI18n } from "@/hooks/useI18n";
 import { usePreferences } from "@/shared/contexts";
 import {
   convertWeight,
@@ -57,8 +60,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Input,
+  Label,
   PageContainer,
   PageHeader,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
 } from "@/shared/ui";
 import {
   MoreVertical,
@@ -68,7 +79,8 @@ import {
   UserPlus,
   Package,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import "./SupplyManagementPage.css";
 
@@ -76,7 +88,12 @@ import "./SupplyManagementPage.css";
 // HELPERS (from InventoryPage)
 // ═══════════════════════════════════════════════════════════════
 
-type TranslateFn = ReturnType<typeof useI18n>["t"];
+type TranslateFn = ReturnType<typeof useTranslation>["t"];
+
+const useSupplyManagementI18n = () => {
+  const { t, i18n } = useTranslation();
+  return { t, locale: i18n.language || "en" };
+};
 
 const formatNumber = (
   value: number,
@@ -184,15 +201,21 @@ type TabType = "suppliers" | "items" | "lots" | "on-hand" | "movements";
 type WarehouseDialogMode = "create" | "edit";
 
 export function SupplyManagementPage() {
-  const { t } = useI18n();
+  const { t } = useSupplyManagementI18n();
   const { preferences } = usePreferences();
-  const [activeTab, setActiveTab] = useState<TabType>("suppliers");
+  const [activeTab, setActiveTab] = useState<TabType>("on-hand");
 
   // ===== Supplier CRUD state =====
   const [showSupplierFormDialog, setShowSupplierFormDialog] = useState(false);
   const [supplierToEdit, setSupplierToEdit] = useState<Supplier | null>(null);
   const [showDeleteSupplierDialog, setShowDeleteSupplierDialog] = useState(false);
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
+
+  // ===== Supply Item CRUD state =====
+  const [showItemFormDialog, setShowItemFormDialog] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState<SupplyItem | null>(null);
+  const [showDeleteItemDialog, setShowDeleteItemDialog] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<SupplyItem | null>(null);
 
   // ===== Stock In state =====
   const [showStockInModal, setShowStockInModal] = useState(false);
@@ -287,6 +310,9 @@ export function SupplyManagementPage() {
   const createSupplierMutation = useCreateSupplier();
   const updateSupplierMutation = useUpdateSupplier();
   const deleteSupplierMutation = useDeleteSupplier();
+  const createSupplyItemMutation = useCreateSupplyItem();
+  const updateSupplyItemMutation = useUpdateSupplyItem();
+  const deleteSupplyItemMutation = useDeleteSupplyItem();
   const recordMovementMutation = useRecordStockMovement();
   const createWarehouseMutation = useCreateWarehouse();
   const updateWarehouseMutation = useUpdateWarehouse();
@@ -340,6 +366,40 @@ export function SupplyManagementPage() {
       await deleteSupplierMutation.mutateAsync(supplierToDelete.id);
       setShowDeleteSupplierDialog(false);
       setSupplierToDelete(null);
+    }
+  };
+
+  // ===== SUPPLY ITEM HANDLERS =====
+  const handleAddItem = () => {
+    setItemToEdit(null);
+    setShowItemFormDialog(true);
+  };
+
+  const handleEditItem = (item: SupplyItem) => {
+    setItemToEdit(item);
+    setShowItemFormDialog(true);
+  };
+
+  const handleDeleteItem = (item: SupplyItem) => {
+    setItemToDelete(item);
+    setShowDeleteItemDialog(true);
+  };
+
+  const handleItemFormSubmit = async (data: CreateSupplyItemRequest) => {
+    if (itemToEdit) {
+      await updateSupplyItemMutation.mutateAsync({ id: itemToEdit.id, data });
+    } else {
+      await createSupplyItemMutation.mutateAsync(data);
+    }
+    setShowItemFormDialog(false);
+    setItemToEdit(null);
+  };
+
+  const handleConfirmDeleteItem = async () => {
+    if (itemToDelete) {
+      await deleteSupplyItemMutation.mutateAsync(itemToDelete.id);
+      setShowDeleteItemDialog(false);
+      setItemToDelete(null);
     }
   };
 
@@ -606,6 +666,10 @@ export function SupplyManagementPage() {
                     />
                     {t("suppliers.filters.restrictedOnly")}
                   </label>
+                  <Button onClick={handleAddItem} variant="outline" size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    {t("suppliers.addItem")}
+                  </Button>
                 </>
               )}
 
@@ -646,20 +710,20 @@ export function SupplyManagementPage() {
 
         {/* ===== TABS ===== */}
         <div className="supply-management-tabs">
-          <button className={`tab ${activeTab === "suppliers" ? "active" : ""}`} onClick={() => handleTabChange("suppliers")}>
-            {t("suppliers.tabs.suppliers")}
-          </button>
-          <button className={`tab ${activeTab === "items" ? "active" : ""}`} onClick={() => handleTabChange("items")}>
-            {t("suppliers.tabs.items")}
+          <button className={`tab ${activeTab === "on-hand" ? "active" : ""}`} onClick={() => handleTabChange("on-hand")}>
+            {t("inventory.tabs.onHand")}
           </button>
           <button className={`tab ${activeTab === "lots" ? "active" : ""}`} onClick={() => handleTabChange("lots")}>
             {t("suppliers.tabs.lots")}
           </button>
-          <button className={`tab ${activeTab === "on-hand" ? "active" : ""}`} onClick={() => handleTabChange("on-hand")}>
-            {t("inventory.tabs.onHand")}
-          </button>
           <button className={`tab ${activeTab === "movements" ? "active" : ""}`} onClick={() => handleTabChange("movements")}>
             {t("inventory.tabs.movements")}
+          </button>
+          <button className={`tab ${activeTab === "items" ? "active" : ""}`} onClick={() => handleTabChange("items")}>
+            {t("suppliers.tabs.items")}
+          </button>
+          <button className={`tab ${activeTab === "suppliers" ? "active" : ""}`} onClick={() => handleTabChange("suppliers")}>
+            {t("suppliers.tabs.suppliers")}
           </button>
         </div>
 
@@ -674,7 +738,12 @@ export function SupplyManagementPage() {
             />
           )}
           {activeTab === "items" && (
-            <SupplyItemsTable data={itemsData?.items || []} loading={loadingItems} />
+            <SupplyItemsTable
+              data={itemsData?.items || []}
+              loading={loadingItems}
+              onEdit={handleEditItem}
+              onDelete={handleDeleteItem}
+            />
           )}
           {activeTab === "lots" && (
             <SupplyLotsTable data={lotsData?.items || []} loading={loadingLots} />
@@ -757,6 +826,7 @@ export function SupplyManagementPage() {
             onSuccess={() => setShowStockInModal(false)}
             onSubmit={stockInMutation.mutateAsync}
             isPending={stockInMutation.isPending}
+            defaultWarehouseId={selectedWarehouseId}
           />
         )}
 
@@ -774,6 +844,22 @@ export function SupplyManagementPage() {
           supplier={supplierToDelete}
           onConfirm={handleConfirmDeleteSupplier}
           isPending={deleteSupplierMutation.isPending}
+        />
+
+        <SupplyItemFormDialog
+          open={showItemFormDialog}
+          onOpenChange={setShowItemFormDialog}
+          item={itemToEdit}
+          onSubmit={handleItemFormSubmit}
+          isPending={createSupplyItemMutation.isPending || updateSupplyItemMutation.isPending}
+        />
+
+        <DeleteSupplyItemDialog
+          open={showDeleteItemDialog}
+          onOpenChange={setShowDeleteItemDialog}
+          item={itemToDelete}
+          onConfirm={handleConfirmDeleteItem}
+          isPending={deleteSupplyItemMutation.isPending}
         />
 
         {warehouseDialogMode && (
@@ -835,7 +921,7 @@ interface SuppliersTableProps {
 }
 
 function SuppliersTable({ data, loading, onEdit, onDelete }: SuppliersTableProps) {
-  const { t } = useI18n();
+  const { t } = useSupplyManagementI18n();
   if (loading) return <div className="loading-state">{t("suppliers.loading")}</div>;
   if (data.length === 0) return <div className="empty-state">{t("suppliers.empty")}</div>;
 
@@ -889,8 +975,15 @@ function SuppliersTable({ data, loading, onEdit, onDelete }: SuppliersTableProps
 // SUPPLY ITEMS TABLE
 // ═══════════════════════════════════════════════════════════════
 
-function SupplyItemsTable({ data, loading }: { data: SupplyItem[]; loading: boolean }) {
-  const { t } = useI18n();
+interface SupplyItemsTableProps {
+  data: SupplyItem[];
+  loading: boolean;
+  onEdit: (item: SupplyItem) => void;
+  onDelete: (item: SupplyItem) => void;
+}
+
+function SupplyItemsTable({ data, loading, onEdit, onDelete }: SupplyItemsTableProps) {
+  const { t } = useSupplyManagementI18n();
   if (loading) return <div className="loading-state">{t("suppliers.loadingItems")}</div>;
   if (data.length === 0) return <div className="empty-state">{t("suppliers.noItems")}</div>;
 
@@ -903,6 +996,7 @@ function SupplyItemsTable({ data, loading }: { data: SupplyItem[]; loading: bool
             <th>{t("suppliers.itemsTable.activeIngredient")}</th>
             <th>{t("suppliers.itemsTable.unit")}</th>
             <th>{t("suppliers.itemsTable.restricted")}</th>
+            <th>{t("suppliers.itemsTable.actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -918,6 +1012,25 @@ function SupplyItemsTable({ data, loading }: { data: SupplyItem[]; loading: bool
                   <span className="badge badge-normal">{t("suppliers.itemsTable.normalBadge")}</span>
                 )}
               </td>
+              <td className="actions-cell">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="action-btn" title={t("suppliers.actions.menu")}>
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onEdit(item)}>
+                      <Pencil className="w-4 h-4 mr-2" />
+                      {t("suppliers.actions.edit")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onDelete(item)} className="text-destructive focus:text-destructive">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {t("suppliers.actions.delete")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -931,7 +1044,7 @@ function SupplyItemsTable({ data, loading }: { data: SupplyItem[]; loading: bool
 // ═══════════════════════════════════════════════════════════════
 
 function SupplyLotsTable({ data, loading }: { data: SupplyLot[]; loading: boolean }) {
-  const { t, locale } = useI18n();
+  const { t, locale } = useSupplyManagementI18n();
   if (loading) return <div className="loading-state">{t("suppliers.loadingLots")}</div>;
   if (data.length === 0) return <div className="empty-state">{t("suppliers.noLots")}</div>;
 
@@ -1002,7 +1115,7 @@ interface OnHandTableProps {
 
 function OnHandTable({ data, loading, onStockOut, onAdjust, formatDate }: OnHandTableProps) {
   const { preferences } = usePreferences();
-  const { t } = useI18n();
+  const { t } = useSupplyManagementI18n();
 
   if (loading) return <div className="loading-state">{t("inventory.loading")}</div>;
   if (data.length === 0) return <div className="empty-state">{t("inventory.noStock")}</div>;
@@ -1071,7 +1184,7 @@ function OnHandTable({ data, loading, onStockOut, onAdjust, formatDate }: OnHand
 
 function MovementsTable({ data, loading, formatDateTime }: { data: StockMovement[]; loading: boolean; formatDateTime: (date: string | null | undefined) => string }) {
   const { preferences } = usePreferences();
-  const { t } = useI18n();
+  const { t } = useSupplyManagementI18n();
 
   if (loading) return <div className="loading-state">{t("inventory.loadingMovements")}</div>;
   if (data.length === 0) return <div className="empty-state">{t("inventory.noMovements")}</div>;
@@ -1128,162 +1241,267 @@ interface StockInModalProps {
   onSuccess: () => void;
   onSubmit: (data: StockInRequest) => Promise<unknown>;
   isPending: boolean;
+  defaultWarehouseId?: number;
 }
 
-function StockInModal({ onClose, onSuccess, onSubmit, isPending }: StockInModalProps) {
-  const { t } = useI18n();
-  const [step, setStep] = useState(1);
+function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehouseId }: StockInModalProps) {
+  const { t } = useSupplyManagementI18n();
   const [error, setError] = useState("");
-  const [warehouseId, setWarehouseId] = useState<number | null>(null);
+  const [warehouseId, setWarehouseId] = useState<number | null>(defaultWarehouseId || null);
   const [locationId, setLocationId] = useState<number | null>(null);
   const [supplierId, setSupplierId] = useState<number | null>(null);
   const [supplyItemId, setSupplyItemId] = useState<number | null>(null);
   const [confirmRestricted, setConfirmRestricted] = useState(false);
   const [batchCode, setBatchCode] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
-  const [quantity, setQuantity] = useState<number>(0);
+  const [quantity, setQuantity] = useState<number | "">("");
   const [note, setNote] = useState("");
   const [confirmExpiry, setConfirmExpiry] = useState(false);
 
-  const { data: siWarehouses } = useMyWarehouses();
+  const { data: siWarehouses } = useMyWarehouses("INPUT");
   const { data: siLocations } = useLocations(warehouseId ?? undefined);
   const { data: siSuppliers } = useAllSuppliers();
   const { data: siItems } = useAllSupplyItems();
 
   const selectedItem = siItems?.find((i) => i.id === supplyItemId);
   const isRestricted = selectedItem?.restrictedFlag === true;
-  const isExpiryPast = expiryDate && new Date(expiryDate) <= new Date();
-  const canGoToStep2 = warehouseId !== null;
-  const canGoToStep3 = supplierId !== null && supplyItemId !== null && (!isRestricted || confirmRestricted);
-  const canSubmit = quantity > 0 && (!isExpiryPast || confirmExpiry);
+  const isExpiryPast = expiryDate ? new Date(expiryDate) <= new Date() : false;
 
-  const handleNext = () => { setError(""); if (step === 1 && canGoToStep2) setStep(2); else if (step === 2 && canGoToStep3) setStep(3); };
-  const handleBack = () => { setError(""); if (step > 1) setStep(step - 1); };
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  
+  const warehouseErrorId = useId();
+  const supplierErrorId = useId();
+  const itemErrorId = useId();
+  const quantityErrorId = useId();
 
-  const handleSubmit = async () => {
-    if (!warehouseId || !supplierId || !supplyItemId || quantity <= 0) { setError(t("suppliers.validation.required")); return; }
-    if (isRestricted && !confirmRestricted) { setError("Please confirm handling of restricted supplies"); return; }
-    if (isExpiryPast && !confirmExpiry) { setError("Please confirm the past expiry date"); return; }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+    if (!warehouseId) newErrors.warehouse = t("suppliers.validation.required");
+    if (!supplierId) newErrors.supplier = t("suppliers.validation.required");
+    if (!supplyItemId) newErrors.item = t("suppliers.validation.required");
+    if (quantity === "" || quantity <= 0) newErrors.quantity = t("suppliers.validation.invalidQuantity");
+    
+    if (isRestricted && !confirmRestricted) {
+      setError(t("suppliers.validation.confirmRestricted"));
+      return;
+    }
+    if (isExpiryPast && !confirmExpiry) {
+      setError(t("suppliers.validation.confirmExpiry"));
+      return;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFieldErrors(newErrors);
+      return;
+    }
+
+    setFieldErrors({});
+    setError("");
+
     try {
-      await onSubmit({ warehouseId, locationId: locationId || undefined, supplierId, supplyItemId, batchCode: batchCode || undefined, expiryDate: expiryDate || undefined, quantity, confirmRestricted: confirmRestricted || undefined, note: note || undefined });
+      await onSubmit({ 
+        warehouseId: warehouseId!, 
+        locationId: locationId || undefined, 
+        supplierId: supplierId!, 
+        supplyItemId: supplyItemId!, 
+        batchCode: batchCode || undefined, 
+        expiryDate: expiryDate || undefined, 
+        quantity: Number(quantity), 
+        confirmRestricted: confirmRestricted || undefined, 
+        note: note || undefined 
+      });
       onSuccess();
-    } catch (e) { setError(e instanceof Error ? e.message : t("suppliers.stockIn.errors.recordFailed")); }
+    } catch (e) { 
+      setError(e instanceof Error ? e.message : t("suppliers.stockIn.errors.recordFailed")); 
+    }
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content stock-in-modal" onClick={(e) => e.stopPropagation()}>
-        <h2>{t("suppliers.stockIn.title")}</h2>
-        <div className="stepper">
-          <div className={`step ${step >= 1 ? "active" : ""} ${step > 1 ? "completed" : ""}`}>
-            <span className="step-number">1</span>
-            <span className="step-label">{t("suppliers.stockIn.steps.warehouse")}</span>
-          </div>
-          <div className="step-line" />
-          <div className={`step ${step >= 2 ? "active" : ""} ${step > 2 ? "completed" : ""}`}>
-            <span className="step-number">2</span>
-            <span className="step-label">{t("suppliers.stockIn.steps.supplierItem")}</span>
-          </div>
-          <div className="step-line" />
-          <div className={`step ${step >= 3 ? "active" : ""}`}>
-            <span className="step-number">3</span>
-            <span className="step-label">{t("suppliers.stockIn.steps.batchInfo")}</span>
-          </div>
-        </div>
+    <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+      <DialogContent className="sm:max-w-[600px]" closeDisabled={isPending}>
+        <DialogHeader>
+          <DialogTitle>{t("suppliers.stockIn.title")}</DialogTitle>
+          <DialogDescription>{t("suppliers.stockIn.description")}</DialogDescription>
+        </DialogHeader>
 
-        {error && <div className="error-message">{error}</div>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="max-h-[calc(100vh-200px)] overflow-y-auto px-1 space-y-4">
+            {error && <p id="stock-in-error" role="alert" className="text-sm text-destructive">{error}</p>}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="warehouse">
+                  {t("suppliers.stockIn.form.warehouse")} <span className="text-destructive">*</span>
+                </Label>
+                <Select 
+                  value={warehouseId?.toString() || ""} 
+                  onValueChange={(val) => { setWarehouseId(Number(val)); setLocationId(null); setFieldErrors(prev => ({...prev, warehouse: ""})); }}
+                  disabled={isPending}
+                >
+                  <SelectTrigger id="warehouse" aria-invalid={!!fieldErrors.warehouse} aria-describedby={fieldErrors.warehouse ? warehouseErrorId : undefined}>
+                    <SelectValue placeholder={t("suppliers.stockIn.form.selectWarehouse")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {siWarehouses?.map((w: WarehouseEntity) => (
+                      <SelectItem key={w.id} value={w.id.toString()}>{w.name} {w.farmName ? `(${w.farmName})` : ""}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldErrors.warehouse && <p id={warehouseErrorId} className="text-sm text-destructive">{fieldErrors.warehouse}</p>}
+              </div>
 
-        {step === 1 && (
-          <div className="step-content">
-            <div className="form-group">
-              <label>{t("suppliers.stockIn.form.warehouse")} *</label>
-              <select value={warehouseId || ""} onChange={(e) => { setWarehouseId(e.target.value ? Number(e.target.value) : null); setLocationId(null); }}>
-                <option value="">{t("suppliers.stockIn.form.selectWarehouse")}</option>
-                {siWarehouses?.map((w: WarehouseEntity) => (<option key={w.id} value={w.id}>{w.name} {w.farmName ? `(${w.farmName})` : ""}</option>))}
-              </select>
+              <div className="space-y-2">
+                <Label htmlFor="location">{t("suppliers.stockIn.form.locationOptional")}</Label>
+                <Select 
+                  value={locationId?.toString() || "any"} 
+                  onValueChange={(val) => setLocationId(val === "any" ? null : Number(val))} 
+                  disabled={!warehouseId || isPending}
+                >
+                  <SelectTrigger id="location">
+                    <SelectValue placeholder={t("suppliers.stockIn.form.anyLocation")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">{t("suppliers.stockIn.form.anyLocation")}</SelectItem>
+                    {siLocations?.map((loc: StockLocation) => (
+                      <SelectItem key={loc.id} value={loc.id.toString()}>{loc.label || t("suppliers.stockIn.form.locationFallback", { id: loc.id })}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="form-group">
-              <label>{t("suppliers.stockIn.form.locationOptional")}</label>
-              <select value={locationId || ""} onChange={(e) => setLocationId(e.target.value ? Number(e.target.value) : null)} disabled={!warehouseId}>
-                <option value="">{t("suppliers.stockIn.form.anyLocation")}</option>
-                {siLocations?.map((loc: StockLocation) => (<option key={loc.id} value={loc.id}>{loc.label || t("suppliers.stockIn.form.locationFallback", { id: loc.id })}</option>))}
-              </select>
-            </div>
-          </div>
-        )}
 
-        {step === 2 && (
-          <div className="step-content">
-            <div className="form-group">
-              <label>{t("suppliers.stockIn.form.supplier")} *</label>
-              <select value={supplierId || ""} onChange={(e) => setSupplierId(e.target.value ? Number(e.target.value) : null)}>
-                <option value="">{t("suppliers.stockIn.form.selectSupplier")}</option>
-                {siSuppliers?.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="supplier">
+                  {t("suppliers.stockIn.form.supplier")} <span className="text-destructive">*</span>
+                </Label>
+                <Select 
+                  value={supplierId?.toString() || ""} 
+                  onValueChange={(val) => { setSupplierId(Number(val)); setFieldErrors(prev => ({...prev, supplier: ""})); }}
+                  disabled={isPending}
+                >
+                  <SelectTrigger id="supplier" aria-invalid={!!fieldErrors.supplier} aria-describedby={fieldErrors.supplier ? supplierErrorId : undefined}>
+                    <SelectValue placeholder={t("suppliers.stockIn.form.selectSupplier")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {siSuppliers?.map((s) => (
+                      <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldErrors.supplier && <p id={supplierErrorId} className="text-sm text-destructive">{fieldErrors.supplier}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="supplyItem">
+                  {t("suppliers.stockIn.form.supplyItem")} <span className="text-destructive">*</span>
+                </Label>
+                <Select 
+                  value={supplyItemId?.toString() || ""} 
+                  onValueChange={(val) => { setSupplyItemId(Number(val)); setConfirmRestricted(false); setFieldErrors(prev => ({...prev, item: ""})); }}
+                  disabled={isPending}
+                >
+                  <SelectTrigger id="supplyItem" aria-invalid={!!fieldErrors.item} aria-describedby={fieldErrors.item ? itemErrorId : undefined}>
+                    <SelectValue placeholder={t("suppliers.stockIn.form.selectItem")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {siItems?.map((i) => (
+                      <SelectItem key={i.id} value={i.id.toString()}>{i.name} {i.unit ? `(${i.unit})` : ""} {i.restrictedFlag ? t("suppliers.stockIn.form.restrictedTag") : ""}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldErrors.item && <p id={itemErrorId} className="text-sm text-destructive">{fieldErrors.item}</p>}
+              </div>
             </div>
-            <div className="form-group">
-              <label>{t("suppliers.stockIn.form.supplyItem")} *</label>
-              <select value={supplyItemId || ""} onChange={(e) => { setSupplyItemId(e.target.value ? Number(e.target.value) : null); setConfirmRestricted(false); }}>
-                <option value="">{t("suppliers.stockIn.form.selectItem")}</option>
-                {siItems?.map((i) => (<option key={i.id} value={i.id}>{i.name} {i.unit ? `(${i.unit})` : ""} {i.restrictedFlag ? t("suppliers.stockIn.form.restrictedTag") : ""}</option>))}
-              </select>
-            </div>
+
             {isRestricted && (
-              <div className="warning-banner">
-                <strong>{t("suppliers.stockIn.form.restrictedTitle")}</strong>
-                <p>{t("suppliers.stockIn.form.restrictedDescription")}</p>
-                <label className="confirm-checkbox">
-                  <input type="checkbox" checked={confirmRestricted} onChange={(e) => setConfirmRestricted(e.target.checked)} />
-                  {t("suppliers.stockIn.form.restrictedConfirm")}
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-md space-y-2">
+                <strong className="text-sm text-amber-800 flex items-center">{t("suppliers.stockIn.form.restrictedTitle")}</strong>
+                <p className="text-sm text-amber-700">{t("suppliers.stockIn.form.restrictedDescription")}</p>
+                <label className="flex items-center space-x-2 text-sm text-amber-900 cursor-pointer">
+                  <input type="checkbox" className="rounded border-amber-300 text-amber-600 focus:ring-amber-500" checked={confirmRestricted} onChange={(e) => setConfirmRestricted(e.target.checked)} disabled={isPending} />
+                  <span>{t("suppliers.stockIn.form.restrictedConfirm")}</span>
                 </label>
               </div>
             )}
-          </div>
-        )}
 
-        {step === 3 && (
-          <div className="step-content">
-            <div className="form-group">
-              <label>{t("suppliers.stockIn.form.batchCode")}</label>
-              <input type="text" value={batchCode} onChange={(e) => setBatchCode(e.target.value)} placeholder={t("suppliers.stockIn.form.batchCodePlaceholder")} />
-            </div>
-            <div className="form-group">
-              <label>{t("suppliers.stockIn.form.expiryDate")}</label>
-              <input type="date" value={expiryDate} onChange={(e) => { setExpiryDate(e.target.value); setConfirmExpiry(false); }} />
-              {isExpiryPast && (
-                <div className="warning-banner small">
-                  <strong>{t("suppliers.stockIn.form.pastExpiryTitle")}</strong>
-                  <label className="confirm-checkbox">
-                    <input type="checkbox" checked={confirmExpiry} onChange={(e) => setConfirmExpiry(e.target.checked)} />
-                    {t("suppliers.stockIn.form.pastExpiryConfirm")}
-                  </label>
-                </div>
-              )}
-            </div>
-            <div className="form-group">
-              <label>{t("suppliers.stockIn.form.quantity")} * {selectedItem?.unit ? `(${selectedItem.unit})` : ""}</label>
-              <input type="number" min={0} step="0.001" value={quantity || ""} onChange={(e) => setQuantity(Number(e.target.value))} placeholder={t("suppliers.stockIn.form.quantityPlaceholder")} />
-            </div>
-            <div className="form-group">
-              <label>{t("suppliers.stockIn.form.noteOptional")}</label>
-              <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("suppliers.stockIn.form.notePlaceholder")} />
-            </div>
-          </div>
-        )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="batchCode">{t("suppliers.stockIn.form.batchCode")}</Label>
+                <Input 
+                  id="batchCode"
+                  value={batchCode} 
+                  onChange={(e) => setBatchCode(e.target.value)} 
+                  placeholder={t("suppliers.stockIn.form.batchCodePlaceholder")} 
+                  disabled={isPending}
+                />
+              </div>
 
-        <div className="modal-actions">
-          <button className="btn-cancel" onClick={onClose} disabled={isPending}>{t("common.cancel")}</button>
-          <div className="action-group">
-            {step > 1 && (<button className="btn-secondary" onClick={handleBack} disabled={isPending}>{t("suppliers.stockIn.actions.back")}</button>)}
-            {step < 3 ? (
-              <button className="btn-primary" onClick={handleNext} disabled={step === 1 ? !canGoToStep2 : !canGoToStep3}>{t("suppliers.stockIn.actions.next")}</button>
-            ) : (
-              <button className="btn-primary" onClick={handleSubmit} disabled={isPending || !canSubmit}>{isPending ? t("common.processing") : t("suppliers.stockIn.actions.confirm")}</button>
+              <div className="space-y-2">
+                <Label htmlFor="expiryDate">{t("suppliers.stockIn.form.expiryDate")}</Label>
+                <Input 
+                  id="expiryDate"
+                  type="date" 
+                  value={expiryDate} 
+                  onChange={(e) => { setExpiryDate(e.target.value); setConfirmExpiry(false); }} 
+                  disabled={isPending}
+                />
+              </div>
+            </div>
+
+            {isExpiryPast && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-md space-y-2">
+                <strong className="text-sm text-amber-800">{t("suppliers.stockIn.form.pastExpiryTitle")}</strong>
+                <label className="flex items-center space-x-2 text-sm text-amber-900 cursor-pointer">
+                  <input type="checkbox" className="rounded border-amber-300 text-amber-600 focus:ring-amber-500" checked={confirmExpiry} onChange={(e) => setConfirmExpiry(e.target.checked)} disabled={isPending} />
+                  <span>{t("suppliers.stockIn.form.pastExpiryConfirm")}</span>
+                </label>
+              </div>
             )}
+
+            <div className="space-y-2">
+              <Label htmlFor="quantity">
+                {t("suppliers.stockIn.form.quantity")} {selectedItem?.unit ? `(${selectedItem.unit})` : ""} <span className="text-destructive">*</span>
+              </Label>
+              <Input 
+                id="quantity"
+                type="number" 
+                min={0} 
+                step="0.001" 
+                value={quantity} 
+                onChange={(e) => { setQuantity(e.target.value === "" ? "" : Number(e.target.value)); setFieldErrors(prev => ({...prev, quantity: ""})); }} 
+                placeholder={t("suppliers.stockIn.form.quantityPlaceholder")} 
+                disabled={isPending}
+                aria-invalid={!!fieldErrors.quantity} 
+                aria-describedby={fieldErrors.quantity ? quantityErrorId : undefined}
+              />
+              {fieldErrors.quantity && <p id={quantityErrorId} className="text-sm text-destructive">{fieldErrors.quantity}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="note">{t("suppliers.stockIn.form.noteOptional")}</Label>
+              <Textarea 
+                id="note"
+                value={note} 
+                onChange={(e) => setNote(e.target.value)} 
+                placeholder={t("suppliers.stockIn.form.notePlaceholder")} 
+                disabled={isPending}
+              />
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? t("common.processing") : t("suppliers.stockIn.actions.confirm")}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1293,7 +1511,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending }: StockInModalP
 
 function StockOutModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; onClose: () => void; onSubmit: (data: StockMovementRequest) => Promise<void>; isPending: boolean }) {
   const { preferences } = usePreferences();
-  const { t } = useI18n();
+  const { t } = useSupplyManagementI18n();
   const [quantity, setQuantity] = useState<number>(0);
   const [seasonId, setSeasonId] = useState<number | null>(null);
   const [note, setNote] = useState("");
@@ -1315,30 +1533,76 @@ function StockOutModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; 
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2>{t("inventory.stockOut")}</h2>
-        <p className="modal-subtitle">{row.supplyItemName} ({row.batchCode})</p>
-        <p className="on-hand-info">{t("inventory.currentOnHand")}: <strong>{display.formatted}{unitSuffix}</strong></p>
-        {error && <div className="error-message">{error}</div>}
-        <div className="form-group">
-          <label>{t("inventory.seasonRequired")}</label>
-          <input type="number" placeholder={t("inventory.enterSeasonId")} value={seasonId || ""} onChange={(e) => setSeasonId(e.target.value ? Number(e.target.value) : null)} />
-        </div>
-        <div className="form-group">
-          <label>{t("inventory.quantity")}{display.unitLabel ? ` (${display.unitLabel})` : ""}</label>
-          <input type="number" min={0} max={maxDisplayQuantity} value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
-        </div>
-        <div className="form-group">
-          <label>{t("inventory.noteOptional")}</label>
-          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("inventory.addNote")} />
-        </div>
-        <div className="modal-actions">
-          <button type="button" className="btn-cancel" onClick={onClose} disabled={isPending}>{t("common.cancel")}</button>
-          <button type="button" className="btn-submit" onClick={handleSubmit} disabled={isPending}>{isPending ? t("common.processing") : t("inventory.confirmStockOut")}</button>
-        </div>
-      </div>
-    </div>
+    <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+      <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
+        <DialogHeader>
+          <DialogTitle>{t("inventory.stockOut")}</DialogTitle>
+          <DialogDescription>
+            {row.supplyItemName} ({row.batchCode}) - {t("inventory.currentOnHand")}: {display.formatted}{unitSuffix}
+          </DialogDescription>
+        </DialogHeader>
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSubmit();
+          }}
+        >
+          {error && (
+            <p id="stock-out-error" role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="stock-out-season" required>{t("inventory.seasonRequired")}</Label>
+            <Input
+              id="stock-out-season"
+              type="number"
+              placeholder={t("inventory.enterSeasonId")}
+              value={seasonId || ""}
+              onChange={(e) => setSeasonId(e.target.value ? Number(e.target.value) : null)}
+              aria-invalid={!!error}
+              aria-describedby={error ? "stock-out-error" : undefined}
+              disabled={isPending}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="stock-out-quantity" required>
+              {t("inventory.quantity")}{display.unitLabel ? ` (${display.unitLabel})` : ""}
+            </Label>
+            <Input
+              id="stock-out-quantity"
+              type="number"
+              min={0}
+              max={maxDisplayQuantity}
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+              aria-invalid={!!error}
+              aria-describedby={error ? "stock-out-error" : undefined}
+              disabled={isPending}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="stock-out-note">{t("inventory.noteOptional")}</Label>
+            <Textarea
+              id="stock-out-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={t("inventory.addNote")}
+              disabled={isPending}
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? t("common.processing") : t("inventory.confirmStockOut")}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1348,7 +1612,7 @@ function StockOutModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; 
 
 function AdjustModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; onClose: () => void; onSubmit: (data: StockMovementRequest) => Promise<void>; isPending: boolean }) {
   const { preferences } = usePreferences();
-  const { t } = useI18n();
+  const { t } = useSupplyManagementI18n();
   const [adjustQuantity, setAdjustQuantity] = useState<number>(0);
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
@@ -1370,32 +1634,71 @@ function AdjustModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; on
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2>{t("inventory.adjustStock")}</h2>
-        <p className="modal-subtitle">{row.supplyItemName} ({row.batchCode})</p>
-        <p className="on-hand-info">{t("inventory.currentOnHand")}: <strong>{display.formatted}{unitSuffix}</strong></p>
-        {error && <div className="error-message">{error}</div>}
-        <div className="form-group">
-          <label>{t("inventory.adjustmentAmount")}{display.unitLabel ? ` (${display.unitLabel})` : ""}</label>
-          <input type="number" value={adjustQuantity} onChange={(e) => setAdjustQuantity(Number(e.target.value))} placeholder={t("inventory.adjustPlaceholder")} />
-          <p className="preview">
-            {t("inventory.newOnHand")}:{" "}
-            <strong className={newOnHand < 0 ? "negative" : ""}>
-              {formatNumber(newOnHand, preferences.locale, preferences.weightUnit === "G" ? 0 : 2)}{unitSuffix}
-            </strong>
-          </p>
-        </div>
-        <div className="form-group">
-          <label>{t("inventory.noteRequired")}</label>
-          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("inventory.adjustReason")} required />
-        </div>
-        <div className="modal-actions">
-          <button type="button" className="btn-cancel" onClick={onClose} disabled={isPending}>{t("common.cancel")}</button>
-          <button type="button" className="btn-submit" onClick={handleSubmit} disabled={isPending || !note.trim()}>{isPending ? t("common.processing") : t("inventory.confirmAdjust")}</button>
-        </div>
-      </div>
-    </div>
+    <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+      <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
+        <DialogHeader>
+          <DialogTitle>{t("inventory.adjustStock")}</DialogTitle>
+          <DialogDescription>
+            {row.supplyItemName} ({row.batchCode}) - {t("inventory.currentOnHand")}: {display.formatted}{unitSuffix}
+          </DialogDescription>
+        </DialogHeader>
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSubmit();
+          }}
+        >
+          {error && (
+            <p id="adjust-stock-error" role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="adjust-stock-quantity" required>
+              {t("inventory.adjustmentAmount")}{display.unitLabel ? ` (${display.unitLabel})` : ""}
+            </Label>
+            <Input
+              id="adjust-stock-quantity"
+              type="number"
+              value={adjustQuantity}
+              onChange={(e) => setAdjustQuantity(Number(e.target.value))}
+              placeholder={t("inventory.adjustPlaceholder")}
+              aria-invalid={!!error}
+              aria-describedby={error ? "adjust-stock-error adjust-stock-preview" : "adjust-stock-preview"}
+              disabled={isPending}
+            />
+            <p id="adjust-stock-preview" className="text-xs text-muted-foreground">
+              {t("inventory.newOnHand")}:{" "}
+              <strong className={newOnHand < 0 ? "text-destructive" : ""}>
+                {formatNumber(newOnHand, preferences.locale, preferences.weightUnit === "G" ? 0 : 2)}{unitSuffix}
+              </strong>
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="adjust-stock-note" required>{t("inventory.noteRequired")}</Label>
+            <Textarea
+              id="adjust-stock-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={t("inventory.adjustReason")}
+              aria-invalid={!!error}
+              aria-describedby={error ? "adjust-stock-error" : undefined}
+              disabled={isPending}
+              required
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" disabled={isPending || !note.trim()}>
+              {isPending ? t("common.processing") : t("inventory.confirmAdjust")}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1417,30 +1720,80 @@ interface WarehouseFormModalProps {
 }
 
 function WarehouseFormModal({ mode, name, farmId, farms, onNameChange, onFarmIdChange, onClose, onSubmit, isPending, error }: WarehouseFormModalProps) {
-  const { t } = useI18n();
+  const { t } = useSupplyManagementI18n();
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(event) => event.stopPropagation()}>
-        <h2>{mode === "create" ? t("inventory.dialog.addWarehouseTitle") : t("inventory.dialog.editWarehouseTitle")}</h2>
-        <p className="modal-subtitle">{t("inventory.dialog.warehouseHint")}</p>
-        {error && <div className="error-message">{error}</div>}
-        <div className="form-group">
-          <label>{t("inventory.form.warehouseNameLabel")}</label>
-          <input type="text" value={name} onChange={(event) => onNameChange(event.target.value)} placeholder={t("inventory.form.warehouseNamePlaceholder")} maxLength={150} />
-        </div>
-        <div className="form-group">
-          <label>{t("inventory.form.farmLabel")}</label>
-          <select value={farmId ?? ""} onChange={(event) => onFarmIdChange(event.target.value ? Number(event.target.value) : undefined)} disabled={mode === "edit"}>
-            <option value="">{t("inventory.form.selectFarm")}</option>
-            {farms.map((farm) => (<option key={farm.id} value={farm.id}>{farm.name}</option>))}
-          </select>
-        </div>
-        <div className="modal-actions">
-          <button type="button" className="btn-cancel" onClick={onClose} disabled={isPending}>{t("common.cancel")}</button>
-          <button type="button" className="btn-submit" onClick={onSubmit} disabled={isPending}>{isPending ? t("common.processing") : t("common.save")}</button>
-        </div>
-      </div>
-    </div>
+    <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+      <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
+        <DialogHeader>
+          <DialogTitle>
+            {mode === "create" ? t("inventory.dialog.addWarehouseTitle") : t("inventory.dialog.editWarehouseTitle")}
+          </DialogTitle>
+          <DialogDescription>{t("inventory.dialog.warehouseHint")}</DialogDescription>
+        </DialogHeader>
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onSubmit();
+          }}
+        >
+          {error && (
+            <p id="inventory-warehouse-form-error" role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="inventory-warehouse-name" required>
+              {t("inventory.form.warehouseNameLabel")}
+            </Label>
+            <Input
+              id="inventory-warehouse-name"
+              type="text"
+              value={name}
+              onChange={(event) => onNameChange(event.target.value)}
+              placeholder={t("inventory.form.warehouseNamePlaceholder")}
+              maxLength={150}
+              aria-invalid={!!error}
+              aria-describedby={error ? "inventory-warehouse-form-error" : undefined}
+              disabled={isPending}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="inventory-warehouse-farm" required>
+              {t("inventory.form.farmLabel")}
+            </Label>
+            <Select
+              value={farmId ? String(farmId) : undefined}
+              onValueChange={(value) => onFarmIdChange(Number(value))}
+              disabled={mode === "edit" || isPending}
+            >
+              <SelectTrigger
+                id="inventory-warehouse-farm"
+                aria-invalid={!!error}
+                aria-describedby={error ? "inventory-warehouse-form-error" : undefined}
+              >
+                <SelectValue placeholder={t("inventory.form.selectFarm")} />
+              </SelectTrigger>
+              <SelectContent>
+                {farms.map((farm) => (
+                  <SelectItem key={farm.id} value={String(farm.id)}>
+                    {farm.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? t("common.processing") : t("common.save")}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1449,19 +1802,27 @@ function WarehouseFormModal({ mode, name, farmId, farms, onNameChange, onFarmIdC
 // ═══════════════════════════════════════════════════════════════
 
 function DeleteWarehouseModal({ warehouseName, onClose, onConfirm, isPending }: { warehouseName: string; onClose: () => void; onConfirm: () => void; isPending: boolean }) {
-  const { t } = useI18n();
+  const { t } = useSupplyManagementI18n();
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(event) => event.stopPropagation()}>
-        <h2>{t("inventory.dialog.deleteWarehouseTitle")}</h2>
-        <p className="modal-subtitle">{t("inventory.dialog.deleteWarehouseDescription", { warehouseName })}</p>
-        <p className="on-hand-info">{t("inventory.dialog.deleteWarehouseHint")}</p>
-        <div className="modal-actions">
-          <button type="button" className="btn-cancel" onClick={onClose} disabled={isPending}>{t("common.cancel")}</button>
-          <button type="button" className="btn-submit btn-submit-danger" onClick={onConfirm} disabled={isPending}>{isPending ? t("common.processing") : t("inventory.actions.deleteWarehouse")}</button>
-        </div>
-      </div>
-    </div>
+    <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+      <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
+        <DialogHeader>
+          <DialogTitle>{t("inventory.dialog.deleteWarehouseTitle")}</DialogTitle>
+          <DialogDescription>
+            {t("inventory.dialog.deleteWarehouseDescription", { warehouseName })}
+          </DialogDescription>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">{t("inventory.dialog.deleteWarehouseHint")}</p>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+            {t("common.cancel")}
+          </Button>
+          <Button type="button" variant="destructive" onClick={onConfirm} disabled={isPending}>
+            {isPending ? t("common.processing") : t("inventory.actions.deleteWarehouse")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1478,7 +1839,7 @@ interface SupplierFormDialogProps {
 }
 
 function SupplierFormDialog({ open, onOpenChange, supplier, onSubmit, isPending }: SupplierFormDialogProps) {
-  const { t } = useI18n();
+  const { t } = useSupplyManagementI18n();
   const [name, setName] = useState("");
   const [licenseNo, setLicenseNo] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -1494,6 +1855,7 @@ function SupplierFormDialog({ open, onOpenChange, supplier, onSubmit, isPending 
   if (open && name === "" && supplier) resetForm();
 
   const handleOpenChange = (newOpen: boolean) => {
+    if (isPending && !newOpen) return;
     if (!newOpen) { setName(""); setLicenseNo(""); setContactEmail(""); setContactPhone(""); setError(""); }
     else if (supplier) resetForm();
     onOpenChange(newOpen);
@@ -1509,34 +1871,34 @@ function SupplierFormDialog({ open, onOpenChange, supplier, onSubmit, isPending 
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[92vw] max-w-[420px]">
+      <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
         <DialogHeader>
           <DialogTitle>{supplier ? t("suppliers.form.editTitle") : t("suppliers.form.addTitle")}</DialogTitle>
           <DialogDescription>{supplier ? t("suppliers.form.editDescription") : t("suppliers.form.addDescription")}</DialogDescription>
         </DialogHeader>
-        {error && <div className="error-message text-destructive text-sm mb-4">{error}</div>}
-        <div className="space-y-4">
-          <div className="form-group">
-            <label className="text-sm font-medium">{t("suppliers.form.name")} *</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("suppliers.form.namePlaceholder")} className="w-full px-3 py-2 border border-border rounded-md" />
+        <form onSubmit={(event) => { event.preventDefault(); void handleSubmit(); }} className="space-y-4">
+          {error && <div id="supplier-form-error" role="alert" className="text-destructive text-sm">{error}</div>}
+          <div className="space-y-2">
+            <Label htmlFor="supplier-name" required>{t("suppliers.form.name")}</Label>
+            <Input id="supplier-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("suppliers.form.namePlaceholder")} aria-invalid={!!error} aria-describedby={error ? "supplier-form-error" : undefined} disabled={isPending} />
           </div>
-          <div className="form-group">
-            <label className="text-sm font-medium">{t("suppliers.form.licenseNo")}</label>
-            <input type="text" value={licenseNo} onChange={(e) => setLicenseNo(e.target.value)} placeholder={t("suppliers.form.licenseNoPlaceholder")} className="w-full px-3 py-2 border border-border rounded-md" />
+          <div className="space-y-2">
+            <Label htmlFor="supplier-license">{t("suppliers.form.licenseNo")}</Label>
+            <Input id="supplier-license" type="text" value={licenseNo} onChange={(e) => setLicenseNo(e.target.value)} placeholder={t("suppliers.form.licenseNoPlaceholder")} disabled={isPending} />
           </div>
-          <div className="form-group">
-            <label className="text-sm font-medium">{t("suppliers.form.phone")}</label>
-            <input type="text" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder={t("suppliers.form.phonePlaceholder")} className="w-full px-3 py-2 border border-border rounded-md" />
+          <div className="space-y-2">
+            <Label htmlFor="supplier-phone">{t("suppliers.form.phone")}</Label>
+            <Input id="supplier-phone" type="text" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder={t("suppliers.form.phonePlaceholder")} disabled={isPending} />
           </div>
-          <div className="form-group">
-            <label className="text-sm font-medium">{t("suppliers.form.email")}</label>
-            <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder={t("suppliers.form.emailPlaceholder")} className="w-full px-3 py-2 border border-border rounded-md" />
+          <div className="space-y-2">
+            <Label htmlFor="supplier-email">{t("suppliers.form.email")}</Label>
+            <Input id="supplier-email" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder={t("suppliers.form.emailPlaceholder")} disabled={isPending} />
           </div>
-        </div>
-        <DialogFooter className="mt-6">
-          <Button variant="ghost" onClick={() => handleOpenChange(false)} disabled={isPending}>{t("common.cancel")}</Button>
-          <Button onClick={handleSubmit} disabled={isPending}>{isPending ? t("common.saving") : supplier ? t("common.saveChanges") : t("suppliers.form.addButton")}</Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>{t("common.cancel")}</Button>
+            <Button type="submit" disabled={isPending}>{isPending ? t("common.saving") : supplier ? t("common.saveChanges") : t("suppliers.form.addButton")}</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -1547,22 +1909,166 @@ function SupplierFormDialog({ open, onOpenChange, supplier, onSubmit, isPending 
 // ═══════════════════════════════════════════════════════════════
 
 function DeleteSupplierDialog({ open, onOpenChange, supplier, onConfirm, isPending }: { open: boolean; onOpenChange: (open: boolean) => void; supplier: Supplier | null; onConfirm: () => Promise<void>; isPending: boolean }) {
-  const { t } = useI18n();
+  const { t } = useSupplyManagementI18n();
   const [error, setError] = useState("");
 
   const handleConfirm = async () => { try { await onConfirm(); } catch (e) { setError(e instanceof Error ? e.message : t("suppliers.errors.deleteFailed")); } };
-  const handleOpenChange = (newOpen: boolean) => { if (!newOpen) setError(""); onOpenChange(newOpen); };
+  const handleOpenChange = (newOpen: boolean) => {
+    if (isPending && !newOpen) return;
+    if (!newOpen) setError("");
+    onOpenChange(newOpen);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[92vw] max-w-[400px]">
+      <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
         <DialogHeader>
           <DialogTitle>{t("suppliers.delete.title")}</DialogTitle>
           <DialogDescription>{t("suppliers.delete.description", { name: supplier?.name })}</DialogDescription>
         </DialogHeader>
-        {error && <div className="error-message text-destructive text-sm mb-4">{error}</div>}
-        <DialogFooter className="mt-6">
-          <Button variant="ghost" onClick={() => handleOpenChange(false)} disabled={isPending}>{t("common.cancel")}</Button>
+        {error && <p id="delete-supplier-error" role="alert" className="text-sm text-destructive">{error}</p>}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>{t("common.cancel")}</Button>
+          <Button variant="destructive" onClick={handleConfirm} disabled={isPending}>{isPending ? t("common.deleting") : t("common.delete")}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface SupplyItemFormDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  item: SupplyItem | null;
+  onSubmit: (data: CreateSupplyItemRequest) => Promise<void>;
+  isPending: boolean;
+}
+
+function SupplyItemFormDialog({ open, onOpenChange, item, onSubmit, isPending }: SupplyItemFormDialogProps) {
+  const { t } = useSupplyManagementI18n();
+  const [name, setName] = useState("");
+  const [activeIngredient, setActiveIngredient] = useState("");
+  const [unit, setUnit] = useState("");
+  const [restrictedFlag, setRestrictedFlag] = useState(false);
+  const [error, setError] = useState("");
+
+  const resetForm = () => {
+    if (item) {
+      setName(item.name || "");
+      setActiveIngredient(item.activeIngredient || "");
+      setUnit(item.unit || "");
+      setRestrictedFlag(Boolean(item.restrictedFlag));
+    } else {
+      setName("");
+      setActiveIngredient("");
+      setUnit("");
+      setRestrictedFlag(false);
+    }
+    setError("");
+  };
+
+  if (open && name === "" && item) resetForm();
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (isPending && !newOpen) return;
+    if (!newOpen) {
+      setName("");
+      setActiveIngredient("");
+      setUnit("");
+      setRestrictedFlag(false);
+      setError("");
+    } else if (item) {
+      resetForm();
+    }
+    onOpenChange(newOpen);
+  };
+
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      setError(t("suppliers.errors.itemNameRequired"));
+      return;
+    }
+    if (!unit.trim()) {
+      setError(t("suppliers.errors.itemUnitRequired"));
+      return;
+    }
+    try {
+      await onSubmit({
+        name: name.trim(),
+        activeIngredient: activeIngredient.trim() || null,
+        unit: unit.trim(),
+        restrictedFlag,
+      });
+      handleOpenChange(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("suppliers.errors.itemSaveFailed"));
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
+        <DialogHeader>
+          <DialogTitle>{item ? t("suppliers.itemForm.editTitle") : t("suppliers.itemForm.addTitle")}</DialogTitle>
+          <DialogDescription>{item ? t("suppliers.itemForm.editDescription") : t("suppliers.itemForm.addDescription")}</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={(event) => { event.preventDefault(); void handleSubmit(); }} className="space-y-4">
+          {error && <div id="supply-item-form-error" role="alert" className="text-destructive text-sm">{error}</div>}
+          <div className="space-y-2">
+            <Label htmlFor="supply-item-name" required>{t("suppliers.itemForm.name")}</Label>
+            <Input id="supply-item-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("suppliers.itemForm.namePlaceholder")} aria-invalid={!!error} aria-describedby={error ? "supply-item-form-error" : undefined} disabled={isPending} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="supply-item-active-ingredient">{t("suppliers.itemForm.activeIngredient")}</Label>
+            <Input id="supply-item-active-ingredient" type="text" value={activeIngredient} onChange={(e) => setActiveIngredient(e.target.value)} placeholder={t("suppliers.itemForm.activeIngredientPlaceholder")} disabled={isPending} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="supply-item-unit" required>{t("suppliers.itemForm.unit")}</Label>
+            <Input id="supply-item-unit" type="text" value={unit} onChange={(e) => setUnit(e.target.value)} placeholder={t("suppliers.itemForm.unitPlaceholder")} maxLength={20} disabled={isPending} />
+          </div>
+          <div className="space-y-2">
+            <label className="filter-checkbox">
+              <input type="checkbox" checked={restrictedFlag} onChange={(e) => setRestrictedFlag(e.target.checked)} disabled={isPending} />
+              {t("suppliers.itemForm.restricted")}
+            </label>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>{t("common.cancel")}</Button>
+            <Button type="submit" disabled={isPending}>{isPending ? t("common.saving") : item ? t("common.saveChanges") : t("suppliers.itemForm.addButton")}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteSupplyItemDialog({ open, onOpenChange, item, onConfirm, isPending }: { open: boolean; onOpenChange: (open: boolean) => void; item: SupplyItem | null; onConfirm: () => Promise<void>; isPending: boolean }) {
+  const { t } = useSupplyManagementI18n();
+  const [error, setError] = useState("");
+
+  const handleConfirm = async () => {
+    try {
+      await onConfirm();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("suppliers.errors.itemDeleteFailed"));
+    }
+  };
+  const handleOpenChange = (newOpen: boolean) => {
+    if (isPending && !newOpen) return;
+    if (!newOpen) setError("");
+    onOpenChange(newOpen);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
+        <DialogHeader>
+          <DialogTitle>{t("suppliers.itemDelete.title")}</DialogTitle>
+          <DialogDescription>{t("suppliers.itemDelete.description", { name: item?.name })}</DialogDescription>
+        </DialogHeader>
+        {error && <p id="delete-supply-item-error" role="alert" className="text-sm text-destructive">{error}</p>}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>{t("common.cancel")}</Button>
           <Button variant="destructive" onClick={handleConfirm} disabled={isPending}>{isPending ? t("common.deleting") : t("common.delete")}</Button>
         </DialogFooter>
       </DialogContent>

@@ -71,7 +71,7 @@ const transformDashboardData = (data: DashboardStats) => {
     userRoles: data.userRoleCounts.map((r) => ({
       name: r.role || 'Unknown',
       value: r.total,
-      color: r.role === 'ADMIN' ? '#4A90E2' : r.role === 'FARMER' ? '#3BA55D' : '#F4C542',
+      color: r.role === 'ADMIN' ? '#4A90E2' : r.role === 'FARMER' ? '#3BA55D' : r.role === 'BUYER' ? '#F97316' : '#F4C542',
     })),
     userStatus: data.userStatusCounts.map((s) => ({
       name: s.status || 'Unknown',

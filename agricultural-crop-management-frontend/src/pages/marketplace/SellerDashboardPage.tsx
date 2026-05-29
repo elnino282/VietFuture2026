@@ -1,4 +1,4 @@
-﻿import {
+import {
   DollarSign,
   Package,
   Plus,
@@ -110,34 +110,7 @@ export function SellerDashboardPage() {
           onRetry={() => dashboardQuery.refetch()}
           loadingText={t("marketplaceSeller.dashboard.loading", "Loading marketplace dashboard...")}
         >
-          <Card variant="page-header">
-            <CardContent className="px-6 py-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex-shrink-0">
-                  <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
-                    <Store className="w-6 h-6 text-primary" />
-                    {t("marketplaceSeller.products.title", "Manage products")}
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t(
-                      "marketplaceSeller.products.subtitle",
-                      "List, moderate, and manage stock for your marketplace products.",
-                    )}
-                  </p>
-                </div>
 
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <Button
-                    className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm acm-button-shadow"
-                    onClick={() => navigate("/farmer/marketplace-products/new")}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    {t("marketplaceSeller.products.addProduct", "Add product")}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           {!hasProducts ? (
             <Card className="border-dashed border-border">

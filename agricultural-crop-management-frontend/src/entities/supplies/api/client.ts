@@ -5,15 +5,18 @@ import {
   type PageResponse,
 } from "@/shared/api/types";
 import {
+  CreateSupplyItemRequestSchema,
   CreateSupplierRequestSchema,
   StockInRequestSchema,
   StockInResponseSchema,
   SupplierSchema,
   SupplyItemSchema,
   SupplyLotSchema,
+  UpdateSupplyItemRequestSchema,
   UpdateSupplierRequestSchema,
 } from "../model/schemas";
 import type {
+  CreateSupplyItemRequest,
   CreateSupplierRequest,
   StockInRequest,
   StockInResponse,
@@ -23,6 +26,7 @@ import type {
   SupplyItemsParams,
   SupplyLot,
   SupplyLotsParams,
+  UpdateSupplyItemRequest,
   UpdateSupplierRequest,
 } from "../model/types";
 
@@ -109,6 +113,43 @@ export const suppliesApi = {
       params: queryParams,
     });
     return parsePageResponse(response.data, SupplyItemSchema);
+  },
+
+  /**
+   * POST /api/v1/supplies/items
+   * Create a new supply item
+   */
+  createSupplyItem: async (data: CreateSupplyItemRequest): Promise<SupplyItem> => {
+    const validatedPayload = CreateSupplyItemRequestSchema.parse(data);
+    const response = await httpClient.post(
+      "/api/v1/supplies/items",
+      validatedPayload,
+    );
+    return parseApiResponse(response.data, SupplyItemSchema);
+  },
+
+  /**
+   * PUT /api/v1/supplies/items/:id
+   * Update an existing supply item
+   */
+  updateSupplyItem: async (
+    id: number,
+    data: UpdateSupplyItemRequest,
+  ): Promise<SupplyItem> => {
+    const validatedPayload = UpdateSupplyItemRequestSchema.parse(data);
+    const response = await httpClient.put(
+      `/api/v1/supplies/items/${id}`,
+      validatedPayload,
+    );
+    return parseApiResponse(response.data, SupplyItemSchema);
+  },
+
+  /**
+   * DELETE /api/v1/supplies/items/:id
+   * Delete a supply item
+   */
+  deleteSupplyItem: async (id: number): Promise<void> => {
+    await httpClient.delete(`/api/v1/supplies/items/${id}`);
   },
 
   /**

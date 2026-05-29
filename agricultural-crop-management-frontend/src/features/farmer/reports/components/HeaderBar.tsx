@@ -43,7 +43,7 @@ export function HeaderBar({
     const headingSubtitle = subtitle ?? t("reports.header.defaultSubtitle");
 
     return (
-        <Card className="border border-border rounded-xl shadow-sm mb-6 sticky top-0 z-10 bg-card">
+        <Card className="sticky top-0 z-10 mb-6 rounded-[18px] border border-border bg-card shadow-sm">
             <CardContent className="px-6 py-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex-shrink-0">
@@ -65,7 +65,7 @@ export function HeaderBar({
 
                     <div className="flex flex-wrap items-center gap-3 flex-shrink-0">
                         <Select value={selectedSeason} onValueChange={onSeasonChange} disabled={disableSeasonSelect}>
-                            <SelectTrigger className="w-[180px] rounded-xl border-border">
+                            <SelectTrigger className="w-[180px] rounded-[14px] border-border">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -79,7 +79,7 @@ export function HeaderBar({
 
                         <Button
                             variant="outline"
-                            className="rounded-xl border-primary text-primary hover:bg-primary/5"
+                            className="rounded-[14px] border-primary text-primary hover:bg-primary/5"
                             onClick={onFilterClick}
                         >
                             <Filter className="w-4 h-4 mr-2" />
@@ -87,7 +87,7 @@ export function HeaderBar({
                         </Button>
 
                         <Button
-                            className="bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm"
+                            className="rounded-[14px] bg-primary text-white shadow-sm hover:bg-primary/90"
                             onClick={onExportClick}
                         >
                             <Download className="w-4 h-4 mr-2" />

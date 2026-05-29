@@ -128,7 +128,7 @@ export function AdminMarketplaceOrdersPage() {
       <AdminHeaderCard
         title="Manage marketplace orders"
         description="Review and manage marketplace orders, verify payment proofs, and track order status changes."
-        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">FarmTrace Admin</span>}
+        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">FarmACM Admin</span>}
       />
 
       <AdminFilterCard>

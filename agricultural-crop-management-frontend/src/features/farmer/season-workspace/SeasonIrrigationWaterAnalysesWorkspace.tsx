@@ -31,7 +31,7 @@ import {
   type IrrigationSourceType,
 } from "@/entities/irrigation-water-analysis";
 import { metricStatusClassName } from "@/features/farmer/dashboard/lib/metrics";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { AlertCircle, Droplets, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -86,6 +86,15 @@ const SOURCE_OPTIONS: { value: IrrigationSourceType; labelKey: string; fallbackL
     fallbackLabel: "External reference",
   },
 ];
+
+const FORM_INPUT_CLASS_NAME =
+  "h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm shadow-sm placeholder:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20";
+
+const FORM_SELECT_TRIGGER_CLASS_NAME =
+  "h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm shadow-sm data-[placeholder]:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20";
+
+const FORM_TEXTAREA_CLASS_NAME =
+  "rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm placeholder:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20";
 
 const defaultValues = (): IrrigationWaterAnalysisFormValues => ({
   sampleDate: new Date().toISOString().split("T")[0],
@@ -284,6 +293,7 @@ export function SeasonIrrigationWaterAnalysesWorkspace() {
                             data-testid="irrigation-sample-date-input"
                             value={field.value}
                             onChange={field.onChange}
+                            className={FORM_INPUT_CLASS_NAME}
                           />
                         </FormControl>
                         <FormMessage />
@@ -299,7 +309,7 @@ export function SeasonIrrigationWaterAnalysesWorkspace() {
                         <FormLabel>{t("seasonIrrigationWorkspace.form.sourceType")} *</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger className="rounded-xl border-border">
+                            <SelectTrigger className={FORM_SELECT_TRIGGER_CLASS_NAME}>
                               <SelectValue placeholder={t("seasonIrrigationWorkspace.form.sourceTypePlaceholder")} />
                             </SelectTrigger>
                           </FormControl>
@@ -331,6 +341,7 @@ export function SeasonIrrigationWaterAnalysesWorkspace() {
                             value={field.value ?? ""}
                             onChange={(event) => field.onChange(toNumberOrUndefined(event.target.value))}
                             placeholder={t("seasonIrrigationWorkspace.form.nitratePlaceholder")}
+                            className={FORM_INPUT_CLASS_NAME}
                           />
                         </FormControl>
                         <FormMessage />
@@ -353,6 +364,7 @@ export function SeasonIrrigationWaterAnalysesWorkspace() {
                             value={field.value ?? ""}
                             onChange={(event) => field.onChange(toNumberOrUndefined(event.target.value))}
                             placeholder={t("seasonIrrigationWorkspace.form.ammoniumPlaceholder")}
+                            className={FORM_INPUT_CLASS_NAME}
                           />
                         </FormControl>
                         <FormMessage />
@@ -375,6 +387,7 @@ export function SeasonIrrigationWaterAnalysesWorkspace() {
                             value={field.value ?? ""}
                             onChange={(event) => field.onChange(toNumberOrUndefined(event.target.value))}
                             placeholder={t("seasonIrrigationWorkspace.form.totalNPlaceholder")}
+                            className={FORM_INPUT_CLASS_NAME}
                           />
                         </FormControl>
                         <FormMessage />
@@ -400,6 +413,7 @@ export function SeasonIrrigationWaterAnalysesWorkspace() {
                               field.onChange(Number.isNaN(nextValue) ? undefined : nextValue);
                             }}
                             placeholder={t("seasonIrrigationWorkspace.form.volumePlaceholder")}
+                            className={FORM_INPUT_CLASS_NAME}
                           />
                         </FormControl>
                         <FormMessage />
@@ -418,6 +432,7 @@ export function SeasonIrrigationWaterAnalysesWorkspace() {
                             value={field.value ?? ""}
                             onChange={field.onChange}
                             placeholder={t("seasonIrrigationWorkspace.form.sourceDocumentPlaceholder")}
+                            className={FORM_INPUT_CLASS_NAME}
                           />
                         </FormControl>
                         <FormMessage />
@@ -436,6 +451,7 @@ export function SeasonIrrigationWaterAnalysesWorkspace() {
                             value={field.value ?? ""}
                             onChange={field.onChange}
                             placeholder={t("seasonIrrigationWorkspace.form.labReferencePlaceholder")}
+                            className={FORM_INPUT_CLASS_NAME}
                           />
                         </FormControl>
                         <FormMessage />
@@ -456,6 +472,7 @@ export function SeasonIrrigationWaterAnalysesWorkspace() {
                           value={field.value ?? ""}
                           onChange={field.onChange}
                           placeholder={t("seasonIrrigationWorkspace.form.notePlaceholder")}
+                          className={FORM_TEXTAREA_CLASS_NAME}
                         />
                       </FormControl>
                       <FormMessage />

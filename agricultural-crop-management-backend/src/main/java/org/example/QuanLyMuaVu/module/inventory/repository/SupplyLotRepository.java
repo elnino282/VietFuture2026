@@ -19,6 +19,8 @@ public interface SupplyLotRepository extends JpaRepository<SupplyLot, Integer> {
 
     List<SupplyLot> findAllBySupplier(Supplier supplier);
 
+    boolean existsBySupplyItem_Id(Integer supplyItemId);
+
     @Query("""
             SELECT l FROM SupplyLot l
             LEFT JOIN FETCH l.supplyItem

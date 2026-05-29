@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "appName": "ACM Platform",
     "loading": "Đang tải...",
@@ -74,7 +74,14 @@
     "loadingPageTransition": "Đang chuyển trang",
     "details": "Chi tiết",
     "signedOut": "Đăng xuất thành công",
-    "markRead": "Đánh dấu đã đọc"
+    "markRead": "Đánh dấu đã đọc",
+    "addressSelector": {
+      "province": "Tỉnh/Thành phố",
+      "provincePlaceholder": "Chọn Tỉnh/Thành phố",
+      "ward": "Phường/Xã",
+      "wardPlaceholder": "Chọn Phường/Xã",
+      "clear": "Xóa chọn"
+    }
   },
   "nav": {
     "dashboard": "Trang chủ",
@@ -99,6 +106,8 @@
     "cropsVarieties": "Cây trồng & Giống",
     "reports": "Báo cáo",
     "marketplace": "Workspace bán hàng",
+    "marketplaceDashboard": "Tổng quan bán hàng",
+    "marketplaceProducts": "Sản phẩm bán hàng",
     "orders": "Đơn hàng",
     "traceability": "Truy xuất nguồn gốc",
     "progress": "Tiến độ",
@@ -135,31 +144,106 @@
   },
   "farmerPortal": {
     "views": {
-      "dashboard": { "title": "Trang chủ", "breadcrumb": "Trang chủ" },
-      "search": { "title": "Tìm kiếm", "breadcrumb": "Tìm kiếm" },
-      "farms": { "title": "Nông trại & Thửa đất", "breadcrumb": "Nông trại & Thửa đất" },
-      "plots": { "title": "Quản lý thửa đất", "breadcrumb": "Quản lý thửa đất" },
-      "seasons": { "title": "Mùa vụ", "breadcrumb": "Mùa vụ" },
-      "tasks": { "title": "Không gian công việc", "breadcrumb": "Không gian công việc" },
-      "fieldLogs": { "title": "Nhật ký đồng ruộng", "breadcrumb": "Nhật ký đồng ruộng" },
-      "expenses": { "title": "Chi phí", "breadcrumb": "Chi phí" },
-      "harvest": { "title": "Thu hoạch", "breadcrumb": "Thu hoạch" },
-      "nutrientInputs": { "title": "Dinh dưỡng", "breadcrumb": "Dinh dưỡng" },
-      "suppliersSupplies": { "title": "Nhà cung cấp & Vật tư", "breadcrumb": "Nhà cung cấp & Vật tư" },
-      "laborManagement": { "title": "Quản lý nhân công", "breadcrumb": "Quản lý nhân công" },
-      "inventory": { "title": "Kho vật tư", "breadcrumb": "Kho vật tư" },
-      "productWarehouse": { "title": "Kho sản phẩm", "breadcrumb": "Kho sản phẩm" },
-      "marketplaceWorkspace": { "title": "Không gian sàn thương mại", "breadcrumb": "Sàn thương mại" },
-      "marketplaceDashboard": { "title": "Tổng quan sàn thương mại", "breadcrumb": "Tổng quan sàn thương mại" },
-      "marketplaceProducts": { "title": "Sản phẩm sàn thương mại", "breadcrumb": "Sản phẩm sàn thương mại" },
-      "marketplaceOrders": { "title": "Đơn hàng sàn thương mại", "breadcrumb": "Đơn hàng sàn thương mại" },
-      "documents": { "title": "Tài liệu", "breadcrumb": "Tài liệu" },
-      "incidents": { "title": "Sự cố", "breadcrumb": "Sự cố" },
-      "aiAssistant": { "title": "Trợ lý AI", "breadcrumb": "Trợ lý AI" },
-      "crops": { "title": "Quản lý cây trồng", "breadcrumb": "Quản lý cây trồng" },
-      "reports": { "title": "Báo cáo", "breadcrumb": "Báo cáo" },
-      "profile": { "title": "Hồ sơ", "breadcrumb": "Hồ sơ" },
-      "settings": { "title": "Tùy chọn", "breadcrumb": "Tùy chọn" }
+      "dashboard": {
+        "title": "Trang chủ",
+        "breadcrumb": "Trang chủ"
+      },
+      "search": {
+        "title": "Tìm kiếm",
+        "breadcrumb": "Tìm kiếm"
+      },
+      "farms": {
+        "title": "Nông trại & Thửa đất",
+        "breadcrumb": "Nông trại & Thửa đất"
+      },
+      "plots": {
+        "title": "Quản lý thửa đất",
+        "breadcrumb": "Quản lý thửa đất"
+      },
+      "seasons": {
+        "title": "Mùa vụ",
+        "breadcrumb": "Mùa vụ"
+      },
+      "tasks": {
+        "title": "Không gian công việc",
+        "breadcrumb": "Không gian công việc"
+      },
+      "fieldLogs": {
+        "title": "Nhật ký đồng ruộng",
+        "breadcrumb": "Nhật ký đồng ruộng"
+      },
+      "expenses": {
+        "title": "Chi phí",
+        "breadcrumb": "Chi phí"
+      },
+      "harvest": {
+        "title": "Thu hoạch",
+        "breadcrumb": "Thu hoạch"
+      },
+      "nutrientInputs": {
+        "title": "Dinh dưỡng",
+        "breadcrumb": "Dinh dưỡng"
+      },
+      "suppliersSupplies": {
+        "title": "Nhà cung cấp & Vật tư",
+        "breadcrumb": "Nhà cung cấp & Vật tư"
+      },
+      "laborManagement": {
+        "title": "Quản lý nhân công",
+        "breadcrumb": "Quản lý nhân công"
+      },
+      "inventory": {
+        "title": "Kho vật tư",
+        "breadcrumb": "Kho vật tư"
+      },
+      "productWarehouse": {
+        "title": "Kho sản phẩm",
+        "breadcrumb": "Kho sản phẩm"
+      },
+      "marketplaceWorkspace": {
+        "title": "Không gian sàn thương mại",
+        "breadcrumb": "Sàn thương mại"
+      },
+      "marketplaceDashboard": {
+        "title": "Tổng quan sàn thương mại",
+        "breadcrumb": "Tổng quan sàn thương mại"
+      },
+      "marketplaceProducts": {
+        "title": "Sản phẩm sàn thương mại",
+        "breadcrumb": "Sản phẩm sàn thương mại"
+      },
+      "marketplaceOrders": {
+        "title": "Đơn hàng sàn thương mại",
+        "breadcrumb": "Đơn hàng sàn thương mại"
+      },
+      "documents": {
+        "title": "Tài liệu",
+        "breadcrumb": "Tài liệu"
+      },
+      "incidents": {
+        "title": "Sự cố",
+        "breadcrumb": "Sự cố"
+      },
+      "aiAssistant": {
+        "title": "Trợ lý AI",
+        "breadcrumb": "Trợ lý AI"
+      },
+      "crops": {
+        "title": "Quản lý cây trồng",
+        "breadcrumb": "Quản lý cây trồng"
+      },
+      "reports": {
+        "title": "Báo cáo",
+        "breadcrumb": "Báo cáo"
+      },
+      "profile": {
+        "title": "Hồ sơ",
+        "breadcrumb": "Hồ sơ"
+      },
+      "settings": {
+        "title": "Tùy chọn",
+        "breadcrumb": "Tùy chọn"
+      }
     }
   },
   "header": {
@@ -706,7 +790,28 @@
       "endDateLabel": "Ngày kết thúc",
       "cancelTitle": "Hủy mùa vụ",
       "cancelDescription": "Bạn có chắc chắn muốn hủy mùa vụ này? Hành động này không thể hoàn tác.",
-      "cancelConfirm": "Hủy mùa vụ"
+      "cancelConfirm": "Hủy mùa vụ",
+      "createDescription": "Điền thông tin dưới đây để tạo mùa vụ mới."
+    },
+    "form": {
+      "seasonName": "Tên mùa vụ",
+      "seasonNamePlaceholder": "VD: Mùa Hè 2024",
+      "selectFarm": "Chọn nông trại",
+      "selectFarmFirst": "Vui lòng chọn nông trại trước",
+      "variety": "Giống cây",
+      "selectCrop": "Chọn cây trồng",
+      "selectCropFirst": "Vui lòng chọn cây trồng trước",
+      "initialPlantCount": "Số lượng cây ban đầu",
+      "initialPlantCountHelp": "Số lượng cây giống hoặc hạt giống được gieo trồng.",
+      "expectedYield": "Sản lượng dự kiến",
+      "expectedYieldHelp": "Sản lượng ước tính thu được.",
+      "budget": "Ngân sách",
+      "budgetPlaceholder": "VD: 50000000",
+      "budgetHelp": "Ngân sách dự kiến cho mùa vụ.",
+      "notesPlaceholder": "Ghi chú thêm về mùa vụ...",
+      "initialPlantCountPlaceholder": "VD: 1000",
+      "expectedYieldPlaceholder": "VD: 5000",
+      "plannedHarvestDate": "Ngày dự kiến thu hoạch"
     }
   },
   "seasonWorkspace": {
@@ -1888,7 +1993,10 @@
       "createPlotTitle": "Tạo thửa đất",
       "editPlotTitle": "Chỉnh sửa thửa đất",
       "deletePlotTitle": "Xóa thửa đất",
-      "deletePlotDescription": "Bạn có chắc chắn muốn xóa thửa đất này?"
+      "deletePlotDescription": "Bạn có chắc chắn muốn xóa thửa đất này?",
+      "createPlotDescription": "Điền thông tin dưới đây để thêm thửa đất mới.",
+      "createFarmDescription": "Nhập các thông tin cơ bản để thêm mới nông trại.",
+      "editFarmDescription": "Cập nhật thông tin cơ bản của nông trại."
     },
     "form": {
       "farmName": "Tên nông trại",
@@ -1900,7 +2008,29 @@
       "plotName": "Tên thửa đất",
       "plotNamePlaceholder": "Nhập tên thửa đất",
       "soilType": "Loại đất",
-      "selectSoilType": "Chọn loại đất"
+      "selectSoilType": "Chọn loại đất",
+      "plotNameExample": "VD: Lô A1",
+      "areaHectares": "Diện tích (Hecta)",
+      "areaExample": "VD: 2.5",
+      "farmAddress": "Địa chỉ nông trại",
+      "farmAddressCreateDescription": "Chọn địa chỉ để tính năng thời tiết hoạt động chính xác.",
+      "farmAddressEditDescription": "Thay đổi địa chỉ sẽ cập nhật lại dữ liệu thời tiết.",
+      "areaHectaresPlaceholder": "VD: 1.5"
+    },
+    "soilTypes": {
+      "FERRALSOLS": "Đất đỏ Feralit",
+      "CHERNOZEMS": "Đất đen",
+      "FLUVISOLS": "Đất phù sa",
+      "PODZOL": "Đất Podzol",
+      "PEAT": "Đất than bùn",
+      "ARENOSOLS": "Đất cát"
+    },
+    "plotStatuses": {
+      "IN_USE": "Đang sử dụng",
+      "IDLE": "Chờ trồng",
+      "AVAILABLE": "Trống",
+      "FALLOW": "Đang nghỉ",
+      "MAINTENANCE": "Đang cải tạo"
     }
   },
   "plots": {
@@ -2031,7 +2161,8 @@
       "unit": "Đơn vị",
       "restricted": "Hạn chế",
       "restrictedBadge": "Hạn chế",
-      "normalBadge": "Bình thường"
+      "normalBadge": "Bình thường",
+      "actions": "Thao tác"
     },
     "lotsTable": {
       "batchCode": "Mã lô",
@@ -2079,7 +2210,21 @@
         "back": "Quay lại",
         "next": "Tiếp theo",
         "confirm": "Xác nhận nhập kho"
-      }
+      },
+      "description": "Điền thông tin nhập kho vật tư từ nhà cung cấp."
+    },
+    "addItem": "Thêm vật tư",
+    "itemForm": {
+      "addTitle": "Thêm vật tư mới",
+      "addDescription": "Nhập thông tin chi tiết để thêm vật tư mới vào danh mục.",
+      "name": "Tên vật tư",
+      "namePlaceholder": "Nhập tên vật tư",
+      "activeIngredient": "Hoạt chất",
+      "activeIngredientPlaceholder": "VD: NPK, Lân, Kali...",
+      "unit": "Đơn vị tính",
+      "unitPlaceholder": "VD: kg, lít, bao...",
+      "restricted": "Vật tư hạn chế sử dụng",
+      "addButton": "Thêm mới"
     }
   },
   "crops": {
@@ -2136,7 +2281,67 @@
       "updateSuccess": "Đã cập nhật chi phí",
       "deleteSuccess": "Đã xóa chi phí",
       "error": "Đã xảy ra lỗi"
-    }
+    },
+    "dialog": {
+      "createTitle": "Thêm chi phí",
+      "editTitle": "Sửa chi phí",
+      "description": "Điền thông tin chi tiết dưới đây để ghi nhận chi phí.",
+      "saveButton": "Lưu chi phí",
+      "updateButton": "Cập nhật chi phí",
+      "savingHint": "Đang lưu..."
+    },
+    "form": {
+      "date": "Ngày ghi nhận",
+      "dateRequired": "Vui lòng chọn ngày.",
+      "category": "Danh mục",
+      "categoryRequired": "Vui lòng chọn danh mục.",
+      "selectCategory": "Chọn danh mục",
+      "description": "Mô tả",
+      "descriptionPlaceholder": "VD: Phân bón NPK 20-20-20",
+      "vendor": "Nhà cung cấp",
+      "selectVendor": "Chọn nhà cung cấp",
+      "noVendor": "Không có nhà cung cấp",
+      "linkedTask": "Công việc liên kết",
+      "loadingTasks": "Đang tải công việc...",
+      "noTasks": "Không có công việc",
+      "selectTask": "Chọn công việc (Tùy chọn)",
+      "noLinkedTask": "Không liên kết công việc",
+      "noTasksFound": "Không tìm thấy công việc cho mùa vụ này",
+      "linkedSeason": "Mùa vụ liên kết",
+      "seasonRequired": "Vui lòng chọn mùa vụ.",
+      "selectSeason": "Chọn mùa vụ",
+      "currentSeason": "Mùa vụ hiện tại",
+      "amount": "Số tiền ({{currency}})",
+      "amountRequired": "Vui lòng nhập số tiền lớn hơn 0.",
+      "paymentStatus": "Trạng thái thanh toán",
+      "statusRequired": "Vui lòng chọn trạng thái.",
+      "attachment": "Tệp đính kèm (Biên lai/Hóa đơn)",
+      "uploadHint": "Nhấp để tải lên hoặc kéo thả",
+      "uploadLimits": "PDF, JPG, PNG (tối đa 5MB)",
+      "selectedFile": "Đã chọn:",
+      "existingFile": "Hiện có:",
+      "receiptAttached": "Biên lai đính kèm",
+      "notes": "Ghi chú thêm",
+      "notesPlaceholder": "Thêm thông tin bổ sung...",
+      "totalAmount": "Tổng số tiền:"
+    },
+    "overview": {
+      "budgetTracker": "Theo dõi ngân sách",
+      "budgetNotSet": "Chưa thiết lập ngân sách cho mùa vụ này.",
+      "setBudget": "Thiết lập ngân sách",
+      "budgetUsage": "Mức sử dụng",
+      "used": "Đã dùng: ",
+      "remaining": "Còn lại: ",
+      "total": "Tổng cộng",
+      "paid": "Đã trả",
+      "unpaid": "Chưa trả",
+      "pendingExpenses": "Chi phí chờ thanh toán",
+      "awaitingPayment": "chi phí đang chờ",
+      "noPending": "Không có chi phí chờ thanh toán."
+    },
+    "invalidSeason": "ID mùa vụ không hợp lệ.",
+    "backToSeasons": "Quay lại danh sách",
+    "lockedReason": "Mùa vụ đã khóa. Không thể ghi nhận hoặc cập nhật chi phí."
   },
   "harvests": {
     "title": "Quản lý thu hoạch",

@@ -4,6 +4,10 @@ import { Building2, MapPin, Search, RefreshCw, MoreVertical } from 'lucide-react
 import {
   AsyncState,
   CardContent,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -498,171 +502,137 @@ export function FarmsPlotsPage() {
       {activeTab === 'farms' && renderFarms()}
       {activeTab === 'plots' && renderPlots()}
 
-      {/* Farm Detail Drawer */}
-      {showFarmDetail && selectedFarm && (
-        <div
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm cursor-pointer"
-          onClick={closeFarmDetail}
-        >
-          <div
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border shadow-lg overflow-auto cursor-default"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold">Farm Details</h2>
-                <button
-                  onClick={closeFarmDetail}
-                  className="p-2 hover:bg-muted rounded"
-                >
-                  ✕
-                </button>
+      {/* Farm Detail Dialog */}
+      <Dialog open={showFarmDetail} onOpenChange={(open) => !open && closeFarmDetail()}>
+        <DialogContent className="sm:max-w-[500px] sm:max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Farm Details</DialogTitle>
+          </DialogHeader>
+          {selectedFarm && (
+            <div className="space-y-6 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Name</label>
+                  <p className="text-base font-medium">{selectedFarm.name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Owner</label>
+                  <p className="text-base font-medium">{selectedFarm.ownerUsername || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Area</label>
+                  <p className="text-base font-medium">{selectedFarm.area?.toFixed(2) || '-'} ha</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <div className="mt-1">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${selectedFarm.active
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                      : 'bg-gray-100 text-gray-800'
+                      }`}>
+                      {selectedFarm.active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Name</label>
-                    <p className="text-sm">{selectedFarm.name}</p>
+              <div>
+                <h3 className="text-base font-medium mb-3">Plots ({farmPlots.length})</h3>
+                {detailLoading ? (
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Loading plots...
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Owner</label>
-                    <p className="text-sm">{selectedFarm.ownerUsername || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Area</label>
-                    <p className="text-sm">{selectedFarm.area?.toFixed(2) || '-'} ha</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Status</label>
-                    <p className="text-sm">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${selectedFarm.active
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-gray-100 text-gray-800'
-                        }`}>
-                        {selectedFarm.active ? 'Active' : 'Inactive'}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-border">
-                  <h3 className="text-sm font-medium mb-3">Plots ({farmPlots.length})</h3>
-                  {detailLoading ? (
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      Loading plots...
-                    </div>
-                  ) : farmPlots.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No plots found for this farm</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {farmPlots.map(plot => (
-                        <div key={plot.id} className="p-3 bg-muted/30 rounded-lg border border-border">
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                              <p className="font-medium text-sm">{plot.plotName || '-'}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {plot.area?.toFixed(2) || '-'} ha • {plot.soilType || 'No soil type'}
-                              </p>
-                            </div>
-                            <button
-                              onClick={() => {
-                                closeFarmDetail();
-                                handleViewPlot(plot);
-                              }}
-                              className="text-xs text-primary hover:underline"
-                            >
-                              View Seasons
-                            </button>
-                          </div>
+                ) : farmPlots.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No plots found for this farm</p>
+                ) : (
+                  <div className="space-y-2">
+                    {farmPlots.map(plot => (
+                      <div key={plot.id} className="p-4 bg-muted/30 rounded-xl border border-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{plot.plotName || '-'}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {plot.area?.toFixed(2) || '-'} ha • {plot.soilType || 'No soil type'}
+                          </p>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                        <button
+                          onClick={() => {
+                            closeFarmDetail();
+                            handleViewPlot(plot);
+                          }}
+                          className="text-xs text-primary font-medium hover:underline p-2 -mr-2 min-h-[44px] sm:min-h-0"
+                        >
+                          View Seasons
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
 
-      {/* Plot Detail Drawer */}
-      {showPlotDetail && selectedPlot && (
-        <div
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm cursor-pointer"
-          onClick={closePlotDetail}
-        >
-          <div
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border shadow-lg overflow-auto cursor-default"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold">Plot Details</h2>
-                <button
-                  onClick={closePlotDetail}
-                  className="p-2 hover:bg-muted rounded"
-                >
-                  ✕
-                </button>
+      {/* Plot Detail Dialog */}
+      <Dialog open={showPlotDetail} onOpenChange={(open) => !open && closePlotDetail()}>
+        <DialogContent className="sm:max-w-[600px] sm:max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Plot Details</DialogTitle>
+          </DialogHeader>
+          {selectedPlot && (
+            <div className="space-y-6 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Name</label>
+                  <p className="text-base font-medium">{selectedPlot.plotName || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Farm</label>
+                  <p className="text-base font-medium">{selectedPlot.farmName || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Area</label>
+                  <p className="text-base font-medium">{selectedPlot.area?.toFixed(2) || '-'} ha</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Soil Type</label>
+                  <p className="text-base font-medium">{selectedPlot.soilType || '-'}</p>
+                </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Name</label>
-                    <p className="text-sm">{selectedPlot.plotName || '-'}</p>
+              <div>
+                <h3 className="text-base font-medium mb-3">Seasons ({plotSeasons.length})</h3>
+                {detailLoading ? (
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Loading seasons...
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Farm</label>
-                    <p className="text-sm">{selectedPlot.farmName || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Area</label>
-                    <p className="text-sm">{selectedPlot.area?.toFixed(2) || '-'} ha</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Soil Type</label>
-                    <p className="text-sm">{selectedPlot.soilType || '-'}</p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-border">
-                  <h3 className="text-sm font-medium mb-3">Seasons ({plotSeasons.length})</h3>
-                  {detailLoading ? (
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      Loading seasons...
-                    </div>
-                  ) : plotSeasons.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No seasons found for this plot</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {plotSeasons.map(season => (
-                        <div key={season.id} className="p-3 bg-muted/30 rounded-lg border border-border">
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                              <p className="font-medium text-sm">{season.seasonName}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {season.cropName} • {new Date(season.startDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${STATUS_COLORS[season.status] || 'bg-gray-100 text-gray-800'
-                              }`}>
-                              {season.status}
-                            </span>
-                          </div>
+                ) : plotSeasons.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No seasons found for this plot</p>
+                ) : (
+                  <div className="space-y-2">
+                    {plotSeasons.map(season => (
+                      <div key={season.id} className="p-4 bg-muted/30 rounded-xl border border-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{season.seasonName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {season.cropName} • {new Date(season.startDate).toLocaleDateString()}
+                          </p>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[season.status] || 'bg-gray-100 text-gray-800'
+                          }`}>
+                          {season.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminPageContainer>
   );
 }

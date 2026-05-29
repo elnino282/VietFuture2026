@@ -9,6 +9,7 @@ import {
 } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
 import { useProfileUpdate } from "@/entities/user";
+import { useTranslation } from "react-i18next";
 import {
   AddressSelector,
   AlertDialog,
@@ -60,6 +61,7 @@ export function EditProfileDialog({
   onOpenChange,
   profileData,
 }: EditProfileDialogProps) {
+  const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const wasOpenRef = useRef(false);
@@ -117,24 +119,30 @@ export function EditProfileDialog({
         : error instanceof Error
           ? error.message
           : undefined;
-      setSubmitError(message || "Failed to update profile. Please try again.");
+      setSubmitError(message || t("profile.editDialog.updateError"));
       console.error("Error updating profile:", error);
     }
   };
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-[92vw] max-w-[520px] max-h-[85vh] overflow-y-auto space-y-4">
+      <Dialog
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (isSaving && !nextOpen) return;
+          onOpenChange(nextOpen);
+        }}
+      >
+        <DialogContent className="sm:max-w-[560px]" closeDisabled={isSaving}>
           <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogTitle>{t("profile.editDialog.title")}</DialogTitle>
             <DialogDescription>
-              Update your details and save changes.
+              {t("profile.editDialog.description")}
             </DialogDescription>
           </DialogHeader>
 
           {submitError && (
-            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {submitError}
             </div>
           )}
@@ -147,9 +155,9 @@ export function EditProfileDialog({
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel required>{t("profile.editDialog.fullName")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your full name" {...field} />
+                        <Input placeholder={t("profile.editDialog.fullNamePlaceholder")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -161,9 +169,9 @@ export function EditProfileDialog({
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone</FormLabel>
+                      <FormLabel>{t("profile.editDialog.phone")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="(+84) 909 123 456" {...field} />
+                        <Input placeholder={t("profile.editDialog.phonePlaceholder")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -196,8 +204,8 @@ export function EditProfileDialog({
                       }}
                       error={combinedError}
                       disabled={isSaving}
-                      label="Location"
-                      description="Select your province/city and ward."
+                      label={t("profile.editDialog.location")}
+                      description={t("profile.editDialog.locationDescription")}
                     />
                   );
                 }}
@@ -210,17 +218,16 @@ export function EditProfileDialog({
                   onClick={() => onOpenChange(false)}
                   disabled={isSaving}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSaving}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {isSaving && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Save Changes
+                  {t("common.saveChanges")}
                 </Button>
               </DialogFooter>
             </form>
@@ -236,10 +243,9 @@ export function EditProfileDialog({
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                 <CheckCircle2 className="h-6 w-6 text-green-600" />
               </div>
-              <AlertDialogTitle>Profile Updated Successfully!</AlertDialogTitle>
+              <AlertDialogTitle>{t("profile.editDialog.successTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                Your profile information has been updated. Click OK to refresh
-                and see the changes.
+                {t("profile.editDialog.successDescription")}
               </AlertDialogDescription>
             </div>
           </AlertDialogHeader>
@@ -249,9 +255,8 @@ export function EditProfileDialog({
                 setShowSuccessDialog(false);
                 window.location.reload();
               }}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              OK
+              {t("common.ok")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

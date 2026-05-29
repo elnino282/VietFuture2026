@@ -90,7 +90,7 @@ export function TaskCard({ task, onDelete, disableMutations = false }: TaskCardP
         </DropdownMenu>
 
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent className="acm-rounded-sm">
+          <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>{t('tasks.dialog.deleteTitle')}</AlertDialogTitle>
               <AlertDialogDescription>
@@ -98,9 +98,9 @@ export function TaskCard({ task, onDelete, disableMutations = false }: TaskCardP
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="acm-rounded-sm">{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
               <AlertDialogAction
-                className="acm-rounded-sm bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 onClick={() => {
                   onDelete(task.id);
                   setDeleteDialogOpen(false);

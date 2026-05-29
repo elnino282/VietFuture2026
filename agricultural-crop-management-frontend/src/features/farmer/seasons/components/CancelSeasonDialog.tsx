@@ -12,6 +12,7 @@ import {
 } from "@/shared/ui";
 import { Ban } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Season } from "../types";
 
 interface CancelSeasonDialogProps {
@@ -29,6 +30,7 @@ export function CancelSeasonDialog({
   onConfirm,
   isSubmitting = false,
 }: CancelSeasonDialogProps) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState("");
   const [forceCancel, setForceCancel] = useState(false);
 
@@ -45,29 +47,33 @@ export function CancelSeasonDialog({
       forceCancel,
     });
   };
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (isSubmitting && !nextOpen) return;
+    onOpenChange(nextOpen);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="acm-rounded-lg">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[500px]" closeDisabled={isSubmitting}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Ban className="w-5 h-5 text-destructive" />
-            Cancel Season
+            {t("seasons.dialog.cancelTitle")}
           </DialogTitle>
           <DialogDescription>
-            Cancelling a season is irreversible. Provide a reason if needed.
+            {t("seasons.dialog.cancelDetailedDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="cancelReason">Reason (Optional)</Label>
+            <Label htmlFor="cancelReason">{t("seasons.dialog.cancelReasonLabel")}</Label>
             <Textarea
               id="cancelReason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g., Weather conditions or crop change"
-              className="border-border acm-rounded-sm"
+              placeholder={t("seasons.dialog.cancelReasonPlaceholder")}
+              disabled={isSubmitting}
               rows={4}
             />
           </div>
@@ -76,10 +82,11 @@ export function CancelSeasonDialog({
             <Checkbox
               checked={forceCancel}
               onCheckedChange={(checked) => setForceCancel(Boolean(checked))}
+              disabled={isSubmitting}
               className="mt-1"
             />
             <div className="text-sm text-muted-foreground">
-              Force cancel even if harvest records exist.
+              {t("seasons.dialog.forceCancelHelp")}
             </div>
           </div>
         </div>
@@ -89,16 +96,15 @@ export function CancelSeasonDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
-            className="acm-rounded-sm"
           >
-            Keep Season
+            {t("seasons.dialog.keepSeason")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="bg-destructive hover:bg-destructive/90 text-white acm-rounded-sm"
+            variant="destructive"
           >
-            {isSubmitting ? "Cancelling..." : "Cancel Season"}
+            {isSubmitting ? t("seasons.dialog.cancelling") : t("seasons.dialog.cancelConfirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

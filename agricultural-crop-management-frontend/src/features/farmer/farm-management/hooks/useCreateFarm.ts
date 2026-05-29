@@ -2,11 +2,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateFarm as useCreateFarmEntity, FarmCreateRequestSchema, type FarmCreateRequest, type FarmDetailResponse } from '@/entities/farm';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Feature hook for creating a farm with form validation and toast handling
  */
 export function useCreateFarm(onSuccessCallback?: (farm: FarmDetailResponse) => void) {
+    const { t } = useTranslation();
     const form = useForm<FarmCreateRequest>({
         resolver: zodResolver(FarmCreateRequestSchema),
         defaultValues: {
@@ -20,7 +22,7 @@ export function useCreateFarm(onSuccessCallback?: (farm: FarmDetailResponse) => 
     const mutation = useCreateFarmEntity({
         onSuccess: (data) => {
             console.log('[useCreateFarm] Success! Created farm:', data);
-            toast.success('Farm created successfully');
+            toast.success(t('farms.toast.createFarmSuccess'));
             form.reset({
                 name: '',
                 provinceId: undefined,
@@ -45,17 +47,17 @@ export function useCreateFarm(onSuccessCallback?: (farm: FarmDetailResponse) => 
 
             const errorData = error?.response?.data;
             const errorCode = errorData?.code || errorData?.result?.code;
-            let message = 'Failed to create farm';
+            let message = t('farms.toast.createFarmError');
 
             // Handle specific error codes from backend
             if (errorCode === 'ERR_FARM_NAME_EXISTS') {
-                message = `Farm name "${form.getValues('name')}" already exists. Please use a different name.`;
+                message = t('farms.errors.nameExists', { name: form.getValues('name') });
             } else if (errorCode === 'ERR_KEY_INVALID') {
-                message = 'Invalid input. Please check your farm details.';
+                message = t('farms.errors.invalidInput');
             } else if (errorCode === 'ERR_UNAUTHORIZED' || error?.response?.status === 401) {
-                message = 'Your session has expired. Please sign in again.';
+                message = t('farms.errors.unauthorized');
             } else if (errorCode === 'ERR_FORBIDDEN' || error?.response?.status === 403) {
-                message = 'You do not have permission to create farms.';
+                message = t('farms.errors.forbiddenCreate');
             } else if (errorData?.message) {
                 message = errorData.message;
             } else if (error?.message) {
@@ -63,7 +65,7 @@ export function useCreateFarm(onSuccessCallback?: (farm: FarmDetailResponse) => 
             }
 
             toast.error(message, {
-                description: errorCode ? `Error code: ${errorCode}` : undefined,
+                description: errorCode ? t('common.errorCode', { code: errorCode }) : undefined,
             });
         },
     });

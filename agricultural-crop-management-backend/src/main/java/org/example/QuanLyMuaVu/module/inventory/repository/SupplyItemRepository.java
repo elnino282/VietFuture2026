@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SupplyItemRepository extends JpaRepository<SupplyItem, Integer> {
 
+    boolean existsByNameIgnoreCase(String name);
+
     @Query("""
             SELECT i FROM SupplyItem i
             WHERE (:q IS NULL OR LOWER(i.name) LIKE LOWER(CONCAT('%', :q, '%')))

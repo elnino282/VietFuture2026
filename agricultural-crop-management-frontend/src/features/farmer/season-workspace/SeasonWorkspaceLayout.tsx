@@ -69,20 +69,20 @@ const formatDate = (value?: string | null) => {
   }
 };
 
-const getSeasonStatusLabel = (status?: string) => {
+const getSeasonStatusLabel = (t: (key: string) => string, status?: string) => {
   switch (status) {
     case "PLANNED":
-      return "Lên kế hoạch";
+      return t("seasonWorkspace.status.planned");
     case "ACTIVE":
-      return "Đang canh tác";
+      return t("seasonWorkspace.status.active");
     case "COMPLETED":
-      return "Hoàn thành";
+      return t("seasonWorkspace.status.completed");
     case "CANCELLED":
-      return "Đã hủy";
+      return t("seasonWorkspace.status.cancelled");
     case "ARCHIVED":
-      return "Lưu trữ";
+      return t("seasonWorkspace.status.archived");
     default:
-      return "Không xác định";
+      return t("seasonWorkspace.status.unknown");
   }
 };
 
@@ -101,10 +101,10 @@ const getSeasonStatusClassName = (status?: string) => {
   }
 };
 
-const getHarvestWorkflowLabel = (progressPercent: number) => {
-  if (progressPercent >= 100) return "Đã thu hoạch xong";
-  if (progressPercent > 0) return "Đang thu hoạch";
-  return "Chưa thu hoạch";
+const getHarvestWorkflowLabel = (t: (key: string) => string, progressPercent: number) => {
+  if (progressPercent >= 100) return t("seasonWorkspace.harvestWorkflow.completed");
+  if (progressPercent > 0) return t("seasonWorkspace.harvestWorkflow.inProgress");
+  return t("seasonWorkspace.harvestWorkflow.notStarted");
 };
 
 const getHarvestWorkflowClassName = (progressPercent: number) => {
@@ -241,11 +241,11 @@ export function SeasonWorkspaceLayout() {
 
   const createTaskMutation = useCreateTask(scopedSeasonId, {
     onSuccess: () => {
-      toast.success("Đã tạo công việc");
+      toast.success(t("seasonWorkspace.toast.createTaskSuccess"));
       setIsTaskDialogOpen(false);
     },
     onError: (error) => {
-      toast.error(error.message || "Không thể tạo công việc");
+      toast.error(error.message || t("seasonWorkspace.toast.createTaskError"));
     },
   });
 
@@ -295,7 +295,7 @@ export function SeasonWorkspaceLayout() {
     || season?.status === "CANCELLED"
     || season?.status === "ARCHIVED";
   const seasonWriteLockReason = isSeasonWriteLocked
-    ? "Mùa vụ đã khóa. Không thể ghi mới hoặc cập nhật dữ liệu workspace."
+    ? t("seasonWorkspace.lockedReason")
     : undefined;
   const tasks = tasksData?.items ?? [];
   const expensesCount = expensesData?.totalElements ?? 0;
@@ -332,9 +332,9 @@ export function SeasonWorkspaceLayout() {
             employee.employeeName ||
             employee.employeeUsername ||
             employee.employeeEmail ||
-            `Employee #${employee.employeeUserId}`,
+            t("seasonWorkspace.employeeFallback", { id: employee.employeeUserId }),
         })),
-    [seasonEmployeesData]
+    [seasonEmployeesData, t]
   );
 
   const totalHarvestedKg = harvestBatches.reduce((sum, item) => sum + (item.quantity ?? 0), 0);
@@ -348,16 +348,16 @@ export function SeasonWorkspaceLayout() {
           ? 100
           : 50;
 
-  const harvestWorkflowLabel = getHarvestWorkflowLabel(harvestProgressPercent);
+  const harvestWorkflowLabel = getHarvestWorkflowLabel(t, harvestProgressPercent);
   const reportButtonLabel =
-    harvestProgressPercent >= 100 ? "Xem báo cáo tổng kết mùa vụ" : "Xem báo cáo tạm tính";
+    harvestProgressPercent >= 100 ? t("seasonWorkspace.actions.finalReport") : t("seasonWorkspace.actions.interimReport");
   const isWorkspaceProcessing =
     createTaskMutation.isPending
     || createFieldLogMutation.isPending
     || isExpenseCreating
     || isExpenseUpdating
     || isHarvestCreating;
-  const workspaceBusyMessage = "Đang xử lý dữ liệu mùa vụ...";
+  const workspaceBusyMessage = t("seasonWorkspace.processingMessage");
 
   const handleQuickTaskCreate = useCallback(
     (data: {
@@ -368,7 +368,7 @@ export function SeasonWorkspaceLayout() {
       assigneeUserId?: number;
     }) => {
       if (!hasValidSeasonId) {
-        toast.error("Mùa vụ không hợp lệ.");
+        toast.error(t("seasonWorkspace.invalidSeason"));
         return;
       }
 
@@ -465,14 +465,14 @@ export function SeasonWorkspaceLayout() {
 
     if (seasonStartDate && selectedDate < seasonStartDate) {
       toast.error(
-        `Ngày ghi phải sau hoặc bằng ngày bắt đầu mùa vụ (${formatDate(season?.startDate)})`
+        t("seasonWorkspace.validation.logDateAfterStart", { date: formatDate(season?.startDate) })
       );
       return;
     }
 
     if (seasonEndDate && selectedDate > seasonEndDate) {
       toast.error(
-        `Ngày ghi phải trước hoặc bằng ngày kết thúc mùa vụ (${formatDate(season?.endDate ?? season?.plannedHarvestDate)})`
+        t("seasonWorkspace.validation.logDateBeforeEnd", { date: formatDate(season?.endDate ?? season?.plannedHarvestDate) })
       );
       return;
     }
@@ -500,7 +500,7 @@ export function SeasonWorkspaceLayout() {
       return;
     }
     if (outputWarehouseCount === 0) {
-      toast.error("No output warehouse found. Create one before recording harvest.");
+      toast.error(t("seasonWorkspace.toast.noOutputWarehouse"));
       navigate("/farmer/product-warehouse");
       return;
     }
@@ -542,9 +542,9 @@ export function SeasonWorkspaceLayout() {
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
               <div className="space-y-2">
-                <p className="text-sm text-foreground">Mùa vụ không hợp lệ.</p>
+                <p className="text-sm text-foreground">{t("seasonWorkspace.invalidSeason")}</p>
                 <Button variant="outline" onClick={() => navigate("/farmer/seasons")}>
-                  Quay lại danh sách mùa vụ
+                  {t("seasonWorkspace.backToSeasons")}
                 </Button>
               </div>
             </div>
@@ -560,13 +560,13 @@ export function SeasonWorkspaceLayout() {
         <CardContent className="p-6 space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
-              <p className="acm-body-text text-muted-foreground">WORKSPACE MÙA VỤ</p>
+              <p className="acm-body-text text-muted-foreground uppercase">{t("seasonWorkspace.subtitle")}</p>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                  {isSeasonLoading ? t("common.loading") : season?.seasonName ?? `Mùa vụ #${seasonIdNumber}`}
+                  {isSeasonLoading ? t("common.loading") : season?.seasonName ?? t("seasonWorkspace.fallbackSeasonName", { id: seasonIdNumber })}
                 </h1>
                 <Badge className={getSeasonStatusClassName(season?.status)}>
-                  {getSeasonStatusLabel(season?.status)}
+                  {getSeasonStatusLabel(t, season?.status)}
                 </Badge>
                 <Badge className={getHarvestWorkflowClassName(harvestProgressPercent)}>
                   {harvestWorkflowLabel}
@@ -583,7 +583,7 @@ export function SeasonWorkspaceLayout() {
                 className={workspaceActionButtonClass}
               >
                 <ClipboardList className="w-4 h-4 mr-2" />
-                Thêm công việc
+                {t("seasonWorkspace.actions.addTask")}
               </Button>
               <Button
                 variant="outline"
@@ -593,7 +593,7 @@ export function SeasonWorkspaceLayout() {
                 className={workspaceActionButtonClass}
               >
                 <DollarSign className="w-4 h-4 mr-2" />
-                Ghi chi phí
+                {t("seasonWorkspace.actions.recordExpense")}
               </Button>
               <Button
                 variant="outline"
@@ -603,7 +603,7 @@ export function SeasonWorkspaceLayout() {
                 className={workspaceActionButtonClass}
               >
                 <FileText className="w-4 h-4 mr-2" />
-                Tạo nhật ký
+                {t("seasonWorkspace.actions.createFieldLog")}
               </Button>
               <Button
                 variant="outline"
@@ -613,7 +613,7 @@ export function SeasonWorkspaceLayout() {
                 className={workspaceActionButtonClass}
               >
                 <Wheat className="w-4 h-4 mr-2" />
-                Thu hoạch
+                {t("seasonWorkspace.actions.recordHarvest")}
               </Button>
               <Button
                 variant="outline"
@@ -634,49 +634,51 @@ export function SeasonWorkspaceLayout() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
             <div className="rounded-xl border border-border p-4 bg-card acm-card-elevated acm-hover-surface">
-              <p className="acm-body-text text-muted-foreground mb-1">Cây trồng</p>
+              <p className="acm-body-text text-muted-foreground mb-1">{t("seasonWorkspace.details.crop")}</p>
               <p className="text-base text-foreground flex items-center gap-2">
                 <Sprout className="w-4 h-4 text-emerald-600" />
                 {season?.cropName ?? "-"}
               </p>
             </div>
             <div className="rounded-xl border border-border p-4 bg-card acm-card-elevated acm-hover-surface">
-              <p className="acm-body-text text-muted-foreground mb-1">Lô đất</p>
+              <p className="acm-body-text text-muted-foreground mb-1">{t("seasonWorkspace.details.plot")}</p>
               <p className="text-base text-foreground">{season?.plotName ?? "-"}</p>
             </div>
             <div className="rounded-xl border border-border p-4 bg-card acm-card-elevated acm-hover-surface">
-              <p className="acm-body-text text-muted-foreground mb-1">Thời gian mùa vụ</p>
+              <p className="acm-body-text text-muted-foreground mb-1">{t("seasonWorkspace.details.duration")}</p>
               <p className="text-base text-foreground flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-blue-600" />
                 {formatDate(season?.startDate)} - {formatDate(season?.endDate ?? season?.plannedHarvestDate)}
               </p>
             </div>
             <div className="rounded-xl border border-border p-4 bg-card acm-card-elevated acm-hover-surface">
-              <p className="acm-body-text text-muted-foreground mb-1">Công việc sắp tới</p>
-              <p className="text-base text-foreground line-clamp-2">{upcomingTask ?? "Không có công việc sắp tới"}</p>
+              <p className="acm-body-text text-muted-foreground mb-1">{t("seasonWorkspace.details.upcomingTask")}</p>
+              <p className="text-base text-foreground line-clamp-2">{upcomingTask ?? t("seasonWorkspace.details.noUpcomingTask")}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
-            <MetricCard icon={ClipboardList} label="Sắp làm" value={pendingTasks} />
-            <MetricCard icon={PackageCheck} label="Đang làm" value={inProgressTasks} />
-            <MetricCard icon={AlertCircle} label="Trễ hạn" value={overdueTasks} />
-            <MetricCard icon={PackageCheck} label="Hoàn thành" value={completedTasks} />
-            <MetricCard icon={DollarSign} label="Chi phí" value={expensesCount} />
-            <MetricCard icon={FileText} label="Nhật ký" value={logsCount} />
-            <MetricCard icon={Wheat} label="Đợt thu hoạch" value={harvestCount} />
-            <MetricCard icon={Sprout} label="Sản lượng thu" value={Math.round(totalHarvestedKg)} suffix="kg" />
+            <MetricCard icon={ClipboardList} label={t("seasonWorkspace.metrics.pending")} value={pendingTasks} />
+            <MetricCard icon={PackageCheck} label={t("seasonWorkspace.metrics.inProgress")} value={inProgressTasks} />
+            <MetricCard icon={AlertCircle} label={t("seasonWorkspace.metrics.overdue")} value={overdueTasks} />
+            <MetricCard icon={PackageCheck} label={t("seasonWorkspace.metrics.completed")} value={completedTasks} />
+            <MetricCard icon={DollarSign} label={t("seasonWorkspace.metrics.expenses")} value={expensesCount} />
+            <MetricCard icon={FileText} label={t("seasonWorkspace.metrics.logs")} value={logsCount} />
+            <MetricCard icon={Wheat} label={t("seasonWorkspace.metrics.harvestBatches")} value={harvestCount} />
+            <MetricCard icon={Sprout} label={t("seasonWorkspace.metrics.harvestedYield")} value={Math.round(totalHarvestedKg)} suffix={t("seasonWorkspace.units.kg")} />
           </div>
 
           <div className="rounded-xl border border-border p-4 bg-card acm-card-elevated acm-hover-surface">
             <div className="flex items-center justify-between gap-3 mb-2">
-              <p className="text-base text-foreground">Tiến độ thu hoạch (ước tính theo sản lượng)</p>
+              <p className="text-base text-foreground">{t("seasonWorkspace.harvestProgress.title")}</p>
               <p className="text-2xl font-semibold text-foreground">{harvestProgressPercent}%</p>
             </div>
             <Progress value={harvestProgressPercent} className="h-2" />
             <p className="acm-body-text text-muted-foreground mt-2">
-              Đã thu: {Math.round(totalHarvestedKg)} kg
-              {expectedYieldKg > 0 ? ` / Mục tiêu: ${Math.round(expectedYieldKg)} kg` : ""}
+              {expectedYieldKg > 0 
+                ? t("seasonWorkspace.harvestProgress.summaryWithTarget", { harvestedKg: Math.round(totalHarvestedKg), targetKg: Math.round(expectedYieldKg) })
+                : t("seasonWorkspace.harvestProgress.summary", { harvestedKg: Math.round(totalHarvestedKg) })
+              }
             </p>
           </div>
         </CardContent>

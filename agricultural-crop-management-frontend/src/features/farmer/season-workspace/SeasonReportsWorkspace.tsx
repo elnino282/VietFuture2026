@@ -47,7 +47,7 @@ export function SeasonReportsWorkspace() {
   if (!hasValidSeasonId) {
     return (
       <div className="p-6">
-        <Card className="border border-destructive/20 bg-destructive/5">
+        <Card className="rounded-[18px] border border-destructive/20 bg-destructive/5 shadow-sm">
           <CardContent className="p-6 space-y-2">
             <div className="flex items-center gap-2 text-destructive">
               <AlertCircle className="w-4 h-4" />
@@ -65,7 +65,7 @@ export function SeasonReportsWorkspace() {
   if (isSeasonLoading || isHarvestLoading) {
     return (
       <div className="p-6">
-        <Card>
+        <Card className="rounded-[18px] shadow-sm">
           <CardContent className="p-6 text-sm text-muted-foreground">
             {t("seasonReportsWorkspace.loading")}
           </CardContent>
@@ -77,7 +77,7 @@ export function SeasonReportsWorkspace() {
   if (!season) {
     return (
       <div className="p-6">
-        <Card className="border border-destructive/20 bg-destructive/5">
+        <Card className="rounded-[18px] border border-destructive/20 bg-destructive/5 shadow-sm">
           <CardContent className="p-6">
             <p className="text-sm text-destructive">{t("seasonReportsWorkspace.notFound")}</p>
           </CardContent>
@@ -107,7 +107,7 @@ export function SeasonReportsWorkspace() {
   if (!hasInterimData && !isFinalReport) {
     return (
       <div className="p-6">
-        <Card className="border border-amber-300 bg-amber-50">
+        <Card className="rounded-[18px] border border-amber-300 bg-amber-50 shadow-sm">
           <CardContent className="p-6 space-y-3">
             <div className="flex items-center gap-2 text-amber-700">
               <Wheat className="w-5 h-5" />
@@ -135,7 +135,7 @@ export function SeasonReportsWorkspace() {
 
   return (
     <div className="space-y-4 p-6">
-      <Card className={isFinalReport ? "border border-emerald-300 bg-emerald-50" : "border border-amber-300 bg-amber-50"}>
+      <Card className={isFinalReport ? "rounded-[18px] border border-emerald-300 bg-emerald-50 shadow-sm" : "rounded-[18px] border border-amber-300 bg-amber-50 shadow-sm"}>
         <CardContent className="p-6 space-y-3">
           <div className={`flex items-start gap-2 ${isFinalReport ? "text-emerald-700" : "text-amber-700"}`}>
             <Wheat className="w-5 h-5 mt-0.5" />

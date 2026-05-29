@@ -31,7 +31,7 @@ import {
   type NutrientInputSourceType,
 } from "@/entities/nutrient-input";
 import { metricStatusClassName } from "@/features/farmer/dashboard/lib/metrics";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { AlertCircle, Beaker, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -96,6 +96,15 @@ const UNIT_OPTIONS = [
     fallbackLabel: "kg N / ha",
   },
 ] as const;
+
+const FORM_INPUT_CLASS_NAME =
+  "h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm shadow-sm placeholder:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20";
+
+const FORM_SELECT_TRIGGER_CLASS_NAME =
+  "h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm shadow-sm data-[placeholder]:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20";
+
+const FORM_TEXTAREA_CLASS_NAME =
+  "rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm placeholder:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20";
 
 const defaultFormValues = (): NutrientInputFormValues => ({
   inputSource: "MINERAL_FERTILIZER",
@@ -284,7 +293,7 @@ export function SeasonNutrientInputsWorkspace() {
                         <FormLabel>{t("seasonNutrientWorkspace.form.inputSource")} *</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger className="rounded-xl border-border">
+                            <SelectTrigger className={FORM_SELECT_TRIGGER_CLASS_NAME}>
                               <SelectValue placeholder={t("seasonNutrientWorkspace.form.inputSourcePlaceholder")} />
                             </SelectTrigger>
                           </FormControl>
@@ -309,7 +318,7 @@ export function SeasonNutrientInputsWorkspace() {
                         <FormLabel>{t("seasonNutrientWorkspace.form.sourceType")} *</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger className="rounded-xl border-border">
+                            <SelectTrigger className={FORM_SELECT_TRIGGER_CLASS_NAME}>
                               <SelectValue placeholder={t("seasonNutrientWorkspace.form.sourceTypePlaceholder")} />
                             </SelectTrigger>
                           </FormControl>
@@ -344,6 +353,7 @@ export function SeasonNutrientInputsWorkspace() {
                               field.onChange(Number.isNaN(nextValue) ? undefined : nextValue);
                             }}
                             placeholder={t("seasonNutrientWorkspace.form.valuePlaceholder")}
+                            className={FORM_INPUT_CLASS_NAME}
                           />
                         </FormControl>
                         <FormMessage />
@@ -359,7 +369,7 @@ export function SeasonNutrientInputsWorkspace() {
                         <FormLabel>{t("seasonNutrientWorkspace.form.unit")} *</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger className="rounded-xl border-border">
+                            <SelectTrigger className={FORM_SELECT_TRIGGER_CLASS_NAME}>
                               <SelectValue placeholder={t("seasonNutrientWorkspace.form.unitPlaceholder")} />
                             </SelectTrigger>
                           </FormControl>
@@ -388,6 +398,7 @@ export function SeasonNutrientInputsWorkspace() {
                             data-testid="nutrient-recorded-at-input"
                             value={field.value}
                             onChange={field.onChange}
+                            className={FORM_INPUT_CLASS_NAME}
                           />
                         </FormControl>
                         <FormMessage />
@@ -406,6 +417,7 @@ export function SeasonNutrientInputsWorkspace() {
                             value={field.value ?? ""}
                             onChange={field.onChange}
                             placeholder={t("seasonNutrientWorkspace.form.sourceDocumentPlaceholder")}
+                            className={FORM_INPUT_CLASS_NAME}
                           />
                         </FormControl>
                         <FormMessage />
@@ -426,6 +438,7 @@ export function SeasonNutrientInputsWorkspace() {
                           value={field.value ?? ""}
                           onChange={field.onChange}
                           placeholder={t("seasonNutrientWorkspace.form.notePlaceholder")}
+                          className={FORM_TEXTAREA_CLASS_NAME}
                         />
                       </FormControl>
                       <FormMessage />

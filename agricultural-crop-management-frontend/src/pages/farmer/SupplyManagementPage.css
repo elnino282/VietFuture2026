@@ -8,9 +8,7 @@
    1. PAGE CONTAINER
    --------------------------------------------------------------- */
 .farmer-supply-management-page .supplies-page {
-    padding: 24px;
-    max-width: 1400px;
-    margin: 0 auto;
+    /* Removed redundant padding, max-width, and margin to defer to PageContainer */
 }
 
 /* ---------------------------------------------------------------

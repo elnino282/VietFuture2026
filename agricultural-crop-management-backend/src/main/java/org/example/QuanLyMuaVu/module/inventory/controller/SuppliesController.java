@@ -101,6 +101,32 @@ public class SuppliesController {
         return ApiResponse.success(suppliesService.getSupplyItems(q, restricted, pageable));
     }
 
+    @Operation(summary = "Create supply item", description = "Create a new supply item")
+    @PreAuthorize("hasRole('FARMER')")
+    @PostMapping("/items")
+    public ApiResponse<SupplyItemResponse> createSupplyItem(
+            @Valid @RequestBody org.example.QuanLyMuaVu.module.inventory.dto.request.CreateSupplyItemRequest request) {
+        return ApiResponse.success(suppliesService.createSupplyItem(request));
+    }
+
+    @Operation(summary = "Update supply item", description = "Update an existing supply item")
+    @PreAuthorize("hasRole('FARMER')")
+    @org.springframework.web.bind.annotation.PutMapping("/items/{id}")
+    public ApiResponse<SupplyItemResponse> updateSupplyItem(
+            @org.springframework.web.bind.annotation.PathVariable("id") Integer id,
+            @Valid @RequestBody org.example.QuanLyMuaVu.module.inventory.dto.request.UpdateSupplyItemRequest request) {
+        return ApiResponse.success(suppliesService.updateSupplyItem(id, request));
+    }
+
+    @Operation(summary = "Delete supply item", description = "Delete a supply item by ID")
+    @PreAuthorize("hasRole('FARMER')")
+    @org.springframework.web.bind.annotation.DeleteMapping("/items/{id}")
+    public ApiResponse<Void> deleteSupplyItem(
+            @org.springframework.web.bind.annotation.PathVariable("id") Integer id) {
+        suppliesService.deleteSupplyItem(id);
+        return ApiResponse.success(null);
+    }
+
     // ===================================
     // CATALOG: SUPPLY LOTS
     // ===================================

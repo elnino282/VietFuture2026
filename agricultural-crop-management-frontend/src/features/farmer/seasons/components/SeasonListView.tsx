@@ -92,7 +92,7 @@ export function SeasonListView({
         formatDateRange={formatDateRange}
       />
 
-      <div className="max-w-[1800px] mx-auto px-6 space-y-6">
+      <div className="space-y-6">
         <SeasonMetricsCards seasons={filteredSeasons} />
 
         <SeasonFilters

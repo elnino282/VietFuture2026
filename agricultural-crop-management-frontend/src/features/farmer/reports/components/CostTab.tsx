@@ -81,7 +81,7 @@ export function CostTab({
 
   if (summaryLoading) {
     return (
-      <Card className="border-border rounded-xl">
+      <Card className="rounded-[18px] border-border">
         <CardContent className="py-6 text-sm text-muted-foreground">
           {t("reports.cost.loading")}
         </CardContent>
@@ -91,7 +91,7 @@ export function CostTab({
 
   if (summaryError) {
     return (
-      <Card className="border-destructive/20 bg-destructive/5 rounded-xl">
+      <Card className="rounded-[18px] border-destructive/20 bg-destructive/5">
         <CardContent className="py-5 space-y-3">
           <div className="flex items-start gap-2 text-destructive text-sm">
             <AlertCircle className="w-4 h-4 mt-0.5" />
@@ -113,25 +113,25 @@ export function CostTab({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card className="border-border rounded-xl">
+        <Card className="rounded-[18px] border-border">
           <CardContent className="p-4 space-y-2">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("reports.cost.seasonalBudget")}</p>
             <p className="text-2xl font-semibold numeric">{formatCurrency(resolvedSummary?.budgetAmount)}</p>
           </CardContent>
         </Card>
-        <Card className="border-border rounded-xl">
+        <Card className="rounded-[18px] border-border">
           <CardContent className="p-4 space-y-2">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("reports.cost.totalExpense")}</p>
             <p className="text-2xl font-semibold numeric">{formatCurrency(resolvedSummary?.totalExpense)}</p>
           </CardContent>
         </Card>
-        <Card className="border-border rounded-xl">
+        <Card className="rounded-[18px] border-border">
           <CardContent className="p-4 space-y-2">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("reports.cost.remainingBudget")}</p>
             <p className="text-2xl font-semibold numeric">{formatCurrency(resolvedSummary?.remainingBudget)}</p>
           </CardContent>
         </Card>
-        <Card className="border-border rounded-xl">
+        <Card className="rounded-[18px] border-border">
           <CardContent className="p-4 space-y-2">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("reports.cost.costPerExpectedYield")}</p>
             <p className="text-xl font-semibold numeric">{formatCostPerWeightUnit(resolvedSummary?.costPerExpectedKg)}</p>
@@ -141,7 +141,7 @@ export function CostTab({
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <Card className="border-border rounded-xl">
+        <Card className="rounded-[18px] border-border">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Wallet className="w-4 h-4 text-primary" />
@@ -165,7 +165,7 @@ export function CostTab({
             ) : (
               <p className="text-sm text-muted-foreground">{t("reports.cost.noCategoryData")}</p>
             )}
-            <div className="rounded-xl border border-border overflow-x-auto">
+            <div className="overflow-x-auto rounded-[14px] border border-border">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted hover:bg-muted">
@@ -195,7 +195,7 @@ export function CostTab({
           </CardContent>
         </Card>
 
-        <Card className="border-border rounded-xl">
+        <Card className="rounded-[18px] border-border">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-600" />
@@ -205,12 +205,12 @@ export function CostTab({
           <CardContent className="space-y-3">
             {warnings.length > 0 ? (
               warnings.map((warning, index) => (
-                <div key={`${warning}-${index}`} className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                <div key={`${warning}-${index}`} className="rounded-[14px] border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                   {warning}
                 </div>
               ))
             ) : (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              <div className="rounded-[14px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
                 {t("reports.cost.noWarnings")}
               </div>
             )}
@@ -218,7 +218,7 @@ export function CostTab({
         </Card>
       </div>
 
-      <Card className="border-secondary/20 rounded-xl bg-secondary/5">
+      <Card className="rounded-[18px] border-secondary/20 bg-secondary/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-secondary" />
@@ -237,18 +237,18 @@ export function CostTab({
             )}
           </div>
           {aiError && (
-            <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <div className="rounded-[14px] border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {aiError}
             </div>
           )}
           {aiSuggestion?.aiSuggestionText ? (
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-[14px] border border-border bg-card p-4">
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{aiSuggestion.aiSuggestionText}</p>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">{t("reports.cost.aiPlaceholder")}</p>
           )}
-          <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          <div className="rounded-[14px] border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
             <strong>{t("reports.cost.disclaimer")}</strong> {disclaimer}
           </div>
         </CardContent>

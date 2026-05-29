@@ -3,13 +3,16 @@ import type { PageResponse } from "@/shared/api/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { suppliesKeys } from "../model/keys";
 import type {
+  CreateSupplyItemRequest,
   CreateSupplierRequest,
   StockInRequest,
   StockInResponse,
   Supplier,
   SuppliersParams,
+  SupplyItem,
   SupplyItemsParams,
   SupplyLotsParams,
+  UpdateSupplyItemRequest,
   UpdateSupplierRequest,
 } from "../model/types";
 import { suppliesApi } from "./client";
@@ -30,6 +33,21 @@ type UpdateSupplierContext = {
 type DeleteSupplierContext = {
   previousSuppliers: PageResponse<Supplier> | undefined;
   previousAllSuppliers: Supplier[] | undefined;
+};
+
+type CreateSupplyItemContext = {
+  previousItems: PageResponse<SupplyItem> | undefined;
+  previousAllItems: SupplyItem[] | undefined;
+};
+
+type UpdateSupplyItemContext = {
+  previousItems: PageResponse<SupplyItem> | undefined;
+  previousAllItems: SupplyItem[] | undefined;
+};
+
+type DeleteSupplyItemContext = {
+  previousItems: PageResponse<SupplyItem> | undefined;
+  previousAllItems: SupplyItem[] | undefined;
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -272,6 +290,178 @@ export function useAllSupplyItems() {
   return useQuery({
     queryKey: [...suppliesKeys.all, "all-items"],
     queryFn: () => suppliesApi.getAllSupplyItems(),
+  });
+}
+
+export function useCreateSupplyItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    SupplyItem,
+    Error,
+    CreateSupplyItemRequest,
+    CreateSupplyItemContext
+  >({
+    mutationFn: (data) => suppliesApi.createSupplyItem(data),
+    onMutate: async (newItem) => {
+      await queryClient.cancelQueries({ queryKey: suppliesKeys.all });
+
+      const previousItems = queryClient.getQueryData<PageResponse<SupplyItem>>(
+        suppliesKeys.items(),
+      );
+      const previousAllItems = queryClient.getQueryData<SupplyItem[]>([
+        ...suppliesKeys.all,
+        "all-items",
+      ]);
+
+      if (previousItems) {
+        queryClient.setQueryData<PageResponse<SupplyItem>>(
+          suppliesKeys.items(),
+          {
+            ...previousItems,
+            items: [{ id: Date.now(), ...newItem } as SupplyItem, ...previousItems.items],
+            totalElements: previousItems.totalElements + 1,
+          },
+        );
+      }
+
+      if (previousAllItems) {
+        queryClient.setQueryData<SupplyItem[]>(
+          [...suppliesKeys.all, "all-items"],
+          [{ id: Date.now(), ...newItem } as SupplyItem, ...previousAllItems],
+        );
+      }
+
+      return { previousItems, previousAllItems };
+    },
+    onError: (_err, _newItem, context) => {
+      if (context?.previousItems) {
+        queryClient.setQueryData(suppliesKeys.items(), context.previousItems);
+      }
+      if (context?.previousAllItems) {
+        queryClient.setQueryData(
+          [...suppliesKeys.all, "all-items"],
+          context.previousAllItems,
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: suppliesKeys.all });
+    },
+  });
+}
+
+export function useUpdateSupplyItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    SupplyItem,
+    Error,
+    { id: number; data: UpdateSupplyItemRequest },
+    UpdateSupplyItemContext
+  >({
+    mutationFn: ({ id, data }) => suppliesApi.updateSupplyItem(id, data),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: suppliesKeys.all });
+
+      const previousItems = queryClient.getQueryData<PageResponse<SupplyItem>>(
+        suppliesKeys.items(),
+      );
+      const previousAllItems = queryClient.getQueryData<SupplyItem[]>([
+        ...suppliesKeys.all,
+        "all-items",
+      ]);
+
+      if (previousItems) {
+        queryClient.setQueryData<PageResponse<SupplyItem>>(
+          suppliesKeys.items(),
+          {
+            ...previousItems,
+            items: previousItems.items.map((item) =>
+              item.id === id ? { ...item, ...data } : item,
+            ),
+          },
+        );
+      }
+
+      if (previousAllItems) {
+        queryClient.setQueryData<SupplyItem[]>(
+          [...suppliesKeys.all, "all-items"],
+          previousAllItems.map((item) =>
+            item.id === id ? { ...item, ...data } : item,
+          ),
+        );
+      }
+
+      return { previousItems, previousAllItems };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousItems) {
+        queryClient.setQueryData(suppliesKeys.items(), context.previousItems);
+      }
+      if (context?.previousAllItems) {
+        queryClient.setQueryData(
+          [...suppliesKeys.all, "all-items"],
+          context.previousAllItems,
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: suppliesKeys.all });
+    },
+  });
+}
+
+export function useDeleteSupplyItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, number, DeleteSupplyItemContext>({
+    mutationFn: (id) => suppliesApi.deleteSupplyItem(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: suppliesKeys.all });
+
+      const previousItems = queryClient.getQueryData<PageResponse<SupplyItem>>(
+        suppliesKeys.items(),
+      );
+      const previousAllItems = queryClient.getQueryData<SupplyItem[]>([
+        ...suppliesKeys.all,
+        "all-items",
+      ]);
+
+      if (previousItems) {
+        queryClient.setQueryData<PageResponse<SupplyItem>>(
+          suppliesKeys.items(),
+          {
+            ...previousItems,
+            items: previousItems.items.filter((item) => item.id !== id),
+            totalElements: Math.max(0, previousItems.totalElements - 1),
+          },
+        );
+      }
+
+      if (previousAllItems) {
+        queryClient.setQueryData<SupplyItem[]>(
+          [...suppliesKeys.all, "all-items"],
+          previousAllItems.filter((item) => item.id !== id),
+        );
+      }
+
+      return { previousItems, previousAllItems };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousItems) {
+        queryClient.setQueryData(suppliesKeys.items(), context.previousItems);
+      }
+      if (context?.previousAllItems) {
+        queryClient.setQueryData(
+          [...suppliesKeys.all, "all-items"],
+          context.previousAllItems,
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: suppliesKeys.all });
+    },
   });
 }
 

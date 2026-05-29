@@ -28,6 +28,7 @@ public class CreateSupplyItemRequest {
     @Size(max = 150, message = "Active ingredient must not exceed 150 characters")
     String activeIngredient;
 
+    @NotBlank(message = "Unit is required")
     @Size(max = 20, message = "Unit must not exceed 20 characters")
     String unit;
 
