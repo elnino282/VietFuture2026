@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { MapPin, MessageCircle, Minus, Package, Plus, ShieldCheck, ShoppingCart, Star, Store } from "lucide-react";
+import { Bot, MapPin, MessageCircle, Minus, Package, Plus, ShieldCheck, ShoppingCart, Star, Store } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/features/auth";
+import { useBuyerAiAssistant } from "@/features/marketplace/ai/BuyerAiAssistantContext";
 import {
   useMarketplaceAddToCart,
   useMarketplaceProductDetail,
@@ -27,7 +28,8 @@ function StarRating({ rating }: { rating?: number }) {
 export function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const { openAssistant } = useBuyerAiAssistant();
   const [quantity, setQuantity] = useState(1);
   const [imageFailed, setImageFailed] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -52,6 +54,7 @@ export function ProductDetailPage() {
 
   const reviewsQuery = useMarketplaceProductReviews(product?.id, { page: 0, size: 5 });
   const traceabilityQuery = useMarketplaceTraceability(product?.traceable ? product.id : null);
+  const canUseBuyerAi = isAuthenticated && user?.role === "buyer";
 
   const canIncrease = useMemo(() => {
     if (!product) {
@@ -65,6 +68,27 @@ export function ProductDetailPage() {
     : quantity;
 
   const reviewCount = reviewsQuery.data?.items?.length ?? 0;
+  const buyerProductContext = useMemo(() => {
+    if (!product) return "";
+
+    const traceability = traceabilityQuery.data;
+    return [
+      `Sản phẩm: ${product.name}`,
+      `Danh mục: ${product.category}`,
+      `Giá: ${formatVnd(product.price)} / ${product.unit}`,
+      `Số lượng còn: ${product.availableQuantity} ${product.unit}`,
+      `Nông trại/người bán: ${product.farmName ?? product.farmerDisplayName}`,
+      product.region ? `Khu vực: ${product.region}` : null,
+      `Đánh giá: ${product.ratingAverage ? product.ratingAverage.toFixed(1) : "5.0"}/5 (${product.ratingCount} đánh giá)`,
+      `Truy xuất nguồn gốc: ${product.traceable ? "Có" : "Không"}`,
+      product.seasonName ? `Mùa vụ: ${product.seasonName}` : null,
+      product.traceabilityCode ? `Mã truy xuất: ${product.traceabilityCode}` : null,
+      traceability?.lot?.lotCode ? `Mã lô: ${traceability.lot.lotCode}` : null,
+      traceability?.lot?.harvestedAt ? `Ngày thu hoạch: ${traceability.lot.harvestedAt}` : null,
+      traceability?.farm?.region ? `Vùng sản xuất: ${traceability.farm.region}` : null,
+      product.shortDescription ? `Mô tả ngắn: ${product.shortDescription}` : null,
+    ].filter((value): value is string => Boolean(value)).join("\n");
+  }, [product, traceabilityQuery.data]);
 
   // ── Loading state ───────────────────────────────────────────
   if (productQuery.isLoading) {
@@ -258,6 +282,18 @@ export function ProductDetailPage() {
                   >
                     {isAdding ? "Đang xử lý..." : "Mua ngay"}
                   </button>
+                  {canUseBuyerAi && (
+                    <button
+                      type="button"
+                      className="pdp__cta-btn pdp__cta-btn--outline"
+                      onClick={() => openAssistant({
+                        context: buyerProductContext,
+                        prompt: "Có nên mua sản phẩm này không? Hãy đánh giá rủi ro trước khi chốt đơn.",
+                      })}
+                    >
+                      <Bot /> Hỏi AI về sản phẩm này
+                    </button>
+                  )}
                 </>
               ) : (
                 <>

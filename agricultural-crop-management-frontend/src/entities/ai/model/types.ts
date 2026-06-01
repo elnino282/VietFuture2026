@@ -7,6 +7,8 @@ export type {
     CostOptimization,
     AiChatRequest,
     AiChatResponse,
+    BuyerAiChatRequest,
+    BuyerAiChatResponse,
     AiQaRequest,
     AiQaResponse,
 } from './schemas';

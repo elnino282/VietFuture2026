@@ -46,6 +46,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useFarmDetail } from "../hooks/useFarmDetail";
+import { useTranslation } from "react-i18next";
 import { CreatePlotInFarmDialog } from "../ui/CreatePlotInFarmDialog";
 import { FarmDeleteDialog } from "../ui/FarmDeleteDialog";
 import { FarmFormDialog } from "../ui/FarmFormDialog";
@@ -66,6 +67,7 @@ export function FarmDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const farmId = id ? parseInt(id, 10) : 0;
+  const { t } = useTranslation();
   const { preferences } = usePreferences();
   const unitLabel = getWeightUnitLabel(preferences.weightUnit);
   const formatYieldValue = (valueKg?: number | null) => {
@@ -157,13 +159,13 @@ export function FarmDetailPage() {
   const handleDeleteConfirm = () => {
     // Delete is handled by the FarmDeleteDialog
     setDeleteDialogOpen(false);
-    toast.success("Farm deleted successfully");
+    toast.success(t('farmDetail.toast.farmDeleted', 'Farm deleted successfully'));
     navigate("/farmer/farms");
   };
 
   const handleCreatePlot = () => {
     if (!farm?.active) {
-      toast.error("This farm is inactive. Activate it to create plots.");
+      toast.error(t('farmDetail.toast.farmInactivePlots', 'This farm is inactive. Activate it to create plots.'));
       return;
     }
     setActiveTab("plots");
@@ -177,7 +179,7 @@ export function FarmDetailPage() {
       if (farm.active) {
         setCreatePlotDialogOpen(true);
       } else {
-        toast.error("This farm is inactive. Activate it to create plots.");
+        toast.error(t('farmDetail.toast.farmInactivePlots', 'This farm is inactive. Activate it to create plots.'));
       }
       navigate(`/farmer/farms/${farmId}`, { replace: true });
     }
@@ -331,9 +333,9 @@ export function FarmDetailPage() {
               </h2>
               <p className="text-gray-500 mb-6">
                 {error?.message ||
-                  "The farm you are looking for does not exist or has been deleted."}
+                  t('farmDetail.notFound.description', 'The farm you are looking for does not exist or has been deleted.')}
               </p>
-              <BackButton to="/farmer/farms" label="Quay về Trang trại" />
+              <BackButton to="/farmer/farms" label={t('farmDetail.backToFarms', 'Back to Farms')} />
             </div>
           </div>
         </div>
@@ -360,7 +362,7 @@ export function FarmDetailPage() {
             </nav>
             
             {/* Back button */}
-            <BackButton to="/farmer/farms" label="Quay về Trang trại" />
+            <BackButton to="/farmer/farms" label={t('farmDetail.backToFarms', 'Back to Farms')} />
           </div>
         </div>
 
@@ -409,40 +411,40 @@ export function FarmDetailPage() {
           {/* Overview Tab */}
           <TabsContent value="info" className="space-y-4">
             <div className="bg-card rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold mb-4">Farm Overview</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('farmDetail.overview.title', 'Farm Overview')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Farm Name</p>
+                  <p className="text-sm text-gray-500">{t('farmDetail.overview.farmName', 'Farm Name')}</p>
                   <p className="text-base font-medium">{farm.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Owner</p>
+                  <p className="text-sm text-gray-500">{t('farmDetail.overview.owner', 'Owner')}</p>
                   <p className="text-base font-medium">@{farm.ownerUsername}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Total Area</p>
+                  <p className="text-sm text-gray-500">{t('farmDetail.overview.totalArea', 'Total Area')}</p>
                   <p className="text-base font-medium font-mono">
-                    {farm.area != null ? `${farm.area} ha` : "Not specified"}
+                    {farm.area != null ? `${farm.area} ha` : t('farmDetail.overview.notSpecified', 'Not specified')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Location</p>
+                  <p className="text-sm text-gray-500">{t('farmDetail.overview.location', 'Location')}</p>
                   <p className="text-base font-medium">
                     {farm.wardName && farm.provinceName
                       ? `${farm.wardName}, ${farm.provinceName}`
-                      : farm.provinceName || "Not specified"}
+                      : farm.provinceName || t('farmDetail.overview.notSpecified', 'Not specified')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Status</p>
+                  <p className="text-sm text-gray-500">{t('farmDetail.overview.status', 'Status')}</p>
                   <div className="mt-1">
                     <Badge variant={farm.active ? "default" : "secondary"}>
-                      {farm.active ? "Active" : "Inactive"}
+                      {farm.active ? t('farmDetail.overview.active', 'Active') : t('farmDetail.overview.inactive', 'Inactive')}
                     </Badge>
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Total Plots</p>
+                  <p className="text-sm text-gray-500">{t('farmDetail.overview.totalPlots', 'Total Plots')}</p>
                   <p className="text-base font-medium font-mono">
                     {plots.length}
                   </p>
@@ -458,7 +460,7 @@ export function FarmDetailPage() {
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold">
-                    Plots in {farm.name}
+                    {t('farmDetail.plots.title', { name: farm.name })}
                   </h3>
                   <p className="text-sm text-gray-500">
                     Manage the plots within this farm
@@ -466,10 +468,10 @@ export function FarmDetailPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
                   <span className="rounded-full bg-gray-100 px-3 py-1">
-                    Total plots: {plots.length}
+                    {t('farmDetail.plots.totalPlots', { count: plots.length })}
                   </span>
                   <span className="rounded-full bg-gray-100 px-3 py-1">
-                    Total area: {totalPlotAreaLabel}
+                    {t('farmDetail.plots.totalArea', { area: totalPlotAreaLabel })}
                   </span>
                 </div>
               </div>
@@ -505,7 +507,7 @@ export function FarmDetailPage() {
                   <div className="flex items-center gap-2">
                     <Sprout className="h-5 w-5 text-emerald-600" />
                     <h3 className="text-lg font-semibold">
-                      Seasons in {farm.name}
+                      {t('farmDetail.seasons.title', { name: farm.name })}
                     </h3>
                   </div>
                   <p className="text-sm text-gray-500">
@@ -530,16 +532,16 @@ export function FarmDetailPage() {
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-lg border border-gray-200 bg-card p-4">
-                  <p className="text-xs text-gray-500">Total seasons</p>
+                  <p className="text-xs text-gray-500">{t('farmDetail.seasons.metrics.totalSeasons', 'Total seasons')}</p>
                   <p className="text-2xl font-semibold">
                     {seasonSummary.total}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
-                    {seasonSummary.active} active
+                    {t('farmDetail.seasons.metrics.activeCount', { count: seasonSummary.active })}
                   </p>
                 </div>
                 <div className="rounded-lg border border-gray-200 bg-card p-4">
-                  <p className="text-xs text-gray-500">Planned vs completed</p>
+                  <p className="text-xs text-gray-500">{t('farmDetail.seasons.metrics.plannedVsCompleted', 'Planned vs completed')}</p>
                   <p className="text-2xl font-semibold">
                     {seasonSummary.planned} / {seasonSummary.completed}
                   </p>
@@ -549,7 +551,7 @@ export function FarmDetailPage() {
                   </p>
                 </div>
                 <div className="rounded-lg border border-gray-200 bg-card p-4">
-                  <p className="text-xs text-gray-500">Upcoming harvest</p>
+                  <p className="text-xs text-gray-500">{t('farmDetail.seasons.metrics.upcomingHarvest', 'Upcoming harvest')}</p>
                   <p className="text-2xl font-semibold">
                     {upcomingHarvestLabel}
                   </p>
@@ -558,7 +560,7 @@ export function FarmDetailPage() {
                   </p>
                 </div>
                 <div className="rounded-lg border border-gray-200 bg-card p-4">
-                  <p className="text-xs text-gray-500">Expected yield</p>
+                  <p className="text-xs text-gray-500">{t('farmDetail.seasons.metrics.expectedYield', 'Expected yield')}</p>
                   <p className="text-2xl font-semibold font-mono">
                     {expectedYieldLabel}
                   </p>
@@ -572,7 +574,7 @@ export function FarmDetailPage() {
                 <div className="flex flex-wrap items-center justify-start gap-4">
                   <div className="w-[320px]">
                     <Input
-                      placeholder="Search by season, crop, or plot..."
+                      placeholder={t('farmDetail.seasons.searchPlaceholder', 'Search by season, crop, or plot...')}
                       value={seasonSearch}
                       onChange={(event) => setSeasonSearch(event.target.value)}
                     />
@@ -586,15 +588,15 @@ export function FarmDetailPage() {
                     }
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="All statuses" />
+                      <SelectValue placeholder={t('farmDetail.seasons.allStatuses', 'All statuses')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All statuses</SelectItem>
-                      <SelectItem value="PLANNED">Planned</SelectItem>
-                      <SelectItem value="ACTIVE">Active</SelectItem>
-                      <SelectItem value="COMPLETED">Completed</SelectItem>
-                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                      <SelectItem value="ARCHIVED">Archived</SelectItem>
+                      <SelectItem value="all">{t('farmDetail.seasons.allStatuses', 'All statuses')}</SelectItem>
+                      <SelectItem value="PLANNED">{t('farmDetail.seasons.statusLabels.PLANNED', 'Planned')}</SelectItem>
+                      <SelectItem value="ACTIVE">{t('farmDetail.seasons.statusLabels.ACTIVE', 'Active')}</SelectItem>
+                      <SelectItem value="COMPLETED">{t('farmDetail.seasons.statusLabels.COMPLETED', 'Completed')}</SelectItem>
+                      <SelectItem value="CANCELLED">{t('farmDetail.seasons.statusLabels.CANCELLED', 'Cancelled')}</SelectItem>
+                      <SelectItem value="ARCHIVED">{t('farmDetail.seasons.statusLabels.ARCHIVED', 'Archived')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select
@@ -610,10 +612,10 @@ export function FarmDetailPage() {
                     }
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="All plots" />
+                      <SelectValue placeholder={t('farmDetail.seasons.allPlots', 'All plots')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All plots</SelectItem>
+                      <SelectItem value="all">{t('farmDetail.seasons.allPlots', 'All plots')}</SelectItem>
                       {plots.map((plot) => (
                         <SelectItem key={plot.id} value={plot.id.toString()}>
                           {plot.plotName}
@@ -623,7 +625,7 @@ export function FarmDetailPage() {
                   </Select>
                 </div>
                 <div className="mt-2 text-xs text-gray-500">
-                  Showing {filteredSeasons.length} of {seasons.length} seasons
+                  {t('farmDetail.seasons.showingCount', { filtered: filteredSeasons.length, total: seasons.length })}
                 </div>
               </div>
 
@@ -649,13 +651,13 @@ export function FarmDetailPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Season</TableHead>
-                        <TableHead>Crop</TableHead>
-                        <TableHead>Plot</TableHead>
-                        <TableHead>Timeline</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>{t('farmDetail.seasons.table.season', 'Season')}</TableHead>
+                        <TableHead>{t('farmDetail.seasons.table.crop', 'Crop')}</TableHead>
+                        <TableHead>{t('farmDetail.seasons.table.plot', 'Plot')}</TableHead>
+                        <TableHead>{t('farmDetail.seasons.table.timeline', 'Timeline')}</TableHead>
+                        <TableHead>{t('farmDetail.seasons.table.status', 'Status')}</TableHead>
                         <TableHead className="text-right">
-                          Yield ({unitLabel})
+                          {t('farmDetail.seasons.table.yield', { unit: unitLabel })}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -695,7 +697,7 @@ export function FarmDetailPage() {
                       </h4>
                       <p className="text-sm text-red-700 mt-1">
                         {seasonsError?.message ||
-                          "Please try again in a moment."}
+                          "{t('farmDetail.seasons.errorDesc', 'Please try again in a moment.')}"}
                       </p>
                       <Button
                         variant="outline"
@@ -712,13 +714,13 @@ export function FarmDetailPage() {
                 <div className="rounded-lg border border-dashed p-8 text-center text-gray-500">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     {seasons.length === 0
-                      ? "No seasons yet"
-                      : "No seasons match your filters"}
+                      ? t('farmDetail.seasons.noSeasons', 'No seasons yet')
+                      : t('farmDetail.seasons.noSeasonsMatch', 'No seasons match your filters')}
                   </h3>
                   <p>
                     {seasons.length === 0
-                      ? "Create a season to start tracking crop cycles for this farm."
-                      : "Try adjusting the search or filters to find seasons."}
+                      ? t('farmDetail.seasons.createToStart', 'Create a season to start tracking crop cycles for this farm.')
+                      : t('farmDetail.seasons.tryAdjusting', 'Try adjusting the search or filters to find seasons.')}
                   </p>
                   {seasons.length === 0 && (
                     <Button
@@ -736,13 +738,13 @@ export function FarmDetailPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Season</TableHead>
-                        <TableHead>Crop</TableHead>
-                        <TableHead>Plot</TableHead>
-                        <TableHead>Timeline</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>{t('farmDetail.seasons.table.season', 'Season')}</TableHead>
+                        <TableHead>{t('farmDetail.seasons.table.crop', 'Crop')}</TableHead>
+                        <TableHead>{t('farmDetail.seasons.table.plot', 'Plot')}</TableHead>
+                        <TableHead>{t('farmDetail.seasons.table.timeline', 'Timeline')}</TableHead>
+                        <TableHead>{t('farmDetail.seasons.table.status', 'Status')}</TableHead>
                         <TableHead className="text-right">
-                          Yield ({unitLabel})
+                          {t('farmDetail.seasons.table.yield', { unit: unitLabel })}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -797,14 +799,14 @@ export function FarmDetailPage() {
                                 {formatSeasonDate(season.startDate)}
                               </div>
                               <div className="text-xs text-gray-500">
-                                Harvest: {formatSeasonDate(harvestDate)}
+                                {t('farmDetail.seasons.table.harvest', { date: formatSeasonDate(harvestDate) })}
                               </div>
                             </TableCell>
                             <TableCell>
                               <Badge
                                 variant={getSeasonStatusVariant(season.status)}
                               >
-                                {getSeasonStatusLabel(season.status)}
+                                {getSeasonStatusLabel(season.status, t)}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right font-mono">
@@ -897,20 +899,20 @@ function getSeasonStatusVariant(
   }
 }
 
-function getSeasonStatusLabel(status?: SeasonStatus) {
+export function getSeasonStatusLabel(status?: SeasonStatus, t?: any) { if (!t) t = (key: string, def: string) => def;
   switch (status) {
     case "ACTIVE":
-      return "Active";
+      return t("farmDetail.seasons.statusLabels.ACTIVE", "Active");
     case "COMPLETED":
-      return "Completed";
+      return t("farmDetail.seasons.statusLabels.COMPLETED", "Completed");
     case "CANCELLED":
-      return "Cancelled";
+      return t("farmDetail.seasons.statusLabels.CANCELLED", t("farmDetail.incidents.statusLabels.Cancelled", "Cancelled"));
     case "ARCHIVED":
-      return "Archived";
+      return t("farmDetail.seasons.statusLabels.ARCHIVED", "Archived");
     case "PLANNED":
-      return "Planned";
+      return t("farmDetail.seasons.statusLabels.PLANNED", "Planned");
     default:
-      return "Unknown";
+      return t("farmDetail.seasons.statusLabels.Unknown", "Unknown");
   }
 }
 
@@ -987,7 +989,7 @@ function FarmStockTab({
   isLoadingOnHand,
   isOnHandError,
   onRefresh,
-}: FarmStockTabProps) {
+}: FarmStockTabProps) { const { t } = useTranslation();
   const navigate = useNavigate();
 
   // Stock summary
@@ -1029,7 +1031,7 @@ function FarmStockTab({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Package className="h-5 w-5 text-emerald-600" />
-            <h3 className="text-lg font-semibold">Stock Management</h3>
+            <h3 className="text-lg font-semibold">{t('farmDetail.stock.title', 'Stock Management')}</h3>
           </div>
         </div>
         <div className="bg-card rounded-lg border border-dashed p-10 text-center">
@@ -1037,7 +1039,7 @@ function FarmStockTab({
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-50">
               <Package className="h-6 w-6 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Warehouse Found</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('farmDetail.stock.noWarehouse', 'No Warehouse Found')}</h3>
             <p className="text-gray-500 mb-6">
               This farm doesn't have any warehouses yet. Create a warehouse in the Inventory page to start tracking stock.
             </p>
@@ -1057,7 +1059,7 @@ function FarmStockTab({
         <div>
           <div className="flex items-center gap-2">
             <Package className="h-5 w-5 text-emerald-600" />
-            <h3 className="text-lg font-semibold">Stock Management</h3>
+            <h3 className="text-lg font-semibold">{t('farmDetail.stock.title', 'Stock Management')}</h3>
           </div>
           <p className="text-sm text-gray-500">
             Track inventory and supplies across farm warehouses
@@ -1082,24 +1084,24 @@ function FarmStockTab({
       {/* Summary Cards */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-gray-200 bg-card p-4">
-          <p className="text-xs text-gray-500">Warehouses</p>
+          <p className="text-xs text-gray-500">{t('farmDetail.stock.metrics.warehouses', 'Warehouses')}</p>
           <p className="text-2xl font-semibold">{farmWarehouses.length}</p>
-          <p className="mt-1 text-xs text-gray-500">linked to this farm</p>
+          <p className="mt-1 text-xs text-gray-500">{t('farmDetail.stock.metrics.linkedToFarm', 'linked to this farm')}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-card p-4">
-          <p className="text-xs text-gray-500">Stock Items</p>
+          <p className="text-xs text-gray-500">{t('farmDetail.stock.metrics.stockItems', 'Stock Items')}</p>
           <p className="text-2xl font-semibold">{stockSummary.totalItems}</p>
-          <p className="mt-1 text-xs text-gray-500">unique supply lots</p>
+          <p className="mt-1 text-xs text-gray-500">{t('farmDetail.stock.metrics.uniqueSupplyLots', 'unique supply lots')}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-card p-4">
-          <p className="text-xs text-gray-500">Low Stock</p>
+          <p className="text-xs text-gray-500">{t('farmDetail.stock.metrics.lowStock', 'Low Stock')}</p>
           <p className="text-2xl font-semibold text-amber-600">{stockSummary.lowStock}</p>
-          <p className="mt-1 text-xs text-gray-500">items below threshold</p>
+          <p className="mt-1 text-xs text-gray-500">{t('farmDetail.stock.metrics.itemsBelowThreshold', 'items below threshold')}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-card p-4">
-          <p className="text-xs text-gray-500">Expiring Soon</p>
+          <p className="text-xs text-gray-500">{t('farmDetail.stock.metrics.expiringSoon', 'Expiring Soon')}</p>
           <p className="text-2xl font-semibold text-red-600">{stockSummary.expiringSoon}</p>
-          <p className="mt-1 text-xs text-gray-500">within 30 days</p>
+          <p className="mt-1 text-xs text-gray-500">{t('farmDetail.stock.metrics.within30Days', 'within 30 days')}</p>
         </div>
       </div>
 
@@ -1111,7 +1113,7 @@ function FarmStockTab({
             onValueChange={(value) => onWarehouseChange(value ? parseInt(value, 10) : null)}
           >
             <SelectTrigger className="w-[280px]">
-              <SelectValue placeholder="Select a warehouse" />
+              <SelectValue placeholder={t('farmDetail.stock.selectWarehouse', 'Select a warehouse')} />
             </SelectTrigger>
             <SelectContent>
               {farmWarehouses.map((warehouse) => (
@@ -1122,7 +1124,7 @@ function FarmStockTab({
             </SelectContent>
           </Select>
           <div className="text-sm text-gray-500">
-            Showing {onHandItems.length} items in selected warehouse
+            {t('farmDetail.stock.showingItems', { count: onHandItems.length })}
           </div>
         </div>
       </div>
@@ -1133,12 +1135,12 @@ function FarmStockTab({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Item</TableHead>
-                <TableHead>Batch Code</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead className="text-right">Quantity</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Expiry</TableHead>
+                <TableHead>{t('farmDetail.stock.table.item', 'Item')}</TableHead>
+                <TableHead>{t('farmDetail.stock.table.batchCode', 'Batch Code')}</TableHead>
+                <TableHead>{t('farmDetail.stock.table.location', 'Location')}</TableHead>
+                <TableHead className="text-right">{t('farmDetail.stock.table.quantity', 'Quantity')}</TableHead>
+                <TableHead>{t('farmDetail.seasons.table.status', 'Status')}</TableHead>
+                <TableHead>{t('farmDetail.stock.table.expiry', 'Expiry')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1160,8 +1162,8 @@ function FarmStockTab({
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
             <div>
-              <h4 className="font-medium text-red-800">Failed to load stock data</h4>
-              <p className="text-sm text-red-700 mt-1">Please try again in a moment.</p>
+              <h4 className="font-medium text-red-800">{t('farmDetail.stock.errorTitle', 'Failed to load stock data')}</h4>
+              <p className="text-sm text-red-700 mt-1">{t('farmDetail.seasons.errorDesc', 'Please try again in a moment.')}</p>
               <Button variant="outline" size="sm" className="mt-3" onClick={onRefresh}>
                 Try Again
               </Button>
@@ -1170,8 +1172,8 @@ function FarmStockTab({
         </div>
       ) : onHandItems.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-gray-500">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No stock items</h3>
-          <p>This warehouse is currently empty. Add supplies to start tracking inventory.</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('farmDetail.stock.noStock', 'No stock items')}</h3>
+          <p>{t('farmDetail.stock.noStockDesc', 'This warehouse is currently empty. Add supplies to start tracking inventory.')}</p>
           <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate("/farmer/inventory")}>
             Add Stock
           </Button>
@@ -1181,12 +1183,12 @@ function FarmStockTab({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Item</TableHead>
-                <TableHead>Batch Code</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead className="text-right">Quantity</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Expiry</TableHead>
+                <TableHead>{t('farmDetail.stock.table.item', 'Item')}</TableHead>
+                <TableHead>{t('farmDetail.stock.table.batchCode', 'Batch Code')}</TableHead>
+                <TableHead>{t('farmDetail.stock.table.location', 'Location')}</TableHead>
+                <TableHead className="text-right">{t('farmDetail.stock.table.quantity', 'Quantity')}</TableHead>
+                <TableHead>{t('farmDetail.seasons.table.status', 'Status')}</TableHead>
+                <TableHead>{t('farmDetail.stock.table.expiry', 'Expiry')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1262,7 +1264,7 @@ interface FarmIncidentsTabProps {
   plotNameById: Map<number | string, string>;
 }
 
-function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabProps) {
+function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabProps) {const { t } = useTranslation();
   const navigate = useNavigate();
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
 
@@ -1327,7 +1329,7 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <h3 className="text-lg font-semibold">Incidents Tracking</h3>
+            <h3 className="text-lg font-semibold">{t('farmDetail.incidents.title', 'Incidents Tracking')}</h3>
           </div>
         </div>
         <div className="bg-card rounded-lg border border-dashed p-10 text-center">
@@ -1335,7 +1337,7 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-50">
               <AlertTriangle className="h-6 w-6 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Seasons Found</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('farmDetail.incidents.noSeasons', 'No Seasons Found')}</h3>
             <p className="text-gray-500 mb-6">
               Incidents are tracked per season. Create a season for this farm to start tracking incidents.
             </p>
@@ -1355,7 +1357,7 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
         <div>
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <h3 className="text-lg font-semibold">Incidents Tracking</h3>
+            <h3 className="text-lg font-semibold">{t('farmDetail.incidents.title', 'Incidents Tracking')}</h3>
           </div>
           <p className="text-sm text-gray-500">
             Track and manage incidents across seasons in this farm
@@ -1380,41 +1382,41 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
       {/* Summary Cards */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-lg border border-gray-200 bg-card p-4">
-          <p className="text-xs text-gray-500">Total Incidents</p>
+          <p className="text-xs text-gray-500">{t('farmDetail.incidents.metrics.totalIncidents', 'Total Incidents')}</p>
           <p className="text-2xl font-semibold">{incidentsSummary.total}</p>
-          <p className="mt-1 text-xs text-gray-500">in selected season</p>
+          <p className="mt-1 text-xs text-gray-500">{t('farmDetail.incidents.metrics.inSelectedSeason', 'in selected season')}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-card p-4">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-red-500" />
-            <p className="text-xs text-gray-500">Open</p>
+            <p className="text-xs text-gray-500">{t('farmDetail.incidents.metrics.open', 'Open')}</p>
           </div>
           <p className="text-2xl font-semibold text-red-600">{incidentsSummary.open}</p>
-          <p className="mt-1 text-xs text-gray-500">need attention</p>
+          <p className="mt-1 text-xs text-gray-500">{t('farmDetail.incidents.metrics.needAttention', 'need attention')}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-card p-4">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-blue-500" />
-            <p className="text-xs text-gray-500">In Progress</p>
+            <p className="text-xs text-gray-500">{t('farmDetail.incidents.metrics.inProgress', 'In Progress')}</p>
           </div>
           <p className="text-2xl font-semibold text-blue-600">{incidentsSummary.inProgress}</p>
-          <p className="mt-1 text-xs text-gray-500">being handled</p>
+          <p className="mt-1 text-xs text-gray-500">{t('farmDetail.incidents.metrics.beingHandled', 'being handled')}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-card p-4">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-green-500" />
-            <p className="text-xs text-gray-500">Resolved</p>
+            <p className="text-xs text-gray-500">{t('farmDetail.incidents.metrics.resolved', 'Resolved')}</p>
           </div>
           <p className="text-2xl font-semibold text-green-600">{incidentsSummary.resolved}</p>
-          <p className="mt-1 text-xs text-gray-500">completed</p>
+          <p className="mt-1 text-xs text-gray-500">{t('farmDetail.incidents.metrics.completed', 'completed')}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-card p-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
-            <p className="text-xs text-gray-500">High Severity</p>
+            <p className="text-xs text-gray-500">{t('farmDetail.incidents.metrics.highSeverity', 'High Severity')}</p>
           </div>
           <p className="text-2xl font-semibold text-amber-600">{incidentsSummary.highSeverity}</p>
-          <p className="mt-1 text-xs text-gray-500">critical issues</p>
+          <p className="mt-1 text-xs text-gray-500">{t('farmDetail.incidents.metrics.criticalIssues', 'critical issues')}</p>
         </div>
       </div>
 
@@ -1426,7 +1428,7 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
             onValueChange={(value) => setSelectedSeasonId(value ? parseInt(value, 10) : null)}
           >
             <SelectTrigger className="w-[280px]">
-              <SelectValue placeholder="Select a season" />
+              <SelectValue placeholder={t('farmDetail.incidents.selectSeason', 'Select a season')} />
             </SelectTrigger>
             <SelectContent>
               {seasons.map((season) => (
@@ -1437,7 +1439,7 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
             </SelectContent>
           </Select>
           <div className="text-sm text-gray-500">
-            Showing {incidents.length} incidents in selected season
+            {t('farmDetail.incidents.showingIncidents', { count: incidents.length })}
           </div>
         </div>
       </div>
@@ -1448,12 +1450,12 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Severity</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Reported</TableHead>
-                <TableHead>Deadline</TableHead>
+                <TableHead>{t('farmDetail.incidents.table.type', 'Type')}</TableHead>
+                <TableHead>{t('farmDetail.incidents.table.description', 'Description')}</TableHead>
+                <TableHead>{t('farmDetail.incidents.table.severity', 'Severity')}</TableHead>
+                <TableHead>{t('farmDetail.seasons.table.status', 'Status')}</TableHead>
+                <TableHead>{t('farmDetail.incidents.table.reported', 'Reported')}</TableHead>
+                <TableHead>{t('farmDetail.incidents.table.deadline', 'Deadline')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1475,8 +1477,8 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
             <div>
-              <h4 className="font-medium text-red-800">Failed to load incidents</h4>
-              <p className="text-sm text-red-700 mt-1">Please try again in a moment.</p>
+              <h4 className="font-medium text-red-800">{t('farmDetail.incidents.errorTitle', 'Failed to load incidents')}</h4>
+              <p className="text-sm text-red-700 mt-1">{t('farmDetail.seasons.errorDesc', 'Please try again in a moment.')}</p>
               <Button variant="outline" size="sm" className="mt-3" onClick={() => refetchIncidents()}>
                 Try Again
               </Button>
@@ -1489,8 +1491,8 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-50">
               <CheckCircle2 className="h-6 w-6 text-green-500" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No incidents reported</h3>
-            <p>This season has no recorded incidents. Great job!</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('farmDetail.incidents.noIncidents', 'No incidents reported')}</h3>
+            <p>{t('farmDetail.incidents.noIncidentsDesc', 'This season has no recorded incidents. Great job!')}</p>
           </div>
         </div>
       ) : (
@@ -1498,19 +1500,19 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Severity</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Reported</TableHead>
-                <TableHead>Deadline</TableHead>
+                <TableHead>{t('farmDetail.incidents.table.type', 'Type')}</TableHead>
+                <TableHead>{t('farmDetail.incidents.table.description', 'Description')}</TableHead>
+                <TableHead>{t('farmDetail.incidents.table.severity', 'Severity')}</TableHead>
+                <TableHead>{t('farmDetail.seasons.table.status', 'Status')}</TableHead>
+                <TableHead>{t('farmDetail.incidents.table.reported', 'Reported')}</TableHead>
+                <TableHead>{t('farmDetail.incidents.table.deadline', 'Deadline')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {incidents.map((incident) => (
                 <TableRow key={incident.incidentId} className="hover:bg-gray-50">
                   <TableCell className="font-medium">
-                    {formatIncidentType(incident.incidentType)}
+                    {formatIncidentType(incident.incidentType, t)}
                   </TableCell>
                   <TableCell className="max-w-xs truncate text-gray-600">
                     {incident.description ?? "-"}
@@ -1522,7 +1524,7 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
                   </TableCell>
                   <TableCell>
                     <Badge variant={getIncidentStatusVariant(incident.status)}>
-                      {formatIncidentStatus(incident.status)}
+                      {formatIncidentStatus(incident.status, t)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-gray-600">
@@ -1542,25 +1544,25 @@ function FarmIncidentsTab({ farmId, seasons, plotNameById }: FarmIncidentsTabPro
 }
 
 // Helper functions for incidents
-function formatIncidentType(type: string): string {
+export function formatIncidentType(type: string, t?: any): string {if (!t) t = (key: string, def: string) => def;
   const typeMap: Record<string, string> = {
-    PEST_OUTBREAK: "Pest Outbreak",
-    DISEASE: "Disease",
-    EQUIPMENT_FAILURE: "Equipment Failure",
-    WEATHER_DAMAGE: "Weather Damage",
-    SAFETY: "Safety",
-    OTHER: "Other",
+    PEST_OUTBREAK: t("farmDetail.incidents.types.Pest Outbreak", "Pest Outbreak"),
+    DISEASE: t("farmDetail.incidents.types.Disease", "Disease"),
+    EQUIPMENT_FAILURE: t("farmDetail.incidents.types.Equipment Failure", "Equipment Failure"),
+    WEATHER_DAMAGE: t("farmDetail.incidents.types.Weather Damage", "Weather Damage"),
+    SAFETY: t("farmDetail.incidents.types.Safety", "Safety"),
+    OTHER: t("farmDetail.incidents.types.Other", "Other"),
   };
   return typeMap[type] ?? type;
 }
 
-function formatIncidentStatus(status?: string | null): string {
+export function formatIncidentStatus(status?: string | null, t?: any): string {if (!t) t = (key: string, def: string) => def;
   if (!status) return "Unknown";
   const statusMap: Record<string, string> = {
-    OPEN: "Open",
-    IN_PROGRESS: "In Progress",
-    RESOLVED: "Resolved",
-    CANCELLED: "Cancelled",
+    OPEN: t("farmDetail.incidents.statusLabels.Open", "Open"),
+    IN_PROGRESS: t("farmDetail.incidents.statusLabels.In Progress", "In Progress"),
+    RESOLVED: t("farmDetail.incidents.statusLabels.Resolved", "Resolved"),
+    CANCELLED: t("farmDetail.incidents.statusLabels.Cancelled", "Cancelled"),
   };
   return statusMap[status.toUpperCase()] ?? status;
 }

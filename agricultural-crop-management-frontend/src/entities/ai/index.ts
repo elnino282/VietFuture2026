@@ -11,6 +11,8 @@ export type {
     CostOptimization,
     AiChatRequest,
     AiChatResponse,
+    BuyerAiChatRequest,
+    BuyerAiChatResponse,
     AiQaRequest,
     AiQaResponse,
 } from './model/types';
@@ -25,6 +27,8 @@ export {
     CostOptimizationSchema,
     AiChatRequestSchema,
     AiChatResponseSchema,
+    BuyerAiChatRequestSchema,
+    BuyerAiChatResponseSchema,
     AiQaRequestSchema,
     AiQaResponseSchema,
 } from './model/schemas';
@@ -44,4 +48,4 @@ export {
 } from './api/hooks';
 
 // Buyer AI Hooks
-export { useAiQa } from './api/hooks';
+export { useAiQa, useBuyerAiChat } from './api/hooks';

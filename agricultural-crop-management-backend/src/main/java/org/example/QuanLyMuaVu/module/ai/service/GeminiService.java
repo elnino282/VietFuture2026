@@ -33,7 +33,9 @@ public class GeminiService {
     private static final String DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com";
     private static final String API_VERSION = "v1beta";
     private static final String SYSTEM_PROMPT_RESOURCE = "prompts/system_prompt.txt";
-    private static final String SYSTEM_PROMPT = loadSystemPrompt();
+    private static final String BUYER_SYSTEM_PROMPT_RESOURCE = "prompts/system_prompt_buyer.txt";
+    private static final String SYSTEM_PROMPT = loadSystemPrompt(SYSTEM_PROMPT_RESOURCE);
+    private static final String BUYER_SYSTEM_PROMPT = loadSystemPrompt(BUYER_SYSTEM_PROMPT_RESOURCE);
     private static final String[] API_KEY_ENV_KEYS = new String[] {
             "APP_AI_API_KEY",
             "GEMINI_API_KEY",
@@ -44,10 +46,18 @@ public class GeminiService {
             "Hi\u1EC7n t\u1EA1i t\u00F4i kh\u00F4ng th\u1EC3 k\u1EBFt n\u1ED1i t\u1EDBi d\u1ECBch v\u1EE5 t\u01B0 v\u1EA5n n\u00F4ng nghi\u1EC7p. Vui l\u00F2ng th\u1EED l\u1EA1i sau.";
     private static final String EMPTY_RESPONSE_FALLBACK_MESSAGE =
             "Hi\u1EC7n t\u1EA1i t\u00F4i kh\u00F4ng th\u1EC3 t\u1EA1o \u0111\u01B0\u1EE3c c\u00E2u tr\u1EA3 l\u1EDDi. Vui l\u00F2ng th\u1EED l\u1EA1i sau ho\u1EB7c \u0111\u1EB7t c\u00E2u h\u1ECFi kh\u00E1c li\u00EAn quan \u0111\u1EBFn n\u00F4ng nghi\u1EC7p.";
+    private static final String BUYER_CONNECTION_FALLBACK_MESSAGE =
+            "Hi\u1EC7n t\u1EA1i t\u00F4i kh\u00F4ng th\u1EC3 k\u1EBFt n\u1ED1i t\u1EDBi d\u1ECBch v\u1EE5 t\u01B0 v\u1EA5n mua h\u00E0ng. Vui l\u00F2ng th\u1EED l\u1EA1i sau.";
+    private static final String BUYER_EMPTY_RESPONSE_FALLBACK_MESSAGE =
+            "Hi\u1EC7n t\u1EA1i t\u00F4i kh\u00F4ng th\u1EC3 t\u1EA1o \u0111\u01B0\u1EE3c c\u00E2u tr\u1EA3 l\u1EDDi. Vui l\u00F2ng th\u1EED l\u1EA1i sau ho\u1EB7c \u0111\u1EB7t c\u00E2u h\u1ECFi kh\u00E1c li\u00EAn quan \u0111\u1EBFn mua n\u00F4ng s\u1EA3n.";
     private static final String CROP_CONTEXT_LABEL =
             "Th\u00F4ng tin m\u00F9a v\u1EE5 hi\u1EC7n t\u1EA1i:\n";
     private static final String USER_QUESTION_LABEL =
             "C\u00E2u h\u1ECFi c\u1EE7a n\u00F4ng d\u00E2n: ";
+    private static final String BUYER_CONTEXT_LABEL =
+            "Th\u00F4ng tin mua h\u00E0ng hi\u1EC7n t\u1EA1i:\n";
+    private static final String BUYER_QUESTION_LABEL =
+            "C\u00E2u h\u1ECFi c\u1EE7a ng\u01B0\u1EDDi mua: ";
 
     private final Client client;
     private final String model;
@@ -100,6 +110,36 @@ public class GeminiService {
     }
 
     public String chatAsAgriculturalExpert(String userMessage, String cropContext) {
+        return chatWithPrompt(
+                userMessage,
+                cropContext,
+                SYSTEM_PROMPT,
+                CROP_CONTEXT_LABEL,
+                USER_QUESTION_LABEL,
+                CONNECTION_FALLBACK_MESSAGE,
+                EMPTY_RESPONSE_FALLBACK_MESSAGE
+        );
+    }
+
+    public String chatAsBuyerProcurementExpert(String userMessage, String buyerContext) {
+        return chatWithPrompt(
+                userMessage,
+                buyerContext,
+                BUYER_SYSTEM_PROMPT,
+                BUYER_CONTEXT_LABEL,
+                BUYER_QUESTION_LABEL,
+                BUYER_CONNECTION_FALLBACK_MESSAGE,
+                BUYER_EMPTY_RESPONSE_FALLBACK_MESSAGE
+        );
+    }
+
+    private String chatWithPrompt(String userMessage,
+                                  String context,
+                                  String systemPrompt,
+                                  String contextLabel,
+                                  String questionLabel,
+                                  String connectionFallbackMessage,
+                                  String emptyResponseFallbackMessage) {
         Objects.requireNonNull(userMessage, "userMessage must not be null");
         if (userMessage.isBlank()) {
             throw new IllegalArgumentException("userMessage must not be blank");
@@ -108,45 +148,45 @@ public class GeminiService {
         String requestId = UUID.randomUUID().toString();
         if (!aiEnabled) {
             log.warn("Gemini request skipped because AI is disabled (requestId={}).", requestId);
-            return CONNECTION_FALLBACK_MESSAGE;
+            return connectionFallbackMessage;
         }
 
-        String prompt = buildPrompt(userMessage, cropContext);
+        String prompt = buildPrompt(userMessage, context, systemPrompt, contextLabel, questionLabel);
 
         try {
             GenerateContentResponse response = client.models.generateContent(model, prompt, null);
             String text = response.text();
             if (text == null || text.isBlank()) {
                 log.warn("Gemini response empty (requestId={}).", requestId);
-                return fallbackMessage();
+                return emptyResponseFallbackMessage;
             }
             return text;
         } catch (ApiException ex) {
             logApiException(requestId, ex);
-            return CONNECTION_FALLBACK_MESSAGE;
+            return connectionFallbackMessage;
         } catch (GenAiIOException ex) {
             logIoException(requestId, ex);
-            return CONNECTION_FALLBACK_MESSAGE;
+            return connectionFallbackMessage;
         } catch (Exception ex) {
             logUnexpectedException(requestId, ex);
-            return CONNECTION_FALLBACK_MESSAGE;
+            return connectionFallbackMessage;
         }
     }
 
-    private String buildPrompt(String userMessage, String cropContext) {
+    private String buildPrompt(String userMessage,
+                               String context,
+                               String systemPrompt,
+                               String contextLabel,
+                               String questionLabel) {
         StringBuilder sb = new StringBuilder();
-        sb.append(SYSTEM_PROMPT).append("\n\n");
-        if (cropContext != null && !cropContext.isBlank()) {
-            sb.append(CROP_CONTEXT_LABEL);
-            sb.append(cropContext).append("\n\n");
+        sb.append(systemPrompt).append("\n\n");
+        if (context != null && !context.isBlank()) {
+            sb.append(contextLabel);
+            sb.append(context).append("\n\n");
         }
-        sb.append(USER_QUESTION_LABEL);
+        sb.append(questionLabel);
         sb.append(userMessage);
         return sb.toString();
-    }
-
-    private String fallbackMessage() {
-        return EMPTY_RESPONSE_FALLBACK_MESSAGE;
     }
 
     private String resolveBaseUrl(AppProperties.Ai aiProps) {
@@ -248,14 +288,14 @@ public class GeminiService {
                 requestId, ex.getClass().getSimpleName(), ex.toString(), ex);
     }
 
-    private static String loadSystemPrompt() {
-        try (InputStream input = GeminiService.class.getClassLoader().getResourceAsStream(SYSTEM_PROMPT_RESOURCE)) {
+    private static String loadSystemPrompt(String resourcePath) {
+        try (InputStream input = GeminiService.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (input == null) {
-                throw new IllegalStateException("Missing resource: " + SYSTEM_PROMPT_RESOURCE);
+                throw new IllegalStateException("Missing resource: " + resourcePath);
             }
             return new String(input.readAllBytes(), StandardCharsets.UTF_8).trim();
         } catch (IOException ex) {
-            throw new IllegalStateException("Failed to load system prompt resource: " + SYSTEM_PROMPT_RESOURCE, ex);
+            throw new IllegalStateException("Failed to load system prompt resource: " + resourcePath, ex);
         }
     }
 

@@ -15,6 +15,8 @@ import type {
     CostOptimizationParams,
     AiChatRequest,
     AiChatResponse,
+    BuyerAiChatRequest,
+    BuyerAiChatResponse,
     AiQaRequest,
     AiQaResponse,
 } from '../model/types';
@@ -71,5 +73,12 @@ export const useAiQa = (
     options?: UseMutationOptions<AiQaResponse, Error, AiQaRequest>
 ) => useMutation({
     mutationFn: aiApi.askQuestion,
+    ...options,
+});
+
+export const useBuyerAiChat = (
+    options?: UseMutationOptions<BuyerAiChatResponse, Error, BuyerAiChatRequest>
+) => useMutation({
+    mutationFn: aiApi.buyerChat,
     ...options,
 });

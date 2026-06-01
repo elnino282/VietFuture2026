@@ -1,6 +1,15 @@
-﻿import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { Bot } from 'lucide-react';
-import { Badge, Button, Input, ScrollArea, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { Bot, Leaf, RotateCcw, Send, Sparkles } from 'lucide-react';
+import {
+    Button,
+    ScrollArea,
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    Textarea,
+} from '@/shared/ui';
 import { cn } from '@/shared/lib';
 import { useAiChatSession } from '@/features/ai';
 import { MarkdownMessage } from '@/components/MarkdownMessage';
@@ -8,37 +17,50 @@ import type { AiDrawerProps } from '../model/types';
 
 const QUICK_CHIPS = [
     {
-        label: 'Weather Forecast',
-        prompt: 'Thời tiết tuần này có gì cần lưu ý cho mùa vụ?'
+        label: 'Thời tiết',
+        prompt: 'Đang giữa mùa nắng hạn gắt, vườn bưởi da xanh đang mang trái non bị héo rũ lá vào buổi trưa. Tôi nên tưới nước vào khung giờ nào và tủ gốc ra sao để cây không bị sốc nhiệt?',
     },
     {
-        label: 'Crop Recommendations',
-        prompt: 'Gợi ý chăm sóc cây trồng giai đoạn hiện tại?'
+        label: 'Chăm sóc cây',
+        prompt: 'Ruộng lúa đài thơm 8 đang ở giai đoạn đẻ nhánh rộ nhưng lá chuyển màu vàng nhạt. Tôi nên bón thúc loại phân gì và liều lượng bao nhiêu kg cho 1 công (1000m2)?',
     },
     {
-        label: 'Pest Alerts',
-        prompt: 'Dấu hiệu sâu bệnh phổ biến và cách phòng tránh?'
+        label: 'Sâu bệnh',
+        prompt: 'Ruộng lúa OM18 đang làm đòng thì phát hiện rầy nâu bu dưới gốc, mật độ khoảng 5-7 con/tép. Tôi cần sử dụng hoạt chất gì để phun xịt ngay bây giờ?',
     },
     {
-        label: 'Expense Analysis',
-        prompt: 'Làm sao tối ưu chi phí phân bón và tưới tiêu?'
+        label: 'Chi phí',
+        prompt: 'Để tiết kiệm tối đa chi phí thuê nhân công làm cỏ cho vườn xoài, tôi có thể trồng xen canh loại cây họ đậu nào phía dưới nền đất để vừa ép cỏ dại vừa cải tạo đất?',
     },
 ];
 
 /**
  * AiDrawer Component
- * 
+ *
  * Side drawer for AI assistant chat interface.
  * Provides quick access to AI features with context chips.
- * 
+ *
  * Single Responsibility: AI assistant UI
  */
 export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
-    const { messages, isSending, sendMessage } = useAiChatSession({
+    const { messages, isSending, sendMessage, reset } = useAiChatSession({
         welcomeMessage: 'Xin chào! Tôi có thể hỗ trợ tư vấn nông nghiệp cho bạn.',
     });
     const [draft, setDraft] = useState('');
     const bottomRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        if (!open) return;
+
+        const openClassName = 'farmer-ai-assistant-open';
+        document.documentElement.classList.add(openClassName);
+        document.body.classList.add(openClassName);
+
+        return () => {
+            document.documentElement.classList.remove(openClassName);
+            document.body.classList.remove(openClassName);
+        };
+    }, [open]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -51,8 +73,8 @@ export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
         void sendMessage(trimmed);
     };
 
-    const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === 'Enter') {
+    const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
             handleSend();
         }
@@ -60,34 +82,62 @@ export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="w-full sm:w-[480px] flex flex-col">
-                <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
-                        <Bot className="w-5 h-5" style={{ color: '#94D82D' }} />
-                        AI Assistant
-                    </SheetTitle>
-                    <SheetDescription>
-                        Get intelligent recommendations and insights for your farm
-                    </SheetDescription>
+            <SheetContent
+                side="right"
+                className="flex w-full max-w-full gap-0 overflow-hidden border-l-0 bg-slate-50 p-0 shadow-2xl sm:w-[640px] sm:max-w-[640px] lg:w-[720px] lg:max-w-[720px]"
+            >
+                <SheetHeader className="border-b border-lime-100 bg-gradient-to-br from-lime-50 via-white to-emerald-50 px-5 py-5 pr-14 text-left sm:px-6">
+                    <div className="flex items-start gap-3">
+                        <div
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-sm"
+                            style={{ background: `linear-gradient(135deg, ${portalColor} 0%, #16a34a 100%)` }}
+                        >
+                            <Leaf className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                            <SheetTitle className="text-base font-semibold text-slate-950 sm:text-lg">
+                                Trợ lý AI mùa vụ
+                            </SheetTitle>
+                            <SheetDescription className="mt-1 max-w-[34rem] text-sm leading-6 text-slate-600">
+                                Nhận gợi ý về thời tiết, chăm sóc cây trồng, sâu bệnh và chi phí vận hành trang trại.
+                            </SheetDescription>
+                        </div>
+                    </div>
                 </SheetHeader>
 
-                <div className="mt-6 flex flex-1 flex-col gap-4 min-h-0">
-                    <div className="flex flex-wrap gap-2">
-                        {QUICK_CHIPS.map((chip) => (
-                            <Badge
-                                key={chip.label}
-                                variant="outline"
-                                className="cursor-pointer hover:bg-muted"
-                                onClick={() => setDraft(chip.prompt)}
-                            >
-                                {chip.label}
-                            </Badge>
-                        ))}
+                <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex flex-wrap gap-2.5">
+                            {QUICK_CHIPS.map((chip) => (
+                                <button
+                                    key={chip.label}
+                                    type="button"
+                                    className="inline-flex h-9 items-center rounded-full border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition hover:border-lime-200 hover:bg-lime-50 hover:text-lime-800 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:ring-offset-2"
+                                    onClick={() => setDraft(chip.prompt)}
+                                >
+                                    {chip.label}
+                                </button>
+                            ))}
+                        </div>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 shrink-0 rounded-full text-slate-500 hover:bg-white hover:text-lime-700"
+                            onClick={() => {
+                                reset();
+                                setDraft('');
+                            }}
+                            disabled={messages.length <= 1 || isSending}
+                            aria-label="Làm mới hội thoại"
+                        >
+                            <RotateCcw className="h-4 w-4" />
+                        </Button>
                     </div>
 
-                    <div className="flex-1 min-h-0 rounded-lg border bg-muted/30">
+                    <div className="min-h-0 flex-1 rounded-2xl border border-slate-200 bg-white/80 shadow-inner">
                         <ScrollArea className="h-full">
-                            <div className="space-y-3 p-4">
+                            <div className="space-y-4 p-4 sm:p-5">
                                 {messages.map((message) => {
                                     const isUser = message.role === 'user';
                                     return (
@@ -95,20 +145,20 @@ export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
                                             key={message.id}
                                             className={cn(
                                                 'flex items-start gap-2',
-                                                isUser ? 'justify-end' : 'justify-start'
+                                                isUser ? 'justify-end' : 'justify-start',
                                             )}
                                         >
                                             {!isUser && (
-                                                <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                                                    <Bot className="h-3.5 w-3.5" />
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-lime-100 text-lime-700">
+                                                    <Bot className="h-4 w-4" />
                                                 </div>
                                             )}
                                             <div
                                                 className={cn(
-                                                    'max-w-[80%] rounded-lg px-3 py-2 text-sm leading-relaxed',
+                                                    'max-w-[84%] rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm',
                                                     isUser
-                                                        ? 'bg-primary text-primary-foreground'
-                                                        : 'bg-card border'
+                                                        ? 'bg-green-700 text-white'
+                                                        : 'border border-slate-200 bg-white text-slate-900',
                                                 )}
                                             >
                                                 {isUser ? (
@@ -122,10 +172,10 @@ export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
                                 })}
                                 {isSending && (
                                     <div className="flex items-start gap-2">
-                                        <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                                            <Bot className="h-3.5 w-3.5" />
+                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-lime-100 text-lime-700">
+                                            <Bot className="h-4 w-4" />
                                         </div>
-                                        <div className="rounded-lg border bg-card px-3 py-2 text-sm text-muted-foreground animate-pulse">
+                                        <div className="animate-pulse rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
                                             Đang trả lời...
                                         </div>
                                     </div>
@@ -135,24 +185,32 @@ export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
                         </ScrollArea>
                     </div>
 
-                    <div className="relative">
-                        <Input
-                            placeholder="Ask me anything about your farm..."
-                            className="pr-12"
+                    <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm focus-within:border-lime-300 focus-within:ring-4 focus-within:ring-lime-100">
+                        <Textarea
+                            placeholder="Hỏi về cây trồng, sâu bệnh, đất, tưới tiêu hoặc lịch mùa vụ..."
                             value={draft}
                             onChange={(event) => setDraft(event.target.value)}
                             onKeyDown={handleKeyDown}
                             disabled={isSending}
+                            rows={3}
+                            className="min-h-[88px] resize-none border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
                         />
-                        <Button
-                            size="sm"
-                            className="absolute right-1 top-1/2 -translate-y-1/2"
-                            style={{ backgroundColor: portalColor }}
-                            onClick={handleSend}
-                            disabled={!draft.trim() || isSending}
-                        >
-                            Send
-                        </Button>
+                        <div className="mt-3 flex items-center justify-between gap-3">
+                            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                <Sparkles className="h-3.5 w-3.5" />
+                                AI mùa vụ
+                            </span>
+                            <Button
+                                type="button"
+                                className="rounded-full px-4 text-white hover:opacity-95"
+                                style={{ backgroundColor: portalColor }}
+                                onClick={handleSend}
+                                disabled={!draft.trim() || isSending}
+                            >
+                                <Send className="h-4 w-4" />
+                                Gửi
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </SheetContent>

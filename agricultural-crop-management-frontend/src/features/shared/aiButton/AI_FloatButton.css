@@ -1,0 +1,29 @@
+.ai-float-button {
+  position: fixed;
+  right: max(80px, calc(env(safe-area-inset-right) + 80px));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 9998;
+  width: 4rem;
+  height: 4rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 300ms ease,
+    box-shadow 300ms ease;
+}
+
+.ai-float-button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    0 0 0 4px rgba(34, 197, 94, 0.3);
+}
+
+@media (max-width: 639px) {
+  .ai-float-button {
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(84px, calc(env(safe-area-inset-bottom) + 84px));
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}

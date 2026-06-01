@@ -2,7 +2,9 @@ package org.example.QuanLyMuaVu.module.ai.controller;
 
 import jakarta.validation.Valid;
 import org.example.QuanLyMuaVu.DTO.Common.ApiResponse;
+import org.example.QuanLyMuaVu.module.ai.dto.request.BuyerChatRequest;
 import org.example.QuanLyMuaVu.module.ai.dto.request.ChatRequest;
+import org.example.QuanLyMuaVu.module.ai.dto.response.BuyerChatResponse;
 import org.example.QuanLyMuaVu.module.ai.dto.response.ChatResponse;
 import org.example.QuanLyMuaVu.module.ai.service.GeminiService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,6 +34,23 @@ public class ChatController {
         ChatResponse response = ChatResponse.builder()
                 .userMessage(request.getUserMessage())
                 .cropContext(request.getCropContext())
+                .assistantMessage(reply)
+                .build();
+
+        return ApiResponse.success(response);
+    }
+
+    @PreAuthorize("hasRole('BUYER')")
+    @PostMapping("/buyer/ai/chat")
+    public ApiResponse<BuyerChatResponse> buyerChat(@Valid @RequestBody BuyerChatRequest request) {
+        String reply = geminiService.chatAsBuyerProcurementExpert(
+                request.getUserMessage(),
+                request.getBuyerContext()
+        );
+
+        BuyerChatResponse response = BuyerChatResponse.builder()
+                .userMessage(request.getUserMessage())
+                .buyerContext(request.getBuyerContext())
                 .assistantMessage(reply)
                 .build();
 

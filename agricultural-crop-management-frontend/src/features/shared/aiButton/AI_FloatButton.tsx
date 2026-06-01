@@ -1,5 +1,6 @@
 import { Bot, Sparkles } from "lucide-react";
 import { useState } from "react";
+import "./AI_FloatButton.css";
 import {
   Tooltip,
   TooltipContent,
@@ -31,10 +32,7 @@ export function AI_FloatButton({
             onClick={onClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="fixed z-[9999] transition-all duration-300 ease-out group
-                       bottom-6 right-6 md:bottom-6 md:right-6
-                       w-14 h-14 md:w-16 md:h-16
-                       focus:outline-none focus:ring-4 focus:ring-green-500/30"
+            className="ai-float-button group"
             style={{
               borderRadius: "100%",
               background: "linear-gradient(135deg, #16A34A 0%, #2563EB 100%)",

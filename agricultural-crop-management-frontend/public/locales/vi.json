@@ -3471,5 +3471,219 @@
       "connectionFailedTitle": "Kết nối thất bại",
       "retryConnection": "Thử kết nối lại"
     }
+  },
+  "adminDashboardHooks": {
+    "kpi": {
+      "totalUsers": "Tổng người dùng",
+      "totalFarms": "Tổng nông trại",
+      "totalPlots": "Tổng thửa đất",
+      "totalSeasons": "Tổng mùa vụ"
+    },
+    "roles": {
+      "ADMIN": "Quản trị viên",
+      "FARMER": "Nông dân",
+      "BUYER": "Người mua",
+      "Unknown": "Không xác định"
+    },
+    "status": {
+      "ACTIVE": "Đang hoạt động",
+      "LOCKED": "Đã khóa",
+      "COMPLETED": "Hoàn thành",
+      "CANCELLED": "Đã hủy",
+      "Unknown": "Không xác định"
+    }
+  },
+  "seasonMetrics": {
+    "totalSeasons": "Tổng số mùa vụ",
+    "completedCount": "{{count}} đã hoàn thành",
+    "activeSeasons": "Mùa vụ đang hoạt động",
+    "percentOfTotal": "{{percent}}% tổng số",
+    "harvestDue": "Sắp thu hoạch",
+    "next30Days": "Trong 30 ngày tới",
+    "expectedYield": "Năng suất dự kiến",
+    "activeSeasonsLabel": "Mùa vụ đang hoạt động"
+  },
+  "seasonFilters": {
+    "allCrops": "Tất cả cây trồng",
+    "allStatus": "Tất cả trạng thái",
+    "planned": "Kế hoạch",
+    "active": "Đang hoạt động",
+    "completed": "Hoàn thành",
+    "cancelled": "Đã hủy",
+    "archived": "Đã lưu trữ",
+    "allYears": "Tất cả các năm",
+    "searchPlaceholder": "Tìm kiếm mùa vụ (tối thiểu 2 ký tự)...",
+    "clear": "Xóa bộ lọc"
+  },
+  "farmDetail": {
+    "myFarms": "Nông trại của tôi",
+    "backToFarms": "Quay về Trang trại",
+    "notFound": {
+      "title": "Không tìm thấy Nông trại",
+      "description": "Nông trại bạn đang tìm kiếm không tồn tại hoặc đã bị xóa."
+    },
+    "tabs": {
+      "overview": "Tổng quan",
+      "plots": "Thửa đất",
+      "seasons": "Mùa vụ",
+      "stock": "Kho",
+      "incidents": "Sự cố"
+    },
+    "overview": {
+      "title": "Tổng quan Nông trại",
+      "farmName": "Tên Nông trại",
+      "owner": "Chủ sở hữu",
+      "totalArea": "Tổng diện tích",
+      "location": "Vị trí",
+      "status": "Trạng thái",
+      "totalPlots": "Tổng số thửa đất",
+      "notSpecified": "Chưa xác định",
+      "active": "Đang hoạt động",
+      "inactive": "Ngừng hoạt động"
+    },
+    "plots": {
+      "title": "Thửa đất trong {{name}}",
+      "subtitle": "Quản lý các thửa đất trong nông trại này",
+      "totalPlots": "Tổng số thửa: {{count}}",
+      "totalArea": "Tổng diện tích: {{area}}",
+      "inactiveWarningTitle": "Nông trại này đang ngừng hoạt động",
+      "inactiveWarningDesc": "Kích hoạt nông trại này để tạo thửa đất hoặc mùa vụ mới. Bạn vẫn có thể xem các thửa đất hiện có."
+    },
+    "seasons": {
+      "title": "Mùa vụ trong {{name}}",
+      "subtitle": "Theo dõi chu kỳ trồng trọt, tiến độ và lịch thu hoạch trên các thửa đất",
+      "refresh": "Làm mới",
+      "manageSeasons": "Quản lý mùa vụ",
+      "metrics": {
+        "totalSeasons": "Tổng số mùa vụ",
+        "activeCount": "{{count}} đang hoạt động",
+        "plannedVsCompleted": "Kế hoạch / Hoàn thành",
+        "archivedOrCancelled": "{{count}} lưu trữ hoặc đã hủy",
+        "upcomingHarvest": "Sắp thu hoạch",
+        "basedOnPlanned": "Dựa trên ngày thu hoạch dự kiến",
+        "expectedYield": "Năng suất dự kiến",
+        "sumOfExpected": "Tổng sản lượng dự kiến"
+      },
+      "searchPlaceholder": "Tìm kiếm theo mùa vụ, cây trồng hoặc thửa đất...",
+      "allStatuses": "Tất cả trạng thái",
+      "allPlots": "Tất cả thửa đất",
+      "showingCount": "Hiển thị {{filtered}} / {{total}} mùa vụ",
+      "inactiveWarningDesc": "Kích hoạt nông trại này để tạo mùa vụ mới. Bạn vẫn có thể xem các mùa vụ hiện có.",
+      "errorTitle": "Không thể tải danh sách mùa vụ",
+      "errorDesc": "Vui lòng thử lại trong giây lát.",
+      "tryAgain": "Thử lại",
+      "noSeasons": "Chưa có mùa vụ nào",
+      "noSeasonsMatch": "Không có mùa vụ nào khớp với bộ lọc",
+      "createToStart": "Tạo một mùa vụ để bắt đầu theo dõi chu kỳ cây trồng cho nông trại này.",
+      "tryAdjusting": "Thử điều chỉnh tìm kiếm hoặc bộ lọc để tìm mùa vụ.",
+      "createSeason": "Tạo mùa vụ",
+      "table": {
+        "season": "Mùa vụ",
+        "crop": "Cây trồng",
+        "plot": "Thửa đất",
+        "timeline": "Thời gian",
+        "status": "Trạng thái",
+        "yield": "Sản lượng ({{unit}})",
+        "harvest": "Thu hoạch: {{date}}"
+      },
+      "statusLabels": {
+        "ACTIVE": "Đang hoạt động",
+        "COMPLETED": "Hoàn thành",
+        "CANCELLED": "Đã hủy",
+        "ARCHIVED": "Đã lưu trữ",
+        "PLANNED": "Kế hoạch",
+        "Unknown": "Không xác định"
+      }
+    },
+    "stock": {
+      "title": "Quản lý Kho",
+      "subtitle": "Theo dõi hàng tồn kho và vật tư trên các kho của nông trại",
+      "refresh": "Làm mới",
+      "manageInventory": "Quản lý Kho",
+      "metrics": {
+        "warehouses": "Nhà kho",
+        "linkedToFarm": "được liên kết với nông trại này",
+        "stockItems": "Mặt hàng",
+        "uniqueSupplyLots": "lô vật tư",
+        "lowStock": "Tồn kho thấp",
+        "itemsBelowThreshold": "mặt hàng dưới ngưỡng",
+        "expiringSoon": "Sắp hết hạn",
+        "within30Days": "trong vòng 30 ngày"
+      },
+      "selectWarehouse": "Chọn một nhà kho",
+      "showingItems": "Hiển thị {{count}} mặt hàng trong kho đã chọn",
+      "errorTitle": "Không thể tải dữ liệu kho",
+      "errorDesc": "Vui lòng thử lại trong giây lát.",
+      "tryAgain": "Thử lại",
+      "noStock": "Không có mặt hàng nào",
+      "noStockDesc": "Kho này hiện đang trống. Thêm vật tư để bắt đầu theo dõi hàng tồn kho.",
+      "addStock": "Thêm vào kho",
+      "noWarehouse": "Không tìm thấy kho",
+      "noWarehouseDesc": "Nông trại này chưa có kho nào. Tạo một nhà kho trong trang Quản lý Kho để bắt đầu theo dõi vật tư.",
+      "goToInventory": "Đi đến Quản lý Kho",
+      "table": {
+        "item": "Mặt hàng",
+        "batchCode": "Mã lô",
+        "location": "Vị trí",
+        "quantity": "Số lượng",
+        "status": "Trạng thái",
+        "expiry": "Hạn dùng"
+      }
+    },
+    "incidents": {
+      "title": "Theo dõi Sự cố",
+      "subtitle": "Theo dõi và quản lý sự cố qua các mùa vụ trong nông trại này",
+      "refresh": "Làm mới",
+      "manageIncidents": "Quản lý Sự cố",
+      "metrics": {
+        "totalIncidents": "Tổng số Sự cố",
+        "inSelectedSeason": "trong mùa vụ đã chọn",
+        "open": "Đang mở",
+        "needAttention": "cần chú ý",
+        "inProgress": "Đang xử lý",
+        "beingHandled": "đang được giải quyết",
+        "resolved": "Đã giải quyết",
+        "completed": "hoàn thành",
+        "highSeverity": "Mức độ nghiêm trọng",
+        "criticalIssues": "vấn đề nghiêm trọng"
+      },
+      "selectSeason": "Chọn một mùa vụ",
+      "showingIncidents": "Hiển thị {{count}} sự cố trong mùa vụ đã chọn",
+      "errorTitle": "Không thể tải danh sách sự cố",
+      "errorDesc": "Vui lòng thử lại trong giây lát.",
+      "tryAgain": "Thử lại",
+      "noIncidents": "Không có sự cố nào",
+      "noIncidentsDesc": "Mùa vụ này không có sự cố nào được ghi nhận. Làm tốt lắm!",
+      "noSeasons": "Không tìm thấy Mùa vụ",
+      "noSeasonsDesc": "Các sự cố được theo dõi theo mùa vụ. Tạo một mùa vụ cho nông trại này để bắt đầu theo dõi sự cố.",
+      "createSeason": "Tạo mùa vụ",
+      "table": {
+        "type": "Loại",
+        "description": "Mô tả",
+        "severity": "Mức độ",
+        "status": "Trạng thái",
+        "reported": "Đã báo cáo",
+        "deadline": "Hạn chót"
+      },
+      "types": {
+        "Pest Outbreak": "Dịch sâu bệnh",
+        "Disease": "Bệnh hại",
+        "Equipment Failure": "Hỏng thiết bị",
+        "Weather Damage": "Thiệt hại do thời tiết",
+        "Safety": "An toàn",
+        "Other": "Khác"
+      },
+      "statusLabels": {
+        "Open": "Đang mở",
+        "In Progress": "Đang xử lý",
+        "Resolved": "Đã giải quyết",
+        "Cancelled": "Đã hủy"
+      }
+    },
+    "toast": {
+      "farmDeleted": "Xóa nông trại thành công",
+      "farmInactivePlots": "Nông trại này đang ngừng hoạt động. Hãy kích hoạt để tạo thửa đất mới.",
+      "farmInactiveSeasons": "Nông trại này đang ngừng hoạt động. Hãy kích hoạt để tạo mùa vụ mới."
+    }
   }
 }

@@ -3470,5 +3470,219 @@
       "connectionFailedTitle": "Connection Failed",
       "retryConnection": "Retry Connection"
     }
+  },
+  "adminDashboardHooks": {
+    "kpi": {
+      "totalUsers": "Total Users",
+      "totalFarms": "Total Farms",
+      "totalPlots": "Total Plots",
+      "totalSeasons": "Total Seasons"
+    },
+    "roles": {
+      "ADMIN": "Admin",
+      "FARMER": "Farmer",
+      "BUYER": "Buyer",
+      "Unknown": "Unknown"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "LOCKED": "Locked",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "Unknown": "Unknown"
+    }
+  },
+  "seasonMetrics": {
+    "totalSeasons": "Total Seasons",
+    "completedCount": "{{count}} completed",
+    "activeSeasons": "Active Seasons",
+    "percentOfTotal": "{{percent}}% of total",
+    "harvestDue": "Harvest Due",
+    "next30Days": "Next 30 days",
+    "expectedYield": "Expected Yield",
+    "activeSeasonsLabel": "Active seasons"
+  },
+  "seasonFilters": {
+    "allCrops": "All Crops",
+    "allStatus": "All Status",
+    "planned": "Planned",
+    "active": "Active",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "archived": "Archived",
+    "allYears": "All Years",
+    "searchPlaceholder": "Search seasons (min 2 characters)...",
+    "clear": "Clear"
+  },
+  "farmDetail": {
+    "myFarms": "My Farms",
+    "backToFarms": "Back to Farms",
+    "notFound": {
+      "title": "Farm Not Found",
+      "description": "The farm you are looking for does not exist or has been deleted."
+    },
+    "tabs": {
+      "overview": "Overview",
+      "plots": "Plots",
+      "seasons": "Seasons",
+      "stock": "Stock",
+      "incidents": "Incidents"
+    },
+    "overview": {
+      "title": "Farm Overview",
+      "farmName": "Farm Name",
+      "owner": "Owner",
+      "totalArea": "Total Area",
+      "location": "Location",
+      "status": "Status",
+      "totalPlots": "Total Plots",
+      "notSpecified": "Not specified",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "plots": {
+      "title": "Plots in {{name}}",
+      "subtitle": "Manage the plots within this farm",
+      "totalPlots": "Total plots: {{count}}",
+      "totalArea": "Total area: {{area}}",
+      "inactiveWarningTitle": "This farm is inactive",
+      "inactiveWarningDesc": "Activate this farm to create new plots or seasons. You can still view existing plots."
+    },
+    "seasons": {
+      "title": "Seasons in {{name}}",
+      "subtitle": "Track planting cycles, progress, and harvest timelines across plots",
+      "refresh": "Refresh",
+      "manageSeasons": "Manage Seasons",
+      "metrics": {
+        "totalSeasons": "Total seasons",
+        "activeCount": "{{count}} active",
+        "plannedVsCompleted": "Planned vs completed",
+        "archivedOrCancelled": "{{count}} archived or cancelled",
+        "upcomingHarvest": "Upcoming harvest",
+        "basedOnPlanned": "Based on planned harvest dates",
+        "expectedYield": "Expected yield",
+        "sumOfExpected": "Sum of expected harvest"
+      },
+      "searchPlaceholder": "Search by season, crop, or plot...",
+      "allStatuses": "All statuses",
+      "allPlots": "All plots",
+      "showingCount": "Showing {{filtered}} of {{total}} seasons",
+      "inactiveWarningDesc": "Activate this farm to create new seasons. You can still view existing seasons.",
+      "errorTitle": "Failed to load seasons",
+      "errorDesc": "Please try again in a moment.",
+      "tryAgain": "Try Again",
+      "noSeasons": "No seasons yet",
+      "noSeasonsMatch": "No seasons match your filters",
+      "createToStart": "Create a season to start tracking crop cycles for this farm.",
+      "tryAdjusting": "Try adjusting the search or filters to find seasons.",
+      "createSeason": "Create Season",
+      "table": {
+        "season": "Season",
+        "crop": "Crop",
+        "plot": "Plot",
+        "timeline": "Timeline",
+        "status": "Status",
+        "yield": "Yield ({{unit}})",
+        "harvest": "Harvest: {{date}}"
+      },
+      "statusLabels": {
+        "ACTIVE": "Active",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled",
+        "ARCHIVED": "Archived",
+        "PLANNED": "Planned",
+        "Unknown": "Unknown"
+      }
+    },
+    "stock": {
+      "title": "Stock Management",
+      "subtitle": "Track inventory and supplies across farm warehouses",
+      "refresh": "Refresh",
+      "manageInventory": "Manage Inventory",
+      "metrics": {
+        "warehouses": "Warehouses",
+        "linkedToFarm": "linked to this farm",
+        "stockItems": "Stock Items",
+        "uniqueSupplyLots": "unique supply lots",
+        "lowStock": "Low Stock",
+        "itemsBelowThreshold": "items below threshold",
+        "expiringSoon": "Expiring Soon",
+        "within30Days": "within 30 days"
+      },
+      "selectWarehouse": "Select a warehouse",
+      "showingItems": "Showing {{count}} items in selected warehouse",
+      "errorTitle": "Failed to load stock data",
+      "errorDesc": "Please try again in a moment.",
+      "tryAgain": "Try Again",
+      "noStock": "No stock items",
+      "noStockDesc": "This warehouse is currently empty. Add supplies to start tracking inventory.",
+      "addStock": "Add Stock",
+      "noWarehouse": "No Warehouse Found",
+      "noWarehouseDesc": "This farm doesn't have any warehouses yet. Create a warehouse in the Inventory page to start tracking stock.",
+      "goToInventory": "Go to Inventory",
+      "table": {
+        "item": "Item",
+        "batchCode": "Batch Code",
+        "location": "Location",
+        "quantity": "Quantity",
+        "status": "Status",
+        "expiry": "Expiry"
+      }
+    },
+    "incidents": {
+      "title": "Incidents Tracking",
+      "subtitle": "Track and manage incidents across seasons in this farm",
+      "refresh": "Refresh",
+      "manageIncidents": "Manage Incidents",
+      "metrics": {
+        "totalIncidents": "Total Incidents",
+        "inSelectedSeason": "in selected season",
+        "open": "Open",
+        "needAttention": "need attention",
+        "inProgress": "In Progress",
+        "beingHandled": "being handled",
+        "resolved": "Resolved",
+        "completed": "completed",
+        "highSeverity": "High Severity",
+        "criticalIssues": "critical issues"
+      },
+      "selectSeason": "Select a season",
+      "showingIncidents": "Showing {{count}} incidents in selected season",
+      "errorTitle": "Failed to load incidents",
+      "errorDesc": "Please try again in a moment.",
+      "tryAgain": "Try Again",
+      "noIncidents": "No incidents reported",
+      "noIncidentsDesc": "This season has no recorded incidents. Great job!",
+      "noSeasons": "No Seasons Found",
+      "noSeasonsDesc": "Incidents are tracked per season. Create a season for this farm to start tracking incidents.",
+      "createSeason": "Create Season",
+      "table": {
+        "type": "Type",
+        "description": "Description",
+        "severity": "Severity",
+        "status": "Status",
+        "reported": "Reported",
+        "deadline": "Deadline"
+      },
+      "types": {
+        "Pest Outbreak": "Pest Outbreak",
+        "Disease": "Disease",
+        "Equipment Failure": "Equipment Failure",
+        "Weather Damage": "Weather Damage",
+        "Safety": "Safety",
+        "Other": "Other"
+      },
+      "statusLabels": {
+        "Open": "Open",
+        "In Progress": "In Progress",
+        "Resolved": "Resolved",
+        "Cancelled": "Cancelled"
+      }
+    },
+    "toast": {
+      "farmDeleted": "Farm deleted successfully",
+      "farmInactivePlots": "This farm is inactive. Activate it to create plots.",
+      "farmInactiveSeasons": "This farm is inactive. Activate it to create seasons."
+    }
   }
 }

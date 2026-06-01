@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/shared/lib";
 import { ProductFilterDropdown } from "./ProductFilterDropdown";
 import {
+  Bot,
   ChevronDown,
   Facebook,
   Instagram,
@@ -31,6 +32,8 @@ import {
   useMarketplaceCartMergeBridge,
   useScrolled,
 } from "../hooks";
+import { BuyerAiAssistantContext, type BuyerAiAssistantOpenInput } from "../ai/BuyerAiAssistantContext";
+import { BuyerAiAssistantDrawer } from "../ai/BuyerAiAssistantDrawer";
 import "./MarketplacePublicLayout.css";
 
 function resolvePortalRoute(role: string | undefined): string {
@@ -491,7 +494,19 @@ function MobileMenu({
 export function MarketplacePublicLayout() {
   const { isAuthenticated, user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [buyerAiOpen, setBuyerAiOpen] = useState(false);
+  const [buyerAiContext, setBuyerAiContext] = useState("");
+  const [buyerAiInitialPrompt, setBuyerAiInitialPrompt] = useState("");
+  const [buyerAiRequestId, setBuyerAiRequestId] = useState(0);
   const showPortalAction = isAuthenticated && user?.role !== "buyer";
+  const showBuyerAiAssistant = isAuthenticated && user?.role === "buyer";
+
+  const openBuyerAiAssistant = useCallback((input: BuyerAiAssistantOpenInput = {}) => {
+    setBuyerAiContext(input.context ?? "");
+    setBuyerAiInitialPrompt(input.prompt ?? "");
+    setBuyerAiRequestId((current) => current + 1);
+    setBuyerAiOpen(true);
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.add(MARKETPLACE_DOCUMENT_SCROLL_CLASS);
@@ -509,7 +524,8 @@ export function MarketplacePublicLayout() {
   const scrolled = useScrolled(80);
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
+    <BuyerAiAssistantContext.Provider value={{ openAssistant: openBuyerAiAssistant }}>
+      <div className="flex min-h-screen flex-col bg-gray-50">
       <header
         className="marketplace-header fb-marketplace sticky top-0 z-50 w-full border-b shadow-sm"
         style={{
@@ -696,11 +712,35 @@ export function MarketplacePublicLayout() {
         />
       </header>
 
-      <main className="flex-1">
-        <Outlet />
-      </main>
+        <main className="flex-1">
+          <Outlet />
+        </main>
 
-      <MarketplaceFooter />
-    </div>
+        <MarketplaceFooter />
+
+        {showBuyerAiAssistant && (
+          <>
+            <button
+              type="button"
+              className="marketplace-buyer-ai-launcher"
+              onClick={() => openBuyerAiAssistant()}
+              aria-label="Mở trợ lý AI mua hàng"
+            >
+              <span className="marketplace-buyer-ai-launcher__icon" aria-hidden="true">
+                <Bot className="h-4 w-4" />
+              </span>
+              <span>AI mua hàng</span>
+            </button>
+            <BuyerAiAssistantDrawer
+              open={buyerAiOpen}
+              onOpenChange={setBuyerAiOpen}
+              buyerContext={buyerAiContext}
+              initialPrompt={buyerAiInitialPrompt}
+              requestId={buyerAiRequestId}
+            />
+          </>
+        )}
+      </div>
+    </BuyerAiAssistantContext.Provider>
   );
 }

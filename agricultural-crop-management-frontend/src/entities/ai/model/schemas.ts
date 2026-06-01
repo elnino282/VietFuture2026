@@ -92,6 +92,23 @@ export const AiChatResponseSchema = z.object({
 
 export type AiChatResponse = z.infer<typeof AiChatResponseSchema>;
 
+// BUYER AI CHAT REQUEST
+export const BuyerAiChatRequestSchema = z.object({
+    userMessage: z.string().min(1, 'User message is required'),
+    buyerContext: z.string().optional(),
+});
+
+export type BuyerAiChatRequest = z.infer<typeof BuyerAiChatRequestSchema>;
+
+// BUYER AI CHAT RESPONSE
+export const BuyerAiChatResponseSchema = z.object({
+    userMessage: z.string(),
+    buyerContext: z.string().nullable().optional(),
+    assistantMessage: z.string(),
+});
+
+export type BuyerAiChatResponse = z.infer<typeof BuyerAiChatResponseSchema>;
+
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // AI Q&A REQUEST (Buyer)

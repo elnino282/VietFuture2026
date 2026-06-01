@@ -10,6 +10,8 @@ import {
     CostOptimizationParamsSchema,
     AiChatRequestSchema,
     AiChatResponseSchema,
+    BuyerAiChatRequestSchema,
+    BuyerAiChatResponseSchema,
     AiQaRequestSchema,
     AiQaResponseSchema,
 } from '../model/schemas';
@@ -22,6 +24,8 @@ import type {
     CostOptimizationParams,
     AiChatRequest,
     AiChatResponse,
+    BuyerAiChatRequest,
+    BuyerAiChatResponse,
     AiQaRequest,
     AiQaResponse,
 } from '../model/types';
@@ -62,6 +66,13 @@ export const aiApi = {
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // BUYER AI ENDPOINTS
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+    /** POST /api/v1/buyer/ai/chat - Buyer procurement Q&A chat */
+    buyerChat: async (data: BuyerAiChatRequest): Promise<BuyerAiChatResponse> => {
+        const validatedPayload = BuyerAiChatRequestSchema.parse(data);
+        const response = await httpClient.post('/api/v1/buyer/ai/chat', validatedPayload);
+        return parseApiResponse(response.data, BuyerAiChatResponseSchema);
+    },
 
     /** GET /api/v1/ai/qa - AI Q&A (Buyer) */
     askQuestion: async (data: AiQaRequest): Promise<AiQaResponse> => {
