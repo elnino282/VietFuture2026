@@ -7,6 +7,7 @@ export { useCheckoutValidation } from "./useCheckoutValidation";
 export type { CheckoutValidationInput, CheckoutValidationResult } from "./useCheckoutValidation";
 export {
   marketplaceQueryKeys,
+  useAnalyzeMarketplaceImageMutation,
   useMarketplaceAddresses,
   useMarketplaceCategories,
   useMarketplaceAdminOrderAuditLogs,
@@ -39,6 +40,7 @@ export {
   useMarketplaceProducts,
   useMarketplaceRemoveCartItemMutation,
   useMarketplaceTraceability,
+  useSearchMarketplaceByImageMutation,
   useMarketplaceUpdateAdminOrderPaymentVerificationMutation,
   useMarketplaceUpdateAdminOrderStatusMutation,
   useMarketplaceUpdateAdminProductStatusMutation,

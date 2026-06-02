@@ -18,6 +18,9 @@ import type {
   MarketplaceFarmDetail,
   MarketplaceFarmPage,
   MarketplaceFarmQuery,
+  MarketplaceImageSearchAnalysis,
+  MarketplaceImageSearchFilters,
+  MarketplaceImageSearchResult,
   MarketplaceMergeCartRequest,
   MarketplaceOrder,
   MarketplaceOrderAuditLog,
@@ -40,6 +43,15 @@ export interface MarketplaceApiAdapter {
   listProducts(
     query?: MarketplaceProductQuery,
   ): Promise<MarketplaceApiResponse<MarketplaceProductPage>>;
+
+  analyzeMarketplaceImage(
+    file: File,
+  ): Promise<MarketplaceApiResponse<MarketplaceImageSearchAnalysis>>;
+
+  searchMarketplaceByImage(
+    file: File,
+    filters?: MarketplaceImageSearchFilters,
+  ): Promise<MarketplaceApiResponse<MarketplaceImageSearchResult>>;
 
   getProductBySlug(
     slug: string,

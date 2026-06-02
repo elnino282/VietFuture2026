@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { ImageOff, PackageOpen, Search, SlidersHorizontal, X } from "lucide-react";
+import { Camera, ImageOff, PackageOpen, Search, SlidersHorizontal, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/features/auth";
+import { ImageSearchModal } from "@/features/marketplace/image-search";
 import { cn } from "@/shared/lib";
+import type { MarketplaceImageSearchFilters } from "@/shared/api";
 import {
   Badge,
   Button,
@@ -564,6 +566,7 @@ export function ProductListPage() {
   const { isAuthenticated } = useAuth();
   const { addToCart, isAdding } = useMarketplaceAddToCart();
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [imageSearchOpen, setImageSearchOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState<FilterState>(appliedFilters);
 
   useEffect(() => {
@@ -572,6 +575,24 @@ export function ProductListPage() {
 
   const page = toPositiveInt(searchParams.get("page"), 1);
   const appliedPriceBounds = getPriceBounds(appliedFilters.priceRange);
+  const imageSearchFilters = useMemo<MarketplaceImageSearchFilters>(
+    () => ({
+      region: appliedFilters.region.trim() || undefined,
+      minPrice: appliedPriceBounds.minPrice,
+      maxPrice: appliedPriceBounds.maxPrice,
+      traceable: appliedFilters.traceable || undefined,
+      sort: appliedFilters.sort,
+      page: 0,
+      size: 8,
+    }),
+    [
+      appliedFilters.region,
+      appliedFilters.traceable,
+      appliedFilters.sort,
+      appliedPriceBounds.minPrice,
+      appliedPriceBounds.maxPrice,
+    ],
+  );
 
   const productsQuery = useMarketplaceProducts({
     q: appliedFilters.q.trim() || undefined,
@@ -655,6 +676,15 @@ export function ProductListPage() {
     applyFilters(draftFilters);
   }
 
+  function handleImageKeywordSearch(keyword: string) {
+    const nextFilters = {
+      ...appliedFilters,
+      q: keyword.trim(),
+    };
+    setDraftFilters(nextFilters);
+    setSearchParams(buildSearchParams(nextFilters, "1"));
+  }
+
   function openMobileFilter() {
     setDraftFilters(appliedFilters);
     setMobileFilterOpen(true);
@@ -721,6 +751,16 @@ export function ProductListPage() {
                     className="h-11 rounded-xl border-border pl-10 focus:border-primary"
                   />
                 </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="marketplace-products-image-search-button h-11"
+                  onClick={() => setImageSearchOpen(true)}
+                  aria-label="Tìm bằng ảnh"
+                  title="Tìm bằng ảnh"
+                >
+                  <Camera size={17} aria-hidden="true" />
+                </Button>
                 <Button
                   type="submit"
                   className="marketplace-products-search-submit h-11 bg-emerald-600 px-5 hover:bg-emerald-700"
@@ -835,6 +875,13 @@ export function ProductListPage() {
           )}
         </main>
       </div>
+
+      <ImageSearchModal
+        open={imageSearchOpen}
+        onOpenChange={setImageSearchOpen}
+        filters={imageSearchFilters}
+        onKeywordSearch={handleImageKeywordSearch}
+      />
 
       <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
         <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-t-2xl">

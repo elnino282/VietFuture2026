@@ -83,11 +83,18 @@
 .marketplace-products-search-form {
   display: grid;
   min-width: 0;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.625rem;
 }
 
+.marketplace-products-image-search-button {
+  width: 2.75rem;
+  padding-right: 0;
+  padding-left: 0;
+}
+
 .marketplace-products-search-submit {
+  grid-column: 1 / -1;
   width: 100%;
   white-space: nowrap;
 }
@@ -208,10 +215,11 @@
   }
 
   .marketplace-products-search-form {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
   }
 
   .marketplace-products-search-submit {
+    grid-column: auto;
     width: auto;
     min-width: 5.75rem;
   }

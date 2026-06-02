@@ -3062,6 +3062,50 @@
     }
   },
   "marketplaceBuyer": {
+    "imageSearch": {
+      "title": "Tìm sản phẩm bằng ảnh",
+      "description": "Tải ảnh nông sản lên để hệ thống gợi ý từ khóa và tìm sản phẩm đang bán.",
+      "authTitle": "Đăng nhập để tìm bằng ảnh",
+      "authMessage": "Tính năng này dùng AI nên chỉ mở cho tài khoản buyer đã đăng nhập.",
+      "buyerOnlyTitle": "Chỉ dành cho buyer",
+      "buyerOnlyMessage": "Vui lòng dùng tài khoản buyer để tìm sản phẩm marketplace bằng ảnh.",
+      "signIn": "Đăng nhập",
+      "createAccount": "Tạo tài khoản",
+      "previewAlt": "Ảnh tìm kiếm đã chọn",
+      "uploadTitle": "Tải ảnh nông sản",
+      "uploadHint": "Kéo thả hoặc chọn ảnh JPG, PNG, WEBP. Ảnh gốc tối đa 8MB.",
+      "chooseImage": "Chọn ảnh",
+      "chooseAnother": "Chọn ảnh khác",
+      "keywordLabel": "Từ khóa tìm kiếm",
+      "keywordPlaceholder": "Ví dụ: cà chua, rau cải, gạo ST25...",
+      "searchText": "Tìm",
+      "resultsTitle": "Sản phẩm gợi ý",
+      "confidence": {
+        "low": "Độ tin cậy thấp",
+        "medium": "Độ tin cậy vừa",
+        "high": "Độ tin cậy cao"
+      },
+      "states": {
+        "idle": "Chọn ảnh rõ sản phẩm để bắt đầu phân tích.",
+        "validating": "Đang kiểm tra và nén ảnh...",
+        "analyzing": "Đang phân tích ảnh và tìm sản phẩm phù hợp...",
+        "success": "Đã tìm thấy sản phẩm phù hợp với ảnh.",
+        "lowConfidence": "AI chưa đủ tự tin để tự tìm. Bạn có thể sửa từ khóa và tìm thủ công.",
+        "empty": "Không có sản phẩm phù hợp. Hãy sửa từ khóa hoặc thử ảnh khác.",
+        "error": "Không thể phân tích ảnh lúc này."
+      },
+      "errors": {
+        "empty": "Vui lòng chọn một ảnh hợp lệ.",
+        "unsupportedType": "Chỉ hỗ trợ ảnh JPG, PNG hoặc WEBP.",
+        "tooLarge": "Ảnh gốc tối đa 8MB. Vui lòng chọn ảnh nhỏ hơn.",
+        "generic": "Không thể phân tích ảnh lúc này. Bạn vẫn có thể nhập từ khóa để tìm.",
+        "ERR_MARKETPLACE_IMAGE_SEARCH_INVALID_IMAGE": "Ảnh không hợp lệ. Vui lòng chọn ảnh rõ hơn.",
+        "ERR_MARKETPLACE_IMAGE_SEARCH_IMAGE_TOO_LARGE": "Ảnh gửi lên quá lớn. Vui lòng chọn ảnh nhỏ hơn.",
+        "ERR_MARKETPLACE_IMAGE_SEARCH_UNSUPPORTED_TYPE": "Định dạng ảnh không được hỗ trợ.",
+        "ERR_MARKETPLACE_IMAGE_SEARCH_AI_UNAVAILABLE": "AI phân tích ảnh đang tạm thời không khả dụng. Hãy nhập từ khóa để tìm.",
+        "ERR_MARKETPLACE_IMAGE_SEARCH_RATE_LIMITED": "Bạn đã dùng quá nhiều lượt tìm bằng ảnh. Vui lòng thử lại sau."
+      }
+    },
     "checkout": {
       "title": "Thanh toán",
       "loadingCart": "Đang tải giỏ hàng...",

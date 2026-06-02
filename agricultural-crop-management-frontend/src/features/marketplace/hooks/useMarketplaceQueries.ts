@@ -17,6 +17,7 @@ import {
   type MarketplaceFarmerProductQuery,
   type MarketplaceFarmerProductUpsertRequest,
   type MarketplaceFarmQuery,
+  type MarketplaceImageSearchFilters,
   type MarketplaceOrderQuery,
   type MarketplaceOrderAuditLog,
   type MarketplaceOrderStatus,
@@ -35,6 +36,7 @@ export const marketplaceQueryKeys = {
   productsBase: () => [...marketplaceQueryKeys.root, "products"] as const,
   products: (query?: MarketplaceProductQuery) =>
     [...marketplaceQueryKeys.productsBase(), query ?? {}] as const,
+  imageSearch: () => [...marketplaceQueryKeys.root, "image-search"] as const,
   product: (slug?: string) => [...marketplaceQueryKeys.root, "product", slug ?? ""] as const,
   productReviews: (productId?: number, query?: MarketplaceReviewQuery) =>
     [...marketplaceQueryKeys.root, "product-reviews", productId ?? 0, query ?? {}] as const,
@@ -161,6 +163,32 @@ export function useMarketplaceProducts(query?: MarketplaceProductQuery) {
     queryKey: marketplaceQueryKeys.products(query),
     queryFn: async () => {
       const response = await marketplaceApi.listProducts(query);
+      return response.result;
+    },
+  });
+}
+
+export function useAnalyzeMarketplaceImageMutation() {
+  return useMutation({
+    mutationKey: [...marketplaceQueryKeys.imageSearch(), "analyze"] as const,
+    mutationFn: async (file: File) => {
+      const response = await marketplaceApi.analyzeMarketplaceImage(file);
+      return response.result;
+    },
+  });
+}
+
+export function useSearchMarketplaceByImageMutation() {
+  return useMutation({
+    mutationKey: [...marketplaceQueryKeys.imageSearch(), "search"] as const,
+    mutationFn: async ({
+      file,
+      filters,
+    }: {
+      file: File;
+      filters?: MarketplaceImageSearchFilters;
+    }) => {
+      const response = await marketplaceApi.searchMarketplaceByImage(file, filters);
       return response.result;
     },
   });

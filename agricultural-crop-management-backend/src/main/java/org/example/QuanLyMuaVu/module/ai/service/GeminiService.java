@@ -4,8 +4,11 @@ package org.example.QuanLyMuaVu.module.ai.service;
 import com.google.genai.Client;
 import com.google.genai.errors.ApiException;
 import com.google.genai.errors.GenAiIOException;
+import com.google.genai.types.Content;
+import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.HttpOptions;
+import com.google.genai.types.Part;
 import jakarta.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -133,6 +136,56 @@ public class GeminiService {
         );
     }
 
+    public String analyzeMarketplaceImage(byte[] imageBytes, String mimeType) {
+        Objects.requireNonNull(imageBytes, "imageBytes must not be null");
+        if (imageBytes.length == 0) {
+            throw new IllegalArgumentException("imageBytes must not be empty");
+        }
+        if (mimeType == null || mimeType.isBlank()) {
+            throw new IllegalArgumentException("mimeType must not be blank");
+        }
+
+        String requestId = UUID.randomUUID().toString();
+        if (!aiEnabled) {
+            log.warn("Gemini image analysis skipped because AI is disabled (requestId={}).", requestId);
+            throw new IllegalStateException("Gemini image analysis is disabled");
+        }
+
+        GenerateContentConfig config = GenerateContentConfig.builder()
+                .responseMimeType("application/json")
+                .temperature(0.1F)
+                .maxOutputTokens(1024)
+                .build();
+        Content content = Content.fromParts(
+                Part.fromText(buildMarketplaceImagePrompt()),
+                Part.fromBytes(imageBytes, mimeType));
+
+        try {
+            GenerateContentResponse response = client.models.generateContent(model, content, config);
+            String finishReason = response.finishReason() == null ? null : response.finishReason().toString();
+            if (finishReason != null && !"STOP".equalsIgnoreCase(finishReason)) {
+                log.warn("Gemini image analysis finished with reason {} (requestId={}).", finishReason, requestId);
+            }
+            String text = response.text();
+            if (text == null || text.isBlank()) {
+                log.warn("Gemini image analysis response empty (requestId={}).", requestId);
+                throw new IllegalStateException("Gemini image analysis returned an empty response");
+            }
+            return text;
+        } catch (ApiException ex) {
+            logApiException(requestId, ex);
+            throw new IllegalStateException("Gemini image analysis API error", ex);
+        } catch (GenAiIOException ex) {
+            logIoException(requestId, ex);
+            throw new IllegalStateException("Gemini image analysis IO error", ex);
+        } catch (IllegalStateException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            logUnexpectedException(requestId, ex);
+            throw new IllegalStateException("Gemini image analysis unexpected error", ex);
+        }
+    }
+
     private String chatWithPrompt(String userMessage,
                                   String context,
                                   String systemPrompt,
@@ -187,6 +240,28 @@ public class GeminiService {
         sb.append(questionLabel);
         sb.append(userMessage);
         return sb.toString();
+    }
+
+    private String buildMarketplaceImagePrompt() {
+        return """
+                Analyze this image for buyer marketplace search.
+                Return ONLY compact valid JSON. No Markdown, no prose.
+                Identify agricultural marketplace products only: produce, seeds, crop inputs, harvested farm goods.
+                Do not diagnose disease or recommend treatment.
+                If unclear/non-agricultural/cannot comply: agricultural=false, confidence=0, arrays=[], Vietnamese message.
+                {
+                  "detectedProduct": "Vietnamese name or null",
+                  "category": "short category or null",
+                  "keywordsVi": ["max 4 Vietnamese search terms"],
+                  "keywordsEn": ["max 4 English search terms"],
+                  "keywords": ["max 5 best search terms"],
+                  "visualAttributes": ["max 4 visual clues"],
+                  "confidence": 0.0,
+                  "confidenceLabel": "low|medium|high",
+                  "agricultural": true,
+                  "message": "short Vietnamese message"
+                }
+                """;
     }
 
     private String resolveBaseUrl(AppProperties.Ai aiProps) {

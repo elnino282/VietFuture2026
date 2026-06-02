@@ -3098,6 +3098,50 @@
     }
   },
   "marketplaceBuyer": {
+    "imageSearch": {
+      "title": "Search by image",
+      "description": "Upload a crop or product photo to generate search keywords and find available marketplace products.",
+      "authTitle": "Sign in to search by image",
+      "authMessage": "This AI feature is available only to signed-in buyer accounts.",
+      "buyerOnlyTitle": "Buyer account required",
+      "buyerOnlyMessage": "Please use a buyer account to search marketplace products by image.",
+      "signIn": "Sign in",
+      "createAccount": "Create account",
+      "previewAlt": "Selected image search preview",
+      "uploadTitle": "Upload a product image",
+      "uploadHint": "Drag and drop or choose JPG, PNG, WEBP. Original image max size is 8MB.",
+      "chooseImage": "Choose image",
+      "chooseAnother": "Choose another image",
+      "keywordLabel": "Search keyword",
+      "keywordPlaceholder": "Example: tomato, leafy greens, ST25 rice...",
+      "searchText": "Search",
+      "resultsTitle": "Suggested products",
+      "confidence": {
+        "low": "Low confidence",
+        "medium": "Medium confidence",
+        "high": "High confidence"
+      },
+      "states": {
+        "idle": "Choose a clear product image to start analysis.",
+        "validating": "Checking and compressing the image...",
+        "analyzing": "Analyzing the image and searching for matching products...",
+        "success": "Matching products were found for this image.",
+        "lowConfidence": "AI is not confident enough to search automatically. Edit the keyword and search manually.",
+        "empty": "No matching products found. Edit the keyword or try another image.",
+        "error": "Image analysis is unavailable right now."
+      },
+      "errors": {
+        "empty": "Please choose a valid image.",
+        "unsupportedType": "Only JPG, PNG, or WEBP images are supported.",
+        "tooLarge": "Original image max size is 8MB. Please choose a smaller image.",
+        "generic": "Image analysis failed. You can still enter a keyword to search.",
+        "ERR_MARKETPLACE_IMAGE_SEARCH_INVALID_IMAGE": "The image is invalid. Please choose a clearer image.",
+        "ERR_MARKETPLACE_IMAGE_SEARCH_IMAGE_TOO_LARGE": "The uploaded image is too large. Please choose a smaller image.",
+        "ERR_MARKETPLACE_IMAGE_SEARCH_UNSUPPORTED_TYPE": "This image format is not supported.",
+        "ERR_MARKETPLACE_IMAGE_SEARCH_AI_UNAVAILABLE": "Image AI is temporarily unavailable. Enter a keyword to search.",
+        "ERR_MARKETPLACE_IMAGE_SEARCH_RATE_LIMITED": "You have used too many image searches. Please try again later."
+      }
+    },
     "checkout": {
       "title": "Checkout",
       "loadingCart": "Loading checkout...",

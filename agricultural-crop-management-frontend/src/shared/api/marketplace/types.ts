@@ -234,6 +234,31 @@ export type MarketplaceProductQuery = {
   traceable?: boolean;
 };
 
+export type MarketplaceImageSearchAnalysis = {
+  detectedProduct: string | null;
+  category: string | null;
+  keywordsVi: string[];
+  keywordsEn: string[];
+  keywords: string[];
+  visualAttributes: string[];
+  confidence: number;
+  confidenceLabel: "low" | "medium" | "high" | string;
+  agricultural: boolean;
+  message: string | null;
+};
+
+export type MarketplaceImageSearchFilters = Pick<
+  MarketplaceProductQuery,
+  "region" | "traceable" | "minPrice" | "maxPrice" | "sort" | "page" | "size"
+>;
+
+export type MarketplaceImageSearchResult = {
+  analysis: MarketplaceImageSearchAnalysis;
+  products: MarketplaceProductPage;
+  searchKeywords: string[];
+  imageHash: string;
+};
+
 export type MarketplaceFarmQuery = {
   page?: number;
   size?: number;

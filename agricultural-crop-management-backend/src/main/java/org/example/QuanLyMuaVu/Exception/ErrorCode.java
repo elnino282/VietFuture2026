@@ -226,6 +226,16 @@ public enum ErrorCode {
                         "Order item does not belong to the specified order", HttpStatus.BAD_REQUEST),
         MARKETPLACE_TRACEABILITY_CHAIN_INVALID("ERR_MARKETPLACE_TRACEABILITY_CHAIN_INVALID",
                         "Marketplace traceability chain is invalid", HttpStatus.CONFLICT),
+        MARKETPLACE_IMAGE_SEARCH_INVALID_IMAGE("ERR_MARKETPLACE_IMAGE_SEARCH_INVALID_IMAGE",
+                        "Uploaded image is invalid", HttpStatus.BAD_REQUEST),
+        MARKETPLACE_IMAGE_SEARCH_IMAGE_TOO_LARGE("ERR_MARKETPLACE_IMAGE_SEARCH_IMAGE_TOO_LARGE",
+                        "Uploaded image is too large", HttpStatus.BAD_REQUEST),
+        MARKETPLACE_IMAGE_SEARCH_UNSUPPORTED_TYPE("ERR_MARKETPLACE_IMAGE_SEARCH_UNSUPPORTED_TYPE",
+                        "Uploaded image type is not supported", HttpStatus.BAD_REQUEST),
+        MARKETPLACE_IMAGE_SEARCH_AI_UNAVAILABLE("ERR_MARKETPLACE_IMAGE_SEARCH_AI_UNAVAILABLE",
+                        "Image analysis is temporarily unavailable", HttpStatus.SERVICE_UNAVAILABLE),
+        MARKETPLACE_IMAGE_SEARCH_RATE_LIMITED("ERR_MARKETPLACE_IMAGE_SEARCH_RATE_LIMITED",
+                        "Image search rate limit exceeded. Please try again later", HttpStatus.TOO_MANY_REQUESTS),
 
         // Supplies errors
         SUPPLIER_NOT_FOUND("ERR_SUPPLIER_NOT_FOUND", "Supplier not found", HttpStatus.NOT_FOUND),

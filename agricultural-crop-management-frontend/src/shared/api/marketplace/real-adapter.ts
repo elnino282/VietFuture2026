@@ -26,6 +26,9 @@ import type {
   MarketplaceFarmDetail,
   MarketplaceFarmPage,
   MarketplaceFarmQuery,
+  MarketplaceImageSearchAnalysis,
+  MarketplaceImageSearchFilters,
+  MarketplaceImageSearchResult,
   MarketplaceMergeCartRequest,
   MarketplaceOrder,
   MarketplaceOrderAuditLog,
@@ -45,6 +48,8 @@ import type {
   MarketplaceUpdateProductStatusRequest,
   MarketplaceUpdateCartItemRequest,
 } from './types';
+
+const BUYER_MARKETPLACE_IMAGE_SEARCH_PREFIX = "/api/v1/buyer/marketplace/image-search";
 
 async function requestEnvelope<T>(
   execute: () => Promise<{ data: unknown }>,
@@ -81,6 +86,26 @@ function normalizeProductStatus(status?: MarketplaceProductStatus): MarketplaceP
   return status;
 }
 
+function buildImageSearchFormData(
+  file: File,
+  filters?: MarketplaceImageSearchFilters,
+): FormData {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  if (!filters) {
+    return formData;
+  }
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      formData.append(key, String(value));
+    }
+  });
+
+  return formData;
+}
+
 export function createMarketplaceRealAdapter(): MarketplaceApiAdapter {
   return {
     listProducts(query?: MarketplaceProductQuery) {
@@ -88,6 +113,32 @@ export function createMarketplaceRealAdapter(): MarketplaceApiAdapter {
         httpClient.get(`${MARKETPLACE_API_PREFIX}/products`, {
           params: query,
         }),
+      );
+    },
+
+    analyzeMarketplaceImage(file: File) {
+      const formData = new FormData();
+      formData.append("file", file);
+      return requestEnvelope<MarketplaceImageSearchAnalysis>(() =>
+        httpClient.post(`${BUYER_MARKETPLACE_IMAGE_SEARCH_PREFIX}/analyze`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }),
+      );
+    },
+
+    searchMarketplaceByImage(file: File, filters?: MarketplaceImageSearchFilters) {
+      return requestEnvelope<MarketplaceImageSearchResult>(() =>
+        httpClient.post(
+          BUYER_MARKETPLACE_IMAGE_SEARCH_PREFIX,
+          buildImageSearchFormData(file, filters),
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          },
+        ),
       );
     },
 

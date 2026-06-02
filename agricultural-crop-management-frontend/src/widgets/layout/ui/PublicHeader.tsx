@@ -41,7 +41,7 @@ function PublicSearchBar() {
     e.preventDefault();
     const trimmed = query.trim();
     if (trimmed) {
-      navigate(`/marketplace/products?search=${encodeURIComponent(trimmed)}`);
+      navigate(`/marketplace/products?q=${encodeURIComponent(trimmed)}`);
     }
   };
 

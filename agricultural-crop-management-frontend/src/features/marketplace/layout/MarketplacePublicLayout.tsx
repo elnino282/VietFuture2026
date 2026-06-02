@@ -493,6 +493,7 @@ function MobileMenu({
 
 export function MarketplacePublicLayout() {
   const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [buyerAiOpen, setBuyerAiOpen] = useState(false);
   const [buyerAiContext, setBuyerAiContext] = useState("");
@@ -507,6 +508,12 @@ export function MarketplacePublicLayout() {
     setBuyerAiRequestId((current) => current + 1);
     setBuyerAiOpen(true);
   }, []);
+
+  const handleLogout = useCallback(async () => {
+    await logout();
+    setMobileMenuOpen(false);
+    navigate("/sign-in", { replace: true });
+  }, [logout, navigate]);
 
   useEffect(() => {
     document.documentElement.classList.add(MARKETPLACE_DOCUMENT_SCROLL_CLASS);
@@ -609,7 +616,9 @@ export function MarketplacePublicLayout() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={logout}
+                        onClick={() => {
+                          void handleLogout();
+                        }}
                         className="text-white hover:bg-white/10 hover:text-emerald-100"
                         title="Đăng xuất"
                       >
@@ -661,7 +670,9 @@ export function MarketplacePublicLayout() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            onClick={logout}
+                            onClick={() => {
+                              void handleLogout();
+                            }}
                             className="cursor-pointer text-red-600"
                           >
                             <LogOut size={16} className="mr-2" />
@@ -707,7 +718,7 @@ export function MarketplacePublicLayout() {
           userRole={user?.role}
           cartCount={cartCount}
           onLogout={() => {
-            void logout();
+            void handleLogout();
           }}
         />
       </header>
