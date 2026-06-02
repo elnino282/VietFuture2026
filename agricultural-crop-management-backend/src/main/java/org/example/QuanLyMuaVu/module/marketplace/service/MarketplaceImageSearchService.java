@@ -433,7 +433,9 @@ public class MarketplaceImageSearchService {
             BigDecimal minPrice,
             BigDecimal maxPrice) {
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(cb.equal(product.get("status"), MarketplaceProductStatus.PUBLISHED));
+        predicates.add(product.get("status").in(List.of(
+                MarketplaceProductStatus.ACTIVE,
+                MarketplaceProductStatus.PUBLISHED)));
         predicates.add(cb.equal(joins.lot().get("status"), ProductWarehouseLotStatus.IN_STOCK));
         predicates.add(cb.greaterThan(product.get("stockQuantity"), ZERO_QUANTITY));
         predicates.add(cb.greaterThan(joins.lot().get("onHandQuantity"), ZERO_QUANTITY));

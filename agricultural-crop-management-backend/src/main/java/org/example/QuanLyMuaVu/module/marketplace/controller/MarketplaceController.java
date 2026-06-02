@@ -2,6 +2,7 @@ package org.example.QuanLyMuaVu.module.marketplace.controller;
 
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,14 @@ import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProduc
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductSummaryResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceReviewResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceTraceabilityResponse;
+import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceProductImageStorageService;
+import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceProductImageStorageService.StoredProductImage;
 import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService;
+import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -46,6 +54,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class MarketplaceController {
 
     MarketplaceService marketplaceService;
+    MarketplaceProductImageStorageService productImageStorageService;
 
     @GetMapping("/products")
     public ApiResponse<PageResponse<MarketplaceProductSummaryResponse>> listProducts(
@@ -64,6 +73,17 @@ public class MarketplaceController {
     @GetMapping("/products/{slug}")
     public ApiResponse<MarketplaceProductDetailResponse> getProductBySlug(@PathVariable String slug) {
         return ApiResponse.success(marketplaceService.getProductBySlug(slug));
+    }
+
+    @GetMapping("/product-images/{fileName:.+}")
+    public ResponseEntity<Resource> getProductImage(@PathVariable String fileName) {
+        StoredProductImage image = productImageStorageService.loadProductImage(fileName);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(image.contentType()))
+                .contentLength(image.size())
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + image.fileName() + "\"")
+                .body(image.resource());
     }
 
     @GetMapping("/products/{productId}/reviews")

@@ -16,10 +16,13 @@ type Translator = (key: string, optionsOrDefault?: Record<string, unknown> | str
 
 function statusVariant(status: MarketplaceProductStatus) {
   switch (status) {
+    case "ACTIVE":
     case "PUBLISHED":
       return "success" as const;
     case "PENDING_REVIEW":
       return "warning" as const;
+    case "INACTIVE":
+    case "REJECTED":
     case "HIDDEN":
       return "destructive" as const;
     default:
@@ -29,14 +32,19 @@ function statusVariant(status: MarketplaceProductStatus) {
 
 function statusLabel(status: MarketplaceProductStatus, t: Translator): string {
   switch (status) {
+    case "ACTIVE":
     case "PUBLISHED":
       return t("marketplaceSeller.status.published", "Published");
     case "PENDING_REVIEW":
       return t("marketplaceSeller.status.pendingReview", "Pending review");
+    case "INACTIVE":
+    case "REJECTED":
     case "HIDDEN":
       return t("marketplaceSeller.status.hidden", "Hidden");
     case "DRAFT":
       return t("marketplaceSeller.status.draft", "Draft");
+    case "SOLD_OUT":
+      return t("marketplaceSeller.status.soldOut", "Sold out");
     default:
       return status;
   }
@@ -48,6 +56,10 @@ function nextStatusActionLabel(status: MarketplaceProductStatus, t: Translator):
       return t("marketplaceSeller.productDetail.actions.submitForReview", "Submit for review");
     case "PENDING_REVIEW":
       return t("marketplaceSeller.productDetail.actions.moveToDraft", "Move back to draft");
+    case "ACTIVE":
+      return t("marketplaceSeller.productDetail.actions.hideProduct", "Hide product");
+    case "INACTIVE":
+      return t("marketplaceSeller.productDetail.actions.showProduct", "Show product");
     case "PUBLISHED":
       return t("marketplaceSeller.productDetail.actions.hideProduct", "Hide product");
     case "HIDDEN":
@@ -167,7 +179,7 @@ export function SellerProductDetailPage() {
               disabled={statusMutation.isPending}
               className="gap-2"
             >
-              {product.status === "PUBLISHED" ? <EyeOff size={14} /> : <Eye size={14} />}
+              {product.status === "ACTIVE" || product.status === "PUBLISHED" ? <EyeOff size={14} /> : <Eye size={14} />}
               {statusMutation.isPending
                 ? t("marketplaceSeller.productDetail.actions.updating", "Updating...")
                 : nextStatusActionLabel(product.status, t)}

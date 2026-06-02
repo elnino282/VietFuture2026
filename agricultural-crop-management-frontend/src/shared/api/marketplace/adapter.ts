@@ -27,6 +27,7 @@ import type {
   MarketplaceOrderPage,
   MarketplaceOrderQuery,
   MarketplaceProductDetail,
+  MarketplaceProductImageUploadResponse,
   MarketplaceProductPage,
   MarketplaceProductQuery,
   MarketplaceReview,
@@ -140,6 +141,10 @@ export interface MarketplaceApiAdapter {
   createFarmerProduct(
     request: MarketplaceFarmerProductUpsertRequest,
   ): Promise<MarketplaceApiResponse<MarketplaceProductDetail>>;
+
+  uploadFarmerProductImage(
+    file: File,
+  ): Promise<MarketplaceApiResponse<MarketplaceProductImageUploadResponse>>;
 
   updateFarmerProduct(
     productId: number,

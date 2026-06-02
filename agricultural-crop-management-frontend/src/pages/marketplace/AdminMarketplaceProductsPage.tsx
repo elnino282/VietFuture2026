@@ -29,14 +29,16 @@ const statusFilters: Array<{ value: "ALL" | MarketplaceProductStatus; label: str
   { value: "ALL", label: "All" },
   { value: "DRAFT", label: "Draft" },
   { value: "PENDING_REVIEW", label: "Pending review" },
-  { value: "PUBLISHED", label: "Published" },
-  { value: "HIDDEN", label: "Hidden" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
+  { value: "REJECTED", label: "Rejected" },
+  { value: "SOLD_OUT", label: "Sold out" },
 ];
 
 function statusVariant(status: MarketplaceProductStatus) {
-  if (status === "PUBLISHED") return "success" as const;
+  if (status === "ACTIVE" || status === "PUBLISHED") return "success" as const;
   if (status === "PENDING_REVIEW") return "warning" as const;
-  if (status === "HIDDEN") return "destructive" as const;
+  if (status === "INACTIVE" || status === "REJECTED" || status === "HIDDEN") return "destructive" as const;
   return "secondary" as const;
 }
 
@@ -46,6 +48,14 @@ function statusLabel(status: MarketplaceProductStatus) {
       return "Draft";
     case "PENDING_REVIEW":
       return "Pending review";
+    case "ACTIVE":
+      return "Active";
+    case "INACTIVE":
+      return "Inactive";
+    case "REJECTED":
+      return "Rejected";
+    case "SOLD_OUT":
+      return "Sold out";
     case "PUBLISHED":
       return "Published";
     case "HIDDEN":
@@ -80,34 +90,34 @@ function ModerationActions({
     currentStatus === "PENDING_REVIEW"
       ? [
           {
-            status: "PUBLISHED",
+            status: "ACTIVE",
             label: "Approve",
             icon: Check,
             className: "text-primary hover:bg-emerald-50 hover:text-primary",
             requiresReason: false,
           },
           {
-            status: "HIDDEN",
-            label: "Hide",
+            status: "REJECTED",
+            label: "Reject",
             icon: X,
             className: "text-destructive hover:bg-red-50 hover:text-red-700",
             requiresReason: true,
           },
         ]
-      : currentStatus === "PUBLISHED"
+      : currentStatus === "ACTIVE" || currentStatus === "PUBLISHED"
         ? [
             {
-              status: "HIDDEN",
+              status: "INACTIVE",
               label: "Hide",
               icon: X,
               className: "text-destructive hover:bg-red-50 hover:text-red-700",
               requiresReason: true,
             },
           ]
-        : currentStatus === "HIDDEN"
+        : currentStatus === "INACTIVE" || currentStatus === "HIDDEN"
           ? [
               {
-                status: "PUBLISHED",
+                status: "ACTIVE",
                 label: "Publish",
                 icon: Check,
                 className: "text-primary hover:bg-emerald-50 hover:text-primary",
@@ -121,6 +131,23 @@ function ModerationActions({
                 requiresReason: false,
               },
             ]
+          : currentStatus === "REJECTED"
+            ? [
+                {
+                  status: "PENDING_REVIEW",
+                  label: "Return to review",
+                  icon: RotateCcw,
+                  className: "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  requiresReason: false,
+                },
+                {
+                  status: "ACTIVE",
+                  label: "Approve",
+                  icon: Check,
+                  className: "text-primary hover:bg-emerald-50 hover:text-primary",
+                  requiresReason: false,
+                },
+              ]
           : [
               {
                 status: "PENDING_REVIEW",
@@ -130,7 +157,7 @@ function ModerationActions({
                 requiresReason: false,
               },
               {
-                status: "HIDDEN",
+                status: "INACTIVE",
                 label: "Hide",
                 icon: X,
                 className: "text-destructive hover:bg-red-50 hover:text-red-700",
@@ -362,9 +389,9 @@ export function AdminMarketplaceProductsPage() {
         onClose={closeRejectModal}
         onConfirm={handleRejectConfirm}
         isLoading={rejectMutation.isPending}
-        title={rejectModalState.targetStatus === "HIDDEN" ? "Hide Product" : "Reject Product"}
+        title={rejectModalState.targetStatus === "INACTIVE" || rejectModalState.targetStatus === "HIDDEN" ? "Hide Product" : "Reject Product"}
         description={
-          rejectModalState.targetStatus === "HIDDEN"
+          rejectModalState.targetStatus === "INACTIVE" || rejectModalState.targetStatus === "HIDDEN"
             ? "This product will be hidden from the marketplace. The farmer will be notified."
             : "This product will be rejected. The farmer will be notified."
         }

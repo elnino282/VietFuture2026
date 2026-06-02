@@ -35,10 +35,13 @@ import {
 
 function statusVariant(status: MarketplaceProductStatus) {
   switch (status) {
+    case "ACTIVE":
     case "PUBLISHED":
       return "default" as const;
     case "PENDING_REVIEW":
       return "secondary" as const;
+    case "INACTIVE":
+    case "REJECTED":
     case "HIDDEN":
       return "destructive" as const;
     default:
@@ -54,10 +57,15 @@ function useStatusLabel() {
         return t("marketplaceSeller.status.draft");
       case "PENDING_REVIEW":
         return t("marketplaceSeller.status.pendingReview");
+      case "ACTIVE":
       case "PUBLISHED":
         return t("marketplaceSeller.status.published");
+      case "INACTIVE":
+      case "REJECTED":
       case "HIDDEN":
         return t("marketplaceSeller.status.hidden");
+      case "SOLD_OUT":
+        return t("marketplaceSeller.status.soldOut", "Sold out");
       default:
         return status;
     }
@@ -86,7 +94,7 @@ function ProductActions({ product }: { product: MarketplaceProductSummary }) {
           }
         }}
       >
-        {product.status === "PUBLISHED" ? <EyeOff size={16} /> : <Eye size={16} />}
+        {product.status === "ACTIVE" || product.status === "PUBLISHED" ? <EyeOff size={16} /> : <Eye size={16} />}
       </Button>
       <Link to={`/farmer/marketplace-products/${product.id}/edit`}>
         <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10 hover:text-primary">
@@ -170,8 +178,8 @@ export function SellerProductsPage() {
               <SelectItem value="ALL">{t("marketplaceSeller.filters.allStatuses")}</SelectItem>
               <SelectItem value="DRAFT">{t("marketplaceSeller.status.draft")}</SelectItem>
               <SelectItem value="PENDING_REVIEW">{t("marketplaceSeller.status.pendingReview")}</SelectItem>
-              <SelectItem value="PUBLISHED">{t("marketplaceSeller.status.published")}</SelectItem>
-              <SelectItem value="HIDDEN">{t("marketplaceSeller.status.hidden")}</SelectItem>
+              <SelectItem value="ACTIVE">{t("marketplaceSeller.status.published")}</SelectItem>
+              <SelectItem value="INACTIVE">{t("marketplaceSeller.status.hidden")}</SelectItem>
             </SelectContent>
           </Select>
         </div>

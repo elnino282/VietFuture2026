@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { Link as LinkIcon, Upload, X } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { MarketplaceFarmerProductUpsertRequest, MarketplaceProductStatus } from "@/shared/api";
@@ -15,6 +16,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
   Textarea,
 } from "@/shared/ui";
 import {
@@ -23,6 +28,7 @@ import {
   useMarketplaceFarmerProductFormOptions,
   useMarketplaceUpdateFarmerProductMutation,
   useMarketplaceUpdateFarmerProductStatusMutation,
+  useMarketplaceUploadFarmerProductImageMutation,
 } from "@/features/marketplace/hooks";
 import { SellerMarketplaceTabs } from "@/features/marketplace/layout";
 import { formatDate, formatVnd } from "@/features/marketplace/lib/format";
@@ -41,6 +47,7 @@ type ProductFormState = {
   selectedLotId: string;
 };
 
+type ImageInputMode = "upload" | "url";
 type Translator = (key: string, optionsOrDefault?: Record<string, unknown> | string) => string;
 
 const EMPTY_FORM: ProductFormState = {
@@ -65,12 +72,38 @@ const FORM_SELECT_TRIGGER_CLASS_NAME =
 const FORM_TEXTAREA_CLASS_NAME =
   "rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm placeholder:text-slate-400 hover:border-slate-400 focus:border-[#3BA55D] focus:ring-2 focus:ring-[#3BA55D]/20 focus-visible:border-[#3BA55D] focus-visible:ring-2 focus-visible:ring-[#3BA55D]/20";
 
+const PRODUCT_IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
+const PRODUCT_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const PRODUCT_IMAGE_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+function validateProductImageFile(file: File, t: Translator): string | null {
+  if (!PRODUCT_IMAGE_ALLOWED_TYPES.has(file.type)) {
+    return t(
+      "marketplaceSeller.productForm.validation.imageUnsupportedType",
+      "Only JPG, PNG, or WEBP product images are supported.",
+    );
+  }
+
+  if (file.size > PRODUCT_IMAGE_MAX_SIZE_BYTES) {
+    return t("marketplaceSeller.productForm.validation.imageTooLarge", {
+      size: "5 MB",
+      defaultValue: "Product image must be {{size}} or smaller.",
+    });
+  }
+
+  return null;
+}
+
 function nextStatusActionLabel(status: MarketplaceProductStatus, t: Translator): string {
   switch (status) {
     case "DRAFT":
       return t("marketplaceSeller.productForm.actions.submitForReview", "Submit for review");
     case "PENDING_REVIEW":
       return t("marketplaceSeller.productForm.actions.moveToDraft", "Move back to draft");
+    case "ACTIVE":
+      return t("marketplaceSeller.productForm.actions.hideProduct", "Hide product");
+    case "INACTIVE":
+      return t("marketplaceSeller.productForm.actions.showProduct", "Show product");
     case "PUBLISHED":
       return t("marketplaceSeller.productForm.actions.hideProduct", "Hide product");
     case "HIDDEN":
@@ -87,6 +120,9 @@ export function SellerProductFormPage() {
   const isEdit = Boolean(id);
   const productId = Number(id ?? 0);
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
+  const [imageInputMode, setImageInputMode] = useState<ImageInputMode>("upload");
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [selectedImagePreview, setSelectedImagePreview] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const formOptionsQuery = useMarketplaceFarmerProductFormOptions();
@@ -96,10 +132,14 @@ export function SellerProductFormPage() {
   const createMutation = useMarketplaceCreateFarmerProductMutation();
   const updateMutation = useMarketplaceUpdateFarmerProductMutation(productId);
   const statusMutation = useMarketplaceUpdateFarmerProductStatusMutation(productId);
+  const uploadImageMutation = useMarketplaceUploadFarmerProductImageMutation();
 
   useEffect(() => {
     if (!isEdit) {
       setForm(EMPTY_FORM);
+      setImageInputMode("upload");
+      setSelectedImageFile(null);
+      setSelectedImagePreview(null);
       return;
     }
 
@@ -119,7 +159,17 @@ export function SellerProductFormPage() {
       selectedSeasonId: product.seasonId ? String(product.seasonId) : "",
       selectedLotId: product.lotId ? String(product.lotId) : "",
     });
+    setSelectedImageFile(null);
+    setSelectedImagePreview(null);
   }, [isEdit, product]);
+
+  useEffect(() => {
+    return () => {
+      if (selectedImagePreview) {
+        URL.revokeObjectURL(selectedImagePreview);
+      }
+    };
+  }, [selectedImagePreview]);
 
   const selectableLots = useMemo(
     () =>
@@ -168,9 +218,50 @@ export function SellerProductFormPage() {
     Number(form.stockQuantity) <= Number(selectedLot?.availableQuantity ?? 0);
 
   const productModerationReason = product?.rejectionReason ?? product?.statusReason ?? null;
+  const imagePreviewSrc = selectedImagePreview ?? form.imageUrl.trim();
+  const isSavingProduct = createMutation.isPending || updateMutation.isPending || uploadImageMutation.isPending;
 
   function updateForm(patch: Partial<ProductFormState>) {
     setForm((current) => ({ ...current, ...patch }));
+  }
+
+  function clearSelectedImageFile() {
+    setSelectedImageFile(null);
+    setSelectedImagePreview(null);
+  }
+
+  function handleImageFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    const validationMessage = validateProductImageFile(file, t);
+    if (validationMessage) {
+      setErrorMessage(validationMessage);
+      clearSelectedImageFile();
+      return;
+    }
+
+    setErrorMessage(null);
+    setImageInputMode("upload");
+    setSelectedImageFile(file);
+    setSelectedImagePreview(URL.createObjectURL(file));
+  }
+
+  function handleImageUrlChange(event: ChangeEvent<HTMLInputElement>) {
+    clearSelectedImageFile();
+    updateForm({ imageUrl: event.target.value });
+  }
+
+  function handleImageInputModeChange(value: string) {
+    const mode = value as ImageInputMode;
+    setImageInputMode(mode);
+    if (mode === "url") {
+      clearSelectedImageFile();
+    }
   }
 
   function handleFarmChange(value: string) {
@@ -249,6 +340,12 @@ export function SellerProductFormPage() {
     }
 
     try {
+      let productImageUrl = form.imageUrl.trim() || undefined;
+      if (selectedImageFile) {
+        const uploadedImage = await uploadImageMutation.mutateAsync(selectedImageFile);
+        productImageUrl = uploadedImage.url;
+      }
+
       const payload: MarketplaceFarmerProductUpsertRequest = {
         name: form.name.trim(),
         category: form.category.trim() || undefined,
@@ -256,7 +353,7 @@ export function SellerProductFormPage() {
         description: form.description.trim() || undefined,
         price,
         stockQuantity,
-        imageUrl: form.imageUrl.trim() || undefined,
+        imageUrl: productImageUrl,
         lotId: Number(form.selectedLotId),
       };
 
@@ -498,15 +595,73 @@ export function SellerProductFormPage() {
                 ) : null}
               </div>
 
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="product-image-url">{t("marketplaceSeller.productForm.fields.imageUrl", "Main image URL")}</Label>
-                <Input
-                  id="product-image-url"
-                  value={form.imageUrl}
-                  onChange={(event) => updateForm({ imageUrl: event.target.value })}
-                  placeholder="https://..."
-                  className={FORM_INPUT_CLASS_NAME}
-                />
+              <div className="space-y-3 md:col-span-2">
+                <Label>{t("marketplaceSeller.productForm.fields.productImage", "Product image")}</Label>
+                <Tabs
+                  value={imageInputMode}
+                  onValueChange={handleImageInputModeChange}
+                  className="gap-3"
+                >
+                  <TabsList className="grid h-10 w-full grid-cols-2 rounded-xl">
+                    <TabsTrigger type="button" value="upload" className="gap-2">
+                      <Upload className="h-4 w-4" aria-hidden="true" />
+                      {t("marketplaceSeller.productForm.imageInput.uploadTab", "Upload image")}
+                    </TabsTrigger>
+                    <TabsTrigger type="button" value="url" className="gap-2">
+                      <LinkIcon className="h-4 w-4" aria-hidden="true" />
+                      {t("marketplaceSeller.productForm.imageInput.urlTab", "Use URL")}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="upload" className="space-y-3">
+                    <Label
+                      htmlFor="product-image-file"
+                      className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm shadow-sm transition-colors hover:border-[#3BA55D] hover:bg-[#3BA55D]/5"
+                    >
+                      <Upload className="mb-2 h-6 w-6 text-[#3BA55D]" aria-hidden="true" />
+                      <span className="font-medium text-foreground">
+                        {selectedImageFile?.name ??
+                          t("marketplaceSeller.productForm.imageInput.chooseFile", "Choose product image")}
+                      </span>
+                      <span className="mt-1 text-xs text-muted-foreground">
+                        {t("marketplaceSeller.productForm.imageInput.fileHint", "JPG, PNG, or WEBP up to 5 MB")}
+                      </span>
+                      <Input
+                        id="product-image-file"
+                        type="file"
+                        accept={PRODUCT_IMAGE_ACCEPT}
+                        aria-label={t("marketplaceSeller.productForm.imageInput.fileInputLabel", "Product image file")}
+                        onChange={handleImageFileChange}
+                        className="sr-only"
+                      />
+                    </Label>
+                    {selectedImageFile ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={clearSelectedImageFile}
+                        className="gap-2"
+                      >
+                        <X className="h-4 w-4" aria-hidden="true" />
+                        {t("marketplaceSeller.productForm.imageInput.removeSelected", "Remove selected image")}
+                      </Button>
+                    ) : null}
+                  </TabsContent>
+
+                  <TabsContent value="url" className="space-y-2">
+                    <Label htmlFor="product-image-url">
+                      {t("marketplaceSeller.productForm.fields.imageUrl", "Main image URL")}
+                    </Label>
+                    <Input
+                      id="product-image-url"
+                      value={form.imageUrl}
+                      onChange={handleImageUrlChange}
+                      placeholder="https://..."
+                      className={FORM_INPUT_CLASS_NAME}
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
             </CardContent>
           </Card>
@@ -694,9 +849,9 @@ export function SellerProductFormPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="overflow-hidden rounded-xl border border-border bg-muted/50">
-                {form.imageUrl ? (
+                {imagePreviewSrc ? (
                   <img
-                    src={form.imageUrl}
+                    src={imagePreviewSrc}
                     alt={form.name || t("marketplaceSeller.productForm.preview.title", "Listing preview")}
                     className="h-48 w-full object-cover"
                     referrerPolicy="no-referrer"
@@ -757,10 +912,10 @@ export function SellerProductFormPage() {
               <div className="flex flex-col gap-3">
                 <Button
                   type="submit"
-                  disabled={!canSubmit || createMutation.isPending || updateMutation.isPending}
+                  disabled={!canSubmit || isSavingProduct}
                   className="w-full"
                 >
-                  {createMutation.isPending || updateMutation.isPending
+                  {isSavingProduct
                     ? t("marketplaceSeller.productForm.actions.saving", "Saving...")
                     : isEdit
                       ? t("marketplaceSeller.productForm.actions.saveChanges", "Save changes")

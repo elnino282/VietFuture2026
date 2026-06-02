@@ -85,7 +85,7 @@ export function SellerDashboardPage() {
   const navigate = useNavigate();
   const { t, locale } = useI18n();
   const dashboardQuery = useMarketplaceFarmerDashboard();
-  const productsQuery = useMarketplaceFarmerProducts({ page: 0, size: 20, status: "PUBLISHED" });
+  const productsQuery = useMarketplaceFarmerProducts({ page: 0, size: 20, status: "ACTIVE" });
 
   const dashboard = dashboardQuery.data;
   const hasProducts = dashboard?.hasProducts ?? false;

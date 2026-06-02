@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.example.QuanLyMuaVu.Config.AppProperties;
@@ -156,6 +157,51 @@ class MarketplaceServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
         lenient().when(productWarehouseLotRepository.saveAll(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+    }
+
+    @Nested
+    @DisplayName("listProducts()")
+    class ListProductsTests {
+
+        @Test
+        void listProducts_UsesActiveAndLegacyPublishedStatuses() {
+            MarketplaceProduct activeProduct = buildProduct(
+                    300L,
+                    "active-rice",
+                    "Active Rice",
+                    new BigDecimal("120000"),
+                    buildLot(3, "12"),
+                    20L);
+            activeProduct.setStatus(MarketplaceProductStatus.ACTIVE);
+
+            when(marketplaceProductRepository.searchPublished(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of(activeProduct)));
+            when(marketplaceProductReviewRepository.aggregateRatingsByProductIds(List.of(300L))).thenReturn(List.of());
+
+            var response = marketplaceService.listProducts(null, null, null, null, null, null, null, 0, 20);
+
+            ArgumentCaptor<Collection<MarketplaceProductStatus>> statusesCaptor = ArgumentCaptor.forClass(Collection.class);
+            verify(marketplaceProductRepository).searchPublished(
+                    statusesCaptor.capture(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(Pageable.class));
+            assertTrue(statusesCaptor.getValue().contains(MarketplaceProductStatus.ACTIVE));
+            assertTrue(statusesCaptor.getValue().contains(MarketplaceProductStatus.PUBLISHED));
+            assertEquals(MarketplaceProductStatus.ACTIVE, response.getItems().getFirst().status());
+        }
     }
 
     @Nested
@@ -333,7 +379,7 @@ class MarketplaceServiceTest {
         void mergeCart_MergeExistingItem_ReturnsMergedCart() {
             when(currentUserService.getCurrentUser()).thenReturn(buyer);
             when(marketplaceCartRepository.findByUserIdForUpdate(10L)).thenReturn(Optional.of(cart));
-            when(marketplaceProductRepository.findSellableByIdAndStatus(200L, MarketplaceProductStatus.ACTIVE))
+            when(marketplaceProductRepository.findSellableByIdAndStatusIn(200L, MarketplaceService.SELLABLE_PRODUCT_STATUSES))
                     .thenReturn(Optional.of(product));
 
             MarketplaceCartItem existing = MarketplaceCartItem.builder()
@@ -371,7 +417,7 @@ class MarketplaceServiceTest {
         void mergeCart_ExceedStock_ThrowsException() {
             when(currentUserService.getCurrentUser()).thenReturn(buyer);
             when(marketplaceCartRepository.findByUserIdForUpdate(10L)).thenReturn(Optional.of(cart));
-            when(marketplaceProductRepository.findSellableByIdAndStatus(200L, MarketplaceProductStatus.ACTIVE))
+            when(marketplaceProductRepository.findSellableByIdAndStatusIn(200L, MarketplaceService.SELLABLE_PRODUCT_STATUSES))
                     .thenReturn(Optional.of(product));
 
             MarketplaceCartItem existing = MarketplaceCartItem.builder()
@@ -723,9 +769,9 @@ class MarketplaceServiceTest {
 
             MarketplaceProductDetailResponse response = marketplaceService.updateAdminProductStatus(
                     777L,
-                    new MarketplaceUpdateProductStatusRequest(MarketplaceProductStatus.PUBLISHED));
+                    new MarketplaceUpdateProductStatusRequest(MarketplaceProductStatus.ACTIVE));
 
-            assertEquals(MarketplaceProductStatus.PUBLISHED, response.status());
+            assertEquals(MarketplaceProductStatus.ACTIVE, response.status());
             assertNotNull(pendingProduct.getPublishedAt());
         }
     }

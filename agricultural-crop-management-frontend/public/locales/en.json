@@ -2921,11 +2921,20 @@
         "price": "Price",
         "quantityToSell": "Quantity to sell",
         "imageUrl": "Main image URL",
+        "productImage": "Product image",
         "shortDescription": "Short description",
         "fullDescription": "Full description",
         "farm": "Farm",
         "season": "Season",
         "harvestLot": "Harvested lot"
+      },
+      "imageInput": {
+        "uploadTab": "Upload image",
+        "urlTab": "Use URL",
+        "chooseFile": "Choose product image",
+        "fileHint": "JPG, PNG, or WEBP up to 5 MB",
+        "fileInputLabel": "Product image file",
+        "removeSelected": "Remove selected image"
       },
       "placeholders": {
         "name": "Example: Premium jasmine rice from harvest lot 2026",
@@ -2965,7 +2974,9 @@
         "selectLot": "Choose a harvested lot before saving the listing.",
         "pricePositive": "Price must be greater than 0.",
         "quantityPositive": "Quantity to sell must be greater than 0.",
-        "quantityExceed": "Quantity to sell cannot exceed {{quantity}} {{unit}} from the selected harvested lot."
+        "quantityExceed": "Quantity to sell cannot exceed {{quantity}} {{unit}} from the selected harvested lot.",
+        "imageUnsupportedType": "Only JPG, PNG, or WEBP product images are supported.",
+        "imageTooLarge": "Product image must be {{size}} or smaller."
       },
       "errors": {
         "save": "Failed to save product.",

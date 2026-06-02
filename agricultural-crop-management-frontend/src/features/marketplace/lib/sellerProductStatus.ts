@@ -11,6 +11,10 @@ export function getNextSellerProductStatusAction(
       return { status: "PENDING_REVIEW" };
     case "PENDING_REVIEW":
       return { status: "DRAFT" };
+    case "ACTIVE":
+      return { status: "INACTIVE" };
+    case "INACTIVE":
+      return { status: "ACTIVE" };
     case "PUBLISHED":
       return { status: "HIDDEN" };
     case "HIDDEN":
@@ -28,6 +32,10 @@ export function getNextSellerProductStatusLabel(
       return "Submit for review";
     case "PENDING_REVIEW":
       return "Move back to draft";
+    case "ACTIVE":
+      return "Hide product";
+    case "INACTIVE":
+      return "Show product";
     case "PUBLISHED":
       return "Hide product";
     case "HIDDEN":

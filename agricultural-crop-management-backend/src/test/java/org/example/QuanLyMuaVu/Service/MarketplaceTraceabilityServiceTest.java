@@ -186,7 +186,7 @@ class MarketplaceTraceabilityServiceTest {
             ProductWarehouseLot lot = buildLot(farm, plot, season, harvest);
             MarketplaceProduct product = buildProduct(farm, season, lot);
 
-            when(marketplaceProductRepository.findSellableByIdAndStatus(1L, MarketplaceProductStatus.PUBLISHED))
+            when(marketplaceProductRepository.findSellableByIdAndStatusIn(eq(1L), any()))
                     .thenReturn(Optional.of(product));
 
             MarketplaceTraceabilityResponse response = marketplaceService.getTraceability(1L);
@@ -283,7 +283,7 @@ class MarketplaceTraceabilityServiceTest {
                     .publishedAt(LocalDateTime.of(2026, 3, 5, 10, 0))
                     .build();
 
-            when(marketplaceProductRepository.findSellableByIdAndStatus(2L, MarketplaceProductStatus.PUBLISHED))
+            when(marketplaceProductRepository.findSellableByIdAndStatusIn(eq(2L), any()))
                     .thenReturn(Optional.of(product));
 
             // Should NOT throw — graceful fallback
@@ -328,7 +328,7 @@ class MarketplaceTraceabilityServiceTest {
                     .status(MarketplaceProductStatus.PUBLISHED)
                     .build();
 
-            when(marketplaceProductRepository.findSellableByIdAndStatus(3L, MarketplaceProductStatus.PUBLISHED))
+            when(marketplaceProductRepository.findSellableByIdAndStatusIn(eq(3L), any()))
                     .thenReturn(Optional.of(product));
 
             MarketplaceTraceabilityResponse response = marketplaceService.getTraceability(3L);
@@ -341,7 +341,7 @@ class MarketplaceTraceabilityServiceTest {
         @Test
         @DisplayName("Product not found throws MARKETPLACE_PRODUCT_NOT_FOUND")
         void productNotFound_throws() {
-            when(marketplaceProductRepository.findSellableByIdAndStatus(999L, MarketplaceProductStatus.PUBLISHED))
+            when(marketplaceProductRepository.findSellableByIdAndStatusIn(eq(999L), any()))
                     .thenReturn(Optional.empty());
 
             AppException ex = assertThrows(AppException.class, () -> marketplaceService.getTraceability(999L));

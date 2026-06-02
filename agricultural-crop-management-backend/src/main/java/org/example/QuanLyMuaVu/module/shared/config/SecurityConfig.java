@@ -75,6 +75,7 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
                                                                 "/api/v1/marketplace/products/**",
+                                                                "/api/v1/marketplace/product-images/**",
                                                                 "/api/v1/marketplace/farms/**",
                                                                 "/api/v1/marketplace/traceability/**")
                                                 .permitAll()

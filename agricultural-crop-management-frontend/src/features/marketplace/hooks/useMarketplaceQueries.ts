@@ -568,6 +568,15 @@ export function useMarketplaceCreateFarmerProductMutation() {
   });
 }
 
+export function useMarketplaceUploadFarmerProductImageMutation() {
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const response = await marketplaceApi.uploadFarmerProductImage(file);
+      return response.result;
+    },
+  });
+}
+
 export function useMarketplaceUpdateFarmerProductMutation(productId: number) {
   const queryClient = useQueryClient();
   return useMutation({

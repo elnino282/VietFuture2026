@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MarketplaceFarmerProductFormOptions, MarketplaceProductDetail } from '@/shared/api';
 import { marketplaceApi } from '@/shared/api';
@@ -14,16 +14,12 @@ if (!Element.prototype.hasPointerCapture) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
-
-const navigateMock = vi.fn();
-
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router-dom')>();
-  return {
-    ...actual,
-    useNavigate: () => navigateMock,
-  };
-});
+if (!URL.createObjectURL) {
+  URL.createObjectURL = vi.fn(() => 'blob:product-image');
+}
+if (!URL.revokeObjectURL) {
+  URL.revokeObjectURL = vi.fn();
+}
 
 vi.mock('@/shared/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/shared/api')>();
@@ -34,11 +30,50 @@ vi.mock('@/shared/api', async (importOriginal) => {
       getFarmerProductFormOptions: vi.fn(),
       getFarmerProductDetail: vi.fn(),
       createFarmerProduct: vi.fn(),
+      uploadFarmerProductImage: vi.fn(),
       updateFarmerProduct: vi.fn(),
       updateFarmerProductStatus: vi.fn(),
     },
   };
 });
+
+vi.mock('@/shared/lib/hooks/useI18n', () => ({
+  useI18n: () => ({
+    t: (_key: string, optionsOrDefault?: Record<string, unknown> | string) => {
+      if (typeof optionsOrDefault === 'string') return optionsOrDefault;
+      const defaultValue = optionsOrDefault?.defaultValue;
+      if (typeof defaultValue !== 'string') return _key;
+      return Object.entries(optionsOrDefault ?? {}).reduce((text, [key, value]) => {
+        return text.split(`{{${key}}}`).join(String(value));
+      }, defaultValue);
+    },
+    locale: 'en',
+    languageCode: 'en',
+    setLocale: vi.fn(),
+    supportedLocales: ['en'],
+    localeDisplayNames: {},
+    isLoading: false,
+  }),
+}));
+
+vi.mock('@/hooks/useI18n', () => ({
+  useI18n: () => ({
+    t: (_key: string, optionsOrDefault?: Record<string, unknown> | string) => {
+      if (typeof optionsOrDefault === 'string') return optionsOrDefault;
+      const defaultValue = optionsOrDefault?.defaultValue;
+      if (typeof defaultValue !== 'string') return _key;
+      return Object.entries(optionsOrDefault ?? {}).reduce((text, [key, value]) => {
+        return text.split(`{{${key}}}`).join(String(value));
+      }, defaultValue);
+    },
+    locale: 'en',
+    languageCode: 'en',
+    setLocale: vi.fn(),
+    supportedLocales: ['en'],
+    localeDisplayNames: {},
+    isLoading: false,
+  }),
+}));
 
 function formOptionsFixture(): MarketplaceFarmerProductFormOptions {
   return {
@@ -89,7 +124,7 @@ function productFixture(): MarketplaceProductDetail {
     traceable: true,
     ratingAverage: 0,
     ratingCount: 0,
-    status: 'HIDDEN',
+    status: 'INACTIVE',
     statusReason: 'Missing harvest certificate',
     rejectionReason: 'Photo quality is too low',
     createdAt: '2026-04-02T08:00:00Z',
@@ -105,17 +140,21 @@ function renderPage(route = '/farmer/marketplace-products/new') {
       mutations: { retry: false },
     },
   });
+  const router = createMemoryRouter(
+    [
+      { path: '/farmer/marketplace-products', element: <div>Products route</div> },
+      { path: '/farmer/marketplace-products/new', element: <SellerProductFormPage /> },
+      { path: '/farmer/marketplace-products/:id/edit', element: <SellerProductFormPage /> },
+    ],
+    { initialEntries: [route] },
+  );
 
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[route]}>
-        <Routes>
-          <Route path="/farmer/marketplace-products/new" element={<SellerProductFormPage />} />
-          <Route path="/farmer/marketplace-products/:id/edit" element={<SellerProductFormPage />} />
-        </Routes>
-      </MemoryRouter>
+      <RouterProvider router={router} />
     </QueryClientProvider>,
   );
+  return { ...result, router };
 }
 
 async function chooseOption(label: string, option: string) {
@@ -128,10 +167,17 @@ async function chooseOption(label: string, option: string) {
 
 describe('SellerProductFormPage', () => {
   beforeEach(() => {
-    navigateMock.mockReset();
     vi.mocked(marketplaceApi.getFarmerProductFormOptions).mockResolvedValue({ result: formOptionsFixture() } as never);
     vi.mocked(marketplaceApi.getFarmerProductDetail).mockResolvedValue({ result: productFixture() } as never);
     vi.mocked(marketplaceApi.createFarmerProduct).mockResolvedValue({ result: productFixture() } as never);
+    vi.mocked(marketplaceApi.uploadFarmerProductImage).mockResolvedValue({
+      result: {
+        url: 'http://localhost:8080/api/v1/marketplace/product-images/uploaded.jpg',
+        fileName: 'uploaded.jpg',
+        contentType: 'image/jpeg',
+        size: 6,
+      },
+    } as never);
     vi.mocked(marketplaceApi.updateFarmerProduct).mockResolvedValue({ result: productFixture() } as never);
     vi.mocked(marketplaceApi.updateFarmerProductStatus).mockResolvedValue({ result: productFixture() } as never);
   });
@@ -141,7 +187,7 @@ describe('SellerProductFormPage', () => {
   });
 
   it('creates a harvest-backed listing end-to-end', async () => {
-    renderPage();
+    const { router } = renderPage();
     const user = userEvent.setup();
 
     await screen.findByRole('heading', { name: 'Create marketplace listing' });
@@ -150,6 +196,7 @@ describe('SellerProductFormPage', () => {
     await user.type(screen.getByLabelText(/Category/i), 'Grain');
     await user.clear(screen.getByLabelText(/Price/i));
     await user.type(screen.getByLabelText(/Price/i), '55000');
+    await user.click(screen.getByRole('tab', { name: /Use URL/i }));
     await user.type(screen.getByLabelText(/Main image URL/i), 'https://example.com/premium.jpg');
     await user.type(screen.getByLabelText(/Short description/i), 'Fragrant rice from spring harvest');
     await user.type(screen.getByLabelText(/Full description/i), 'Packed after harvest with traceability enabled.');
@@ -174,8 +221,55 @@ describe('SellerProductFormPage', () => {
         lotId: 30,
       });
     });
-    expect(navigateMock).toHaveBeenCalledWith('/farmer/marketplace-products');
+    expect(marketplaceApi.uploadFarmerProductImage).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/farmer/marketplace-products');
+    });
   }, 10000);
+
+  it('uploads a selected product image before creating the listing', async () => {
+    renderPage();
+    const user = userEvent.setup();
+    const image = new File(['durian'], 'durian.jpg', { type: 'image/jpeg' });
+
+    await screen.findByRole('heading', { name: 'Create marketplace listing' });
+
+    await user.type(screen.getByLabelText(/Listing name/i), 'Durian harvest');
+    await user.type(screen.getByLabelText(/Category/i), 'Fruit');
+    await user.clear(screen.getByLabelText(/Price/i));
+    await user.type(screen.getByLabelText(/Price/i), '50000');
+    await user.upload(screen.getByLabelText(/Product image file/i), image);
+    await chooseOption('Farm', 'Green Valley Farm');
+    await chooseOption('Season', 'Spring 2026');
+    await chooseOption('Harvested lot', 'LOT-30 - Jasmine rice');
+    await user.clear(screen.getByLabelText(/Quantity to sell/i));
+    await user.type(screen.getByLabelText(/Quantity to sell/i), '3');
+
+    await user.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => {
+      expect(marketplaceApi.uploadFarmerProductImage).toHaveBeenCalledWith(image);
+      expect(marketplaceApi.createFarmerProduct).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Durian harvest',
+          imageUrl: 'http://localhost:8080/api/v1/marketplace/product-images/uploaded.jpg',
+          lotId: 30,
+        }),
+      );
+    });
+  }, 10000);
+
+  it('rejects unsupported product image files before upload', async () => {
+    renderPage();
+    const user = userEvent.setup({ applyAccept: false });
+    const textFile = new File(['not image'], 'durian.txt', { type: 'text/plain' });
+
+    await screen.findByRole('heading', { name: 'Create marketplace listing' });
+    await user.upload(screen.getByLabelText(/Product image file/i), textFile);
+
+    expect(await screen.findByText('Only JPG, PNG, or WEBP product images are supported.')).toBeInTheDocument();
+    expect(marketplaceApi.uploadFarmerProductImage).not.toHaveBeenCalled();
+  });
 
   it('blocks listing quantity that exceeds selected lot availability', async () => {
     renderPage();

@@ -68,6 +68,13 @@ export type MarketplaceProductDetail = MarketplaceProductSummary & {
   traceabilityCode: string | null;
 };
 
+export type MarketplaceProductImageUploadResponse = {
+  url: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+};
+
 export type MarketplaceFarmSummary = {
   id: number;
   name: string;

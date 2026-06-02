@@ -12,6 +12,7 @@ import org.example.QuanLyMuaVu.DTO.Common.PageResponse;
 import org.example.QuanLyMuaVu.Exception.AppException;
 import org.example.QuanLyMuaVu.Exception.ErrorCode;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderResponse;
+import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceProductImageStorageService;
 import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,9 @@ class MarketplaceBuyerOrderControllerTest {
 
     @MockitoBean
     private MarketplaceService marketplaceService;
+
+    @MockitoBean
+    private MarketplaceProductImageStorageService productImageStorageService;
 
     @MockitoBean(name = "customJwtDecoder")
     private org.example.QuanLyMuaVu.module.identity.config.CustomJwtDecoder customJwtDecoder;

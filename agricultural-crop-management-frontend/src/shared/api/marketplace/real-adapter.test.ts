@@ -71,4 +71,21 @@ describe("createMarketplaceRealAdapter", () => {
       },
     );
   });
+
+  it("uploads farmer product images as multipart form data", async () => {
+    const adapter = createMarketplaceRealAdapter();
+    const file = new File(["image-bytes"], "durian.jpg", { type: "image/jpeg" });
+
+    await adapter.uploadFarmerProductImage(file);
+
+    expect(httpClient.post).toHaveBeenCalledWith(
+      "/api/v1/marketplace/farmer/product-images",
+      expect.any(FormData),
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+  });
 });

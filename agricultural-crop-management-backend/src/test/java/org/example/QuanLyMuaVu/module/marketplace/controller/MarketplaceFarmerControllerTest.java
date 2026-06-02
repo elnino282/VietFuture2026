@@ -4,8 +4,12 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -20,14 +24,18 @@ import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceFarmer
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceFarmerProductFormOptionsResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceFarmerProductFormSeasonOptionResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductDetailResponse;
+import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductImageUploadResponse;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceProductStatus;
+import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceProductImageStorageService;
 import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.multipart.MultipartFile;
 
 @WebMvcTest(controllers = MarketplaceFarmerController.class)
 class MarketplaceFarmerControllerTest {
@@ -37,6 +45,9 @@ class MarketplaceFarmerControllerTest {
 
     @MockBean
     private MarketplaceService marketplaceService;
+
+    @MockBean
+    private MarketplaceProductImageStorageService productImageStorageService;
 
     @Test
     @WithMockUser(roles = "FARMER")
@@ -112,6 +123,32 @@ class MarketplaceFarmerControllerTest {
                 .andExpect(jsonPath("$.result.stockQuantity").value(10.0))
                 .andExpect(jsonPath("$.result.availableQuantity").value(8.0))
                 .andExpect(jsonPath("$.result.status").value("DRAFT"));
+    }
+
+    @Test
+    @WithMockUser(roles = "FARMER")
+    void uploadProductImage_ReturnsUploadedImageUrl() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "durian.jpg",
+                "image/jpeg",
+                new byte[] {1, 2, 3});
+        MarketplaceProductImageUploadResponse response = new MarketplaceProductImageUploadResponse(
+                "http://localhost/api/v1/marketplace/product-images/product.jpg",
+                "product.jpg",
+                "image/jpeg",
+                3L);
+
+        when(productImageStorageService.storeProductImage(any(MultipartFile.class), eq("http://localhost")))
+                .thenReturn(response);
+
+        mockMvc.perform(multipart("/api/v1/marketplace/farmer/product-images").file(file).with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.result.url").value(response.url()))
+                .andExpect(jsonPath("$.result.fileName").value("product.jpg"))
+                .andExpect(jsonPath("$.result.contentType").value("image/jpeg"))
+                .andExpect(jsonPath("$.result.size").value(3));
     }
 
     @Test

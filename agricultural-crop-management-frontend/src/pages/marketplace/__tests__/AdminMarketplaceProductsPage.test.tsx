@@ -6,7 +6,7 @@ import { AdminMarketplaceProductsPage } from "../AdminMarketplaceProductsPage";
 import * as marketplaceHooks from "@/features/marketplace/hooks/useMarketplaceQueries";
 import type { MarketplaceProductStatus } from "@/shared/api";
 
-vi.mock("../../hooks/useMarketplaceQueries");
+vi.mock("@/features/marketplace/hooks/useMarketplaceQueries");
 
 describe("AdminMarketplaceProductsPage", () => {
   let queryClient: QueryClient;
@@ -50,6 +50,8 @@ describe("AdminMarketplaceProductsPage", () => {
   });
 
   it("renders product list with moderation actions", async () => {
+    const user = userEvent.setup();
+
     vi.mocked(marketplaceHooks.useMarketplaceAdminProducts).mockReturnValue({
       data: {
         items: [createMockProduct()],
@@ -70,10 +72,12 @@ describe("AdminMarketplaceProductsPage", () => {
 
     renderPage();
 
+    await user.click(await screen.findByRole("button", { name: /product actions/i }));
+
     await waitFor(() => {
       expect(screen.getByText("Test Product")).toBeInTheDocument();
       expect(screen.getByText("Approve")).toBeInTheDocument();
-      expect(screen.getByText("Hide")).toBeInTheDocument();
+      expect(screen.getByText("Reject")).toBeInTheDocument();
     });
   });
 
@@ -101,14 +105,15 @@ describe("AdminMarketplaceProductsPage", () => {
 
     renderPage();
 
-    const approveButton = await screen.findByRole("button", { name: /approve/i });
+    await user.click(await screen.findByRole("button", { name: /product actions/i }));
+    const approveButton = await screen.findByRole("menuitem", { name: /approve/i });
     await user.click(approveButton);
 
-    expect(mutateAsync).toHaveBeenCalledWith({ status: "PUBLISHED" });
+    expect(mutateAsync).toHaveBeenCalledWith({ status: "ACTIVE" });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("hide action opens modal and requires reason", async () => {
+  it("reject action opens modal and requires reason", async () => {
     const user = userEvent.setup();
     const mutateAsync = vi.fn().mockResolvedValue({});
 
@@ -132,11 +137,12 @@ describe("AdminMarketplaceProductsPage", () => {
 
     renderPage();
 
-    const hideButton = await screen.findByRole("button", { name: /hide/i });
-    await user.click(hideButton);
+    await user.click(await screen.findByRole("button", { name: /product actions/i }));
+    const rejectButton = await screen.findByRole("menuitem", { name: /reject/i });
+    await user.click(rejectButton);
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText("Hide Product")).toBeInTheDocument();
+    expect(screen.getByText("Reject Product")).toBeInTheDocument();
 
     const confirmButton = screen.getByRole("button", { name: /confirm/i });
     expect(confirmButton).toBeDisabled();
@@ -149,7 +155,7 @@ describe("AdminMarketplaceProductsPage", () => {
 
     await waitFor(() => {
       expect(mutateAsync).toHaveBeenCalledWith({
-        status: "HIDDEN",
+        status: "REJECTED",
         statusReason: "Product images do not match description",
       });
     });
@@ -191,10 +197,12 @@ describe("AdminMarketplaceProductsPage", () => {
     expect(screen.getByText("Failed to load admin marketplace products.")).toBeInTheDocument();
   });
 
-  it("shows only Hide button for PUBLISHED products", async () => {
+  it("shows only Hide button for ACTIVE products", async () => {
+    const user = userEvent.setup();
+
     vi.mocked(marketplaceHooks.useMarketplaceAdminProducts).mockReturnValue({
       data: {
-        items: [createMockProduct({ status: "PUBLISHED" })],
+        items: [createMockProduct({ status: "ACTIVE" })],
         totalPages: 1,
         totalElements: 1,
         page: 0,
@@ -212,11 +220,13 @@ describe("AdminMarketplaceProductsPage", () => {
 
     renderPage();
 
+    await user.click(await screen.findByRole("button", { name: /product actions/i }));
+
     await waitFor(() => {
       expect(screen.getByText("Test Product")).toBeInTheDocument();
     });
 
-    expect(screen.queryByRole("button", { name: /approve/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /hide/i })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /approve/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /hide/i })).toBeInTheDocument();
   });
 });

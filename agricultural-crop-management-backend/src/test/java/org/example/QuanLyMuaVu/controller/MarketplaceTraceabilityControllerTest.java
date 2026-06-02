@@ -7,6 +7,7 @@ import java.util.List;
 import org.example.QuanLyMuaVu.module.marketplace.controller.MarketplaceBuyerOrderAliasController;
 import org.example.QuanLyMuaVu.module.marketplace.controller.MarketplaceController;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceTraceabilityResponse;
+import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceProductImageStorageService;
 import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService;
 import org.example.QuanLyMuaVu.Exception.AppException;
 import org.example.QuanLyMuaVu.Exception.ErrorCode;
@@ -40,6 +41,9 @@ class MarketplaceTraceabilityControllerTest {
 
     @MockitoBean
     private MarketplaceService marketplaceService;
+
+    @MockitoBean
+    private MarketplaceProductImageStorageService productImageStorageService;
 
     // Suppress any additional beans the controllers require
     @MockitoBean(name = "customJwtDecoder")

@@ -45,6 +45,7 @@ export type {
   MarketplacePaymentMethod,
   MarketplacePaymentVerificationStatus,
   MarketplaceProductDetail,
+  MarketplaceProductImageUploadResponse,
   MarketplaceProductPage,
   MarketplaceProductQuery,
   MarketplaceProductStatus,

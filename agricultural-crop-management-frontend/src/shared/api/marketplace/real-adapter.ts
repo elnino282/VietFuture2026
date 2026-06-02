@@ -36,6 +36,7 @@ import type {
   MarketplaceOrderQuery,
   MarketplaceOrderStatus,
   MarketplaceProductDetail,
+  MarketplaceProductImageUploadResponse,
   MarketplaceProductPage,
   MarketplaceProductQuery,
   MarketplaceProductStatus,
@@ -329,6 +330,18 @@ export function createMarketplaceRealAdapter(): MarketplaceApiAdapter {
     createFarmerProduct(request: MarketplaceFarmerProductUpsertRequest) {
       return requestEnvelope<MarketplaceProductDetail>(() =>
         httpClient.post(`${MARKETPLACE_API_PREFIX}/farmer/products`, request),
+      );
+    },
+
+    uploadFarmerProductImage(file: File) {
+      const formData = new FormData();
+      formData.append("file", file);
+      return requestEnvelope<MarketplaceProductImageUploadResponse>(() =>
+        httpClient.post(`${MARKETPLACE_API_PREFIX}/farmer/product-images`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }),
       );
     },
 

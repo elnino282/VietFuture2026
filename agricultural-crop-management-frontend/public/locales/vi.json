@@ -2885,11 +2885,20 @@
         "price": "Giá",
         "quantityToSell": "Số lượng bán",
         "imageUrl": "URL ảnh chính",
+        "productImage": "Ảnh sản phẩm",
         "shortDescription": "Mô tả ngắn",
         "fullDescription": "Mô tả đầy đủ",
         "farm": "Nông trại",
         "season": "Mùa vụ",
         "harvestLot": "Lô thu hoạch"
+      },
+      "imageInput": {
+        "uploadTab": "Tải ảnh lên",
+        "urlTab": "Dán URL",
+        "chooseFile": "Chọn ảnh sản phẩm",
+        "fileHint": "JPG, PNG hoặc WEBP tối đa 5 MB",
+        "fileInputLabel": "File ảnh sản phẩm",
+        "removeSelected": "Xóa ảnh đã chọn"
       },
       "placeholders": {
         "name": "Ví dụ: Gạo jasmine cao cấp từ lô thu hoạch 2026",
@@ -2929,7 +2938,9 @@
         "selectLot": "Hãy chọn lô thu hoạch trước khi lưu tin đăng.",
         "pricePositive": "Giá phải lớn hơn 0.",
         "quantityPositive": "Số lượng bán phải lớn hơn 0.",
-        "quantityExceed": "Số lượng bán không được vượt quá {{quantity}} {{unit}} của lô thu hoạch đã chọn."
+        "quantityExceed": "Số lượng bán không được vượt quá {{quantity}} {{unit}} của lô thu hoạch đã chọn.",
+        "imageUnsupportedType": "Chỉ hỗ trợ ảnh JPG, PNG hoặc WEBP.",
+        "imageTooLarge": "Ảnh sản phẩm phải có dung lượng tối đa {{size}}."
       },
       "errors": {
         "save": "Không thể lưu sản phẩm.",

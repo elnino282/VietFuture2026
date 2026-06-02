@@ -1,6 +1,7 @@
 package org.example.QuanLyMuaVu.module.marketplace.controller;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -13,9 +14,11 @@ import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceFarmer
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceFarmerProductFormOptionsResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceOrderResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductDetailResponse;
+import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductImageUploadResponse;
 import org.example.QuanLyMuaVu.module.marketplace.dto.response.MarketplaceProductSummaryResponse;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceOrderStatus;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceProductStatus;
+import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceProductImageStorageService;
 import org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -26,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/v1/marketplace/farmer")
@@ -34,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MarketplaceFarmerController {
 
     MarketplaceService marketplaceService;
+    MarketplaceProductImageStorageService productImageStorageService;
 
     @GetMapping("/dashboard")
     public ApiResponse<MarketplaceFarmerDashboardResponse> getDashboard() {
@@ -63,6 +69,18 @@ public class MarketplaceFarmerController {
     public ApiResponse<MarketplaceProductDetailResponse> createProduct(
             @Valid @RequestBody MarketplaceFarmerProductUpsertRequest request) {
         return ApiResponse.success(marketplaceService.createFarmerProduct(request));
+    }
+
+    @PostMapping("/product-images")
+    public ApiResponse<MarketplaceProductImageUploadResponse> uploadProductImage(
+            @RequestParam("file") MultipartFile file,
+            HttpServletRequest request) {
+        String baseUrl = ServletUriComponentsBuilder.fromRequestUri(request)
+                .replacePath(null)
+                .replaceQuery(null)
+                .build()
+                .toUriString();
+        return ApiResponse.success(productImageStorageService.storeProductImage(file, baseUrl));
     }
 
     @PutMapping("/products/{productId}")

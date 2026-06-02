@@ -49,5 +49,6 @@ export {
   useMarketplaceUpdateFarmerOrderStatusMutation,
   useMarketplaceUpdateFarmerProductMutation,
   useMarketplaceUpdateFarmerProductStatusMutation,
+  useMarketplaceUploadFarmerProductImageMutation,
   useMarketplaceUploadPaymentProofMutation,
 } from "./useMarketplaceQueries";

@@ -138,6 +138,7 @@ public class AppProperties {
 
     public static class Storage {
         private String paymentProofRoot = "storage/marketplace/payment-proofs";
+        private String productImageRoot = "storage/marketplace/product-images";
 
         public String getPaymentProofRoot() {
             return paymentProofRoot;
@@ -145,6 +146,14 @@ public class AppProperties {
 
         public void setPaymentProofRoot(String paymentProofRoot) {
             this.paymentProofRoot = paymentProofRoot;
+        }
+
+        public String getProductImageRoot() {
+            return productImageRoot;
+        }
+
+        public void setProductImageRoot(String productImageRoot) {
+            this.productImageRoot = productImageRoot;
         }
     }
 

@@ -97,14 +97,14 @@ public interface ProductWarehouseLotRepository extends JpaRepository<ProductWare
             from MarketplaceProduct p
             join p.lot l
             where p.farmerUser.id = :farmerUserId
-              and p.status = :status
+              and p.status in :statuses
               and p.stockQuantity > 0
               and l.onHandQuantity > 0
               and (case when p.stockQuantity < l.onHandQuantity then p.stockQuantity else l.onHandQuantity end) <= :threshold
             """)
     long countMarketplaceListingsByFarmerAndOnHandLessThanEqual(
             @Param("farmerUserId") Long farmerUserId,
-            @Param("status") MarketplaceProductStatus status,
+            @Param("statuses") Collection<MarketplaceProductStatus> statuses,
             @Param("threshold") BigDecimal threshold);
 
     @Query("""

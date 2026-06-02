@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -49,6 +50,32 @@ public class MarketplaceSecurityTest {
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Public can request product images - GET /api/v1/marketplace/product-images/{fileName} is not auth-gated")
+    void publicCanRequestMarketplaceProductImages() throws Exception {
+        mockMvc.perform(get("/api/v1/marketplace/product-images/missing.jpg"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Unauthenticated users cannot upload product images - POST /api/v1/marketplace/farmer/product-images returns 401")
+    void unauthenticatedCannotUploadProductImages() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "durian.jpg", "image/jpeg", new byte[] {1, 2, 3});
+
+        mockMvc.perform(multipart("/api/v1/marketplace/farmer/product-images").file(file))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "buyer", roles = "BUYER")
+    @DisplayName("BUYER cannot upload product images - POST /api/v1/marketplace/farmer/product-images returns 403")
+    void buyerCannotUploadProductImages() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "durian.jpg", "image/jpeg", new byte[] {1, 2, 3});
+
+        mockMvc.perform(multipart("/api/v1/marketplace/farmer/product-images").file(file))
+                .andExpect(status().isForbidden());
     }
 
     @Test

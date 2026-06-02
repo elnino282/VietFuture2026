@@ -126,6 +126,12 @@ public class MarketplaceService {
     static BigDecimal LOW_STOCK_THRESHOLD = new BigDecimal("10");
     static BigDecimal ZERO_QUANTITY = BigDecimal.ZERO;
     static String AUDIT_ENTITY_ORDER = "MARKETPLACE_ORDER";
+    static List<MarketplaceProductStatus> SELLABLE_PRODUCT_STATUSES = List.of(
+            MarketplaceProductStatus.ACTIVE,
+            MarketplaceProductStatus.PUBLISHED);
+    static List<MarketplaceProductStatus> HIDDEN_PRODUCT_STATUSES = List.of(
+            MarketplaceProductStatus.INACTIVE,
+            MarketplaceProductStatus.HIDDEN);
 
     MarketplaceProductRepository marketplaceProductRepository;
     MarketplaceCartRepository marketplaceCartRepository;
@@ -158,7 +164,7 @@ public class MarketplaceService {
             int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), resolveProductSort(sort));
         Page<MarketplaceProduct> productPage = marketplaceProductRepository.searchPublished(
-                MarketplaceProductStatus.PUBLISHED,
+                SELLABLE_PRODUCT_STATUSES,
                 normalizeNullable(category),
                 normalizeNullable(q),
                 traceable,
@@ -180,7 +186,7 @@ public class MarketplaceService {
     @Transactional(readOnly = true)
     public MarketplaceProductDetailResponse getProductBySlug(String slug) {
         MarketplaceProduct product = marketplaceProductRepository
-                .findSellableBySlugAndStatus(slug, MarketplaceProductStatus.PUBLISHED)
+                .findSellableBySlugAndStatusIn(slug, SELLABLE_PRODUCT_STATUSES)
                 .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND));
 
         validateTraceabilityChain(product);
@@ -193,7 +199,7 @@ public class MarketplaceService {
 
     @Transactional(readOnly = true)
     public PageResponse<MarketplaceReviewResponse> listProductReviews(Long productId, int page, int size) {
-        marketplaceProductRepository.findSellableByIdAndStatus(productId, MarketplaceProductStatus.PUBLISHED)
+        marketplaceProductRepository.findSellableByIdAndStatusIn(productId, SELLABLE_PRODUCT_STATUSES)
                 .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND));
 
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -382,7 +388,7 @@ public class MarketplaceService {
     public PageResponse<MarketplaceFarmSummaryResponse> listFarms(String q, String region, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
         Page<Farm> farmPage = marketplaceProductRepository.searchDistinctFarmsWithPublishedProducts(
-                MarketplaceProductStatus.PUBLISHED,
+                SELLABLE_PRODUCT_STATUSES,
                 normalizeNullable(q),
                 normalizeNullable(region),
                 pageable);
@@ -400,7 +406,7 @@ public class MarketplaceService {
     @Transactional(readOnly = true)
     public MarketplaceFarmDetailResponse getFarmDetail(Integer farmId) {
         Farm farm = farmRepository.findById(farmId).orElseThrow(() -> new AppException(ErrorCode.FARM_NOT_FOUND));
-        long productCount = marketplaceProductRepository.countSellableByFarmIdAndStatus(farmId, MarketplaceProductStatus.PUBLISHED);
+        long productCount = marketplaceProductRepository.countSellableByFarmIdAndStatusIn(farmId, SELLABLE_PRODUCT_STATUSES);
 
         MarketplaceFarmSummaryResponse summary = toFarmSummary(farm, productCount);
         User owner = farm.getUser();
@@ -422,7 +428,7 @@ public class MarketplaceService {
 
     @Transactional(readOnly = true)
     public MarketplaceTraceabilityResponse getTraceability(Long productId) {
-        MarketplaceProduct product = marketplaceProductRepository.findSellableByIdAndStatus(productId, MarketplaceProductStatus.PUBLISHED)
+        MarketplaceProduct product = marketplaceProductRepository.findSellableByIdAndStatusIn(productId, SELLABLE_PRODUCT_STATUSES)
                 .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND));
 
         return buildTraceabilityResponse(
@@ -1374,12 +1380,12 @@ public class MarketplaceService {
         long pendingReviewProducts = marketplaceProductRepository.countByFarmerUser_IdAndStatus(
                 farmerUserId,
                 MarketplaceProductStatus.PENDING_REVIEW);
-        long publishedProducts = marketplaceProductRepository.countByFarmerUser_IdAndStatus(
+        long publishedProducts = marketplaceProductRepository.countByFarmerUser_IdAndStatusIn(
                 farmerUserId,
-                MarketplaceProductStatus.PUBLISHED);
+                SELLABLE_PRODUCT_STATUSES);
         long lowStockProducts = productWarehouseLotRepository.countMarketplaceListingsByFarmerAndOnHandLessThanEqual(
                 farmerUserId,
-                MarketplaceProductStatus.PUBLISHED,
+                SELLABLE_PRODUCT_STATUSES,
                 LOW_STOCK_THRESHOLD);
 
         long pendingOrders = marketplaceOrderRepository.countByFarmerUser_IdAndStatus(
@@ -1831,8 +1837,8 @@ public class MarketplaceService {
     public MarketplaceAdminStatsResponse getAdminStats() {
         long totalProducts = marketplaceProductRepository.count();
         long pendingReviewProducts = marketplaceProductRepository.countByStatus(MarketplaceProductStatus.PENDING_REVIEW);
-        long publishedProducts = marketplaceProductRepository.countByStatus(MarketplaceProductStatus.PUBLISHED);
-        long hiddenProducts = marketplaceProductRepository.countByStatus(MarketplaceProductStatus.HIDDEN);
+        long publishedProducts = marketplaceProductRepository.countByStatusIn(SELLABLE_PRODUCT_STATUSES);
+        long hiddenProducts = marketplaceProductRepository.countByStatusIn(HIDDEN_PRODUCT_STATUSES);
 
         long totalOrders = marketplaceOrderRepository.count();
         long pendingOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.PENDING_PAYMENT);
@@ -2072,7 +2078,7 @@ public class MarketplaceService {
     }
 
     private MarketplaceProduct getActiveProductOrThrow(Long productId) {
-        MarketplaceProduct product = marketplaceProductRepository.findSellableByIdAndStatus(productId, MarketplaceProductStatus.ACTIVE)
+        MarketplaceProduct product = marketplaceProductRepository.findSellableByIdAndStatusIn(productId, SELLABLE_PRODUCT_STATUSES)
                 .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND));
         return product;
     }
@@ -2216,9 +2222,9 @@ public class MarketplaceService {
 
     private MarketplaceFarmSummaryResponse toFarmSummary(Farm farm, long productCount) {
         String coverImage = marketplaceProductRepository
-                .findSellableByFarmIdAndStatusOrderByPublishedAtDescIdDesc(
+                .findSellableByFarmIdAndStatusInOrderByPublishedAtDescIdDesc(
                         farm.getId(),
-                        MarketplaceProductStatus.PUBLISHED,
+                        SELLABLE_PRODUCT_STATUSES,
                         PageRequest.of(0, 1))
                 .stream()
                 .findFirst()
@@ -2277,7 +2283,7 @@ public class MarketplaceService {
         }
         Map<Integer, Long> result = new HashMap<>();
         for (MarketplaceProductRepository.FarmProductCountProjection projection : marketplaceProductRepository
-                .countPublishedByFarmIds(farmIds, MarketplaceProductStatus.PUBLISHED)) {
+                .countPublishedByFarmIds(farmIds, SELLABLE_PRODUCT_STATUSES)) {
             result.put(projection.getFarmId(), projection.getProductCount());
         }
         return result;
