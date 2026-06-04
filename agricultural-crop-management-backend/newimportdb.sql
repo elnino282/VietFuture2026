@@ -324,7 +324,7 @@ CREATE TABLE stock_movements (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE inventory_balances (
-    id INT NOT NULL PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY,
     supply_lot_id INT NOT NULL,
     warehouse_id INT NOT NULL,
     location_id INT NULL,
@@ -785,7 +785,7 @@ CREATE TABLE marketplace_product_reviews (
     order_id BIGINT NOT NULL,
     order_item_id BIGINT NULL,
     buyer_user_id BIGINT NOT NULL,
-    rating TINYINT NOT NULL,
+    rating INT NOT NULL,
     comment TEXT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NULL,

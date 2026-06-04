@@ -181,6 +181,13 @@ public enum ErrorCode {
                         "No warehouse available to receive harvested products", HttpStatus.BAD_REQUEST),
 
         // Marketplace errors
+        PRODUCT_NOT_FOUND("PRODUCT_NOT_FOUND", "Product not found", HttpStatus.NOT_FOUND),
+        PRODUCT_NOT_AVAILABLE("PRODUCT_NOT_AVAILABLE", "Product is not available", HttpStatus.BAD_REQUEST),
+        PRODUCT_OUT_OF_STOCK("PRODUCT_OUT_OF_STOCK", "Product is out of stock", HttpStatus.BAD_REQUEST),
+        PRODUCT_LOT_UNAVAILABLE("PRODUCT_LOT_UNAVAILABLE", "Product warehouse lot is unavailable",
+                        HttpStatus.BAD_REQUEST),
+        MARKETPLACE_INSUFFICIENT_STOCK("INSUFFICIENT_STOCK", "Insufficient stock for this operation",
+                        HttpStatus.BAD_REQUEST),
         MARKETPLACE_PRODUCT_NOT_FOUND("ERR_MARKETPLACE_PRODUCT_NOT_FOUND", "Marketplace product not found",
                         HttpStatus.NOT_FOUND),
         MARKETPLACE_PRODUCT_NOT_PUBLISHED("ERR_MARKETPLACE_PRODUCT_NOT_PUBLISHED",

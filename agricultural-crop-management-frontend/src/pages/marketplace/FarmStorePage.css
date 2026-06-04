@@ -228,15 +228,15 @@
    Compact 2×3 grid, height matches banner
    ═══════════════════════════════════════════════════════════════ */
 .farm-store-stats-card {
-  width: 280px;
+  width: 320px;
   flex-shrink: 0;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1.5px solid #cbd5e1;
   border-radius: 14px;
   padding: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   overflow: hidden;
 }
@@ -244,20 +244,20 @@
 .farm-store-stat-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.875rem 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
+  gap: 0.75rem;
+  padding: 1rem 0.875rem;
+  border-bottom: 1.5px solid #cbd5e1;
 }
 
 /* Remove bottom border from last row */
-.farm-store-stat-item:nth-child(5),
-.farm-store-stat-item:nth-child(6) {
+.farm-store-stat-item:nth-child(3),
+.farm-store-stat-item:nth-child(4) {
   border-bottom: none;
 }
 
 /* Right border on left column items */
 .farm-store-stat-item:nth-child(odd) {
-  border-right: 1px solid #f1f5f9;
+  border-right: 1.5px solid #cbd5e1;
 }
 
 .farm-store-stat-item__icon {
