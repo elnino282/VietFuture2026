@@ -8,6 +8,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.example.QuanLyMuaVu.Enums.ProductWarehouseLotStatus;
+import org.example.QuanLyMuaVu.Enums.UserStatus;
+import org.example.QuanLyMuaVu.module.farm.entity.Farm;
+import org.example.QuanLyMuaVu.module.farm.entity.Plot;
+import org.example.QuanLyMuaVu.module.farm.entity.Province;
+import org.example.QuanLyMuaVu.module.farm.entity.Ward;
+import org.example.QuanLyMuaVu.module.farm.repository.FarmRepository;
+import org.example.QuanLyMuaVu.module.farm.repository.PlotRepository;
+import org.example.QuanLyMuaVu.module.farm.repository.ProvinceRepository;
+import org.example.QuanLyMuaVu.module.farm.repository.WardRepository;
+import org.example.QuanLyMuaVu.module.identity.entity.User;
+import org.example.QuanLyMuaVu.module.identity.repository.UserRepository;
+import org.example.QuanLyMuaVu.module.inventory.entity.ProductWarehouseLot;
+import org.example.QuanLyMuaVu.module.inventory.entity.Warehouse;
+import org.example.QuanLyMuaVu.module.inventory.repository.ProductWarehouseLotRepository;
+import org.example.QuanLyMuaVu.module.inventory.repository.WarehouseRepository;
+import org.example.QuanLyMuaVu.module.marketplace.entity.MarketplaceCart;
+import org.example.QuanLyMuaVu.module.marketplace.entity.MarketplaceCartItem;
+import org.example.QuanLyMuaVu.module.marketplace.entity.MarketplaceProduct;
+import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceProductStatus;
+import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceCartItemRepository;
+import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceCartRepository;
+import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +41,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -30,6 +57,36 @@ class MarketplaceBuyerCartIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ProvinceRepository provinceRepository;
+
+    @Autowired
+    private WardRepository wardRepository;
+
+    @Autowired
+    private FarmRepository farmRepository;
+
+    @Autowired
+    private PlotRepository plotRepository;
+
+    @Autowired
+    private WarehouseRepository warehouseRepository;
+
+    @Autowired
+    private ProductWarehouseLotRepository productWarehouseLotRepository;
+
+    @Autowired
+    private MarketplaceProductRepository marketplaceProductRepository;
+
+    @Autowired
+    private MarketplaceCartRepository marketplaceCartRepository;
+
+    @Autowired
+    private MarketplaceCartItemRepository marketplaceCartItemRepository;
 
     /**
      * Test user ID 4L corresponds to the "buyer" test account created by ApplicationInitConfig.
@@ -236,6 +293,34 @@ class MarketplaceBuyerCartIntegrationTest {
     }
 
     @Test
+    void addCartItem_CreatesPersistedCartItemWithGeneratedId() throws Exception {
+        User buyer = createUser("buyer");
+        MarketplaceProduct product = createPublishedProduct();
+
+        String requestBody = String.format("""
+            {
+                "productId": %d,
+                "quantity": 2.0
+            }
+            """, product.getId());
+
+        mockMvc.perform(post("/api/v1/marketplace/cart/items")
+                .with(jwt().jwt(jwt -> jwt.claim("user_id", buyer.getId()).claim("role", "BUYER")).authorities(() -> "ROLE_BUYER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value("SUCCESS"));
+
+        MarketplaceCart cart = marketplaceCartRepository.findByUser_Id(buyer.getId()).orElseThrow();
+        MarketplaceCartItem cartItem = marketplaceCartItemRepository
+                .findByCart_IdAndProduct_Id(cart.getId(), product.getId())
+                .orElseThrow();
+
+        assertNotNull(cartItem.getId());
+        assertEquals(0, cartItem.getQuantity().compareTo(new BigDecimal("2.000")));
+    }
+
+    @Test
     void getCart_WithMultipleSellers_ShouldGroupBySeller() throws Exception {
         // First, get multiple products from different sellers
         MvcResult productsResult = mockMvc.perform(get("/api/v1/marketplace/products")
@@ -324,18 +409,8 @@ class MarketplaceBuyerCartIntegrationTest {
         }
     }
 
-    /**
-     * Tests that products with INACTIVE status cannot be added to cart.
-     * <p>
-     * Note: The API treats all non-ACTIVE products (INACTIVE, SOLD_OUT, REJECTED)
-     * as "not found" from a buyer's perspective, returning 404 with
-     * ERR_MARKETPLACE_PRODUCT_NOT_FOUND. This test uses a non-existent product ID
-     * which produces the same result as an INACTIVE product would - both are filtered
-     * out by the getActiveProductOrThrow() method which only queries for ACTIVE status.
-     * </p>
-     */
     @Test
-    void addCartItem_InactiveProduct_ShouldFail() throws Exception {
+    void addCartItem_MissingProduct_ShouldFail() throws Exception {
         String requestBody = """
             {
                 "productId": 999,
@@ -348,21 +423,11 @@ class MarketplaceBuyerCartIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.code").value("ERR_MARKETPLACE_PRODUCT_NOT_FOUND"));
+            .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
     }
 
-    /**
-     * Tests that products with SOLD_OUT status cannot be added to cart.
-     * <p>
-     * Note: The API treats all non-ACTIVE products (INACTIVE, SOLD_OUT, REJECTED)
-     * as "not found" from a buyer's perspective, returning 404 with
-     * ERR_MARKETPLACE_PRODUCT_NOT_FOUND. This test uses a non-existent product ID
-     * which produces the same result as a SOLD_OUT product would - both are filtered
-     * out by the getActiveProductOrThrow() method which only queries for ACTIVE status.
-     * </p>
-     */
     @Test
-    void addCartItem_SoldOutProduct_ShouldFail() throws Exception {
+    void addCartItem_MissingProduct_SecondUnknownId_ShouldFail() throws Exception {
         String requestBody = """
             {
                 "productId": 998,
@@ -375,21 +440,11 @@ class MarketplaceBuyerCartIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.code").value("ERR_MARKETPLACE_PRODUCT_NOT_FOUND"));
+            .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
     }
 
-    /**
-     * Tests that products with REJECTED status cannot be added to cart.
-     * <p>
-     * Note: The API treats all non-ACTIVE products (INACTIVE, SOLD_OUT, REJECTED)
-     * as "not found" from a buyer's perspective, returning 404 with
-     * ERR_MARKETPLACE_PRODUCT_NOT_FOUND. This test uses a non-existent product ID
-     * which produces the same result as a REJECTED product would - both are filtered
-     * out by the getActiveProductOrThrow() method which only queries for ACTIVE status.
-     * </p>
-     */
     @Test
-    void addCartItem_RejectedProduct_ShouldFail() throws Exception {
+    void addCartItem_MissingProduct_ThirdUnknownId_ShouldFail() throws Exception {
         String requestBody = """
             {
                 "productId": 997,
@@ -402,7 +457,7 @@ class MarketplaceBuyerCartIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.code").value("ERR_MARKETPLACE_PRODUCT_NOT_FOUND"));
+            .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
     }
 
     @Test
@@ -440,7 +495,7 @@ class MarketplaceBuyerCartIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("ERR_MARKETPLACE_STOCK_CONFLICT"));
+            .andExpect(jsonPath("$.code").value("INSUFFICIENT_STOCK"));
     }
 
     @Test
@@ -554,5 +609,88 @@ class MarketplaceBuyerCartIntegrationTest {
                 .content(requestBody2))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.result.items[0].quantity").value(3.0));
+    }
+
+    private MarketplaceProduct createPublishedProduct() {
+        String suffix = UUID.randomUUID().toString();
+        User farmer = createUser("farmer");
+        Province province = provinceRepository.findById(24)
+                .orElseGet(() -> provinceRepository.save(Province.builder()
+                        .id(24)
+                        .name("Ha Noi")
+                        .slug("ha-noi")
+                        .type("thanh-pho")
+                        .nameWithType("Thanh pho Ha Noi")
+                        .build()));
+        Ward ward = wardRepository.findById(25112)
+                .orElseGet(() -> wardRepository.save(Ward.builder()
+                        .id(25112)
+                        .name("Phuong Demo")
+                        .slug("phuong-demo")
+                        .type("phuong")
+                        .nameWithType("Phuong Demo, Ha Noi")
+                        .province(province)
+                        .build()));
+        Farm farm = farmRepository.saveAndFlush(Farm.builder()
+                .user(farmer)
+                .name("Cart Test Farm " + suffix)
+                .province(province)
+                .ward(ward)
+                .area(new BigDecimal("1.00"))
+                .build());
+        Plot plot = plotRepository.saveAndFlush(Plot.builder()
+                .user(farmer)
+                .farm(farm)
+                .plotName("Cart Test Plot " + suffix)
+                .area(new BigDecimal("1.00"))
+                .soilType("FERRALSOLS")
+                .build());
+        Warehouse warehouse = warehouseRepository.saveAndFlush(Warehouse.builder()
+                .farm(farm)
+                .name("Cart Test Warehouse " + suffix)
+                .type("OUTPUT")
+                .province(province)
+                .ward(ward)
+                .build());
+        ProductWarehouseLot lot = productWarehouseLotRepository.saveAndFlush(ProductWarehouseLot.builder()
+                .lotCode("CART-LOT-" + suffix)
+                .productName("Cart Test Rice")
+                .farm(farm)
+                .plot(plot)
+                .warehouse(warehouse)
+                .harvestedAt(LocalDate.now())
+                .receivedAt(LocalDateTime.now())
+                .unit("kg")
+                .initialQuantity(new BigDecimal("100.000"))
+                .onHandQuantity(new BigDecimal("100.000"))
+                .status(ProductWarehouseLotStatus.IN_STOCK)
+                .createdBy(farmer)
+                .build());
+
+        return marketplaceProductRepository.saveAndFlush(MarketplaceProduct.builder()
+                .slug("cart-test-product-" + suffix)
+                .name("Cart Test Product")
+                .category("rice")
+                .price(new BigDecimal("25000.00"))
+                .unit("kg")
+                .stockQuantity(new BigDecimal("100.000"))
+                .farmerUser(farmer)
+                .farm(farm)
+                .lot(lot)
+                .traceable(true)
+                .status(MarketplaceProductStatus.PUBLISHED)
+                .publishedAt(LocalDateTime.now())
+                .build());
+    }
+
+    private User createUser(String prefix) {
+        String suffix = UUID.randomUUID().toString();
+        return userRepository.saveAndFlush(User.builder()
+                .username(prefix + "-" + suffix)
+                .email(prefix + "-" + suffix + "@test.local")
+                .fullName(prefix + " user")
+                .phone("0900000000")
+                .status(UserStatus.ACTIVE)
+                .build());
     }
 }

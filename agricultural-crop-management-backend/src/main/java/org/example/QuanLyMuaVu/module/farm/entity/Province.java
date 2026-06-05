@@ -1,5 +1,6 @@
 package org.example.QuanLyMuaVu.module.farm.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -49,6 +50,7 @@ public class Province {
     @Column(name = "NameWithType", nullable = false, length = 256)
     String nameWithType;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "province")
     List<Ward> wards;
 }

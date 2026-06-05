@@ -94,6 +94,13 @@ public interface MarketplaceProductRepository extends JpaRepository<MarketplaceP
         return findSellableByIdAndStatusIn(id, List.of(status));
     }
 
+    @Query("""
+            SELECT p FROM MarketplaceProduct p
+            LEFT JOIN FETCH p.lot
+            WHERE p.id = :id
+            """)
+    Optional<MarketplaceProduct> findByIdWithLotForCartValidation(@Param("id") Long id);
+
     Optional<MarketplaceProduct> findByIdAndStatus(Long id, MarketplaceProductStatus status);
 
     Optional<MarketplaceProduct> findByIdAndFarmerUser_Id(Long id, Long farmerUserId);

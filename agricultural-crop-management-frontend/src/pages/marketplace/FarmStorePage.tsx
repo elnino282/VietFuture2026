@@ -237,24 +237,6 @@ function FarmHero({ farmName, coverImageUrl, enriched, productCount }: HeroProps
             <span className="farm-store-stat-item__label">Năm hoạt động</span>
           </div>
         </div>
-        <div className="farm-store-stat-item">
-          <CheckCircle className="farm-store-stat-item__icon" />
-          <div className="farm-store-stat-item__content">
-            <span className="farm-store-stat-item__value">
-              {enriched.certifications.length}
-            </span>
-            <span className="farm-store-stat-item__label">Chứng nhận</span>
-          </div>
-        </div>
-        <div className="farm-store-stat-item">
-          <MessageCircle className="farm-store-stat-item__icon" />
-          <div className="farm-store-stat-item__content">
-            <span className="farm-store-stat-item__value">
-              {enriched.chatResponseRate}%
-            </span>
-            <span className="farm-store-stat-item__label">Phản hồi chat</span>
-          </div>
-        </div>
       </div>
     </section>
   );
@@ -594,9 +576,8 @@ export function FarmStorePage() {
             type="button"
             role="tab"
             aria-selected={selectedCategory === tab.value}
-            className={`farm-store-category-tab ${
-              selectedCategory === tab.value ? "farm-store-category-tab--active" : ""
-            }`}
+            className={`farm-store-category-tab ${selectedCategory === tab.value ? "farm-store-category-tab--active" : ""
+              }`}
             onClick={() => setSelectedCategory(tab.value)}
           >
             {tab.label}
