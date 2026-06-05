@@ -969,7 +969,10 @@ INSERT INTO seasons (season_id, season_name, plot_id, crop_id, variety_id, start
     (18, '2026 - Vụ Đậu nành Xuân (Chốt cải tạo trước lúa)', 1, 2, 4, '2026-01-15', '2026-05-10', '2026-05-10', 'COMPLETED', 145000, 140000, 1200.00, 1250.00, 6800000.00, 'Vụ đậu nành ngay trước mùa lúa 2026, tạo nền soil legacy để kiểm tra FDN đầu vụ lúa.', '2026-01-01 08:00:00'),
     (19, '2026 - Vụ Lúa Hè (Bắt đầu 26/05 - kiểm tra FDN)', 1, 1, 1, '2026-05-26', '2026-09-05', NULL, 'ACTIVE', 220000, 220000, 3350.00, NULL, 15500000.00, 'Ngày 26/05/2026 bắt đầu vụ lúa hè và đồng thời nhập 3 nhóm dữ liệu: phân bón, nước tưới, chất lượng đất để kiểm tra FDN đã giảm nhờ luân canh cây họ đậu.', '2026-05-26 08:00:00'),
     (20, '2026 - Vụ Lạc Thu (Kế hoạch duy trì FDN thấp)', 1, 3, 5, '2026-09-20', '2026-12-20', NULL, 'PLANNED', 90000, NULL, 650.00, NULL, 3200000.00, 'Kế hoạch tiếp tục dùng cây họ đậu sau vụ lúa để duy trì FDN thấp cho chu kỳ kế tiếp.', '2026-05-26 08:30:00'),
-    (21, '2026 - Vụ Ngô Xuân Cao Nguyên', 9, 5, 7, '2026-01-20', '2026-04-25', '2026-04-28', 'COMPLETED', 15000, 14500, 2800.00, 2900.00, 7500000.00, 'Vụ ngô cao nguyên farmer 2, dùng cho marketplace split-order flow.', '2026-01-12 08:00:00');
+    (21, '2026 - Vụ Ngô Xuân Cao Nguyên', 9, 5, 7, '2026-01-20', '2026-04-25', '2026-04-28', 'COMPLETED', 15000, 14500, 2800.00, 2900.00, 7500000.00, 'Vụ ngô cao nguyên farmer 2, dùng cho marketplace split-order flow.', '2026-01-12 08:00:00'),
+    -- Seasons cho farm 2 (An Phát) - fix traceability chain cho marketplace products 3 & 4
+    (22, '2025 - Vụ Lạc Xuân An Phát', 7, 3, 5, '2025-01-20', '2025-04-20', '2025-04-25', 'COMPLETED', 50000, 48000, 380.00, 400.00, 2000000.00, 'Vụ lạc xuân trên lô B2 farm An Phát, cung cấp nguồn lạc tươi cho marketplace.', '2025-01-10 08:00:00'),
+    (23, '2025 - Vụ Đậu đen An Phát', 6, 4, 6, '2025-09-15', '2026-01-20', '2026-02-08', 'COMPLETED', 60000, 58000, 1800.00, 2050.00, 5500000.00, 'Vụ đậu đen trên lô B1 farm An Phát, thu hoạch phục vụ Tết 2026.', '2025-09-01 08:00:00');
 
 
 -- =========================================================
@@ -1054,7 +1057,10 @@ INSERT INTO harvests (harvest_id, season_id, harvest_date, quantity, unit, grade
     (15, 16, '2025-08-25', 1180.00, 12000.00, 'A', 'Đậu nành hè 2025 tích lũy soil legacy cho vụ ngô sau', '2025-08-25 17:00:00'),
     (16, 17, '2025-12-25', 3100.00, 7800.00, 'A', 'Ngô thu 2025 sau hai vụ họ đậu, năng suất ổn định dù giảm phân khoáng', '2025-12-25 17:10:00'),
     (17, 18, '2026-05-10', 1250.00, 12200.00, 'A', 'Đậu nành xuân 2026 chốt cải tạo đất trước khi bắt đầu vụ lúa hè ngày 26/05', '2026-05-10 16:40:00'),
-    (18, 21, '2026-04-28', 2900.00, 7500.00, 'A', 'Ngô cao nguyên farmer 2 thu hoạch vụ xuân 2026', '2026-04-28 17:00:00');
+    (18, 21, '2026-04-28', 2900.00, 7500.00, 'A', 'Ngô cao nguyên farmer 2 thu hoạch vụ xuân 2026', '2026-04-28 17:00:00'),
+    -- Harvests cho farm 2 (An Phát) - fix traceability chain
+    (19, 22, '2025-04-25', 400.00, 8500.00, 'B', 'Thu hoạch lạc xuân lô B2 An Phát, dùng cho marketplace listing', '2025-04-25 17:00:00'),
+    (20, 23, '2026-02-08', 2050.00, 11000.00, 'A', 'Thu hoạch đậu đen lô B1 An Phát, phục vụ chiến dịch Tết 2026', '2026-02-08 17:00:00');
 
 
 -- =========================================================
@@ -1742,11 +1748,11 @@ INSERT INTO product_warehouse_lots (id, lot_code, product_id, product_name, prod
      '2025-02-28', '2025-02-28 18:00:00', 'kg', 900.000, 780.000, 'A', 'DRY',
      '{"harvestTaskId":12,"route":"plot-2->output-warehouse-2"}', 'Lo lua published chinh cho buyer catalog', 'IN_STOCK',
      2, '2025-02-28 18:00:00', '2025-03-03 09:00:00'),
-    (3, 'LOT-PEANUT-2025-02-01', 3001, 'Lac tuoi', 'Loai tuoi', 5, 2, 7, 10, 3, NULL,
+    (3, 'LOT-PEANUT-2025-02-01', 3001, 'Lac tuoi', 'Loai tuoi', 22, 2, 7, 19, 3, NULL,
      '2025-02-08', '2025-02-08 12:00:00', 'kg', 180.000, 150.000, 'B', 'FRESH',
      '{"harvestTaskId":15,"route":"plot-7->warehouse-3"}', 'Lo lac dung cho pending-review listing', 'IN_STOCK',
      2, '2025-02-08 12:00:00', '2025-02-10 09:00:00'),
-    (4, 'LOT-BLACKBEAN-2026-02', 4001, 'Dau den xanh long', 'Loai A', 15, 2, 6, 11, 2, NULL,
+    (4, 'LOT-BLACKBEAN-2026-02', 4001, 'Dau den xanh long', 'Loai A', 23, 2, 6, 20, 2, NULL,
      '2026-02-08', '2026-02-08 18:00:00', 'kg', 2050.000, 1930.000, 'A', 'FRESH',
      '{"harvestTaskId":22,"route":"plot-6->warehouse-2"}', 'Lo da an sau campaign tet, dung cho hidden listing', 'IN_STOCK',
      @farmer_user_id, '2026-02-08 18:00:00', '2026-03-18 09:40:00'),
@@ -1817,12 +1823,12 @@ VALUES
     (3, 0, 'lac-tuoi-an-phat', 'Lac tuoi An Phat', 'PEANUT', 'Listing waiting admin review.', 'Used to test pending-review filters in farmer and admin dashboards.', 92000.00, 'kg', 120.000,
      'https://loremflickr.com/1200/800/peanut,nuts?lock=9201',
      '["https://loremflickr.com/1200/800/peanut,nuts?lock=9201","https://loremflickr.com/1200/800/peanut,agriculture?lock=9202"]',
-     2, 2, 5, 3, TRUE, 0.0, 0, 'PENDING_REVIEW', NULL, '2026-04-03 08:00:00', '2026-04-03 08:00:00'),
+     2, 2, 22, 3, TRUE, 0.0, 0, 'PENDING_REVIEW', NULL, '2026-04-03 08:00:00', '2026-04-03 08:00:00'),
 
     (4, 0, 'dau-den-cao-cap-tet-2026', 'Dau den cao cap Tet 2026', 'BLACK_BEAN', 'Hidden listing after campaign close.', 'Used to test hidden-status records in analytics and seller tables.', 98000.00, 'kg', 1500.000,
      'https://loremflickr.com/1200/800/blackbeans,beans?lock=20261',
      '["https://loremflickr.com/1200/800/blackbeans,beans?lock=20261","https://loremflickr.com/1200/800/blackbeans,food?lock=20262"]',
-     2, 2, 15, 4, TRUE, 0.0, 0, 'HIDDEN', '2026-03-01 08:00:00', '2026-03-01 08:00:00', '2026-04-05 08:00:00'),
+     2, 2, 23, 4, TRUE, 0.0, 0, 'HIDDEN', '2026-03-01 08:00:00', '2026-03-01 08:00:00', '2026-04-05 08:00:00'),
 
     (5, 0, 'dau-nanh-ags398-say-kho-2026', 'Dau nanh AGS398 say kho 2026', 'SOYBEAN', 'Published low-stock lot for seller dashboard alerts.', 'Used to test low stock KPI and reservation/release inventory flows.', 145000.00, 'kg', 8.000,
      'https://loremflickr.com/1200/800/soybeans,drybeans?lock=3985',
