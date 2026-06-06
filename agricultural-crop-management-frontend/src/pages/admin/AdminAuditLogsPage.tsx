@@ -2,9 +2,15 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
+  BackButton,
   Badge,
   Button,
   CardContent,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   Input,
   Select,
   SelectContent,
@@ -26,6 +32,7 @@ import {
   AdminPageContainer,
 } from "@/features/admin/shared/ui";
 import { usePreferences } from "@/shared/contexts";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -66,6 +73,7 @@ const compactText = (value?: string | null, maxLength = 120) => {
 };
 
 export function AdminAuditLogsPage() {
+  const { t } = useI18n();
   const { preferences } = usePreferences();
   const [page, setPage] = useState(0);
   const [module, setModule] = useState("ALL");
@@ -74,6 +82,7 @@ export function AdminAuditLogsPage() {
   const [user, setUser] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [selectedLog, setSelectedLog] = useState<Awaited<ReturnType<typeof adminAuditLogApi.list>>["items"][number] | null>(null);
 
   useEffect(() => {
     setPage(0);
@@ -108,8 +117,8 @@ export function AdminAuditLogsPage() {
   return (
     <AdminPageContainer>
       <AdminHeaderCard
-        title="Audit Logs"
-        description="View and filter sensitive data change trails."
+        title={t("admin.auditLogs.title")}
+        description={t("admin.auditLogs.subtitle")}
       />
 
       <AdminContentCard>
@@ -117,7 +126,7 @@ export function AdminAuditLogsPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Select value={module} onValueChange={setModule}>
               <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[180px]">
-                <SelectValue placeholder="Module" />
+                <SelectValue placeholder={t("admin.auditLogs.filters.module")} />
               </SelectTrigger>
               <SelectContent>
                 {MODULE_OPTIONS.map((option) => (
@@ -130,19 +139,19 @@ export function AdminAuditLogsPage() {
 
             <Input
               className="h-9 w-full rounded-[14px] sm:w-[190px]"
-              placeholder="Entity type"
+              placeholder={t("admin.auditLogs.filters.entityType")}
               value={entityType}
               onChange={(event) => setEntityType(event.target.value)}
             />
             <Input
               className="h-9 w-full rounded-[14px] sm:w-[190px]"
-              placeholder="Action"
+              placeholder={t("admin.auditLogs.filters.action")}
               value={action}
               onChange={(event) => setAction(event.target.value)}
             />
             <Input
               className="h-9 w-full rounded-[14px] sm:w-[190px]"
-              placeholder="User"
+              placeholder={t("admin.auditLogs.filters.user")}
               value={user}
               onChange={(event) => setUser(event.target.value)}
             />
@@ -171,9 +180,9 @@ export function AdminAuditLogsPage() {
           {auditLogsQuery.isError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Failed to load audit logs</AlertTitle>
+              <AlertTitle>{t("admin.auditLogs.error.load")}</AlertTitle>
               <AlertDescription>
-                {auditLogsQuery.error?.message || "Please retry."}
+                {auditLogsQuery.error?.message || t("common.error.description")}
               </AlertDescription>
             </Alert>
           )}
@@ -185,18 +194,22 @@ export function AdminAuditLogsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Time</TableHead>
-                        <TableHead>User</TableHead>
-                        <TableHead>Module</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead>Entity</TableHead>
-                        <TableHead>Reason</TableHead>
-                        <TableHead>Snapshot</TableHead>
+                        <TableHead>{t("admin.auditLogs.table.time")}</TableHead>
+                        <TableHead>{t("admin.auditLogs.table.user")}</TableHead>
+                        <TableHead>{t("admin.auditLogs.table.module")}</TableHead>
+                        <TableHead>{t("admin.auditLogs.table.action")}</TableHead>
+                        <TableHead>{t("admin.auditLogs.table.entity")}</TableHead>
+                        <TableHead>{t("admin.auditLogs.table.reason")}</TableHead>
+                        <TableHead>{t("admin.auditLogs.table.snapshot")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {auditLogsQuery.data.items.map((log) => (
-                        <TableRow key={log.id}>
+                        <TableRow
+                          key={log.id}
+                          className="cursor-pointer hover:bg-muted/40"
+                          onClick={() => setSelectedLog(log)}
+                        >
                           <TableCell>
                             {formatDateTime(log.performedAt, preferences.locale)}
                           </TableCell>
@@ -220,7 +233,7 @@ export function AdminAuditLogsPage() {
                   </Table>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <span className="text-sm text-muted-foreground">
-                      Page {page + 1} / {Math.max(totalPages, 1)}
+                      {t("pagination.page")} {page + 1} / {Math.max(totalPages, 1)}
                     </span>
                     <div className="flex items-center gap-2">
                       <Button
@@ -229,7 +242,7 @@ export function AdminAuditLogsPage() {
                         disabled={page === 0}
                         onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
                       >
-                        Previous
+                        {t("pagination.previousPage")}
                       </Button>
                       <Button
                         variant="outline"
@@ -237,20 +250,73 @@ export function AdminAuditLogsPage() {
                         disabled={page >= totalPages - 1 || totalPages === 0}
                         onClick={() => setPage((prev) => prev + 1)}
                       >
-                        Next
+                        {t("pagination.nextPage")}
                       </Button>
                     </div>
                   </div>
                 </>
               ) : (
                 <div className="py-10 text-center text-sm text-muted-foreground">
-                  No audit logs found for current filters.
+                  {t("admin.auditLogs.empty")}
                 </div>
               )}
             </>
           )}
         </CardContent>
       </AdminContentCard>
+
+      <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <BackButton onClick={() => setSelectedLog(null)} className="w-fit" />
+            <DialogTitle>{selectedLog?.operation ?? t("admin.auditLogs.detail.title", "Audit log detail")}</DialogTitle>
+            <DialogDescription>
+              {selectedLog ? `${selectedLog.module} / ${selectedLog.entityType} #${selectedLog.entityId}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedLog && (
+            <div className="space-y-4 text-sm">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">{t("admin.auditLogs.table.time")}</p>
+                  <p className="font-medium">{formatDateTime(selectedLog.performedAt, preferences.locale)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{t("admin.auditLogs.table.user")}</p>
+                  <p className="font-medium">{selectedLog.performedBy}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{t("admin.auditLogs.table.module")}</p>
+                  <p className="font-medium">{selectedLog.module}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{t("admin.auditLogs.table.action")}</p>
+                  <p className="font-medium">{selectedLog.operation}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{t("admin.auditLogs.table.entity")}</p>
+                  <p className="font-medium">{selectedLog.entityType} #{selectedLog.entityId}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">IP</p>
+                  <p className="font-medium">{selectedLog.ipAddress || "-"}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{t("admin.auditLogs.table.reason")}</p>
+                <p className="mt-1 whitespace-pre-wrap">{selectedLog.reason || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{t("admin.auditLogs.table.snapshot")}</p>
+                <pre className="mt-1 max-h-[260px] overflow-auto rounded-lg border border-border bg-muted/30 p-3 text-xs whitespace-pre-wrap">
+                  {selectedLog.snapshotData || "-"}
+                </pre>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminPageContainer>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import {
   Badge,
+  BackButton,
   Button,
   Card,
   CardContent,
@@ -129,16 +130,19 @@ export function SearchResultsPage({
       )}
     >
       {isAdminVariant ? (
-        <Card className="rounded-[18px] border-border bg-card shadow-sm">
-          <CardContent className="p-4 sm:p-5">
-            <h1 className="text-2xl font-bold">Search Results</h1>
-            <p className="text-muted-foreground">
-              {normalizedQuery
-                ? `Showing results for "${normalizedQuery}"`
-                : "Type a keyword to search."}
-            </p>
-          </CardContent>
-        </Card>
+        <>
+          <BackButton to="/admin/dashboard" className="w-fit" />
+          <Card className="rounded-[18px] border-border bg-card shadow-sm">
+            <CardContent className="p-4 sm:p-5">
+              <h1 className="text-2xl font-bold">Search Results</h1>
+              <p className="text-muted-foreground">
+                {normalizedQuery
+                  ? `Showing results for "${normalizedQuery}"`
+                  : "Type a keyword to search."}
+              </p>
+            </CardContent>
+          </Card>
+        </>
       ) : (
         <div>
           <h1 className="text-2xl font-bold">Search Results</h1>

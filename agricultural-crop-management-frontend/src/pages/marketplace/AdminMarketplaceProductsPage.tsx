@@ -24,15 +24,16 @@ import {
 } from "@/features/marketplace/hooks";
 import { formatVnd } from "@/features/marketplace/lib/format";
 import { RejectWithReasonModal, PaginationControls } from "@/features/marketplace/components";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
-const statusFilters: Array<{ value: "ALL" | MarketplaceProductStatus; label: string }> = [
-  { value: "ALL", label: "All" },
-  { value: "DRAFT", label: "Draft" },
-  { value: "PENDING_REVIEW", label: "Pending review" },
-  { value: "ACTIVE", label: "Active" },
-  { value: "INACTIVE", label: "Inactive" },
-  { value: "REJECTED", label: "Rejected" },
-  { value: "SOLD_OUT", label: "Sold out" },
+const statusFilters: Array<{ value: "ALL" | MarketplaceProductStatus; labelKey: string }> = [
+  { value: "ALL", labelKey: "admin.marketplace.products.filters.all" },
+  { value: "DRAFT", labelKey: "admin.marketplace.products.status.draft" },
+  { value: "PENDING_REVIEW", labelKey: "admin.marketplace.products.status.pendingReview" },
+  { value: "ACTIVE", labelKey: "admin.marketplace.products.status.active" },
+  { value: "INACTIVE", labelKey: "admin.marketplace.products.status.inactive" },
+  { value: "REJECTED", labelKey: "admin.marketplace.products.status.rejected" },
+  { value: "SOLD_OUT", labelKey: "admin.marketplace.products.status.soldOut" },
 ];
 
 function statusVariant(status: MarketplaceProductStatus) {
@@ -42,24 +43,24 @@ function statusVariant(status: MarketplaceProductStatus) {
   return "secondary" as const;
 }
 
-function statusLabel(status: MarketplaceProductStatus) {
+function statusLabel(status: MarketplaceProductStatus, t: ReturnType<typeof useI18n>["t"]) {
   switch (status) {
     case "DRAFT":
-      return "Draft";
+      return t("admin.marketplace.products.status.draft");
     case "PENDING_REVIEW":
-      return "Pending review";
+      return t("admin.marketplace.products.status.pendingReview");
     case "ACTIVE":
-      return "Active";
+      return t("admin.marketplace.products.status.active");
     case "INACTIVE":
-      return "Inactive";
+      return t("admin.marketplace.products.status.inactive");
     case "REJECTED":
-      return "Rejected";
+      return t("admin.marketplace.products.status.rejected");
     case "SOLD_OUT":
-      return "Sold out";
+      return t("admin.marketplace.products.status.soldOut");
     case "PUBLISHED":
-      return "Published";
+      return t("admin.marketplace.products.status.published");
     case "HIDDEN":
-      return "Hidden";
+      return t("admin.marketplace.products.status.hidden");
     default:
       return status;
   }
@@ -74,6 +75,7 @@ function ModerationActions({
   currentStatus: MarketplaceProductStatus;
   onOpenRejectModal: (productId: number, targetStatus: MarketplaceProductStatus) => void;
 }) {
+  const { t } = useI18n();
   const mutation = useMarketplaceUpdateAdminProductStatusMutation(productId);
 
   const handleApprove = (status: MarketplaceProductStatus) => {
@@ -91,14 +93,14 @@ function ModerationActions({
       ? [
           {
             status: "ACTIVE",
-            label: "Approve",
+            label: t("admin.marketplace.products.actions.approve"),
             icon: Check,
             className: "text-primary hover:bg-emerald-50 hover:text-primary",
             requiresReason: false,
           },
           {
             status: "REJECTED",
-            label: "Reject",
+            label: t("admin.marketplace.products.actions.reject"),
             icon: X,
             className: "text-destructive hover:bg-red-50 hover:text-red-700",
             requiresReason: true,
@@ -108,7 +110,7 @@ function ModerationActions({
         ? [
             {
               status: "INACTIVE",
-              label: "Hide",
+              label: t("admin.marketplace.products.actions.hide"),
               icon: X,
               className: "text-destructive hover:bg-red-50 hover:text-red-700",
               requiresReason: true,
@@ -118,14 +120,14 @@ function ModerationActions({
           ? [
               {
                 status: "ACTIVE",
-                label: "Publish",
+                label: t("admin.marketplace.products.actions.publish"),
                 icon: Check,
                 className: "text-primary hover:bg-emerald-50 hover:text-primary",
                 requiresReason: false,
               },
               {
                 status: "PENDING_REVIEW",
-                label: "Return to review",
+                label: t("admin.marketplace.products.actions.returnToReview"),
                 icon: RotateCcw,
                 className: "text-muted-foreground hover:bg-muted hover:text-foreground",
                 requiresReason: false,
@@ -135,14 +137,14 @@ function ModerationActions({
             ? [
                 {
                   status: "PENDING_REVIEW",
-                  label: "Return to review",
+                  label: t("admin.marketplace.products.actions.returnToReview"),
                   icon: RotateCcw,
                   className: "text-muted-foreground hover:bg-muted hover:text-foreground",
                   requiresReason: false,
                 },
                 {
                   status: "ACTIVE",
-                  label: "Approve",
+                  label: t("admin.marketplace.products.actions.approve"),
                   icon: Check,
                   className: "text-primary hover:bg-emerald-50 hover:text-primary",
                   requiresReason: false,
@@ -151,14 +153,14 @@ function ModerationActions({
           : [
               {
                 status: "PENDING_REVIEW",
-                label: "Send to review",
+                label: t("admin.marketplace.products.actions.sendToReview"),
                 icon: RotateCcw,
                 className: "text-muted-foreground hover:bg-muted hover:text-foreground",
                 requiresReason: false,
               },
               {
                 status: "INACTIVE",
-                label: "Hide",
+                label: t("admin.marketplace.products.actions.hide"),
                 icon: X,
                 className: "text-destructive hover:bg-red-50 hover:text-red-700",
                 requiresReason: true,
@@ -174,7 +176,7 @@ function ModerationActions({
           size="icon"
           className="h-8 w-8 rounded-[14px]"
           disabled={mutation.isPending}
-          aria-label="Product actions"
+          aria-label={t("admin.marketplace.products.actions.productActions")}
         >
           <MoreVertical className="h-4 w-4" />
         </Button>
@@ -207,6 +209,7 @@ function ModerationActions({
 }
 
 export function AdminMarketplaceProductsPage() {
+  const { t } = useI18n();
   const [status, setStatus] = useState<"ALL" | MarketplaceProductStatus>("ALL");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -247,7 +250,7 @@ export function AdminMarketplaceProductsPage() {
       });
       closeRejectModal();
     } catch {
-      toast.error("Failed to update product status. Please try again.");
+      toast.error(t("admin.marketplace.products.toast.updateStatusFailed"));
       // Keep modal open on error so user can retry
     }
   };
@@ -255,9 +258,9 @@ export function AdminMarketplaceProductsPage() {
   return (
     <AdminPageContainer>
       <AdminHeaderCard
-        title="Moderate marketplace products"
-        description="Review product listings while keeping current moderation mutations and filters."
-        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">FarmACM Admin</span>}
+        title={t("admin.marketplace.products.title")}
+        description={t("admin.marketplace.products.description")}
+        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{t("admin.marketplace.common.adminBadge")}</span>}
       />
 
       <AdminFilterCard>
@@ -268,7 +271,7 @@ export function AdminMarketplaceProductsPage() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by product, farm, or seller..."
+              placeholder={t("admin.marketplace.products.searchPlaceholder")}
               className="h-11 rounded-[14px] border-border pl-10"
             />
           </div>
@@ -286,7 +289,7 @@ export function AdminMarketplaceProductsPage() {
                 }}
                 className="rounded-[14px]"
               >
-                {option.label}
+                {t(option.labelKey)}
               </Button>
             ))}
           </div>
@@ -299,12 +302,12 @@ export function AdminMarketplaceProductsPage() {
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-border bg-muted text-sm text-muted-foreground">
-                <th className="p-4 font-medium">Product</th>
-                <th className="p-4 font-medium">Seller</th>
-                <th className="p-4 font-medium">Traceability</th>
-                <th className="p-4 font-medium">Status</th>
-                <th className="p-4 font-medium">Price</th>
-                <th className="p-4 text-right font-medium">Actions</th>
+                <th className="p-4 font-medium">{t("admin.marketplace.products.table.product")}</th>
+                <th className="p-4 font-medium">{t("admin.marketplace.products.table.seller")}</th>
+                <th className="p-4 font-medium">{t("admin.marketplace.products.table.traceability")}</th>
+                <th className="p-4 font-medium">{t("admin.marketplace.products.table.status")}</th>
+                <th className="p-4 font-medium">{t("admin.marketplace.products.table.price")}</th>
+                <th className="p-4 text-right font-medium">{t("admin.marketplace.products.table.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -320,19 +323,23 @@ export function AdminMarketplaceProductsPage() {
                       />
                       <div className="min-w-0">
                         <p className="truncate font-medium text-foreground">{product.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">{product.category || "Uncategorized"}</p>
+                        <p className="truncate text-xs text-muted-foreground">{product.category || t("admin.marketplace.products.fallback.uncategorized")}</p>
                       </div>
                     </div>
                   </td>
                   <td className="p-4 text-sm text-muted-foreground">
                     <div>{product.farmerDisplayName}</div>
-                    <div className="text-xs text-muted-foreground/60">{product.farmName ?? "Unknown farm"}</div>
+                    <div className="text-xs text-muted-foreground/60">{product.farmName ?? t("admin.marketplace.products.fallback.unknownFarm")}</div>
                   </td>
                   <td className="p-4">
-                    {product.traceable ? <Badge variant="success">Yes</Badge> : <Badge variant="secondary">No</Badge>}
+                    {product.traceable ? (
+                      <Badge variant="success">{t("common.yes")}</Badge>
+                    ) : (
+                      <Badge variant="secondary">{t("common.no")}</Badge>
+                    )}
                   </td>
                   <td className="p-4">
-                    <Badge variant={statusVariant(product.status)}>{statusLabel(product.status)}</Badge>
+                    <Badge variant={statusVariant(product.status)}>{statusLabel(product.status, t)}</Badge>
                   </td>
                   <td className="p-4 font-medium text-foreground">{formatVnd(product.price)}</td>
                   <td className="p-4 text-right">
@@ -347,21 +354,21 @@ export function AdminMarketplaceProductsPage() {
               {productsQuery.isLoading ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">
-                    Loading products...
+                    {t("admin.marketplace.products.table.loading")}
                   </td>
                 </tr>
               ) : null}
               {!productsQuery.isLoading && !productsQuery.isError && (productsQuery.data?.items ?? []).length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">
-                    No products matched the current moderation filters.
+                    {t("admin.marketplace.products.table.empty")}
                   </td>
                 </tr>
               ) : null}
               {productsQuery.isError ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-sm text-destructive">
-                    Failed to load admin marketplace products.
+                    {t("admin.marketplace.products.table.loadError")}
                   </td>
                 </tr>
               ) : null}
@@ -389,14 +396,18 @@ export function AdminMarketplaceProductsPage() {
         onClose={closeRejectModal}
         onConfirm={handleRejectConfirm}
         isLoading={rejectMutation.isPending}
-        title={rejectModalState.targetStatus === "INACTIVE" || rejectModalState.targetStatus === "HIDDEN" ? "Hide Product" : "Reject Product"}
+        title={
+          rejectModalState.targetStatus === "INACTIVE" || rejectModalState.targetStatus === "HIDDEN"
+            ? t("admin.marketplace.products.modal.hideTitle")
+            : t("admin.marketplace.products.modal.rejectTitle")
+        }
         description={
           rejectModalState.targetStatus === "INACTIVE" || rejectModalState.targetStatus === "HIDDEN"
-            ? "This product will be hidden from the marketplace. The farmer will be notified."
-            : "This product will be rejected. The farmer will be notified."
+            ? t("admin.marketplace.products.modal.hideDescription")
+            : t("admin.marketplace.products.modal.rejectDescription")
         }
-        reasonLabel="Reason for action"
-        reasonPlaceholder="Explain why this action is being taken..."
+        reasonLabel={t("admin.marketplace.products.modal.reasonLabel")}
+        reasonPlaceholder={t("admin.marketplace.products.modal.reasonPlaceholder")}
       />
     </AdminPageContainer>
   );

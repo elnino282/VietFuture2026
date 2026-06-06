@@ -10,7 +10,7 @@ export function ChangePasswordSection() {
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
 
   return (
-    <Card className="border-border shadow-sm">
+    <Card className="rounded-[18px] border border-border bg-card shadow-sm">
       <CardHeader className="pb-6">
         <CardTitle className="flex items-center gap-2 text-base font-normal text-foreground">
           <Shield className="w-5 h-5" />
@@ -18,7 +18,7 @@ export function ChangePasswordSection() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="bg-muted/30 border border-border rounded-2xl p-4 flex items-start justify-between">
+        <div className="bg-muted/30 border border-border rounded-2xl p-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4">
             <Lock className="w-5 h-5 text-foreground mt-0.5" />
             <div className="space-y-1">
@@ -32,7 +32,7 @@ export function ChangePasswordSection() {
             variant="outline"
             size="sm"
             onClick={() => setPasswordDialogOpen(true)}
-            className="border-border bg-muted text-foreground hover:bg-muted/50"
+            className="w-full rounded-[14px] border-border bg-muted text-foreground hover:bg-muted/50 sm:w-auto"
           >
             <KeyRound className="w-4 h-4 mr-2" />
             {t('profile.security.changePassword')}

@@ -7,6 +7,7 @@ import { Label } from '@/shared/ui/label';
 import { Switch } from '@/shared/ui/switch';
 import { AddressSelector } from '@/shared/ui/address-selector';
 import { CreateFarmRequest } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface CreateFarmModalProps {
     open: boolean;
@@ -15,6 +16,7 @@ interface CreateFarmModalProps {
 }
 
 export function CreateFarmModal({ open, onOpenChange, onSubmit }: CreateFarmModalProps) {
+    const { t } = useTranslation();
     const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<CreateFarmRequest>({
         defaultValues: {
             farmName: '',
@@ -29,7 +31,7 @@ export function CreateFarmModal({ open, onOpenChange, onSubmit }: CreateFarmModa
     const handleFormSubmit = async (data: CreateFarmRequest) => {
         setAddressError('');
         if (!data.provinceId || !data.wardId) {
-            setAddressError('Please select a valid location');
+            setAddressError(t('farms.validation.locationRequired'));
             return;
         }
         
@@ -46,31 +48,31 @@ export function CreateFarmModal({ open, onOpenChange, onSubmit }: CreateFarmModa
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>Create New Farm</DialogTitle>
+                    <DialogTitle>{t('farms.dialog.createFarmTitle')}</DialogTitle>
                     <DialogDescription>
-                        Register a new farm location to start managing plots and seasons.
+                        {t('farms.dialog.createFarmDescription')}
                     </DialogDescription>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label htmlFor="farmName">Farm Name <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="farmName" required>{t('farms.form.farmName')}</Label>
                         <Input 
                             id="farmName" 
-                            {...register('farmName', { required: 'Farm name is required' })} 
+                            {...register('farmName', { required: t('farms.validation.farmNameRequired') })}
                         />
                         {errors.farmName && <p className="text-sm text-red-500">{errors.farmName.message}</p>}
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="area">Total Area (ha) <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="area" required>{t('farms.form.totalAreaHectares')}</Label>
                         <Input 
                             id="area" 
                             type="number" 
                             step="0.01" 
                             {...register('area', { 
-                                required: 'Area is required',
-                                min: { value: 0.01, message: 'Area must be greater than 0' },
+                                required: t('farms.validation.areaRequired'),
+                                min: { value: 0.01, message: t('farms.validation.areaPositive') },
                                 valueAsNumber: true
                             })} 
                         />
@@ -80,7 +82,7 @@ export function CreateFarmModal({ open, onOpenChange, onSubmit }: CreateFarmModa
                     <div className="space-y-2">
                          <AddressSelector
                             required
-                            label="Location"
+                            label={t('farms.form.location')}
                             error={addressError}
                             onChange={(val) => {
                                 setValue('provinceId', val.provinceId || 0);
@@ -91,7 +93,7 @@ export function CreateFarmModal({ open, onOpenChange, onSubmit }: CreateFarmModa
                     </div>
 
                     <div className="flex items-center justify-between space-x-2 border p-3 rounded-lg">
-                        <Label htmlFor="active" className="cursor-pointer">Active Status</Label>
+                        <Label htmlFor="active" className="cursor-pointer">{t('farms.form.activeStatus')}</Label>
                         <Switch 
                             id="active" 
                             checked={watch('active')} 
@@ -100,9 +102,9 @@ export function CreateFarmModal({ open, onOpenChange, onSubmit }: CreateFarmModa
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
                         <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Creating...' : 'Create Farm'}
+                            {isSubmitting ? t('common.creating') : t('farms.dialog.createFarmTitle')}
                         </Button>
                     </DialogFooter>
                 </form>

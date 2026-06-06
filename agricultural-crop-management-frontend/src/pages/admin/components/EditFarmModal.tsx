@@ -4,9 +4,10 @@ import {
   adminUsersApi,
   type AdminFarmUpdateRequest,
 } from "@/services/api.admin";
+import { BackButton } from "@/shared/ui/back-button";
 import { useVietnameseAddress } from "@/shared/ui/address-selector";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle, Loader2, Search, X } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface EditFarmModalProps {
@@ -63,6 +64,14 @@ export function EditFarmModal({
   } = useVietnameseAddress({
     initialWardCode: farm?.wardId,
   });
+  const isDirty = !!farm && (
+    formData.name !== (farm.name || "") ||
+    formData.area !== (farm.area?.toString() || "") ||
+    formData.ownerId !== (farm.ownerId ?? null) ||
+    formData.active !== (farm.active ?? true) ||
+    (selectedProvince ?? null) !== (farm.provinceId ?? null) ||
+    (selectedWard ?? null) !== (farm.wardId ?? null)
+  );
 
   // Fetch FARMER users for owner selection
   const { data: farmersData, isLoading: farmersLoading } = useQuery({
@@ -108,17 +117,17 @@ export function EditFarmModal({
     onError: (err: any) => {
       // Handle specific error codes
       const message =
-        err.response?.data?.message || err.message || "Failed to update farm";
+        err.response?.data?.message || err.message || t("admin.farmsPlots.editFarm.error.updateFailed");
       if (
         message.includes("FARMER role") ||
         err.response?.data?.code === "ERR_INVALID_FARM_OWNER_ROLE"
       ) {
-        setError("Selected owner must have FARMER role");
+        setError(t("admin.farmsPlots.editFarm.error.ownerMustBeFarmer"));
       } else if (
         message.includes("Ward does not belong") ||
         err.response?.data?.code === "ERR_WARD_NOT_IN_PROVINCE"
       ) {
-        setError("Ward does not belong to selected province");
+        setError(t("admin.farmsPlots.validation.wardProvinceMismatch"));
       } else {
         setError(message);
       }
@@ -131,23 +140,23 @@ export function EditFarmModal({
 
     // Validation
     if (!formData.name.trim()) {
-      setError("Farm name is required");
+      setError(t("admin.farmsPlots.editFarm.validation.nameRequired"));
       return;
     }
     if (!selectedProvince) {
-      setError("Province is required");
+      setError(t("admin.farmsPlots.editFarm.validation.provinceRequired"));
       return;
     }
     if (!selectedWard) {
-      setError("Ward is required");
+      setError(t("admin.farmsPlots.editFarm.validation.wardRequired"));
       return;
     }
     if (!formData.area || parseFloat(formData.area) <= 0) {
-      setError("Area must be greater than 0");
+      setError(t("admin.farmsPlots.editFarm.validation.areaPositive"));
       return;
     }
     if (!formData.ownerId) {
-      setError("Owner is required");
+      setError(t("admin.farmsPlots.editFarm.validation.ownerRequired"));
       return;
     }
 
@@ -166,25 +175,32 @@ export function EditFarmModal({
     setShowOwnerDropdown(false);
     setOwnerSearch("");
   };
+  const handleClose = () => {
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+
+    onClose();
+  };
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
 
       {/* Modal */}
       <div className="relative bg-background border border-border rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-lg font-semibold">Edit Farm</h2>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <BackButton onClick={handleClose} className="w-fit" />
+            <h2 className="text-lg font-semibold">{t("admin.farmsPlots.editFarm.title")}</h2>
+          </div>
         </div>
 
         {/* Content */}
@@ -205,7 +221,7 @@ export function EditFarmModal({
 
               {/* Name */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Farm Name *</label>
+                <label className="text-sm font-medium">{t("admin.farmsPlots.editFarm.nameRequired")}</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -213,13 +229,13 @@ export function EditFarmModal({
                     setFormData((prev) => ({ ...prev, name: e.target.value }))
                   }
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
-                  placeholder="Enter farm name"
+                  placeholder={t("admin.farmsPlots.editFarm.namePlaceholder")}
                 />
               </div>
 
               {/* Province - REQUIRED */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Province *</label>
+                <label className="text-sm font-medium">{t("common.addressSelector.province")} *</label>
                 <select
                   value={selectedProvince ?? ""}
                   onChange={(e) => {
@@ -230,7 +246,7 @@ export function EditFarmModal({
                   disabled={isLoadingProvinces}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
                 >
-                  <option value="">Select province...</option>
+                  <option value="">{t("common.addressSelector.provincePlaceholder")}</option>
                   {provinces.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
@@ -241,7 +257,7 @@ export function EditFarmModal({
 
               {/* Ward - REQUIRED, disabled until province selected */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Ward *</label>
+                <label className="text-sm font-medium">{t("common.addressSelector.ward")} *</label>
                 <select
                   value={selectedWard ?? ""}
                   onChange={(e) =>
@@ -254,10 +270,10 @@ export function EditFarmModal({
                 >
                   <option value="">
                     {isLoadingWards
-                      ? "Loading..."
+                      ? t("common.loading")
                       : !selectedProvince
-                        ? "Select province first"
-                        : "Select ward..."}
+                        ? t("admin.farmsPlots.addPlot.selectProvinceFirst")
+                        : t("common.addressSelector.wardPlaceholder")}
                   </option>
                   {wards.map((w) => (
                     <option key={w.id} value={w.id}>
@@ -269,7 +285,7 @@ export function EditFarmModal({
 
               {/* Area */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Area (ha) *</label>
+                <label className="text-sm font-medium">{t("admin.farmsPlots.editFarm.areaRequired")}</label>
                 <input
                   type="number"
                   step="0.01"
@@ -279,14 +295,14 @@ export function EditFarmModal({
                     setFormData((prev) => ({ ...prev, area: e.target.value }))
                   }
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
-                  placeholder="Enter area in hectares"
+                  placeholder={t("admin.farmsPlots.editFarm.areaPlaceholder")}
                 />
               </div>
 
               {/* Owner Selector - FARMER only */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">
-                  Owner (FARMER only) *
+                  {t("admin.farmsPlots.editFarm.ownerRequiredLabel")}
                 </label>
                 <div className="relative">
                   <div
@@ -300,7 +316,7 @@ export function EditFarmModal({
                       </span>
                     ) : (
                       <span className="text-muted-foreground">
-                        Select owner...
+                        {t("admin.farmsPlots.editFarm.selectOwner")}
                       </span>
                     )}
                   </div>
@@ -315,7 +331,7 @@ export function EditFarmModal({
                             type="text"
                             value={ownerSearch}
                             onChange={(e) => setOwnerSearch(e.target.value)}
-                            placeholder="Search farmers..."
+                            placeholder={t("admin.farmsPlots.editFarm.searchFarmers")}
                             className="w-full pl-8 pr-3 py-1.5 text-sm border border-border rounded"
                             autoFocus
                           />
@@ -330,7 +346,7 @@ export function EditFarmModal({
                           </div>
                         ) : farmers.length === 0 ? (
                           <div className="p-3 text-center text-sm text-muted-foreground">
-                            No farmers found
+                            {t("admin.farmsPlots.editFarm.noFarmers")}
                           </div>
                         ) : (
                           farmers.map((farmer) => (
@@ -381,7 +397,7 @@ export function EditFarmModal({
                   className="h-4 w-4 rounded border-border"
                 />
                 <label htmlFor="active" className="text-sm">
-                  Active
+                  {t("common.active")}
                 </label>
               </div>
             </form>
@@ -392,7 +408,7 @@ export function EditFarmModal({
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-muted/30">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={updateMutation.isPending}
             className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-muted/50 disabled:opacity-50"
           >

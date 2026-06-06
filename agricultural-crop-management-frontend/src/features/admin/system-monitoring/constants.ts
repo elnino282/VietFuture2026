@@ -24,6 +24,7 @@ import type {
 export const KPI_METRICS: KPIMetric[] = [
     {
         title: 'CPU Usage',
+        titleKey: 'admin.systemMonitoring.kpi.cpuUsage',
         value: '68',
         unit: '%',
         change: 5.2,
@@ -36,6 +37,7 @@ export const KPI_METRICS: KPIMetric[] = [
     },
     {
         title: 'Memory',
+        titleKey: 'admin.systemMonitoring.kpi.memory',
         value: '74',
         unit: '%',
         change: 3.8,
@@ -48,6 +50,7 @@ export const KPI_METRICS: KPIMetric[] = [
     },
     {
         title: 'Disk Space',
+        titleKey: 'admin.systemMonitoring.kpi.diskSpace',
         value: '45',
         unit: '%',
         change: 1.2,
@@ -60,6 +63,7 @@ export const KPI_METRICS: KPIMetric[] = [
     },
     {
         title: 'API Latency',
+        titleKey: 'admin.systemMonitoring.kpi.apiLatency',
         value: '125',
         unit: 'ms',
         change: -8.5,
@@ -72,6 +76,7 @@ export const KPI_METRICS: KPIMetric[] = [
     },
     {
         title: 'Requests',
+        titleKey: 'admin.systemMonitoring.kpi.requests',
         value: '2.4K',
         unit: '/s',
         change: 12.3,
@@ -84,6 +89,7 @@ export const KPI_METRICS: KPIMetric[] = [
     },
     {
         title: 'Uptime',
+        titleKey: 'admin.systemMonitoring.kpi.uptime',
         value: '99.97',
         unit: '%',
         change: 0.02,

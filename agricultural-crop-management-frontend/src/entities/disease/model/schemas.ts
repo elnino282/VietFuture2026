@@ -4,6 +4,7 @@ import { DateSchema } from "@/shared/api/types";
 export const DiseaseSeverityEnum = z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]);
 export const DiseaseStatusEnum = z.enum(["OPEN", "UNDER_TREATMENT", "MONITORING", "RESOLVED", "CLOSED"]);
 export const TreatmentEffectivenessEnum = z.enum(["UNKNOWN", "POOR", "FAIR", "GOOD", "EXCELLENT"]);
+export const DiseaseActorTypeEnum = z.enum(["FARMER", "EMPLOYEE", "UNKNOWN"]);
 
 export const DiseaseRecordListParamsSchema = z.object({
   status: DiseaseStatusEnum.optional(),
@@ -27,6 +28,10 @@ export const DiseaseRecordSchema = z.object({
   varietyName: z.string().nullable().optional(),
   reportedByUserId: z.number().int().nullable().optional(),
   reportedByUsername: z.string().nullable().optional(),
+  reportedByDisplayName: z.string().nullable().optional(),
+  reportedByType: DiseaseActorTypeEnum.nullable().optional(),
+  canEdit: z.boolean().nullable().optional(),
+  canDelete: z.boolean().nullable().optional(),
   incidentId: z.number().int().nullable().optional(),
   diseaseName: z.string(),
   symptomSummary: z.string().nullable().optional(),
@@ -64,6 +69,10 @@ export const DiseaseTreatmentSchema = z.object({
   notes: z.string().nullable().optional(),
   createdByUserId: z.number().int().nullable().optional(),
   createdByUsername: z.string().nullable().optional(),
+  createdByDisplayName: z.string().nullable().optional(),
+  createdByType: DiseaseActorTypeEnum.nullable().optional(),
+  canEdit: z.boolean().nullable().optional(),
+  canDelete: z.boolean().nullable().optional(),
   createdAt: z.string().nullable().optional(),
   updatedAt: z.string().nullable().optional(),
 });
@@ -158,6 +167,7 @@ export const DiseaseTreatmentUpdateRequestSchema = z.object({
 export type DiseaseSeverity = z.infer<typeof DiseaseSeverityEnum>;
 export type DiseaseStatus = z.infer<typeof DiseaseStatusEnum>;
 export type TreatmentEffectiveness = z.infer<typeof TreatmentEffectivenessEnum>;
+export type DiseaseActorType = z.infer<typeof DiseaseActorTypeEnum>;
 export type DiseaseRecordListParams = z.infer<typeof DiseaseRecordListParamsSchema>;
 export type DiseaseRecord = z.infer<typeof DiseaseRecordSchema>;
 export type DiseaseTreatment = z.infer<typeof DiseaseTreatmentSchema>;

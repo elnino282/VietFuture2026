@@ -1,5 +1,6 @@
 import { Calendar, CheckCircle2, DollarSign, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { Activity } from '../types';
 
 interface ActivityFeedProps {
@@ -7,6 +8,8 @@ interface ActivityFeedProps {
 }
 
 export function ActivityFeed({ activities }: ActivityFeedProps) {
+  const { t } = useI18n();
+
   const getActivityIcon = (type: Activity['type']) => {
     switch (type) {
       case 'task':
@@ -23,8 +26,8 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
   return (
     <Card className="border-border acm-rounded-lg acm-card-shadow">
       <CardHeader>
-        <CardTitle className="text-lg">Recent Activity</CardTitle>
-        <CardDescription>Timeline of recent actions</CardDescription>
+        <CardTitle className="text-lg">{t('seasonActivity.title')}</CardTitle>
+        <CardDescription>{t('seasonActivity.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

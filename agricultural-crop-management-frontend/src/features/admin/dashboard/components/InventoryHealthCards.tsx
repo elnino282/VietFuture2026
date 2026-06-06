@@ -33,6 +33,7 @@ import {
 import { AdminContentCard } from '@/features/admin/shared/ui';
 import { adminDashboardApi } from '@/features/admin/shared/api';
 import { usePreferences } from '@/shared/contexts';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 const WINDOW_OPTIONS = ['7', '14', '30', '60', '90'];
 
@@ -42,6 +43,7 @@ const WINDOW_OPTIONS = ['7', '14', '30', '60', '90'];
 export function InventoryHealthCards() {
     const navigate = useNavigate();
     const { preferences } = usePreferences();
+    const { t } = useI18n();
     const [windowDays, setWindowDays] = useState('30');
     const [expiredOnly, setExpiredOnly] = useState(false);
     const includeExpiring = !expiredOnly;
@@ -85,13 +87,13 @@ export function InventoryHealthCards() {
                     <div>
                         <div className="flex items-center gap-2">
                             <Package className="h-5 w-5 text-primary" />
-                            <CardTitle className="text-lg">Inventory Health</CardTitle>
+                            <CardTitle className="text-lg">{t('admin.dashboard.inventoryHealth.title')}</CardTitle>
                             {query.isFetching && (
                                 <RefreshCw className="h-4 w-4 text-muted-foreground animate-spin" />
                             )}
                         </div>
                         <CardDescription>
-                            Real warehouse risk profile by farm
+                            {t('admin.dashboard.inventoryHealth.description')}
                         </CardDescription>
                     </div>
                     <div className="flex flex-wrap items-center gap-3 justify-start sm:justify-end">
@@ -102,14 +104,14 @@ export function InventoryHealthCards() {
                             <SelectContent>
                                 {WINDOW_OPTIONS.map((option) => (
                                     <SelectItem key={option} value={option}>
-                                        {option} days
+                                        {t('admin.dashboard.inventoryHealth.daysOption', { count: option })}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Switch checked={expiredOnly} onCheckedChange={setExpiredOnly} />
-                            <span>Expired only</span>
+                            <span>{t('admin.dashboard.inventoryHealth.expiredOnly')}</span>
                         </div>
                         <Button
                             variant="ghost"
@@ -117,7 +119,7 @@ export function InventoryHealthCards() {
                             className="text-primary"
                             onClick={() => navigate(buildInventoryUrl())}
                         >
-                            View all
+                            {t('admin.dashboard.inventoryHealth.viewAll')}
                         </Button>
                     </div>
                 </div>
@@ -134,15 +136,15 @@ export function InventoryHealthCards() {
                 {query.isError && (
                     <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Failed to load inventory health</AlertTitle>
+                        <AlertTitle>{t('admin.dashboard.inventoryHealth.errorTitle')}</AlertTitle>
                         <AlertDescription className="mt-2 flex items-center justify-between gap-3">
-                            <span>{query.error?.message || 'Please try again.'}</span>
+                            <span>{query.error?.message || t('common.tryAgain')}</span>
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => query.refetch()}
                             >
-                                Retry
+                                {t('common.retry')}
                             </Button>
                         </AlertDescription>
                     </Alert>
@@ -152,14 +154,14 @@ export function InventoryHealthCards() {
                     <div className="mb-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
                         <div className="flex items-center gap-2 font-medium">
                             <AlertTriangle className="h-4 w-4" />
-                            Inventory data quality warning
+                            {t('admin.dashboard.inventoryHealth.dataQuality.title')}
                         </div>
                         <p className="mt-1">
-                            Missing expiry date: <span className="font-semibold">{formatNumber(missingExpiryDateCount)}</span>
-                            {' '}| Missing movement history: <span className="font-semibold">{formatNumber(missingMovementHistoryCount)}</span>
+                            {t('admin.dashboard.inventoryHealth.dataQuality.missingExpiryDate')}: <span className="font-semibold">{formatNumber(missingExpiryDateCount)}</span>
+                            {' '}| {t('admin.dashboard.inventoryHealth.dataQuality.missingMovementHistory')}: <span className="font-semibold">{formatNumber(missingMovementHistoryCount)}</span>
                             {typeof dataQuality?.coveragePercent === 'number' && (
                                 <>
-                                    {' '}| Coverage: <span className="font-semibold">{dataQuality.coveragePercent.toFixed(1)}%</span>
+                                    {' '}| {t('admin.dashboard.inventoryHealth.dataQuality.coverage')}: <span className="font-semibold">{dataQuality.coveragePercent.toFixed(1)}%</span>
                                 </>
                             )}
                         </p>
@@ -172,7 +174,7 @@ export function InventoryHealthCards() {
                             <Package className="h-6 w-6 text-emerald-500" />
                         </div>
                         <p className="text-sm font-medium text-muted-foreground">
-                            No high-risk stock in selected window
+                            {t('admin.dashboard.inventoryHealth.empty')}
                         </p>
                         <Button
                             variant="outline"
@@ -180,7 +182,7 @@ export function InventoryHealthCards() {
                             className="mt-4"
                             onClick={() => navigate(buildInventoryUrl())}
                         >
-                            Open Inventory
+                            {t('admin.dashboard.inventoryHealth.openInventory')}
                         </Button>
                     </div>
                 )}
@@ -190,19 +192,19 @@ export function InventoryHealthCards() {
                         {summary && (
                             <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 lg:grid-cols-5">
                                 <div className="rounded border bg-muted/20 px-2 py-1">
-                                    Expired: <span className="font-semibold">{formatNumber(summary.expiredLots)}</span>
+                                    {t('admin.dashboard.inventoryHealth.summary.expired')}: <span className="font-semibold">{formatNumber(summary.expiredLots)}</span>
                                 </div>
                                 <div className="rounded border bg-muted/20 px-2 py-1">
-                                    Expiring soon: <span className="font-semibold">{formatNumber(summary.expiringSoonLots)}</span>
+                                    {t('admin.dashboard.inventoryHealth.summary.expiringSoon')}: <span className="font-semibold">{formatNumber(summary.expiringSoonLots)}</span>
                                 </div>
                                 <div className="rounded border bg-muted/20 px-2 py-1">
-                                    Low stock: <span className="font-semibold">{formatNumber(summary.lowStockLots)}</span>
+                                    {t('admin.dashboard.inventoryHealth.summary.lowStock')}: <span className="font-semibold">{formatNumber(summary.lowStockLots)}</span>
                                 </div>
                                 <div className="rounded border bg-muted/20 px-2 py-1">
-                                    No movement: <span className="font-semibold">{formatNumber(summary.noMovementLots)}</span>
+                                    {t('admin.dashboard.inventoryHealth.summary.noMovement')}: <span className="font-semibold">{formatNumber(summary.noMovementLots)}</span>
                                 </div>
                                 <div className="rounded border bg-muted/20 px-2 py-1">
-                                    Slow movement: <span className="font-semibold">{formatNumber(summary.slowMovementLots)}</span>
+                                    {t('admin.dashboard.inventoryHealth.summary.slowMovement')}: <span className="font-semibold">{formatNumber(summary.slowMovementLots)}</span>
                                 </div>
                             </div>
                         )}
@@ -210,14 +212,14 @@ export function InventoryHealthCards() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Farm</TableHead>
-                                    <TableHead>Expired</TableHead>
-                                    {includeExpiring && <TableHead>Expiring soon</TableHead>}
-                                    <TableHead>Low stock</TableHead>
-                                    <TableHead>No movement</TableHead>
-                                    <TableHead>Slow movement</TableHead>
-                                    <TableHead className="text-right">Qty at risk</TableHead>
-                                    <TableHead className="text-right">Action</TableHead>
+                                    <TableHead>{t('admin.dashboard.inventoryHealth.table.farm')}</TableHead>
+                                    <TableHead>{t('admin.dashboard.inventoryHealth.summary.expired')}</TableHead>
+                                    {includeExpiring && <TableHead>{t('admin.dashboard.inventoryHealth.summary.expiringSoon')}</TableHead>}
+                                    <TableHead>{t('admin.dashboard.inventoryHealth.summary.lowStock')}</TableHead>
+                                    <TableHead>{t('admin.dashboard.inventoryHealth.summary.noMovement')}</TableHead>
+                                    <TableHead>{t('admin.dashboard.inventoryHealth.summary.slowMovement')}</TableHead>
+                                    <TableHead className="text-right">{t('admin.dashboard.inventoryHealth.table.qtyAtRisk')}</TableHead>
+                                    <TableHead className="text-right">{t('common.actions')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -263,7 +265,7 @@ export function InventoryHealthCards() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-8 w-8 rounded-[14px]"
-                                                                aria-label={`Actions for ${farm.farmName}`}
+                                                                aria-label={t('admin.dashboard.inventoryHealth.actionsFor', { name: farm.farmName })}
                                                             >
                                                                 <MoreVertical className="h-4 w-4" />
                                                             </Button>
@@ -272,7 +274,7 @@ export function InventoryHealthCards() {
                                                             <DropdownMenuItem
                                                                 onSelect={() => navigate(buildInventoryUrl(farm.farmId))}
                                                             >
-                                                                Open inventory
+                                                                {t('admin.dashboard.inventoryHealth.openInventory')}
                                                             </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
@@ -283,7 +285,7 @@ export function InventoryHealthCards() {
                                                     <TableCell colSpan={colSpan} className="text-xs text-muted-foreground">
                                                         {topLots.map((lot) => (
                                                             <span key={lot.lotId} className="mr-4">
-                                                                {lot.itemName} - {lot.status}
+                                                                {lot.itemName} - {t(`admin.dashboard.inventoryHealth.lotStatus.${lot.status}`, lot.status)}
                                                                 {lot.expiryDate ? ` (${lot.expiryDate})` : ''}
                                                             </span>
                                                         ))}

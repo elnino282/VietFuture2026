@@ -5,4 +5,5 @@ export type {
     FieldLogUpdateRequest,
     SeasonMinimal,
     LogType,
+    ActorType,
 } from './schemas';

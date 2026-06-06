@@ -62,7 +62,7 @@ export function UserWarningModal({
   const validateForm = (): boolean => {
     const nextErrors: { description?: string } = {};
     if (!formData.description.trim()) {
-      nextErrors.description = "Description is required";
+      nextErrors.description = t("warnings.validation.descriptionRequired");
     }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -78,12 +78,12 @@ export function UserWarningModal({
         description: formData.description.trim(),
         decision: formData.decision,
       });
-      toast.success("Warning sent successfully");
+      toast.success(t("warnings.toast.sent"));
       onSuccess();
       onOpenChange(false);
     } catch (err) {
       console.error("Failed to send warning:", err);
-      toast.error("Failed to send warning");
+      toast.error(t("warnings.toast.sendFailed"));
     } finally {
       setLoading(false);
     }
@@ -101,18 +101,17 @@ export function UserWarningModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
-            Issue Warning
+            {t("warnings.issueTitle")}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Send a warning or lock decision to the selected user. The user will
-            receive this in the farmer portal notifications.
+            {t("warnings.issueDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="rounded-[14px] border border-border bg-muted/30 p-3 text-sm">
             <div className="font-medium text-foreground">
-              {user?.username || "Unknown user"}
+              {user?.username || t("admin.users.detail.unknownUser")}
             </div>
             {user?.email && (
               <div className="text-muted-foreground">{user.email}</div>
@@ -121,7 +120,7 @@ export function UserWarningModal({
 
           <div className="space-y-2">
             <Label htmlFor="warning-decision">
-              Decision <span className="text-destructive">*</span>
+              {t("warnings.decision")} <span className="text-destructive">*</span>
             </Label>
             <Select
               value={formData.decision}
@@ -133,15 +132,15 @@ export function UserWarningModal({
               }
             >
               <SelectTrigger id="warning-decision" className="rounded-[14px]">
-                <SelectValue placeholder="Select a decision" />
+                <SelectValue placeholder={t("warnings.selectDecision")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="WARNING">First warning (no lock)</SelectItem>
+                <SelectItem value="WARNING">{t("warnings.decisions.WARNING")}</SelectItem>
                 <SelectItem value="LOCK_1_DAY">
-                  Lock account for 1 day
+                  {t("warnings.decisions.LOCK_1_DAY")}
                 </SelectItem>
                 <SelectItem value="LOCK_PERMANENT">
-                  Lock account permanently
+                  {t("warnings.decisions.LOCK_PERMANENT")}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -149,11 +148,11 @@ export function UserWarningModal({
 
           <div className="space-y-2">
             <Label htmlFor="warning-description">
-              Violation Description <span className="text-destructive">*</span>
+              {t("warnings.violationDescription")} <span className="text-destructive">*</span>
             </Label>
             <Textarea
               id="warning-description"
-              placeholder="Describe the abnormal behavior or policy violation"
+              placeholder={t("warnings.descriptionPlaceholder")}
               value={formData.description}
               onChange={(event) =>
                 setFormData((prev) => ({

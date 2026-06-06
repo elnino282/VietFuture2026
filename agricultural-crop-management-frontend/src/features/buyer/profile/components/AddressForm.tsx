@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, Input, Label, RadioGroup, RadioGroupItem, Checkbox } from '@/shared/ui';
+import { BackButton, Button, Input, Label, RadioGroup, RadioGroupItem, Checkbox } from '@/shared/ui';
+import { useI18n } from '@/hooks/useI18n';
 import { Loader2 } from 'lucide-react';
 
 interface AddressFormData {
@@ -22,6 +23,7 @@ interface AddressFormProps {
 }
 
 export function AddressForm({ mode, initialData, onSave, onCancel }: AddressFormProps) {
+  const { t } = useI18n();
   const [formData, setFormData] = useState<Partial<AddressFormData>>({
     name: initialData?.name || '',
     phone: initialData?.phone || '',
@@ -44,9 +46,32 @@ export function AddressForm({ mode, initialData, onSave, onCancel }: AddressForm
       setIsSubmitting(false);
     }
   };
+  const initialSnapshot = JSON.stringify({
+    name: initialData?.name || '',
+    phone: initialData?.phone || '',
+    province: initialData?.province || '',
+    district: initialData?.district || '',
+    ward: initialData?.ward || '',
+    street: initialData?.street || '',
+    detail: initialData?.detail || '',
+    label: initialData?.label || 'HOME',
+    isDefault: initialData?.isDefault || false,
+  });
+  const isDirty = JSON.stringify(formData) !== initialSnapshot;
+  const handleCancel = () => {
+    if (
+      isDirty &&
+      !window.confirm(t('common.unsavedChangesConfirm', 'You have unsaved changes. Leave this page?'))
+    ) {
+      return;
+    }
+
+    onCancel();
+  };
 
   return (
     <div className="rounded-lg bg-gray-50 p-4">
+      <BackButton onClick={handleCancel} className="mb-3 w-fit" />
       <h3 className="mb-4 font-bold">
         {mode === 'add' ? 'Thêm địa chỉ mới' : 'Chỉnh sửa địa chỉ'}
       </h3>
@@ -163,7 +188,7 @@ export function AddressForm({ mode, initialData, onSave, onCancel }: AddressForm
         </label>
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
             Hủy
           </Button>
           <Button type="submit" disabled={isSubmitting}>

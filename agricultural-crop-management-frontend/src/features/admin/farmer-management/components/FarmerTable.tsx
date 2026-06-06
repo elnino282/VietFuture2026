@@ -24,6 +24,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Farmer } from '../types';
 import { ROLE_BADGE_COLORS, STATUS_BADGE_COLORS } from '../constants';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface FarmerTableProps {
     farmers: Farmer[];
@@ -56,6 +57,8 @@ export function FarmerTable({
     onResetPassword,
     onViewHistory,
 }: FarmerTableProps) {
+    const { t } = useI18n();
+
     const getSortIcon = (column: keyof Farmer) => {
         if (sortColumn !== column) return null;
         return sortDirection === 'asc' ? 'rotate-180' : '';
@@ -79,17 +82,17 @@ export function FarmerTable({
                                     onClick={() => onSort('name')}
                                 >
                                     <div className="flex items-center gap-2">
-                                        Name
+                                        {t('common.name')}
                                         <ChevronDown className={`w-4 h-4 transition-transform ${getSortIcon('name')}`} />
                                     </div>
                                 </TableHead>
-                                <TableHead>Contact</TableHead>
+                                <TableHead>{t('admin.farmerManagement.table.contact')}</TableHead>
                                 <TableHead
                                     className="cursor-pointer hover:bg-muted/50"
                                     onClick={() => onSort('role')}
                                 >
                                     <div className="flex items-center gap-2">
-                                        Role
+                                        {t('admin.farmerManagement.fields.role')}
                                         <ChevronDown className={`w-4 h-4 transition-transform ${getSortIcon('role')}`} />
                                     </div>
                                 </TableHead>
@@ -98,7 +101,7 @@ export function FarmerTable({
                                     onClick={() => onSort('status')}
                                 >
                                     <div className="flex items-center gap-2">
-                                        Status
+                                        {t('common.status')}
                                         <ChevronDown className={`w-4 h-4 transition-transform ${getSortIcon('status')}`} />
                                     </div>
                                 </TableHead>
@@ -107,7 +110,7 @@ export function FarmerTable({
                                     onClick={() => onSort('lastLogin')}
                                 >
                                     <div className="flex items-center gap-2">
-                                        Last Login
+                                        {t('admin.farmerManagement.table.lastLogin')}
                                         <ChevronDown className={`w-4 h-4 transition-transform ${getSortIcon('lastLogin')}`} />
                                     </div>
                                 </TableHead>
@@ -116,11 +119,11 @@ export function FarmerTable({
                                     onClick={() => onSort('createdAt')}
                                 >
                                     <div className="flex items-center gap-2">
-                                        Created At
+                                        {t('admin.farmerManagement.table.createdAt')}
                                         <ChevronDown className={`w-4 h-4 transition-transform ${getSortIcon('createdAt')}`} />
                                     </div>
                                 </TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead className="text-right">{t('common.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -144,7 +147,7 @@ export function FarmerTable({
                                                 <div className="font-medium text-sm">{farmer.name}</div>
                                                 {farmer.plotsCount !== undefined && (
                                                     <div className="text-xs text-muted-foreground">
-                                                        {farmer.plotsCount} plot{farmer.plotsCount !== 1 ? 's' : ''}
+                                                        {t('admin.farmerManagement.table.plotsCount', { count: farmer.plotsCount })}
                                                     </div>
                                                 )}
                                             </div>
@@ -164,12 +167,12 @@ export function FarmerTable({
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="secondary" className={ROLE_BADGE_COLORS[farmer.role]}>
-                                            {farmer.role}
+                                            {t(`admin.farmerManagement.roles.${farmer.role}`, farmer.role)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="secondary" className={STATUS_BADGE_COLORS[farmer.status]}>
-                                            {farmer.status}
+                                            {t(`admin.farmerManagement.status.${farmer.status}`, farmer.status)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
@@ -187,26 +190,32 @@ export function FarmerTable({
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={t('admin.farmerManagement.table.actionsFor', { name: farmer.name })}
+                                                >
                                                     <MoreVertical className="w-4 h-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem onClick={() => onEdit(farmer)}>
                                                     <Edit className="w-4 h-4 mr-2" />
-                                                    Edit
+                                                    {t('common.edit')}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => onLock(farmer.id)}>
                                                     <Lock className="w-4 h-4 mr-2" />
-                                                    {farmer.status === 'locked' ? 'Unlock' : 'Lock'}
+                                                    {farmer.status === 'locked'
+                                                        ? t('admin.farmerManagement.actions.unlock')
+                                                        : t('admin.farmerManagement.actions.lock')}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => onResetPassword(farmer.id)}>
                                                     <Key className="w-4 h-4 mr-2" />
-                                                    Reset Password
+                                                    {t('admin.farmerManagement.actions.resetPassword')}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={onViewHistory}>
                                                     <History className="w-4 h-4 mr-2" />
-                                                    View History
+                                                    {t('admin.farmerManagement.actions.viewHistory')}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem
@@ -214,7 +223,7 @@ export function FarmerTable({
                                                     onClick={() => onDelete(farmer.id)}
                                                 >
                                                     <Trash2 className="w-4 h-4 mr-2" />
-                                                    Delete
+                                                    {t('common.delete')}
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>

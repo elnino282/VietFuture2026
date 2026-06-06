@@ -160,6 +160,14 @@ public class SeasonQueryService implements SeasonQueryPort {
                 .map(season -> MySeasonResponse.builder()
                         .seasonId(season.getId())
                         .seasonName(season.getSeasonName())
+                        .farmId(season.getPlot() != null && season.getPlot().getFarm() != null
+                                ? season.getPlot().getFarm().getId()
+                                : null)
+                        .farmName(season.getPlot() != null && season.getPlot().getFarm() != null
+                                ? season.getPlot().getFarm().getName()
+                                : null)
+                        .plotId(season.getPlot() != null ? season.getPlot().getId() : null)
+                        .plotName(season.getPlot() != null ? season.getPlot().getPlotName() : null)
                         .startDate(season.getStartDate())
                         .endDate(season.getEndDate())
                         .plannedHarvestDate(season.getPlannedHarvestDate())

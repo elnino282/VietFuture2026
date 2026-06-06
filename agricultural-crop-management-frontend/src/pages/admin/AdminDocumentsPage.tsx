@@ -1,4 +1,5 @@
 import {
+  BackButton,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -38,7 +39,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // Document Type options
@@ -69,7 +70,7 @@ const statusBadgeColors: Record<DocumentStatus, string> = {
 };
 
 export function AdminDocumentsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   // Data states
   const [documents, setDocuments] = useState<AdminDocument[]>([]);
   const [loading, setLoading] = useState(false);
@@ -100,6 +101,7 @@ export function AdminDocumentsPage() {
   const [formType, setFormType] = useState<DocumentType>("POLICY");
   const [formStatus, setFormStatus] = useState<DocumentStatus>("ACTIVE");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const initialFormRef = useRef<string | null>(null);
 
   // Confirmation dialog (Deactivate - Soft Delete)
   const [deactivateConfirm, setDeactivateConfirm] =
@@ -125,7 +127,23 @@ export function AdminDocumentsPage() {
     ? documentIdParam
     : null;
 
-  const closeForm = () => {
+  const serializeForm = () => JSON.stringify({
+    title: formTitle,
+    description: formDescription,
+    url: formUrl,
+    type: formType,
+    status: formStatus,
+  });
+
+  const closeForm = ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
+    const isDirty = showForm && !!initialFormRef.current && initialFormRef.current !== serializeForm();
+    if (
+      !skipConfirm &&
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
     // If opened via deep-link (?documentId=...), clear it so closing stays closed.
     if (searchParams.get("documentId")) {
       const next = new URLSearchParams(searchParams);
@@ -134,6 +152,7 @@ export function AdminDocumentsPage() {
     }
     setShowForm(false);
     setEditingDocument(null);
+    initialFormRef.current = null;
   };
 
   // Fetch documents
@@ -153,7 +172,7 @@ export function AdminDocumentsPage() {
       setTotalElements(response.totalElements);
     } catch (err: any) {
       console.error("Failed to load documents:", err);
-      setError(err?.response?.data?.message || "Failed to load documents");
+      setError(err?.response?.data?.message || t("admin.documents.error.load"));
     } finally {
       setLoading(false);
     }
@@ -194,6 +213,13 @@ export function AdminDocumentsPage() {
       setFormUrl(doc.documentUrl);
       setFormType(doc.documentType as DocumentType);
       setFormStatus(doc.status as DocumentStatus);
+      initialFormRef.current = JSON.stringify({
+        title: doc.title,
+        description: doc.description || "",
+        url: doc.documentUrl,
+        type: doc.documentType as DocumentType,
+        status: doc.status as DocumentStatus,
+      });
     } else {
       setEditingDocument(null);
       setFormTitle("");
@@ -201,6 +227,13 @@ export function AdminDocumentsPage() {
       setFormUrl("");
       setFormType("POLICY");
       setFormStatus("ACTIVE");
+      initialFormRef.current = JSON.stringify({
+        title: "",
+        description: "",
+        url: "",
+        type: "POLICY",
+        status: "ACTIVE",
+      });
     }
     setFormErrors({});
     setShowForm(true);
@@ -230,16 +263,16 @@ export function AdminDocumentsPage() {
     const errors: Record<string, string> = {};
 
     if (!formTitle.trim() || formTitle.length < 3) {
-      errors.title = "Title must be at least 3 characters";
+      errors.title = t("admin.documents.validation.titleMin");
     }
 
     if (!formUrl.trim()) {
-      errors.url = "Document URL is required";
+      errors.url = t("admin.documents.validation.urlRequired");
     } else {
       try {
         new URL(formUrl);
       } catch {
-        errors.url = "Must be a valid URL";
+        errors.url = t("admin.documents.validation.urlInvalid");
       }
     }
 
@@ -263,19 +296,19 @@ export function AdminDocumentsPage() {
 
       if (editingDocument) {
         await adminDocumentApi.update(editingDocument.id, payload);
-        setToast({ type: "success", message: "Document updated successfully" });
+        setToast({ type: "success", message: t("admin.documents.toast.updated") });
       } else {
         await adminDocumentApi.create(payload);
-        setToast({ type: "success", message: "Document created successfully" });
+        setToast({ type: "success", message: t("admin.documents.toast.created") });
       }
 
-      closeForm();
+      closeForm({ skipConfirm: true });
       fetchDocuments();
     } catch (err: any) {
       console.error("Failed to save document:", err);
       setToast({
         type: "error",
-        message: err?.response?.data?.message || "Failed to save document",
+        message: err?.response?.data?.message || t("admin.documents.toast.saveFailed"),
       });
     } finally {
       setFormLoading(false);
@@ -291,7 +324,7 @@ export function AdminDocumentsPage() {
       await adminDocumentApi.delete(deactivateConfirm.id);
       setToast({
         type: "success",
-        message: `Document "${deactivateConfirm.title}" deactivated`,
+        message: t("admin.documents.toast.deactivated", { title: deactivateConfirm.title }),
       });
       setDeactivateConfirm(null);
       fetchDocuments();
@@ -300,7 +333,7 @@ export function AdminDocumentsPage() {
       setToast({
         type: "error",
         message:
-          err?.response?.data?.message || "Failed to deactivate document",
+          err?.response?.data?.message || t("admin.documents.toast.deactivateFailed"),
       });
     } finally {
       setDeactivateLoading(false);
@@ -316,7 +349,7 @@ export function AdminDocumentsPage() {
       await adminDocumentApi.hardDelete(hardDeleteConfirm.id);
       setToast({
         type: "success",
-        message: `Document "${hardDeleteConfirm.title}" permanently deleted`,
+        message: t("admin.documents.toast.permanentlyDeleted", { title: hardDeleteConfirm.title }),
       });
       setHardDeleteConfirm(null);
       setHardDeleteConfirmText("");
@@ -327,7 +360,7 @@ export function AdminDocumentsPage() {
         type: "error",
         message:
           err?.response?.data?.message ||
-          "Failed to permanently delete document",
+          t("admin.documents.toast.permanentDeleteFailed"),
       });
     } finally {
       setHardDeleteLoading(false);
@@ -355,7 +388,7 @@ export function AdminDocumentsPage() {
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "-";
     try {
-      return new Date(dateStr).toLocaleDateString("en-US", {
+      return new Date(dateStr).toLocaleDateString(locale, {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -368,8 +401,8 @@ export function AdminDocumentsPage() {
   return (
     <AdminPageContainer>
       <AdminHeaderCard
-        title="Documents"
-        description="Manage system-wide documents and references"
+        title={t("admin.documents.title")}
+        description={t("admin.documents.subtitle")}
       />
 
       {/* Filters & Actions */}
@@ -383,7 +416,7 @@ export function AdminDocumentsPage() {
                 type="text"
                 value={debouncedSearch}
                 onChange={(e) => setDebouncedSearch(e.target.value)}
-                placeholder="Search by title (min 2 chars)"
+                placeholder={t("admin.documents.searchPlaceholder")}
                 className="w-full pl-10 pr-4 py-2 border border-border rounded-[14px] bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
@@ -397,10 +430,10 @@ export function AdminDocumentsPage() {
           }}
           className="w-full sm:w-auto px-3 py-2 border border-border rounded-[14px] bg-card text-sm"
         >
-          <option value="">All Types</option>
-          {DOCUMENT_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
+          <option value="">{t("admin.documents.filters.allTypes")}</option>
+          {DOCUMENT_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {t(`admin.documents.types.${type}`, type)}
             </option>
           ))}
         </select>
@@ -414,10 +447,10 @@ export function AdminDocumentsPage() {
           }}
           className="w-full sm:w-auto px-3 py-2 border border-border rounded-[14px] bg-card text-sm"
         >
-          <option value="">All Statuses</option>
-          {DOCUMENT_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
+          <option value="">{t("admin.documents.filters.allStatuses")}</option>
+          {DOCUMENT_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {t(`admin.documents.status.${status}`, status)}
             </option>
           ))}
         </select>
@@ -428,7 +461,7 @@ export function AdminDocumentsPage() {
             onClick={resetFilters}
             className="w-full sm:w-auto px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
           >
-            Reset
+            {t("common.reset")}
           </button>
         )}
 
@@ -440,14 +473,14 @@ export function AdminDocumentsPage() {
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90 transition-colors"
         >
           <Plus className="h-4 w-4" />
-          Create Document
+          {t("admin.documents.actions.create")}
         </button>
 
         {/* Refresh */}
         <button
           onClick={fetchDocuments}
           className="w-full sm:w-auto p-2 border border-border rounded-[14px] hover:bg-muted/50 transition-colors"
-          title="Refresh"
+          title={t("common.refresh")}
         >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
         </button>
@@ -458,7 +491,7 @@ export function AdminDocumentsPage() {
       {/* Stats */}
       <div className="flex items-center gap-4">
         <span className="text-sm text-muted-foreground">
-          {totalElements} document{totalElements !== 1 ? "s" : ""} found
+          {t("admin.documents.resultsFound", { count: totalElements })}
         </span>
       </div>
 
@@ -469,22 +502,22 @@ export function AdminDocumentsPage() {
           <thead className="bg-muted/50 border-b border-border">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Title
+                {t("admin.documents.table.title")}
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Type
+                {t("common.type")}
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Status
+                {t("common.status")}
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                 URL
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Created
+                {t("admin.alerts.table.created")}
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Actions
+                {t("common.actions")}
               </th>
             </tr>
           </thead>
@@ -496,7 +529,7 @@ export function AdminDocumentsPage() {
                   className="px-4 py-12 text-center text-muted-foreground"
                 >
                   <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                  Loading documents...
+                  {t("admin.documents.loading")}
                 </td>
               </tr>
             ) : error ? (
@@ -509,7 +542,7 @@ export function AdminDocumentsPage() {
                       onClick={fetchDocuments}
                       className="text-sm text-primary hover:underline"
                     >
-                      Try again
+                      {t("common.tryAgain")}
                     </button>
                   </div>
                 </td>
@@ -521,7 +554,7 @@ export function AdminDocumentsPage() {
                   className="px-4 py-12 text-center text-muted-foreground"
                 >
                   <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  No documents found
+                  {t("admin.documents.empty")}
                 </td>
               </tr>
             ) : (
@@ -545,7 +578,7 @@ export function AdminDocumentsPage() {
                         typeBadgeColors.OTHER
                       }`}
                     >
-                      {doc.documentType}
+                      {t(`admin.documents.types.${doc.documentType}`, doc.documentType)}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -560,7 +593,7 @@ export function AdminDocumentsPage() {
                       ) : (
                         <Ban className="h-3 w-3" />
                       )}
-                      {doc.status}
+                      {t(`admin.documents.status.${doc.status}`, doc.status)}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -571,7 +604,7 @@ export function AdminDocumentsPage() {
                       className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                     >
                       <ExternalLink className="h-3 w-3" />
-                      Open
+                      {t("admin.documents.actions.open")}
                     </a>
                   </td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">
@@ -582,7 +615,7 @@ export function AdminDocumentsPage() {
                       <DropdownMenuTrigger asChild>
                         <button
                           className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          aria-label="Actions"
+                          aria-label={t("common.actions")}
                         >
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
                         </button>
@@ -593,7 +626,7 @@ export function AdminDocumentsPage() {
                           className="cursor-pointer"
                         >
                           <Edit className="mr-2 h-4 w-4" />
-                          Edit
+                          {t("common.edit")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -602,7 +635,7 @@ export function AdminDocumentsPage() {
                           disabled={doc.status === "INACTIVE"}
                         >
                           <Ban className="mr-2 h-4 w-4" />
-                          Deactivate
+                          {t("admin.documents.actions.deactivate")}
                         </DropdownMenuItem>
                         <TooltipProvider>
                           <Tooltip>
@@ -614,14 +647,14 @@ export function AdminDocumentsPage() {
                                   disabled={doc.status !== "INACTIVE"}
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
-                                  Hard Delete
+                                  {t("admin.documents.actions.hardDelete")}
                                 </DropdownMenuItem>
                               </span>
                             </TooltipTrigger>
                             {doc.status !== "INACTIVE" && (
                               <TooltipContent side="left">
-                                <p>Please deactivate the document</p>
-                                <p>before permanently deleting it.</p>
+                                <p>{t("admin.documents.tooltip.deactivateFirstLine1")}</p>
+                                <p>{t("admin.documents.tooltip.deactivateFirstLine2")}</p>
                               </TooltipContent>
                             )}
                           </Tooltip>
@@ -641,7 +674,7 @@ export function AdminDocumentsPage() {
       {totalPages > 1 && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mt-4">
           <span className="text-sm text-muted-foreground">
-            Page {page + 1} of {totalPages}
+            {t("pagination.page")} {page + 1} {t("pagination.of")} {totalPages}
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -649,14 +682,14 @@ export function AdminDocumentsPage() {
               disabled={page === 0}
               className="px-3 py-1 border border-border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50"
             >
-              Previous
+              {t("pagination.previousPage")}
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
               className="px-3 py-1 border border-border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50"
             >
-              Next
+              {t("pagination.nextPage")}
             </button>
           </div>
         </div>
@@ -668,10 +701,11 @@ export function AdminDocumentsPage() {
           <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-md mx-4">
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h3 className="text-lg font-semibold">
-                {editingDocument ? "Edit Document" : "Create Document"}
+                {editingDocument ? t("admin.documents.form.editTitle") : t("admin.documents.form.createTitle")}
               </h3>
+              <BackButton onClick={() => closeForm()} />
               <button
-                onClick={closeForm}
+                onClick={() => closeForm()}
                 className="p-1 hover:bg-muted rounded"
               >
                 <X className="h-4 w-4" />
@@ -682,7 +716,7 @@ export function AdminDocumentsPage() {
               {/* Title */}
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Title <span className="text-destructive">*</span>
+                  {t("admin.documents.table.title")} <span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
@@ -691,7 +725,7 @@ export function AdminDocumentsPage() {
                   className={`w-full px-3 py-2 border rounded-lg bg-background text-sm ${
                     formErrors.title ? "border-destructive" : "border-border"
                   }`}
-                  placeholder="Enter title"
+                  placeholder={t("admin.documents.form.titlePlaceholder")}
                 />
                 {formErrors.title && (
                   <p className="text-xs text-destructive mt-1">
@@ -703,20 +737,20 @@ export function AdminDocumentsPage() {
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Description
+                  {t("common.description")}
                 </label>
                 <textarea
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm min-h-[60px] resize-none"
-                  placeholder="Optional description"
+                  placeholder={t("admin.crops.form.descriptionPlaceholder")}
                 />
               </div>
 
               {/* Document URL */}
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Document URL <span className="text-destructive">*</span>
+                  {t("admin.documents.form.documentUrl")} <span className="text-destructive">*</span>
                 </label>
                 <input
                   type="url"
@@ -725,7 +759,7 @@ export function AdminDocumentsPage() {
                   className={`w-full px-3 py-2 border rounded-lg bg-background text-sm ${
                     formErrors.url ? "border-destructive" : "border-border"
                   }`}
-                  placeholder="https://..."
+                  placeholder={t("admin.documents.form.urlPlaceholder")}
                 />
                 {formErrors.url && (
                   <p className="text-xs text-destructive mt-1">
@@ -738,7 +772,7 @@ export function AdminDocumentsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Type <span className="text-destructive">*</span>
+                    {t("common.type")} <span className="text-destructive">*</span>
                   </label>
                   <select
                     value={formType}
@@ -747,16 +781,16 @@ export function AdminDocumentsPage() {
                     }
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
                   >
-                    {DOCUMENT_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
+                    {DOCUMENT_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {t(`admin.documents.types.${type}`, type)}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Status <span className="text-destructive">*</span>
+                    {t("common.status")} <span className="text-destructive">*</span>
                   </label>
                   <select
                     value={formStatus}
@@ -765,9 +799,9 @@ export function AdminDocumentsPage() {
                     }
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
                   >
-                    {DOCUMENT_STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
+                    {DOCUMENT_STATUSES.map((status) => (
+                      <option key={status} value={status}>
+                        {t(`admin.documents.status.${status}`, status)}
                       </option>
                     ))}
                   </select>
@@ -777,7 +811,7 @@ export function AdminDocumentsPage() {
 
             <div className="flex justify-end gap-2 p-4 border-t border-border">
               <button
-                onClick={closeForm}
+                onClick={() => closeForm()}
                 className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
               >
                 {t("common.cancel")}
@@ -788,7 +822,7 @@ export function AdminDocumentsPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50"
               >
                 {formLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {editingDocument ? "Update" : "Create"}
+                {editingDocument ? t("common.update") : t("common.create")}
               </button>
             </div>
           </div>
@@ -801,20 +835,19 @@ export function AdminDocumentsPage() {
           <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-md mx-4">
             <div className="p-4 border-b border-border">
               <h2 className="text-lg font-semibold text-destructive">
-                Deactivate Document
+                {t("admin.documents.deactivate.title")}
               </h2>
             </div>
             <div className="p-4">
               <p className="text-sm text-muted-foreground mb-4">
-                Are you sure you want to deactivate{" "}
+                {t("admin.documents.deactivate.confirm")}{" "}
                 <strong className="text-foreground">
                   "{deactivateConfirm.title}"
                 </strong>
                 ?
               </p>
               <p className="text-xs text-muted-foreground">
-                This will set the document status to INACTIVE. The document will
-                not be visible to users but can be reactivated later.
+                {t("admin.documents.deactivate.description")}
               </p>
             </div>
             <div className="flex justify-end gap-2 p-4 border-t border-border">
@@ -833,12 +866,12 @@ export function AdminDocumentsPage() {
                 {deactivateLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Deactivating...
+                    {t("admin.documents.actions.deactivating")}
                   </>
                 ) : (
                   <>
                     <Ban className="h-4 w-4" />
-                    Deactivate
+                    {t("admin.documents.actions.deactivate")}
                   </>
                 )}
               </button>
@@ -855,34 +888,34 @@ export function AdminDocumentsPage() {
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
                 <h2 className="text-lg font-semibold text-destructive">
-                  Permanently Delete Document
+                  {t("admin.documents.hardDelete.title")}
                 </h2>
               </div>
             </div>
             <div className="p-4 space-y-4">
               <p className="text-sm text-foreground">
-                You are about to permanently delete{" "}
+                {t("admin.documents.hardDelete.aboutToDelete")}{" "}
                 <strong>"{hardDeleteConfirm.title}"</strong>.
               </p>
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
                 <p className="text-sm text-destructive font-medium">
-                  ⚠️ This action cannot be undone!
+                  {t("admin.documents.hardDelete.cannotUndo")}
                 </p>
                 <p className="text-xs text-destructive/80 mt-1">
-                  The document will be permanently removed from the database and
-                  cannot be recovered.
+                  {t("admin.documents.hardDelete.description")}
                 </p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Type <strong className="text-destructive">DELETE</strong> to
-                  confirm:
+                  {t("admin.documents.hardDelete.typeDeletePrefix")}{" "}
+                  <strong className="text-destructive">DELETE</strong>{" "}
+                  {t("admin.documents.hardDelete.typeDeleteSuffix")}
                 </label>
                 <input
                   type="text"
                   value={hardDeleteConfirmText}
                   onChange={(e) => setHardDeleteConfirmText(e.target.value)}
-                  placeholder='Type "DELETE" to confirm'
+                  placeholder={t("admin.documents.hardDelete.placeholder")}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20"
                   autoComplete="off"
                 />
@@ -909,12 +942,12 @@ export function AdminDocumentsPage() {
                 {hardDeleteLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Deleting...
+                    {t("common.deleting")}
                   </>
                 ) : (
                   <>
                     <Trash2 className="h-4 w-4" />
-                    Permanently Delete
+                    {t("admin.documents.actions.permanentlyDelete")}
                   </>
                 )}
               </button>

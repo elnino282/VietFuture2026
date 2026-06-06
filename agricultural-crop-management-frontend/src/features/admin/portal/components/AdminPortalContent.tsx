@@ -1,6 +1,7 @@
-import { getAdminViewTitle } from "../constants";
+import { getAdminViewTitleKey } from "../constants";
 import type { AdminView } from "../types";
 import { UnderConstruction } from "./UnderConstruction";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 // Feature Imports
 import { AdminDashboard } from "@/features/admin";
@@ -30,6 +31,8 @@ type AdminPortalContentProps = {
 };
 
 export function AdminPortalContent({ currentView }: AdminPortalContentProps) {
+  const { t } = useI18n();
+
   switch (currentView) {
     case "dashboard":
       return <AdminDashboard />;
@@ -65,6 +68,6 @@ export function AdminPortalContent({ currentView }: AdminPortalContentProps) {
     case "settings":
       return <AdminPreferences />;
     default:
-      return <UnderConstruction title={getAdminViewTitle(currentView)} />;
+      return <UnderConstruction title={t(getAdminViewTitleKey(currentView))} />;
   }
 }

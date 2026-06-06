@@ -1,16 +1,18 @@
 import { useProfileMe } from "@/entities/user";
 import { useAuth } from "@/features/auth";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useEmployeeBreadcrumbs } from "./useEmployeeBreadcrumbs";
 import type { EmployeePortalShellState, EmployeeView } from "../types";
 
-const EMPLOYEE_VIEWS: EmployeeView[] = ["tasks", "progress", "payroll", "profile", "settings"];
+const EMPLOYEE_VIEWS: EmployeeView[] = ["tasks", "progress", "payroll", "workspace", "profile", "settings"];
 
 const resolveViewFromPath = (pathname: string): EmployeeView => {
   const pathParts = pathname.split("/").filter(Boolean);
   if (pathParts[0] !== "employee") return "tasks";
+  if (pathParts[1] === "seasons") return "workspace";
   const view = pathParts[1] as EmployeeView | undefined;
   if (view && EMPLOYEE_VIEWS.includes(view)) return view;
   return "tasks";
@@ -32,24 +34,10 @@ export function useEmployeePortalShell(): EmployeePortalShellState {
   const profileFullName = profile?.fullName?.trim();
   const sessionFullName = user?.profile?.fullName?.trim();
   const emailUsername = user?.email?.split("@")[0];
-  const userName = profileFullName || sessionFullName || emailUsername || "Employee";
+  const userName = profileFullName || sessionFullName || emailUsername || t("employee.common.defaultUserName");
   const userEmail = profile?.email || user?.email || "employee@acm-platform.com";
 
-  const viewLabels: Record<EmployeeView, string> = {
-    tasks: t("nav.tasks"),
-    progress: t("nav.progress"),
-    payroll: t("nav.payroll"),
-    profile: t("userMenu.profile"),
-    settings: t("userMenu.preferences"),
-  };
-
-  const breadcrumbs = useMemo(
-    () => [
-      { label: t("nav.tasks"), href: "/employee/tasks" },
-      ...(currentView !== "tasks" ? [{ label: viewLabels[currentView] }] : []),
-    ],
-    [currentView, t, viewLabels]
-  );
+  const breadcrumbs = useEmployeeBreadcrumbs(currentView);
 
   const handleViewChange = (view: string) => {
     if (view.startsWith("/")) {
@@ -73,7 +61,7 @@ export function useEmployeePortalShell(): EmployeePortalShellState {
 
   const handleLogout = async () => {
     await logout();
-    toast.success("Signed out successfully");
+    toast.success(t("common.signedOut"));
     navigate("/sign-in", { replace: true });
   };
 

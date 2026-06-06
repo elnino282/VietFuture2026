@@ -20,6 +20,8 @@ public interface SeasonEmployeeRepository extends JpaRepository<SeasonEmployee, 
 
     List<SeasonEmployee> findAllBySeason_IdAndActiveTrue(Integer seasonId);
 
+    List<SeasonEmployee> findAllByEmployee_IdAndActiveTrue(Long employeeId);
+
     @Query("SELECT se FROM SeasonEmployee se " +
             "WHERE se.season.id = :seasonId " +
             "AND (:keyword IS NULL OR :keyword = '' " +
@@ -30,4 +32,3 @@ public interface SeasonEmployeeRepository extends JpaRepository<SeasonEmployee, 
             @Param("keyword") String keyword,
             Pageable pageable);
 }
-

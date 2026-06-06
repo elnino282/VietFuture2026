@@ -4,6 +4,7 @@ import {
   adminSupplierApi,
   adminWarehouseApi,
 } from "@/services/api.admin";
+import { BackButton } from "@/shared/ui/back-button";
 import {
   AlertCircle,
   AlertTriangle,
@@ -12,7 +13,6 @@ import {
   Loader2,
   Package,
   RefreshCw,
-  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -62,19 +62,16 @@ interface RecordMovementModalProps {
 // ERROR MESSAGE MAPPING
 // ═══════════════════════════════════════════════════════════════
 
-const ERROR_MESSAGES: Record<string, string> = {
-  INSUFFICIENT_STOCK:
-    "Not enough stock available. The requested quantity exceeds the current on-hand quantity.",
-  WAREHOUSE_SEASON_FARM_MISMATCH:
-    "Warehouse and Season must belong to the same farm.",
-  LOCATION_WAREHOUSE_MISMATCH:
-    "The selected location does not belong to the selected warehouse.",
-  SUPPLY_LOT_NOT_FOUND: "The selected supply lot was not found.",
-  WAREHOUSE_NOT_FOUND: "The selected warehouse was not found.",
-  LOCATION_NOT_FOUND: "The selected location was not found.",
-  SEASON_NOT_FOUND: "The selected season was not found.",
-  INVALID_MOVEMENT_TYPE: "Invalid movement type specified.",
-  BAD_REQUEST: "Invalid request. Please check your inputs.",
+const ERROR_MESSAGE_KEYS: Record<string, string> = {
+  INSUFFICIENT_STOCK: "admin.recordMovement.errors.insufficientStock",
+  WAREHOUSE_SEASON_FARM_MISMATCH: "admin.recordMovement.errors.warehouseSeasonMismatch",
+  LOCATION_WAREHOUSE_MISMATCH: "admin.recordMovement.errors.locationWarehouseMismatch",
+  SUPPLY_LOT_NOT_FOUND: "admin.recordMovement.errors.supplyLotNotFound",
+  WAREHOUSE_NOT_FOUND: "admin.recordMovement.errors.warehouseNotFound",
+  LOCATION_NOT_FOUND: "admin.recordMovement.errors.locationNotFound",
+  SEASON_NOT_FOUND: "admin.recordMovement.errors.seasonNotFound",
+  INVALID_MOVEMENT_TYPE: "admin.recordMovement.errors.invalidMovementType",
+  BAD_REQUEST: "admin.recordMovement.errors.badRequest",
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -113,6 +110,15 @@ export function RecordMovementModal({
   const [seasonsLoading, setSeasonsLoading] = useState(false);
   const [stockLoading, setStockLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isDirty =
+    supplyLotId !== "" ||
+    warehouseId !== "" ||
+    locationId !== "" ||
+    movementType !== "IN" ||
+    quantity.trim().length > 0 ||
+    isNegativeAdjust ||
+    seasonId !== "" ||
+    note.trim().length > 0;
 
   // ═══════════════════════════════════════════════════════════════
   // EFFECTS
@@ -240,6 +246,17 @@ export function RecordMovementModal({
     setError(null);
     setOnHandQuantity(null);
   };
+  const handleClose = () => {
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+
+    resetForm();
+    onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -247,15 +264,15 @@ export function RecordMovementModal({
 
     // Validation
     if (!supplyLotId) {
-      setError("Please select a supply lot");
+      setError(t("admin.recordMovement.validation.supplyLotRequired"));
       return;
     }
     if (!warehouseId) {
-      setError("Please select a warehouse");
+      setError(t("admin.recordMovement.validation.warehouseRequired"));
       return;
     }
     if (!quantity || parseFloat(quantity) <= 0) {
-      setError("Please enter a valid quantity greater than 0");
+      setError(t("admin.recordMovement.validation.quantityPositive"));
       return;
     }
 
@@ -269,7 +286,10 @@ export function RecordMovementModal({
     if (onHandQuantity !== null) {
       if (movementType === "OUT" && finalQuantity > onHandQuantity) {
         setError(
-          `Not enough stock. Current: ${onHandQuantity}, Requested: ${finalQuantity}`,
+          t("admin.recordMovement.validation.notEnoughRequested", {
+            current: onHandQuantity,
+            requested: finalQuantity,
+          }),
         );
         return;
       }
@@ -279,7 +299,10 @@ export function RecordMovementModal({
         Math.abs(finalQuantity) > onHandQuantity
       ) {
         setError(
-          `Not enough stock. Current: ${onHandQuantity}, Adjustment: ${finalQuantity}`,
+          t("admin.recordMovement.validation.notEnoughAdjustment", {
+            current: onHandQuantity,
+            adjustment: finalQuantity,
+          }),
         );
         return;
       }
@@ -302,10 +325,11 @@ export function RecordMovementModal({
       onClose();
     } catch (err: any) {
       const code = err.response?.data?.code;
+      const messageKey = ERROR_MESSAGE_KEYS[code];
       const message =
-        ERROR_MESSAGES[code] ||
+        (messageKey ? t(messageKey) : undefined) ||
         err.response?.data?.message ||
-        "Failed to record movement";
+        t("admin.recordMovement.errors.recordFailed");
       setError(message);
     } finally {
       setLoading(false);
@@ -336,22 +360,19 @@ export function RecordMovementModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
 
       {/* Modal */}
       <div className="relative bg-background border border-border rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Record Stock Movement
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="space-y-2">
+            <BackButton onClick={handleClose} className="w-fit" />
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              {t("admin.recordMovement.title")}
+            </h2>
+          </div>
         </div>
 
         {/* Content */}
@@ -367,7 +388,7 @@ export function RecordMovementModal({
 
             {/* Supply Lot */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Supply Lot *</label>
+              <label className="text-sm font-medium">{t("admin.recordMovement.supplyLotRequired")}</label>
               <select
                 value={supplyLotId}
                 onChange={(e) =>
@@ -376,7 +397,7 @@ export function RecordMovementModal({
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
                 disabled={lotsLoading}
               >
-                <option value="">Select supply lot...</option>
+                <option value="">{t("admin.recordMovement.selectSupplyLot")}</option>
                 {supplyLots.map((lot) => (
                   <option key={lot.id} value={lot.id}>
                     {lot.batchCode} - {lot.supplyItemName} ({lot.supplierName})
@@ -385,15 +406,17 @@ export function RecordMovementModal({
               </select>
               {selectedLot && (
                 <p className="text-xs text-muted-foreground">
-                  Item: {selectedLot.supplyItemName} | Supplier:{" "}
-                  {selectedLot.supplierName}
+                  {t("admin.recordMovement.selectedLotMeta", {
+                    item: selectedLot.supplyItemName,
+                    supplier: selectedLot.supplierName,
+                  })}
                 </p>
               )}
             </div>
 
             {/* Warehouse */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Warehouse *</label>
+              <label className="text-sm font-medium">{t("admin.recordMovement.warehouseRequired")}</label>
               <select
                 value={warehouseId}
                 onChange={(e) => {
@@ -404,7 +427,7 @@ export function RecordMovementModal({
                 }}
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
               >
-                <option value="">Select warehouse...</option>
+                <option value="">{t("admin.recordMovement.selectWarehouse")}</option>
                 {warehouses.map((wh) => (
                   <option key={wh.id} value={wh.id}>
                     {wh.name} ({wh.farmName})
@@ -417,7 +440,7 @@ export function RecordMovementModal({
             {warehouseId && (
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">
-                  Location (Optional)
+                  {t("admin.recordMovement.locationOptional")}
                 </label>
                 <select
                   value={locationId}
@@ -429,12 +452,12 @@ export function RecordMovementModal({
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
                   disabled={locationsLoading}
                 >
-                  <option value="">No specific location</option>
+                  <option value="">{t("admin.recordMovement.noSpecificLocation")}</option>
                   {locations.map((loc) => (
                     <option key={loc.id} value={loc.id}>
                       {[loc.zone, loc.aisle, loc.shelf, loc.bin]
                         .filter(Boolean)
-                        .join(" / ") || `Location #${loc.id}`}
+                        .join(" / ") || t("admin.recordMovement.locationFallback", { id: loc.id })}
                     </option>
                   ))}
                 </select>
@@ -443,7 +466,7 @@ export function RecordMovementModal({
 
             {/* Movement Type */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Movement Type *</label>
+              <label className="text-sm font-medium">{t("admin.recordMovement.movementTypeRequired")}</label>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -458,7 +481,7 @@ export function RecordMovementModal({
                   }`}
                 >
                   <ArrowDownToLine className="h-4 w-4" />
-                  IN
+                  {t("admin.recordMovement.types.IN")}
                 </button>
                 <button
                   type="button"
@@ -473,7 +496,7 @@ export function RecordMovementModal({
                   }`}
                 >
                   <ArrowUpFromLine className="h-4 w-4" />
-                  OUT
+                  {t("admin.recordMovement.types.OUT")}
                 </button>
                 <button
                   type="button"
@@ -485,22 +508,22 @@ export function RecordMovementModal({
                   }`}
                 >
                   <RefreshCw className="h-4 w-4" />
-                  ADJUST
+                  {t("admin.recordMovement.types.ADJUST")}
                 </button>
               </div>
               <p className="text-xs text-muted-foreground">
                 {movementType === "IN" &&
-                  "Inbound: Add stock to inventory (e.g., receiving from supplier)"}
+                  t("admin.recordMovement.typeDescriptions.IN")}
                 {movementType === "OUT" &&
-                  "Outbound: Remove stock from inventory (e.g., usage, sale)"}
+                  t("admin.recordMovement.typeDescriptions.OUT")}
                 {movementType === "ADJUST" &&
-                  "Audit adjustment: Correct inventory discrepancies (positive or negative)"}
+                  t("admin.recordMovement.typeDescriptions.ADJUST")}
               </p>
             </div>
 
             {/* Quantity */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Quantity *</label>
+              <label className="text-sm font-medium">{t("admin.recordMovement.quantityRequired")}</label>
               <div className="flex gap-2">
                 {movementType === "ADJUST" && (
                   <button
@@ -522,7 +545,7 @@ export function RecordMovementModal({
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-sm"
-                  placeholder="Enter quantity"
+                  placeholder={t("admin.recordMovement.quantityPlaceholder")}
                 />
               </div>
             </div>
@@ -534,7 +557,7 @@ export function RecordMovementModal({
                 <div className="flex items-start gap-2 p-3 bg-muted/30 border border-border rounded-lg">
                   <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5 text-amber-500" />
                   <div className="text-sm">
-                    <strong>Current On-Hand:</strong>{" "}
+                    <strong>{t("admin.recordMovement.currentOnHand")}</strong>{" "}
                     {stockLoading ? (
                       <Loader2 className="inline h-4 w-4 animate-spin" />
                     ) : (
@@ -543,15 +566,15 @@ export function RecordMovementModal({
                       </span>
                     )}
                     {locationId
-                      ? " (at selected location)"
-                      : " (warehouse total)"}
+                      ? t("admin.recordMovement.atSelectedLocation")
+                      : t("admin.recordMovement.warehouseTotal")}
                   </div>
                 </div>
               )}
 
             {/* Season (Optional) */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Season (Optional)</label>
+              <label className="text-sm font-medium">{t("admin.recordMovement.seasonOptional")}</label>
               <select
                 value={seasonId}
                 onChange={(e) =>
@@ -560,28 +583,27 @@ export function RecordMovementModal({
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
                 disabled={seasonsLoading}
               >
-                <option value="">No season linked</option>
+                <option value="">{t("admin.recordMovement.noSeasonLinked")}</option>
                 {getFilteredSeasons().map((s: any) => (
                   <option key={s.id} value={s.id}>
-                    {s.seasonName} ({s.farmName || s.plotName || "Unknown"})
+                    {s.seasonName} ({s.farmName || s.plotName || t("adminDashboardHooks.status.Unknown")})
                   </option>
                 ))}
               </select>
               <p className="text-xs text-muted-foreground">
-                Link this movement to a season for tracking purposes. Season's
-                farm must match warehouse farm.
+                {t("admin.recordMovement.seasonHelp")}
               </p>
             </div>
 
             {/* Note */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Note (Optional)</label>
+              <label className="text-sm font-medium">{t("admin.recordMovement.noteOptional")}</label>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={3}
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm resize-none"
-                placeholder="Add notes for audit purposes..."
+                placeholder={t("admin.recordMovement.notePlaceholder")}
               />
             </div>
           </form>
@@ -591,7 +613,7 @@ export function RecordMovementModal({
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-muted/30">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={loading}
             className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-muted/50 disabled:opacity-50"
           >
@@ -604,7 +626,7 @@ export function RecordMovementModal({
             className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 inline-flex items-center gap-2"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {loading ? "Recording..." : "Record Movement"}
+            {loading ? t("admin.recordMovement.recording") : t("admin.recordMovement.title")}
           </button>
         </div>
       </div>

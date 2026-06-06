@@ -31,11 +31,13 @@ export interface SortState {
  */
 export interface Plot {
   id: string;
+  farmId?: number;
   name: string;
   area: number;
   soilType: string;
   pH: number;
   status: PlotStatus;
+  statusCode?: string;
   crop?: string;
   cropVariety?: string;
   coordinates?: { lat: number; lng: number }[];
@@ -56,6 +58,17 @@ export interface LinkedSeason {
   status: string;
   startDate: string;
   endDate?: string;
+}
+
+/**
+ * Data required to split one plot into two new plots.
+ */
+export interface SplitPlotRequest {
+  sourcePlot: Plot;
+  firstPlotName: string;
+  firstArea: number;
+  secondPlotName: string;
+  secondArea: number;
 }
 
 

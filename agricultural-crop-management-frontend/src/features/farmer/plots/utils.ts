@@ -37,7 +37,7 @@ export const mapStatusToPlotStatus = (status?: string | null): PlotStatus => {
 export const mapPlotStatusToApiStatus = (status: PlotStatus): PlotRequest["status"] => {
   const statusMap: Record<PlotStatus, PlotRequest["status"]> = {
     active: "IN_USE",
-    dormant: "IDLE",
+    dormant: "FALLOW",
     planned: "AVAILABLE",
     "at-risk": "MAINTENANCE",
   };
@@ -49,11 +49,13 @@ export const mapPlotStatusToApiStatus = (status: PlotStatus): PlotRequest["statu
  */
 export const transformApiToFeature = (apiPlot: ApiPlot): Plot => ({
   id: String(apiPlot.id),
+  farmId: apiPlot.farmId ?? undefined,
   name: apiPlot.plotName,
   area: apiPlot.area ?? 0,
   soilType: apiPlot.soilType ?? "Unknown",
   pH: 7.0,
   status: mapStatusToPlotStatus(apiPlot.status),
+  statusCode: apiPlot.status ?? undefined,
   createdDate: apiPlot.createdAt?.split("T")[0] ?? new Date().toISOString().split("T")[0],
   seasons: [],
 });

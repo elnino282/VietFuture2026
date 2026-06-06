@@ -7,9 +7,11 @@ import {
   useCreateHarvest,
   useDeleteHarvest,
   useHarvestSummary,
+  useUpdateHarvest,
   type Harvest as ApiHarvest,
 } from "@/entities/harvest";
 import { useOptionalSeason } from "@/shared/contexts";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type {
   CropResidueHandling,
   HarvestBatch,
@@ -20,6 +22,8 @@ import type {
   SummaryStats,
 } from "../types";
 import { GRADE_DISTRIBUTION_COLORS, GRADE_POINTS_MAP } from "../constants";
+
+type Translate = (key: string, optionsOrDefault?: Record<string, unknown> | string) => string;
 
 const INITIAL_FORM_DATA: HarvestFormData = {
   batchId: "",
@@ -53,6 +57,9 @@ const parseSeasonId = (value?: string | number | null): number | undefined => {
   return undefined;
 };
 
+const getSafeNumber = (value: number | null | undefined, fallback = 0): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
 const parseHarvestGrade = (value?: string | null): HarvestGrade | undefined => {
   if (value === "Premium" || value === "A" || value === "B" || value === "C") {
     return value;
@@ -60,20 +67,27 @@ const parseHarvestGrade = (value?: string | null): HarvestGrade | undefined => {
   return undefined;
 };
 
-const getSeasonStatusLabel = (status?: string | null): string => {
+const parseHarvestStatus = (value?: string | null): HarvestStatus | undefined => {
+  if (value === "stored" || value === "sold" || value === "processing") {
+    return value;
+  }
+  return undefined;
+};
+
+const getSeasonStatusLabel = (status: string | null | undefined, t: Translate): string => {
   switch (status) {
     case "PLANNED":
-      return "PLANNED";
+      return t("seasonWorkspace.status.planned", "Planned");
     case "ACTIVE":
-      return "ACTIVE";
+      return t("seasonWorkspace.status.active", "Active");
     case "COMPLETED":
-      return "COMPLETED";
+      return t("seasonWorkspace.status.completed", "Completed");
     case "CANCELLED":
-      return "CANCELLED";
+      return t("seasonWorkspace.status.cancelled", "Cancelled");
     case "ARCHIVED":
-      return "ARCHIVED";
+      return t("seasonWorkspace.status.archived", "Archived");
     default:
-      return "UNKNOWN";
+      return t("seasonWorkspace.status.unknown", "Unknown");
   }
 };
 
@@ -108,6 +122,7 @@ const generateAutoLotCode = (
 const parseOptionalPercentage = (
   rawValue: string,
   label: string,
+  t: Translate,
 ): number | undefined => {
   const normalized = rawValue.trim();
   if (!normalized) {
@@ -115,7 +130,10 @@ const parseOptionalPercentage = (
   }
   const parsed = Number(normalized);
   if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
-    throw new Error(`${label} must be between 0 and 100`);
+    throw new Error(t("harvests.validation.percentageRange", {
+      field: label,
+      defaultValue: `${label} must be between 0 and 100`,
+    }));
   }
   return parsed;
 };
@@ -138,6 +156,33 @@ const appendMetadataToNote = (
     return metadataBlock;
   }
   return `${trimmedNote}\n\n${metadataBlock}`;
+};
+
+const splitNoteMetadata = (
+  note?: string | null,
+): { note: string; metadata: Record<string, string> } => {
+  if (!note) {
+    return { note: "", metadata: {} };
+  }
+  const marker = "[harvest-metadata]";
+  const markerIndex = note.indexOf(marker);
+  if (markerIndex < 0) {
+    return { note, metadata: {} };
+  }
+
+  const metadata: Record<string, string> = {};
+  const visibleNote = note.slice(0, markerIndex).trim();
+  note
+    .slice(markerIndex + marker.length)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .forEach((line) => {
+      const separatorIndex = line.indexOf("=");
+      if (separatorIndex <= 0) return;
+      metadata[line.slice(0, separatorIndex)] = line.slice(separatorIndex + 1);
+    });
+  return { note: visibleNote, metadata };
 };
 
 const escapeCsvCell = (value: unknown): string => {
@@ -166,6 +211,7 @@ const transformApiToFeature = (h: ApiHarvest): HarvestBatch => ({
   unitPrice: h.unit ?? undefined,
   revenue: h.revenue ?? undefined,
   grade: parseHarvestGrade(h.grade),
+  status: parseHarvestStatus(h.status),
   notes: h.note ?? undefined,
   season:
     h.seasonName ??
@@ -173,11 +219,13 @@ const transformApiToFeature = (h: ApiHarvest): HarvestBatch => ({
 });
 
 export function useHarvestManagement() {
+  const { t, locale } = useI18n();
   const seasonContext = useOptionalSeason();
 
   const [selectedSeason, setSelectedSeason] = useState<string>("all");
   const [isAddBatchOpen, setIsAddBatchOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<HarvestBatch | null>(null);
+  const [editingBatch, setEditingBatch] = useState<HarvestBatch | null>(null);
   const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
   const [formData, setFormData] = useState<HarvestFormData>(INITIAL_FORM_DATA);
   const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
@@ -207,18 +255,38 @@ export function useHarvestManagement() {
 
   const { data: summaryData } = useHarvestSummary(effectiveSeasonId);
 
-  const resetForm = useCallback(() => setFormData(INITIAL_FORM_DATA), []);
+  const resetForm = useCallback(() => {
+    setFormData(INITIAL_FORM_DATA);
+    setEditingBatch(null);
+  }, []);
 
   const createMutation = useCreateHarvest({
     onSuccess: (_created, variables) => {
-      toast.success("Harvest Added", {
-        description: `${variables.data.lotCode} - ${variables.data.quantity} kg`,
+      toast.success(t("harvests.toast.harvestAdded", "Harvest Added"), {
+        description: t("harvests.toast.harvestAddedDescription", {
+          lotCode: variables.data.lotCode,
+          quantity: variables.data.quantity,
+          unit: "kg",
+          defaultValue: `${variables.data.lotCode} - ${variables.data.quantity} kg`,
+        }),
       });
       setIsAddBatchOpen(false);
+      setEditingBatch(null);
       resetForm();
     },
     onError: (err) =>
-      toast.error("Failed to add harvest", { description: err.message }),
+      toast.error(t("harvests.toast.addFailed", "Failed to add harvest"), { description: err.message }),
+  });
+
+  const updateMutation = useUpdateHarvest({
+    onSuccess: () => {
+      toast.success(t("harvests.toast.updateSuccess", "Harvest updated successfully"));
+      setIsAddBatchOpen(false);
+      setEditingBatch(null);
+      resetForm();
+    },
+    onError: (err) =>
+      toast.error(t("harvests.toast.error", "An error occurred"), { description: err.message }),
   });
 
   const deleteMutation = useDeleteHarvest();
@@ -236,23 +304,30 @@ export function useHarvestManagement() {
 
   const filteredBatches = batches;
 
-  const totalHarvested = useMemo(
-    () => filteredBatches.reduce((sum, batch) => sum + batch.quantity, 0),
-    [filteredBatches]
-  );
+  const totalHarvested = useMemo(() => {
+    if (typeof summaryData?.totalHarvestedKg === "number") {
+      return summaryData.totalHarvestedKg;
+    }
+    return filteredBatches.reduce((sum, batch) => sum + batch.quantity, 0);
+  }, [filteredBatches, summaryData?.totalHarvestedKg]);
 
-  const lotsCount = filteredBatches.length;
+  const lotsCount = typeof summaryData?.lotsCount === "number"
+    ? summaryData.lotsCount
+    : filteredBatches.length;
 
   const avgGrade = useMemo(() => {
     const gradedBatches = batches.filter((batch) => !!batch.grade);
-    if (gradedBatches.length === 0) return "N/A";
+    if (gradedBatches.length === 0) return t("common.notAvailable", "N/A");
     const avg =
       gradedBatches.reduce(
         (sum, batch) => sum + GRADE_POINTS_MAP[batch.grade as HarvestGrade],
         0
       ) / gradedBatches.length;
-    return avg >= 3.5 ? "Premium" : avg >= 2.5 ? "A" : avg >= 1.5 ? "B" : "C";
-  }, [batches]);
+    if (avg >= 3.5) return t("harvests.grades.premium", "Premium");
+    if (avg >= 2.5) return t("harvests.grades.a", "Grade A");
+    if (avg >= 1.5) return t("harvests.grades.b", "Grade B");
+    return t("harvests.grades.c", "Grade C");
+  }, [batches, t]);
 
   const avgMoisture = useMemo(() => {
     const moistureSamples = filteredBatches
@@ -276,7 +351,7 @@ export function useHarvestManagement() {
     filteredBatches.forEach((batch) => {
       if (!batch.date) return;
       const dateObj = new Date(batch.date);
-      const formattedDate = dateObj.toLocaleDateString("en-US", {
+      const formattedDate = dateObj.toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
       });
@@ -289,54 +364,62 @@ export function useHarvestManagement() {
         const rightDate = new Date(right.date ?? "").getTime();
         return leftDate - rightDate;
       });
-  }, [filteredBatches]);
+  }, [filteredBatches, locale]);
 
   const gradeDistribution: ChartDataPoint[] = useMemo(
     () =>
       [
         {
-          name: "Premium",
+          name: t("harvests.grades.premium", "Premium"),
           value: batches.filter((batch) => batch.grade === "Premium").length,
           color: GRADE_DISTRIBUTION_COLORS.Premium,
         },
         {
-          name: "Grade A",
+          name: t("harvests.grades.a", "Grade A"),
           value: batches.filter((batch) => batch.grade === "A").length,
-          color: GRADE_DISTRIBUTION_COLORS["Grade A"],
+          color: GRADE_DISTRIBUTION_COLORS.A,
         },
         {
-          name: "Grade B",
+          name: t("harvests.grades.b", "Grade B"),
           value: batches.filter((batch) => batch.grade === "B").length,
-          color: GRADE_DISTRIBUTION_COLORS["Grade B"],
+          color: GRADE_DISTRIBUTION_COLORS.B,
         },
         {
-          name: "Grade C",
+          name: t("harvests.grades.c", "Grade C"),
           value: batches.filter((batch) => batch.grade === "C").length,
-          color: GRADE_DISTRIBUTION_COLORS["Grade C"],
+          color: GRADE_DISTRIBUTION_COLORS.C,
         },
       ].filter((entry) => (entry.value ?? 0) > 0),
+    [batches, t]
+  );
+
+  const premiumGradePercentageFallback = useMemo(
+    () =>
+      batches.length > 0
+        ? (batches.filter((batch) => batch.grade === "Premium").length /
+            batches.length) *
+          100
+        : 0,
     [batches]
   );
 
   const summaryStats: SummaryStats = useMemo(
     () => ({
-      totalStored: batches
-        .filter((batch) => batch.status === "stored")
-        .reduce((sum, batch) => sum + batch.quantity, 0),
-      totalSold: batches
-        .filter((batch) => batch.status === "sold")
-        .reduce((sum, batch) => sum + batch.quantity, 0),
-      totalProcessing: batches
-        .filter((batch) => batch.status === "processing")
-        .reduce((sum, batch) => sum + batch.quantity, 0),
-      premiumGradePercentage:
-        batches.length > 0
-          ? (batches.filter((batch) => batch.grade === "Premium").length /
-              batches.length) *
-            100
-          : 0,
+      totalStored: getSafeNumber(summaryData?.totalStoredKg),
+      totalSold: getSafeNumber(summaryData?.totalSoldKg),
+      totalProcessing: getSafeNumber(summaryData?.totalProcessingKg),
+      premiumGradePercentage: getSafeNumber(
+        summaryData?.premiumGradePercentage,
+        premiumGradePercentageFallback
+      ),
     }),
-    [batches]
+    [
+      premiumGradePercentageFallback,
+      summaryData?.premiumGradePercentage,
+      summaryData?.totalProcessingKg,
+      summaryData?.totalSoldKg,
+      summaryData?.totalStoredKg,
+    ]
   );
 
   const getStatusBadge = useCallback((status?: HarvestStatus | null) => {
@@ -345,29 +428,35 @@ export function useHarvestManagement() {
       stored: (
         <Badge className="bg-secondary/10 text-secondary border-secondary/20">
           <Package className="w-3 h-3 mr-1" />
-          Stored
+          {t("harvests.status.stored", "Stored")}
         </Badge>
       ),
       sold: (
         <Badge className="bg-primary/10 text-primary border-primary/20">
           <CheckCircle2 className="w-3 h-3 mr-1" />
-          Sold
+          {t("harvests.status.sold", "Sold")}
         </Badge>
       ),
       processing: (
         <Badge className="bg-accent/10 text-foreground border-accent/20">
           <Clock className="w-3 h-3 mr-1" />
-          Processing
+          {t("harvests.status.processing", "Processing")}
         </Badge>
       ),
     };
     return badges[status] ?? null;
-  }, []);
+  }, [t]);
 
   const getGradeBadge = useCallback((grade?: HarvestGrade | null) => {
     if (!grade) {
-      return <span className="text-xs text-muted-foreground">—</span>;
+      return <span className="text-xs text-muted-foreground">{t("common.notAvailable", "—")}</span>;
     }
+    const labels: Record<HarvestGrade, string> = {
+      Premium: t("harvests.grades.premium", "Premium"),
+      A: t("harvests.grades.a", "Grade A"),
+      B: t("harvests.grades.b", "Grade B"),
+      C: t("harvests.grades.c", "Grade C"),
+    };
     const classes: Record<HarvestGrade, string> = {
       Premium: "bg-primary/10 text-primary border-primary/20",
       A: "bg-secondary/10 text-secondary border-secondary/20",
@@ -377,10 +466,10 @@ export function useHarvestManagement() {
     return (
       <Badge className={classes[grade]}>
         <Award className="w-3 h-3 mr-1" />
-        {grade}
+        {labels[grade]}
       </Badge>
     );
-  }, []);
+  }, [t]);
 
   const resolveSubmitSeasonId = useCallback(() => {
     const fromForm = parseSeasonId(formData.season);
@@ -389,26 +478,31 @@ export function useHarvestManagement() {
   }, [effectiveSeasonId, formData.season]);
 
   const handleAddBatch = useCallback(() => {
+    const isEditing = !!editingBatch;
     if (
       !formData.date ||
       !formData.quantity ||
-      !formData.warehouseId ||
-      !formData.productName
+      (!isEditing && (!formData.warehouseId || !formData.productName))
     ) {
-      toast.error("Missing Fields");
+      toast.error(t("harvests.validation.missingFields", "Missing Fields"));
       return;
     }
 
     const quantityDisplay = Number(formData.quantity);
     if (!Number.isFinite(quantityDisplay) || quantityDisplay <= 0) {
-      toast.error("Invalid quantity");
+      toast.error(t("harvests.validation.invalidQuantity", "Invalid quantity"));
       return;
     }
 
-    const seasonId = resolveSubmitSeasonId();
-    if (!seasonId) {
-      toast.error("Season required", {
-        description: "Select a valid season before adding harvest.",
+    const seasonId = isEditing
+      ? parseSeasonId(editingBatch?.seasonId ?? effectiveSeasonId)
+      : resolveSubmitSeasonId();
+    if (!isEditing && !seasonId) {
+      toast.error(t("harvests.validation.seasonRequired", "Season required"), {
+        description: t(
+          "harvests.validation.seasonRequiredDescription",
+          "Select a valid season before adding harvest.",
+        ),
       });
       return;
     }
@@ -422,16 +516,22 @@ export function useHarvestManagement() {
         ? plotIdFromForm
         : selectedSeasonMeta?.plotId;
     const selectedSeasonStatus = selectedSeasonMeta?.status;
-    if (selectedSeasonStatus !== "ACTIVE") {
-      toast.error("Season must be ACTIVE", {
-        description: `Current status: ${getSeasonStatusLabel(selectedSeasonStatus)}. Start the season before recording harvest.`,
+    if ((!isEditing && selectedSeasonStatus !== "ACTIVE") || (isEditing && selectedSeasonStatus && selectedSeasonStatus !== "ACTIVE")) {
+      toast.error(t("harvests.validation.seasonMustBeActive", "Season must be ACTIVE"), {
+        description: t("harvests.validation.seasonMustBeActiveDescription", {
+          status: getSeasonStatusLabel(selectedSeasonStatus, t),
+          defaultValue: `Current status: ${getSeasonStatusLabel(selectedSeasonStatus, t)}. Start the season before recording harvest.`,
+        }),
       });
       return;
     }
 
-    if (!selectedPlotId || !Number.isFinite(selectedPlotId) || selectedPlotId <= 0) {
-      toast.error("Harvest plot required", {
-        description: "Selected season is missing a valid plot link.",
+    if (!isEditing && (!selectedPlotId || !Number.isFinite(selectedPlotId) || selectedPlotId <= 0)) {
+      toast.error(t("harvests.validation.plotRequired", "Harvest plot required"), {
+        description: t(
+          "harvests.validation.plotRequiredDescription",
+          "Selected season is missing a valid plot link.",
+        ),
       });
       return;
     }
@@ -443,14 +543,39 @@ export function useHarvestManagement() {
     let harvestLossPercent: number | undefined;
 
     try {
-      moisturePercent = parseOptionalPercentage(formData.moisture, "Moisture %");
-      purityPercent = parseOptionalPercentage(formData.purity, "Purity %");
-      foreignMatterPercent = parseOptionalPercentage(formData.foreignMatter, "Foreign Matter %");
-      brokenGrainsPercent = parseOptionalPercentage(formData.brokenGrains, "Broken Grains %");
-      harvestLossPercent = parseOptionalPercentage(formData.harvestLoss, "Harvest Loss %");
+      moisturePercent = parseOptionalPercentage(
+        formData.moisture,
+        t("harvests.addBatch.fields.moisture", "Moisture %"),
+        t,
+      );
+      purityPercent = parseOptionalPercentage(
+        formData.purity,
+        t("harvests.addBatch.fields.purity", "Purity %"),
+        t,
+      );
+      foreignMatterPercent = parseOptionalPercentage(
+        formData.foreignMatter,
+        t("harvests.addBatch.fields.foreignMatter", "Foreign Matter %"),
+        t,
+      );
+      brokenGrainsPercent = parseOptionalPercentage(
+        formData.brokenGrains,
+        t("harvests.addBatch.fields.brokenGrains", "Broken Grains %"),
+        t,
+      );
+      harvestLossPercent = parseOptionalPercentage(
+        formData.harvestLoss,
+        t("harvests.addBatch.fields.harvestLoss", "Harvest Loss %"),
+        t,
+      );
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Percentage fields contain invalid values.";
+        error instanceof Error
+          ? error.message
+          : t(
+              "harvests.validation.invalidPercentageFields",
+              "Percentage fields contain invalid values.",
+            );
       toast.error(message);
       return;
     }
@@ -461,8 +586,8 @@ export function useHarvestManagement() {
       : undefined;
     const productId = formData.productId ? Number(formData.productId) : undefined;
 
-    if (!Number.isFinite(warehouseId) || warehouseId <= 0) {
-      toast.error("Invalid warehouse");
+    if (!isEditing && (!Number.isFinite(warehouseId) || warehouseId <= 0)) {
+      toast.error(t("harvests.validation.invalidWarehouse", "Invalid warehouse"));
       return;
     }
 
@@ -483,8 +608,31 @@ export function useHarvestManagement() {
       cropResidueHandling: residueHandling || undefined,
     });
 
+    if (isEditing) {
+      const batchId = Number(editingBatch?.id);
+      if (!Number.isFinite(batchId) || batchId <= 0) {
+        toast.error(t("harvests.validation.invalidBatchId", "Invalid batch id"));
+        return;
+      }
+      updateMutation.mutate({
+        id: batchId,
+        seasonId,
+        data: {
+          harvestDate: formData.date,
+          quantity: quantityDisplay,
+          unit:
+            editingBatch?.unitPrice && Number.isFinite(editingBatch.unitPrice) && editingBatch.unitPrice > 0
+              ? editingBatch.unitPrice
+              : 1,
+          grade: formData.grade,
+          note: noteWithMetadata,
+        },
+      });
+      return;
+    }
+
     createMutation.mutate({
-      seasonId,
+      seasonId: seasonId!,
       data: {
         harvestDate: formData.date,
         quantity: quantityDisplay,
@@ -508,16 +656,20 @@ export function useHarvestManagement() {
     });
   }, [
     createMutation,
+    editingBatch,
+    effectiveSeasonId,
     formData,
     resolveSubmitSeasonId,
     seasonContext?.seasons,
+    t,
+    updateMutation,
   ]);
 
   const handleDeleteBatch = useCallback(
     async (batch: HarvestBatch) => {
       const id = Number(batch.id);
       if (!Number.isFinite(id) || id <= 0) {
-        toast.error("Invalid batch id");
+        toast.error(t("harvests.validation.invalidBatchId", "Invalid batch id"));
         return;
       }
       try {
@@ -525,23 +677,25 @@ export function useHarvestManagement() {
           id,
           seasonId: parseSeasonId(batch.seasonId ?? undefined),
         });
-        toast.success("Batch Deleted");
+        toast.success(t("harvests.toast.batchDeleted", "Batch Deleted"));
         setSelectedBatchIds((previous) =>
           previous.filter((selectedId) => selectedId !== batch.id)
         );
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : "Unable to delete batch.";
-        toast.error("Failed to delete", { description: message });
+          error instanceof Error
+            ? error.message
+            : t("harvests.toast.unableToDeleteBatch", "Unable to delete batch.");
+        toast.error(t("harvests.toast.deleteFailed", "Failed to delete"), { description: message });
       }
     },
-    [deleteMutation]
+    [deleteMutation, t]
   );
 
   const handleDeleteSelectedBatches = useCallback(
     async (selectedBatches: HarvestBatch[]) => {
       if (selectedBatches.length === 0) {
-        toast.error("No batches selected");
+        toast.error(t("harvests.validation.noBatchesSelected", "No batches selected"));
         return;
       }
 
@@ -553,7 +707,7 @@ export function useHarvestManagement() {
         .filter((target) => Number.isFinite(target.id) && target.id > 0);
 
       if (validTargets.length === 0) {
-        toast.error("No valid batch IDs found");
+        toast.error(t("harvests.validation.noValidBatchIds", "No valid batch IDs found"));
         return;
       }
 
@@ -574,8 +728,11 @@ export function useHarvestManagement() {
       );
 
       if (successCount > 0) {
-        toast.success("Batches Deleted", {
-          description: `${successCount} batch(es) deleted.`,
+        toast.success(t("harvests.toast.batchesDeleted", "Batches Deleted"), {
+          description: t("harvests.toast.batchesDeletedDescription", {
+            count: successCount,
+            defaultValue: `${successCount} batch(es) deleted.`,
+          }),
         });
       }
 
@@ -584,15 +741,19 @@ export function useHarvestManagement() {
         const message =
           firstError instanceof Error
             ? firstError.message
-            : "Some batches could not be deleted.";
-        toast.error("Partial delete failure", {
-          description: `${failedResults.length} failed. ${message}`,
+            : t("harvests.toast.someBatchesDeleteFailed", "Some batches could not be deleted.");
+        toast.error(t("harvests.toast.partialDeleteFailure", "Partial delete failure"), {
+          description: t("harvests.toast.partialDeleteFailureDescription", {
+            count: failedResults.length,
+            message,
+            defaultValue: `${failedResults.length} failed. ${message}`,
+          }),
         });
       }
 
       setSelectedBatchIds([]);
     },
-    [deleteMutation]
+    [deleteMutation, t]
   );
 
   const handleToggleBatchSelection = useCallback(
@@ -627,43 +788,59 @@ export function useHarvestManagement() {
     setIsDetailsDrawerOpen(true);
   }, []);
 
-  const handleQuickAction = useCallback((action: string) => {
-    const messages: Record<string, [string, string]> = {
-      qr: ["Generating QR", "Ready shortly"],
-      qc: ["Record QC", "Opening..."],
-      sale: ["Link Sale", "Opening..."],
-      handover: ["Printing", "Preparing..."],
-      weight: ["Scale Reading", "Opening..."],
-    };
-    const message = messages[action];
-    if (message) {
-      toast.success(message[0], { description: message[1] });
-    }
+  const handleEditBatch = useCallback((batch: HarvestBatch) => {
+    const { note, metadata } = splitNoteMetadata(batch.notes);
+    setEditingBatch(batch);
+    setSelectedBatch(batch);
+    setFormData({
+      ...INITIAL_FORM_DATA,
+      batchId: batch.batchId,
+      date: batch.date,
+      quantity: String(batch.quantity),
+      grade: batch.grade ?? "A",
+      moisture: metadata.moisturePercent ?? "",
+      season: batch.seasonId ? String(batch.seasonId) : "",
+      plot: metadata.harvestPlotId ?? "",
+      plotName: batch.plot ?? "",
+      crop: batch.crop ?? "",
+      productName: batch.crop ?? "",
+      status: batch.status ?? "stored",
+      notes: note,
+      purity: metadata.purityPercent ?? "",
+      foreignMatter: metadata.foreignMatterPercent ?? "",
+      brokenGrains: metadata.brokenGrainsPercent ?? "",
+      harvestLoss: metadata.harvestLossPercent ?? "",
+      cropResidueHandling: (metadata.cropResidueHandling as CropResidueHandling | undefined) ?? "",
+    });
+    setIsDetailsDrawerOpen(false);
+    setIsAddBatchOpen(true);
   }, []);
 
   const handleExport = useCallback(
     (rows: HarvestBatch[]) => {
       if (rows.length === 0) {
-        toast.error("No data to export");
+        toast.error(t("harvests.export.noData", "No data to export"));
         return;
       }
       if (typeof window === "undefined") {
-        toast.error("Export is not available in this environment");
+        toast.error(
+          t("harvests.export.unavailable", "Export is not available in this environment"),
+        );
         return;
       }
 
       const headers = [
-        "Harvest ID",
-        "Batch ID",
-        "Season ID",
-        "Season Name",
-        "Harvest Date",
-        "Quantity (kg)",
-        "Unit Price",
-        "Revenue",
-        "Grade",
-        "Notes",
-        "Created At",
+        t("harvests.export.columns.harvestId", "Harvest ID"),
+        t("harvests.export.columns.batchId", "Batch ID"),
+        t("harvests.export.columns.seasonId", "Season ID"),
+        t("harvests.export.columns.seasonName", "Season Name"),
+        t("harvests.export.columns.harvestDate", "Harvest Date"),
+        t("harvests.export.columns.quantityKg", "Quantity (kg)"),
+        t("harvests.export.columns.unitPrice", "Unit Price"),
+        t("harvests.export.columns.revenue", "Revenue"),
+        t("harvests.export.columns.grade", "Grade"),
+        t("harvests.export.columns.notes", "Notes"),
+        t("harvests.export.columns.createdAt", "Created At"),
       ];
 
       const bodyRows = rows.map((batch) =>
@@ -697,48 +874,58 @@ export function useHarvestManagement() {
       link.click();
       window.URL.revokeObjectURL(url);
 
-      toast.success("CSV Export Complete", {
-        description: `${rows.length} row(s) exported.`,
+      toast.success(t("harvests.export.complete", "CSV Export Complete"), {
+        description: t("harvests.export.completeDescription", {
+          count: rows.length,
+          defaultValue: `${rows.length} row(s) exported.`,
+        }),
       });
     },
-    [effectiveSeasonId]
+    [effectiveSeasonId, t]
   );
 
   const handlePrint = useCallback(
     (rows: HarvestBatch[]) => {
       if (rows.length === 0) {
-        toast.error("No data to print");
+        toast.error(t("harvests.print.noData", "No data to print"));
         return;
       }
       if (typeof window === "undefined") {
-        toast.error("Print is not available in this environment");
+        toast.error(t("harvests.print.unavailable", "Print is not available in this environment"));
         return;
       }
 
       const printWindow = window.open("", "_blank", "width=1200,height=800");
       if (!printWindow) {
-        toast.error("Print window blocked", {
-          description: "Please allow pop-ups to print harvest summary.",
+        toast.error(t("harvests.print.windowBlocked", "Print window blocked"), {
+          description: t(
+            "harvests.print.windowBlockedDescription",
+            "Please allow pop-ups to print harvest summary.",
+          ),
         });
         return;
       }
 
-      const generatedAt = new Date().toLocaleString();
+      const generatedAt = new Date().toLocaleString(locale);
       const title = effectiveSeasonId
-        ? `Harvest Summary - Season #${effectiveSeasonId}`
-        : "Harvest Summary - All Seasons";
+        ? t("harvests.print.titleForSeason", {
+            seasonId: effectiveSeasonId,
+            defaultValue: `Harvest Summary - Season #${effectiveSeasonId}`,
+          })
+        : t("harvests.print.titleAllSeasons", "Harvest Summary - All Seasons");
+      const notAvailable = t("common.notAvailable", "—");
       const rowsHtml = rows
         .map(
           (batch) => `
           <tr>
             <td>${escapeHtml(batch.id)}</td>
             <td>${escapeHtml(batch.batchId)}</td>
-            <td>${escapeHtml(batch.seasonName ?? batch.seasonId ?? "—")}</td>
+            <td>${escapeHtml(batch.seasonName ?? batch.seasonId ?? notAvailable)}</td>
             <td>${escapeHtml(batch.date)}</td>
             <td style="text-align:right;">${escapeHtml(batch.quantity)}</td>
-            <td>${escapeHtml(batch.grade ?? "—")}</td>
-            <td style="text-align:right;">${escapeHtml(batch.revenue ?? "—")}</td>
-            <td>${escapeHtml(batch.notes ?? "—")}</td>
+            <td>${escapeHtml(batch.grade ?? notAvailable)}</td>
+            <td style="text-align:right;">${escapeHtml(batch.revenue ?? notAvailable)}</td>
+            <td>${escapeHtml(batch.notes ?? notAvailable)}</td>
           </tr>`
         )
         .join("");
@@ -759,18 +946,21 @@ export function useHarvestManagement() {
   </head>
   <body>
     <h1>${escapeHtml(title)}</h1>
-    <p>Generated at ${escapeHtml(generatedAt)}</p>
+    <p>${escapeHtml(t("harvests.print.generatedAt", {
+      time: generatedAt,
+      defaultValue: `Generated at ${generatedAt}`,
+    }))}</p>
     <table>
       <thead>
         <tr>
-          <th>Harvest ID</th>
-          <th>Batch ID</th>
-          <th>Season</th>
-          <th>Harvest Date</th>
-          <th style="text-align:right;">Quantity (kg)</th>
-          <th>Grade</th>
-          <th style="text-align:right;">Revenue</th>
-          <th>Notes</th>
+          <th>${escapeHtml(t("harvests.export.columns.harvestId", "Harvest ID"))}</th>
+          <th>${escapeHtml(t("harvests.export.columns.batchId", "Batch ID"))}</th>
+          <th>${escapeHtml(t("harvests.export.columns.season", "Season"))}</th>
+          <th>${escapeHtml(t("harvests.export.columns.harvestDate", "Harvest Date"))}</th>
+          <th style="text-align:right;">${escapeHtml(t("harvests.export.columns.quantityKg", "Quantity (kg)"))}</th>
+          <th>${escapeHtml(t("harvests.export.columns.grade", "Grade"))}</th>
+          <th style="text-align:right;">${escapeHtml(t("harvests.export.columns.revenue", "Revenue"))}</th>
+          <th>${escapeHtml(t("harvests.export.columns.notes", "Notes"))}</th>
         </tr>
       </thead>
       <tbody>
@@ -783,7 +973,7 @@ export function useHarvestManagement() {
       printWindow.focus();
       printWindow.print();
     },
-    [effectiveSeasonId]
+    [effectiveSeasonId, locale, t]
   );
 
   return {
@@ -795,6 +985,7 @@ export function useHarvestManagement() {
     setIsAddBatchOpen,
     selectedBatch,
     setSelectedBatch,
+    editingBatch,
     isDetailsDrawerOpen,
     setIsDetailsDrawerOpen,
     batches,
@@ -823,10 +1014,10 @@ export function useHarvestManagement() {
     handleToggleAllSelection,
     resetForm,
     handleViewDetails,
-    handleQuickAction,
+    handleEditBatch,
     handleExport,
     handlePrint,
-    isCreating: createMutation.isPending,
+    isCreating: createMutation.isPending || updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };
 }

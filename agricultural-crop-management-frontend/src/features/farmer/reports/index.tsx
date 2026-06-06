@@ -1,7 +1,6 @@
 import { Card, CardContent, PageContainer, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 import { Wheat, DollarSign, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useReports } from "./hooks/useReports";
-import { Sidebar } from "./components/Sidebar";
 import { HeaderBar } from "./components/HeaderBar";
 import { KPICards } from "./components/KPICards";
 import { YieldTab } from "./components/YieldTab";
@@ -71,10 +70,8 @@ export function Reports({
 
     return (
         <PageContainer variant="default">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
-                <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-
-                <main className="min-w-0">
+            <div className="w-full">
+                <main className="min-w-0 w-full">
                     <HeaderBar
                         selectedSeason={selectedSeason}
                         onSeasonChange={setSelectedSeason}

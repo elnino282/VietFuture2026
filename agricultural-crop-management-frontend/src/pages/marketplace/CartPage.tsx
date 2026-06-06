@@ -1,6 +1,6 @@
-import { ArrowLeft, Minus, Package, Plus, ShoppingCart, Store, Trash2 } from "lucide-react";
+import { Minus, Package, Plus, ShoppingCart, Store, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button, Card, CardContent } from "@/shared/ui";
+import { BackButton, Button, Card, CardContent } from "@/shared/ui";
 import {
   useMarketplaceCart,
   useMarketplaceRemoveCartItemMutation,
@@ -175,7 +175,8 @@ export function CartPage() {
   /* ---------- Loading ---------- */
   if (cartQuery.isLoading) {
     return (
-      <div className="max-w-[1200px] mx-auto px-4 pt-8 sm:px-6">
+      <div className="max-w-[1800px] mx-auto px-6 pt-6">
+        <BackButton to="/marketplace/products" className="mb-4 w-fit" />
         <div className="mb-8 h-9 w-56 animate-pulse rounded-lg bg-muted" />
         <div className="flex flex-col gap-8 lg:flex-row">
           <div className="flex-1 space-y-4">
@@ -194,7 +195,8 @@ export function CartPage() {
   /* ---------- Error ---------- */
   if (cartQuery.isError) {
     return (
-      <div className="max-w-[1200px] mx-auto px-4 pt-8 sm:px-6">
+      <div className="max-w-[1800px] mx-auto px-6 pt-6">
+        <BackButton to="/marketplace/products" className="mb-4 w-fit" />
         <div className="rounded-xl border border-dashed border-destructive/30 bg-card p-8 text-center text-sm text-destructive">
           Không thể tải giỏ hàng từ máy chủ. Vui lòng thử lại sau.
         </div>
@@ -206,7 +208,8 @@ export function CartPage() {
   const cart = cartQuery.data;
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="max-w-[1200px] mx-auto px-4 pt-8 sm:px-6">
+      <div className="max-w-[1800px] mx-auto px-6 pt-6">
+        <BackButton to="/marketplace/products" className="mb-4 w-fit" />
         <CartEmpty />
       </div>
     );
@@ -240,18 +243,11 @@ export function CartPage() {
   };
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 pt-6 pb-12 sm:px-6">
+    <div className="max-w-[1800px] mx-auto px-6 pt-6 pb-12">
       {/* Header */}
       <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <button
-            type="button"
-            onClick={() => navigate("/marketplace/products")}
-            className="mb-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
-          >
-            <ArrowLeft size={16} />
-            Tiếp tục mua sắm
-          </button>
+          <BackButton to="/marketplace/products" className="mb-2 w-fit" />
           <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
             Giỏ hàng
             <span className="ml-2 text-lg font-medium text-muted-foreground">

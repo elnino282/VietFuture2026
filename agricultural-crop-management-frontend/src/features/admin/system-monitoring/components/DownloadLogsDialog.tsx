@@ -20,6 +20,7 @@ import {
 } from "@/shared/ui";
 import { Download } from "lucide-react";
 import type { DateRange, DownloadConfig } from "../types";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface DownloadLogsDialogProps {
   downloadLogsOpen: boolean;
@@ -36,22 +37,24 @@ export function DownloadLogsDialog({
   setDownloadConfig,
   handleDownloadLogs,
 }: DownloadLogsDialogProps) {
+  const { t } = useI18n();
+
   return (
     <Dialog open={downloadLogsOpen} onOpenChange={setDownloadLogsOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Download className="w-5 h-5" />
-            Download Logs
+            {t('admin.systemMonitoring.download.title')}
           </DialogTitle>
           <DialogDescription>
-            Configure and download system logs
+            {t('admin.systemMonitoring.download.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           <div className="space-y-3">
-            <Label>Log Types</Label>
+            <Label>{t('admin.systemMonitoring.download.logTypes')}</Label>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -68,7 +71,7 @@ export function DownloadLogsDialog({
                   }
                 />
                 <Label htmlFor="error-logs" className="cursor-pointer">
-                  Error Logs
+                  {t('admin.systemMonitoring.download.types.error')}
                 </Label>
               </div>
               <div className="flex items-center gap-2">
@@ -86,7 +89,7 @@ export function DownloadLogsDialog({
                   }
                 />
                 <Label htmlFor="system-logs" className="cursor-pointer">
-                  System Logs
+                  {t('admin.systemMonitoring.download.types.system')}
                 </Label>
               </div>
               <div className="flex items-center gap-2">
@@ -104,7 +107,7 @@ export function DownloadLogsDialog({
                   }
                 />
                 <Label htmlFor="auth-logs" className="cursor-pointer">
-                  Authentication Logs
+                  {t('admin.systemMonitoring.download.types.auth')}
                 </Label>
               </div>
               <div className="flex items-center gap-2">
@@ -122,14 +125,14 @@ export function DownloadLogsDialog({
                   }
                 />
                 <Label htmlFor="ai-logs" className="cursor-pointer">
-                  AI Assistant Logs
+                  {t('admin.systemMonitoring.download.types.ai')}
                 </Label>
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Date Range</Label>
+            <Label>{t('admin.systemMonitoring.download.dateRange')}</Label>
             <Select
               value={downloadConfig.dateRange}
               onValueChange={(v: string) =>
@@ -143,16 +146,16 @@ export function DownloadLogsDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="24h">Last 24 hours</SelectItem>
-                <SelectItem value="7d">Last 7 days</SelectItem>
-                <SelectItem value="30d">Last 30 days</SelectItem>
+                <SelectItem value="today">{t('admin.systemMonitoring.dateRange.today')}</SelectItem>
+                <SelectItem value="24h">{t('admin.systemMonitoring.dateRange.last24Hours')}</SelectItem>
+                <SelectItem value="7d">{t('admin.systemMonitoring.dateRange.last7d')}</SelectItem>
+                <SelectItem value="30d">{t('admin.systemMonitoring.dateRange.last30d')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label>Size Cap</Label>
+            <Label>{t('admin.systemMonitoring.download.sizeCap')}</Label>
             <Select
               value={downloadConfig.sizeCap}
               onValueChange={(v: string) =>
@@ -166,7 +169,7 @@ export function DownloadLogsDialog({
                 <SelectItem value="50MB">50 MB</SelectItem>
                 <SelectItem value="100MB">100 MB</SelectItem>
                 <SelectItem value="500MB">500 MB</SelectItem>
-                <SelectItem value="unlimited">Unlimited</SelectItem>
+                <SelectItem value="unlimited">{t('admin.systemMonitoring.download.unlimited')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -174,11 +177,11 @@ export function DownloadLogsDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setDownloadLogsOpen(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleDownloadLogs}>
             <Download className="w-4 h-4 mr-2" />
-            Download
+            {t('admin.systemMonitoring.download.download')}
           </Button>
         </DialogFooter>
       </DialogContent>

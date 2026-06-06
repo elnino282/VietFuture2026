@@ -16,6 +16,7 @@ import {
 } from '@/shared/ui';
 import { cn } from '@/shared/lib';
 import type { AdminDashboardPendingApproval } from '../hooks/useAdminDashboard';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 type PendingApprovalsProps = {
   items: AdminDashboardPendingApproval[];
@@ -39,15 +40,15 @@ function resolveSeverityTag(input?: string | null): string {
   return 'LOW';
 }
 
-function formatSubmittedAt(value?: string | null): string {
+function formatSubmittedAt(value: string | null | undefined, locale: string, fallback: string): string {
   if (!value) {
-    return 'Time not available';
+    return fallback;
   }
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return 'Time not available';
+    return fallback;
   }
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(date);
@@ -60,6 +61,7 @@ export function PendingApprovals({
   onRetry,
 }: PendingApprovalsProps) {
   const navigate = useNavigate();
+  const { t, locale } = useI18n();
   const sortedItems = useMemo(
     () => [...items].sort((a, b) => (a.submittedAt || '').localeCompare(b.submittedAt || '')),
     [items],
@@ -70,9 +72,9 @@ export function PendingApprovals({
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <CardTitle className="text-lg">Pending approvals</CardTitle>
+            <CardTitle className="text-lg">{t('admin.dashboard.pendingApprovals.title')}</CardTitle>
             <CardDescription>
-              Real admin actions waiting for review
+              {t('admin.dashboard.pendingApprovals.description')}
             </CardDescription>
           </div>
           <Badge variant="outline">{items.length}</Badge>
@@ -90,11 +92,11 @@ export function PendingApprovals({
         {!isLoading && error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Failed to load pending approvals</AlertTitle>
+            <AlertTitle>{t('admin.dashboard.pendingApprovals.errorTitle')}</AlertTitle>
             <AlertDescription className="mt-2 flex items-center justify-between gap-3">
-              <span>{error.message || 'Please try again.'}</span>
+              <span>{error.message || t('common.tryAgain')}</span>
               <Button variant="outline" size="sm" onClick={onRetry}>
-                Retry
+                {t('common.retry')}
               </Button>
             </AlertDescription>
           </Alert>
@@ -102,7 +104,7 @@ export function PendingApprovals({
 
         {!isLoading && !error && sortedItems.length === 0 && (
           <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-            No pending approvals right now.
+            {t('admin.dashboard.pendingApprovals.empty')}
           </div>
         )}
 
@@ -123,11 +125,19 @@ export function PendingApprovals({
                       ) : null}
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Clock3 className="h-3.5 w-3.5" />
-                        <span>{formatSubmittedAt(item.submittedAt)}</span>
+                        <span>
+                          {formatSubmittedAt(
+                            item.submittedAt,
+                            locale,
+                            t('admin.dashboard.pendingApprovals.timeUnavailable'),
+                          )}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className={cn('border', severityClasses[severity])}>{severity}</Badge>
+                      <Badge className={cn('border', severityClasses[severity])}>
+                        {t(`admin.dashboard.pendingApprovals.severity.${severity}`)}
+                      </Badge>
                       {item.actionUrl ? (
                         <Button
                           size="sm"
@@ -137,7 +147,7 @@ export function PendingApprovals({
                             }
                           }}
                         >
-                          Review
+                          {t('admin.dashboard.pendingApprovals.review')}
                         </Button>
                       ) : null}
                     </div>

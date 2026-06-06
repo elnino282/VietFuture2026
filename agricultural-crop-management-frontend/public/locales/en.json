@@ -13,6 +13,7 @@
     "import": "Import",
     "refresh": "Refresh",
     "back": "Back",
+    "unsavedChangesConfirm": "You have unsaved changes. Leave this page?",
     "next": "Next",
     "previous": "Previous",
     "submit": "Submit",
@@ -23,6 +24,7 @@
     "all": "All",
     "none": "None",
     "noData": "No data available",
+    "notAvailable": "—",
     "optional": "optional",
     "required": "required",
     "and": "and",
@@ -120,6 +122,31 @@
     "soilTests": "Soil Tests",
     "home": "Home",
     "toggleSidebar": "Toggle navigation"
+  },
+  "breadcrumb": {
+    "contextAriaLabel": "Current location",
+    "kind": {
+      "farm": "Farm",
+      "plot": "Plot",
+      "season": "Season"
+    },
+    "portal": {
+      "farmer": "Farmer Portal",
+      "admin": "Admin Portal",
+      "employee": "Employee Portal"
+    },
+    "fallback": {
+      "farm": "Farm",
+      "plot": "Plot",
+      "season": "Season",
+      "product": "Product",
+      "order": "Order",
+      "user": "User"
+    },
+    "action": {
+      "create": "Create",
+      "edit": "Edit"
+    }
   },
   "userMenu": {
     "profile": "Profile",
@@ -224,6 +251,10 @@
       "incidents": {
         "title": "Incidents",
         "breadcrumb": "Incidents"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "breadcrumb": "Notifications"
       },
       "aiAssistant": {
         "title": "AI Assistant",
@@ -689,6 +720,10 @@
         "high": "High",
         "missingKey": "Missing VITE_GOOGLE_MAPS_API_KEY.",
         "unavailable": "Google Maps is unavailable.",
+        "unavailableNoBoundaryNoFarmLocation": "No valid field boundary and no farm location available to define a real map viewport.",
+        "noViewport": "No real viewport center available for map rendering.",
+        "allMissingBoundary": "All fields in current filters are missing valid boundary GeoJSON, so the map cannot be rendered.",
+        "scriptLoadError": "Failed to load Google Maps script.",
         "missingGeometry": "{{count}} field(s) do not have boundary geometry yet and cannot be rendered on the map.",
         "field": "Field",
         "fdnTotal": "FDN total",
@@ -701,10 +736,20 @@
         "noRecommendation": "No recommendation available.",
         "noFieldMatch": "No field matches current filters.",
         "noGeometryForFilters": "No field geometry available for current filters.",
+        "configRequiredTitle": "Map configuration required",
+        "apiErrorTitle": "Map data is temporarily unavailable",
+        "missingBoundaryTitle": "Fields require boundary update",
+        "missingBoundaryListTitle": "Fields missing boundary GeoJSON",
+        "boundaryIssue": "Boundary issue: {{issue}}",
         "fallbackTitle": "Map is currently unavailable",
         "fallbackHint": "You can still review field sustainability in list view and add missing boundaries from farm management.",
         "manageFieldsCta": "Go to Farms & Plots",
-        "listFallbackTitle": "Field list fallback"
+        "listFallbackTitle": "Field list fallback",
+        "input": {
+          "mineral": "Mineral",
+          "organic": "Organic",
+          "irrigation": "Irrigation"
+        }
       }
     }
   },
@@ -814,6 +859,7 @@
     "dialog": {
       "createTitle": "Create Season",
       "editTitle": "Edit Season",
+      "editDescription": "Update season details below.",
       "deleteTitle": "Delete Season",
       "deleteDescription": "Are you sure you want to delete this season? This action cannot be undone.",
       "startTitle": "Start Season",
@@ -827,17 +873,25 @@
       "cancelTitle": "Cancel Season",
       "cancelDescription": "Are you sure you want to cancel this season? This action cannot be undone.",
       "cancelConfirm": "Cancel Season",
+      "currentPlantCountInvalid": "Current plant count must be at least 1.",
+      "actualYieldLabel": "Actual Yield ({{unit}})",
       "createDescription": "Fill in the details below to create a new season."
     },
     "form": {
       "seasonName": "Season Name",
       "seasonNamePlaceholder": "e.g., Summer 2024",
+      "farm": "Farm",
       "selectFarm": "Select farm",
       "selectFarmFirst": "Select farm first",
+      "selectPlot": "Select plot",
+      "noPlotsAvailable": "No plots available",
       "variety": "Variety",
       "selectCrop": "Select crop",
       "selectCropFirst": "Select crop first",
+      "selectVariety": "Select variety",
+      "noVarietiesAvailable": "No varieties available",
       "initialPlantCount": "Initial Plant Count",
+      "currentPlantCount": "Current Plant Count",
       "initialPlantCountHelp": "Number of seeds or seedlings planted.",
       "expectedYield": "Expected Yield",
       "expectedYieldHelp": "Estimated yield to be harvested.",
@@ -1188,7 +1242,8 @@
     "lockedSeasonBanner": "Current season is locked. You can only view labor plans and data; add/remove/assign/payroll actions are disabled.",
     "tabs": {
       "employees": "Employee list",
-      "assignment": "Assignment & progress",
+      "assignment": "Assignment",
+      "progress": "Progress",
       "payroll": "Payroll"
     },
     "sections": {
@@ -1257,6 +1312,8 @@
       "task": "Task",
       "progress": "Progress",
       "note": "Note",
+      "evidence": "Evidence",
+      "openEvidence": "Open link",
       "time": "Time"
     },
     "payrollTable": {
@@ -1341,6 +1398,20 @@
     "actions": {
       "start": "Start",
       "complete": "Complete"
+    },
+    "progressReports": {
+      "title": "Employee progress reports",
+      "subtitle": "Progress updates submitted by employees for this season.",
+      "refresh": "Refresh",
+      "openLabor": "View in Labor",
+      "totalReports": "Total reports",
+      "reportingEmployees": "Reporting employees",
+      "averageProgress": "Average progress",
+      "latest": "Latest",
+      "progress": "Progress",
+      "loading": "Loading progress reports...",
+      "empty": "No employee progress reports yet.",
+      "openEvidence": "Open evidence"
     },
     "empty": {
       "title": "No Tasks Found",
@@ -1655,6 +1726,18 @@
     "searchPlaceholder": "Search logs...",
     "selectSeason": "Select a season",
     "allTypes": "All Types",
+    "logTypes": {
+      "TRANSPLANT": "Transplant",
+      "FERTILIZE": "Fertilize",
+      "PEST": "Pest",
+      "SPRAY": "Spray",
+      "IRRIGATE": "Irrigate",
+      "WEED": "Weed",
+      "HARVEST": "Harvest",
+      "WEATHER": "Weather",
+      "GROWTH": "Growth",
+      "OTHER": "Other"
+    },
     "summary": {
       "totalLogs": "Total Logs",
       "latestDate": "Latest Activity",
@@ -1667,6 +1750,7 @@
       "logDate": "Log Date",
       "type": "Type",
       "notes": "Notes",
+      "createdBy": "Created By",
       "createdAt": "Created At",
       "actions": "Actions"
     },
@@ -1694,6 +1778,7 @@
       "dateAfterStart": "Log date must be on or after season start date",
       "dateBeforeEnd": "Log date must be on or before season end date",
       "fillRequired": "Please fill in required fields",
+      "noPermission": "You can only modify records you created.",
       "seasonLocked": "Season is locked. Field log write actions are disabled."
     },
     "toast": {
@@ -1891,7 +1976,8 @@
       "quantityUsedInvalid": "Quantity used must be a number >= 0.",
       "costAmountInvalid": "Treatment cost must be a number >= 0.",
       "nonNegativeIntegerHint": "Please enter an integer >= 0.",
-      "nonNegativeNumberHint": "Please enter a number >= 0."
+      "nonNegativeNumberHint": "Please enter a number >= 0.",
+      "noPermission": "You can only modify records or treatments you created."
     },
     "toast": {
       "recordCreated": "Disease record created.",
@@ -2016,21 +2102,31 @@
       "createFarmError": "Failed to create farm",
       "createPlotSuccess": "Plot created successfully",
       "createPlotError": "Failed to create plot",
+      "updateFarmSuccess": "Farm updated successfully",
+      "updateFarmError": "Failed to update farm",
       "updateSuccess": "Updated successfully",
       "updateError": "Failed to update",
       "deleteSuccess": "Deleted successfully",
-      "deleteError": "Failed to delete"
+      "deleteError": "Failed to delete",
+      "deleteFarmNamedSuccess": "{{name}} deleted successfully",
+      "deleteFarmConflict": "This farm cannot be deleted because it has related data.",
+      "farmStatusUpdated": "Farm status updated",
+      "farmStatusUpdateError": "Failed to update farm status",
+      "farmInactivePlots": "This farm is inactive. Activate it to create plots."
     },
     "dialog": {
       "createFarmTitle": "Create Farm",
       "editFarmTitle": "Edit Farm",
       "deleteFarmTitle": "Delete Farm",
       "deleteFarmDescription": "Are you sure you want to delete this farm? All plots will also be deleted.",
+      "deleteFarmConfirmDescription": "Delete \"{{name}}\"? This action cannot be undone.",
       "createPlotTitle": "Create Plot",
       "editPlotTitle": "Edit Plot",
       "deletePlotTitle": "Delete Plot",
       "deletePlotDescription": "Are you sure you want to delete this plot?",
       "createPlotDescription": "Fill in the details below to add a new plot.",
+      "createPlotInFarmDescription": "Add a new plot to {{farmName}}.",
+      "createStandalonePlotDescription": "Create a new agricultural plot by entering the details below.",
       "createFarmDescription": "Enter basic information to add a new farm.",
       "editFarmDescription": "Update basic information for the farm."
     },
@@ -2045,8 +2141,14 @@
       "plotNamePlaceholder": "Enter plot name",
       "soilType": "Soil Type",
       "selectSoilType": "Select soil type",
+      "soilTypePlaceholder": "e.g., Ferralsols, Arenosols",
+      "status": "Status",
+      "selectStatus": "Select status",
+      "initialStatus": "Initial Status",
+      "activeStatus": "Active Status",
       "plotNameExample": "e.g., Plot A1",
       "areaHectares": "Area (Hectares)",
+      "totalAreaHectares": "Total Area (ha)",
       "areaExample": "e.g., 2.5",
       "farmAddress": "Farm Address",
       "farmAddressCreateDescription": "Select the address for accurate weather data.",
@@ -2067,26 +2169,209 @@
       "AVAILABLE": "Available",
       "FALLOW": "Fallow / Resting",
       "MAINTENANCE": "Under Maintenance"
+    },
+    "validation": {
+      "farmNameRequired": "Farm name is required",
+      "farmRequired": "Please select a farm",
+      "locationRequired": "Please select a province and ward",
+      "plotNameRequired": "Plot name is required",
+      "areaRequired": "Area is required",
+      "areaPositive": "Area must be greater than 0",
+      "soilTypeRequired": "Soil type is required",
+      "statusRequired": "Status is required"
+    },
+    "errors": {
+      "nameExists": "A farm with this name already exists.",
+      "plotNameExists": "A plot with this name already exists in this farm.",
+      "invalidInput": "Please check your input and try again.",
+      "unauthorized": "Your session has expired. Please sign in again.",
+      "forbiddenCreate": "You do not have permission to create farms.",
+      "errorCode": "Error code: {{code}}"
     }
   },
   "plots": {
     "title": "Plots",
+    "myPlots": "My Plots",
     "subtitle": "Manage plots for this farm",
+    "pageSubtitle": "View and manage all farm plots",
     "loading": "Loading plots...",
-    "noFarmSelected": {
-      "title": "No Farm Selected",
-      "description": "Select a farm to view its plots"
-    },
+    "addPlot": "Add Plot",
+    "mergePlots": "Merge Plots",
+    "mergeDisabledHint": "Select at least 2 plots before merging",
+    "searchPlaceholder": "Search plots...",
+    "searchByNameOrId": "Search plots by name or ID",
+    "selected": "selected",
+    "selectedCount": "{{count}} selected",
+    "noCrop": "No crop",
     "inactiveFarmWarning": "This farm is inactive. Activate it to create plots.",
     "empty": "No plots found in this farm.",
     "createNow": "Create one now",
+    "viewMode": {
+      "list": "List",
+      "map": "Map"
+    },
+    "filters": {
+      "allPlots": "All Plots",
+      "allStatuses": "All Status",
+      "allSoilTypes": "All Soil Types",
+      "activeFilters": "Active filters:",
+      "crop": "Crop",
+      "status": "Status",
+      "soil": "Soil",
+      "soilType": "Soil Type",
+      "showingCount": "Showing {{filtered}} of {{total}} plots",
+      "clearFilters": "Clear Filters"
+    },
+    "status": {
+      "active": "Active",
+      "dormant": "Dormant",
+      "planned": "Planned",
+      "atRisk": "At Risk"
+    },
     "table": {
       "name": "Name",
+      "plotName": "Plot Name",
       "area": "Area (ha)",
+      "areaHa": "Area (ha)",
+      "ph": "pH",
       "soilType": "Soil Type",
       "status": "Status",
       "currentCrop": "Current Crop",
-      "plantingDate": "Planting Date"
+      "plantingDate": "Planting Date",
+      "showingCount": "Showing {{count}} plot"
+    },
+    "actions": {
+      "openMenu": "Open menu",
+      "viewDetails": "View details",
+      "viewDetail": "View Detail",
+      "duplicate": "Duplicate",
+      "assign": "Assign",
+      "clearSelection": "Clear selection"
+    },
+    "bulk": {
+      "changeStatus": "Change Status"
+    },
+    "map": {
+      "legendTitle": "Plot Status",
+      "title": "Interactive Map View",
+      "description": "Click on plot polygons to view details. Map would show real-time plot boundaries with Mapbox or Leaflet integration.",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fullscreen": "Fullscreen",
+      "layers": "Layers"
+    },
+    "meta": {
+      "id": "ID: {{id}}"
+    },
+    "unit": {
+      "hectares": "hectares"
+    },
+    "dialog": {
+      "deleteDescription": "Are you sure you want to delete this plot? This action cannot be undone."
+    },
+    "detail": {
+      "description": "Plot ID: {{id}} - {{area}} hectares",
+      "tabs": {
+        "overview": "Overview",
+        "soilData": "Soil Data",
+        "seasons": "Seasons",
+        "actions": "Actions"
+      },
+      "area": "Area",
+      "soilType": "Soil Type",
+      "phLevel": "pH Level",
+      "status": "Status",
+      "plotInformation": "Plot Information",
+      "createdDate": "Created Date",
+      "currentCrop": "Current Crop",
+      "qrCode": "QR Code",
+      "downloadQR": "Download QR",
+      "soilTestResults": "Soil Test Results",
+      "lastUpdated": "Last updated: {{date}}",
+      "noData": "No data",
+      "notAvailable": "N/A",
+      "organicMatter": "Organic Matter (%)",
+      "electricalConductivity": "Electrical Conductivity",
+      "uploadSoilTestReport": "Upload Soil Test Report",
+      "uploadPdfCsv": "Upload PDF/CSV",
+      "soilRecommendationTitle": "Soil Analysis Recommendation",
+      "soilRecommendationDesc": "Based on your soil data, consider applying organic matter to improve soil structure. Schedule next soil test in 6 months.",
+      "soilRating": {
+        "optimal": "Optimal",
+        "good": "Good"
+      },
+      "linkedSeasons": "Linked Seasons",
+      "linkedSeasonsDesc": "Growing seasons associated with this plot",
+      "seasonStarted": "{{crop}} - Started {{date}}",
+      "noSeasonsLinked": "No seasons linked to this plot",
+      "createSeason": "Create Season",
+      "editPlotDetails": "Edit Plot Details",
+      "mergeSplitPlot": "Merge/Split Plot",
+      "splitPlot": "Split Plot",
+      "markAsDormant": "Mark as Dormant",
+      "markAsActive": "Mark as Active",
+      "generatePrintQR": "Generate & Print QR Code"
+    },
+    "merge": {
+      "title": "Merge Plots Wizard",
+      "stepDescription": "Step {{step}} of {{total}}: {{label}}",
+      "selectStep": "Select plots to merge",
+      "previewStep": "Preview and confirm",
+      "selectInstruction": "Select at least 2 plots to merge into a single plot",
+      "previewTitle": "Merge Preview",
+      "plotsToMerge": "Plots to Merge",
+      "newPlotName": "New Plot Name",
+      "newPlotNamePlaceholder": "Enter merged plot name",
+      "totalArea": "Total Area",
+      "confirm": "Confirm Merge"
+    },
+    "split": {
+      "title": "Split Plot",
+      "description": "Split {{name}} into two new plots.",
+      "descriptionFallback": "Split one plot into two new plots.",
+      "sourcePlot": "Source Plot",
+      "firstPlotName": "First Plot Name",
+      "secondPlotName": "Second Plot Name",
+      "firstArea": "First Plot Area (ha)",
+      "secondArea": "Second Plot Area (ha)",
+      "firstAreaPlaceholder": "Enter area for the first plot",
+      "areaLessThanSource": "Area must be less than the source plot area",
+      "confirm": "Confirm Split"
+    },
+    "toast": {
+      "createSuccess": "Plot Added Successfully",
+      "createSuccessDesc": "New plot has been added to your records",
+      "createError": "Failed to Add Plot",
+      "deleteSuccess": "Plot Deleted",
+      "deleteSuccessDesc": "The plot has been removed from your records",
+      "deleteError": "Failed to Delete Plot",
+      "statusUpdateSuccess": "Plot Status Updated",
+      "updateError": "Failed to Update Plot",
+      "filtersCleared": "Filters cleared",
+      "missingRequiredFields": "Missing Required Fields",
+      "missingRequiredFieldsDesc": "Please fill in all required fields marked with *",
+      "qrGenerated": "QR Code Generated",
+      "qrGeneratedDesc": "QR code for {{name}} is ready to download",
+      "selectAtLeastTwo": "Select at least 2 plots",
+      "mergeSuccess": "Plots Merged Successfully",
+      "mergeSuccessDesc": "{{count}} plots have been merged",
+      "mergeError": "Failed to merge plots",
+      "mergeMissingPlots": "Some selected plots are no longer available.",
+      "mergeFarmMissing": "Unable to identify the farm for the selected plots.",
+      "mergeSameFarmRequired": "Only plots within the same farm can be merged.",
+      "splitSuccess": "Plot Split Successfully",
+      "splitSuccessDesc": "{{name}} has been split into two plots",
+      "splitError": "Failed to split plot",
+      "splitMissingPlot": "The selected plot is no longer available.",
+      "splitFarmMissing": "Unable to identify the farm for this plot.",
+      "noPlotsSelected": "No plots selected",
+      "bulkDeleteSuccess": "Plots Deleted",
+      "bulkDeleteSuccessDesc": "{{count}} plot(s) have been deleted",
+      "bulkStatusUpdateSuccessDesc": "{{count}} plot(s) updated to {{status}}"
+    },
+    "noFarmSelected": {
+      "title": "No Farm Selected",
+      "description": "Select a farm to view its plots"
     }
   },
   "farmManagement": {
@@ -2095,7 +2380,17 @@
     "createFarm": "Create Farm",
     "searchPlaceholder": "Search farms...",
     "noFarms": "No farms found",
+    "emptyDescription": "Create your first farm to start managing plots and seasons.",
+    "errorTitle": "Failed to Load Farms",
+    "errorDescription": "An error occurred while loading your farms.",
+    "noResultsTitle": "No farms found",
+    "noResultsDescription": "Try adjusting your search or filters.",
+    "clearFilters": "Clear filters",
     "showingFarms": "Showing {{count}} farms",
+    "selectAll": "Select all farms",
+    "selectedCount": "{{selected}} of {{total}} selected",
+    "selectedCountInline": "{{selected}} selected",
+    "farmCount": "{{count}} farms",
     "filters": {
       "allStatuses": "All Statuses",
       "allFarms": "All Farms",
@@ -2107,6 +2402,18 @@
       "area": "AREA (HA)",
       "address": "ADDRESS",
       "status": "STATUS"
+    },
+    "actions": {
+      "openMenu": "Open menu",
+      "viewDetails": "View details",
+      "changeStatus": "Change Status",
+      "clearSelection": "Clear selection"
+    },
+    "toast": {
+      "filtersCleared": "Filters cleared",
+      "noFarmsSelected": "No farms selected",
+      "bulkStatusUpdated": "Updated {{count}} farms to {{status}}",
+      "someFarmsFailedUpdate": "Some farms could not be updated"
     }
   },
   "suppliers": {
@@ -2312,6 +2619,70 @@
       "pending": "Pending",
       "unpaid": "Unpaid"
     },
+    "table": {
+      "showingCount": "Showing {{shown}} of {{total}} expenses",
+      "totalAmount": "Total: {{amount}}",
+      "columns": {
+        "date": "Date",
+        "category": "Category",
+        "description": "Description",
+        "linkedTo": "Linked To",
+        "amount": "Amount",
+        "status": "Status",
+        "receipt": "Receipt",
+        "actions": "Actions"
+      },
+      "emptyTitle": "No expenses found",
+      "emptyDescription": "Try adjusting your filters",
+      "openNewTab": "Open tab",
+      "receiptFallback": "Receipt",
+      "receiptTooltip": "{{name}} - Open in a new tab",
+      "downloadReceipt": "Download receipt (open tab)",
+      "viewDetails": "View Details"
+    },
+    "insights": {
+      "title": "Cost insights",
+      "description": "Built from recorded expenses and seasonal cost summary.",
+      "selectSeason": "Select a season to view insights.",
+      "loading": "Loading cost insights...",
+      "summaryLoadError": "Failed to load seasonal summary: {{error}}",
+      "unknownError": "Unknown error",
+      "empty": "No expense records yet. Add expenses to generate cost insights.",
+      "aiAnalyze": "Analyze with AI",
+      "aiAnalyzing": "Analyzing with AI...",
+      "aiError": "Failed to analyze with AI.",
+      "aiSuggestion": "AI suggestion",
+      "disclaimerLabel": "Disclaimer:",
+      "fallbackDisclaimer": "AI suggestions are references only. Do not auto-apply expense or budget changes.",
+      "uncategorized": "Uncategorized",
+      "summary": {
+        "topCategory": {
+          "title": "Top category from seasonal summary",
+          "description": "{{category}} is currently the largest cost category in this season summary."
+        },
+        "warningTitle": "Budget/cost warning"
+      },
+      "local": {
+        "highestCostCategory": {
+          "title": "Highest cost category",
+          "description": "{{category}} accounts for {{percent}}% of recorded spend."
+        },
+        "averageExpense": {
+          "title": "Average expense amount",
+          "description": "Average amount across {{count}} expenses."
+        },
+        "missingReceipts": {
+          "title": "Expenses missing receipt proof",
+          "description": "{{count}} expense record(s) have no attachment."
+        },
+        "recentTrend": {
+          "title": "Recent 30-day trend",
+          "up": "up",
+          "down": "down",
+          "description": "Spend is {{trend}} {{percent}}% vs the previous 30 days."
+        }
+      }
+    },
     "toast": {
       "createSuccess": "Expense created successfully",
       "updateSuccess": "Expense updated successfully",
@@ -2383,20 +2754,335 @@
     "title": "Harvest Management",
     "subtitle": "Track and manage harvest batches, quality control, and sales",
     "createButton": "Add Single Product Harvest",
+    "filters": {
+      "allSeasons": "All Seasons",
+      "searchPlaceholder": "Search batches...",
+      "viewingSeason": "Viewing"
+    },
+    "warehouseDirectory": {
+      "button": "Warehouse list",
+      "openNewTab": "Open new tab",
+      "title": "Output Warehouse Directory",
+      "count": "{{count}} warehouse(s)",
+      "empty": "No output warehouse available. Please create one before adding harvest batches.",
+      "farm": "Farm",
+      "type": "Type"
+    },
+    "table": {
+      "title": "Harvest Batches",
+      "showingCount": "Showing {{shown}} of {{total}} batches",
+      "deleteSelected": "Delete Selected ({{count}})",
+      "exportCsv": "Export CSV",
+      "printSummary": "Print Summary",
+      "selectAllBatches": "Select all batches",
+      "selectBatch": "Select batch {{batchId}}",
+      "columns": {
+        "date": "Date",
+        "batchId": "Batch ID",
+        "quantity": "Quantity ({{unit}})",
+        "grade": "Grade",
+        "status": "Status",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      },
+      "emptyTitle": "No harvest batches found",
+      "emptyDescription": "Try adjusting your filters",
+      "actions": {
+        "openMenu": "Open actions for batch {{batchId}}",
+        "viewDetails": "View Details",
+        "editBatch": "Edit Batch",
+        "generateQr": "Generate QR",
+        "printHandover": "Print Handover"
+      }
+    },
+    "summary": {
+      "title": "Season Summary",
+      "totalStored": "Total Stored",
+      "totalSold": "Total Sold",
+      "processing": "Processing",
+      "premiumGradePercentage": "Premium Grade %"
+    },
+    "kpi": {
+      "totalHarvested": "Total Harvested",
+      "lotsCount": "Lots Count",
+      "batches": "batches",
+      "avgGrade": "Avg Grade",
+      "quality": "quality",
+      "avgMoisture": "Avg Moisture",
+      "yieldVsPlan": "Yield vs Plan",
+      "noPlanData": "No plan data",
+      "onTarget": "On target",
+      "belowPlan": "Below plan"
+    },
+    "charts": {
+      "dailyTrend": "Daily Harvest Trend",
+      "gradeDistribution": "Grade Distribution",
+      "batchCount": "{{count}} batches",
+      "batchCount_one": "{{count}} batch",
+      "batchCount_other": "{{count}} batches"
+    },
+    "details": {
+      "title": "Batch Details",
+      "noPhoto": "No photo uploaded",
+      "basicInformation": "Basic Information",
+      "quantity": "Quantity",
+      "qualityControl": "Quality Control",
+      "linkedSale": "Linked Sale",
+      "saleReference": "Sale Reference",
+      "generateQrCode": "Generate QR Code",
+      "printHandoverNote": "Print Handover Note"
+    },
+    "grades": {
+      "premium": "Premium",
+      "a": "Grade A",
+      "b": "Grade B",
+      "c": "Grade C"
+    },
+    "status": {
+      "stored": "Stored",
+      "sold": "Sold",
+      "processing": "Processing"
+    },
+    "addBatch": {
+      "title": "Add Harvest Batch",
+      "description": "Quickly record harvest output and keep inventory links in sync.",
+      "editTitle": "Edit Harvest Batch",
+      "editDescription": "Update harvest date, quantity, grade, notes, and quality metadata.",
+      "quickEntryTitle": "Quick Entry",
+      "quickEntryDescription": "Record essential harvest details first. Open advanced settings only when needed.",
+      "advancedDescription": "Lot controls, quality metrics, and optional sustainability attributes.",
+      "currentSeason": "Current season",
+      "locationFallback": "Location #{{id}}",
+      "plotMissing": "This season is missing a valid plot link.",
+      "lotHint": "If left blank, lot number will be auto-generated when saving.",
+      "matchingLots": "Matching lots",
+      "onHand": "On-hand",
+      "stockContextHint": "Select warehouse, product, and lot to preview current stock context.",
+      "loadingStockContext": "Loading stock context...",
+      "noStockContext": "No stock context found.",
+      "plotRequiredForSustainability": "Harvest must be linked to a valid plot to keep NUE/FDN analytics reliable.",
+      "savingHint": "Harvest batch is being saved",
+      "saving": "Saving...",
+      "saveButton": "Save Batch",
+      "updateButton": "Update Batch",
+      "alerts": {
+        "seasonLocked": "This season is locked. Harvest write actions are disabled.",
+        "noOutputWarehouse": "No output warehouse found. Create one before recording harvest.",
+        "invalidSeason": "Select a valid season before saving a harvest batch."
+      },
+      "legumeBadge": {
+        "title": "Previous legume rotation detected",
+        "subtitle": "Potential soil nitrogen carry-over improved."
+      },
+      "fields": {
+        "harvestDate": "Harvest Date",
+        "season": "Season",
+        "harvestFromPlot": "Harvest From Plot",
+        "cropProduct": "Crop / Product",
+        "quantityKg": "Quantity (kg)",
+        "warehouse": "Warehouse",
+        "grade": "Grade",
+        "moisture": "Moisture %",
+        "notes": "Notes",
+        "advancedInventoryQuality": "Advanced Inventory & Quality",
+        "batchIdPreview": "Batch ID Preview",
+        "lotNumber": "Lot Number",
+        "productVariant": "Product Variant",
+        "locationOptional": "Location (Optional)",
+        "inventoryUnit": "Inventory Unit",
+        "productIdReadonly": "Product ID (Readonly)",
+        "harvestLoss": "Harvest Loss %",
+        "cropResidueHandling": "Crop Residue Handling",
+        "qualityControlMetrics": "Quality Control Metrics (Optional)",
+        "purity": "Purity %",
+        "foreignMatter": "Foreign Matter %",
+        "brokenGrains": "Broken Grains %",
+        "currentLotStockContext": "Current lot stock context"
+      },
+      "placeholders": {
+        "selectSeason": "Select season",
+        "plotLinked": "Plot linked from season",
+        "enterProduct": "Enter product name",
+        "selectWarehouse": "Select warehouse",
+        "optionalPercent": "Optional",
+        "notes": "Add any additional notes...",
+        "optional": "Optional",
+        "selectLocation": "Select location"
+      },
+      "cropResidue": {
+        "returnedToSoil": "Returned to soil",
+        "removedFromField": "Removed from field",
+        "burned": "Burned",
+        "usedAsFeedOrCompost": "Used as feed/compost",
+        "unknown": "Unknown"
+      }
+    },
+    "validation": {
+      "activeSeasonRequiredWithStatus": "Harvest write actions require an ACTIVE season. Current status: {{status}}.",
+      "noOutputWarehouses": "No output warehouses found. Create one before recording harvest.",
+      "noOutputWarehousesDescription": "Use the Warehouse list button below to create a warehouse.",
+      "activeSeasonRequired": "Harvest requires an ACTIVE season",
+      "activeSeasonRequiredDescription": "Select or start an ACTIVE season before adding a harvest batch.",
+      "missingFields": "Missing Fields",
+      "invalidQuantity": "Invalid quantity",
+      "seasonRequired": "Season required",
+      "seasonRequiredDescription": "Select a valid season before adding harvest.",
+      "seasonMustBeActive": "Season must be ACTIVE",
+      "seasonMustBeActiveDescription": "Current status: {{status}}. Start the season before recording harvest.",
+      "plotRequired": "Harvest plot required",
+      "plotRequiredDescription": "Selected season is missing a valid plot link.",
+      "percentageRange": "{{field}} must be between 0 and 100",
+      "invalidPercentageFields": "Percentage fields contain invalid values.",
+      "invalidWarehouse": "Invalid warehouse",
+      "invalidBatchId": "Invalid batch id",
+      "noBatchesSelected": "No batches selected",
+      "noValidBatchIds": "No valid batch IDs found"
+    },
     "toast": {
       "createSuccess": "Harvest recorded successfully",
       "updateSuccess": "Harvest updated successfully",
       "deleteSuccess": "Harvest deleted successfully",
-      "error": "An error occurred"
+      "error": "An error occurred",
+      "generatingQr": "Generating QR Code",
+      "qrDescription": "QR for {{batchId}}",
+      "printingHandover": "Printing Handover Note",
+      "handoverDescription": "For batch {{batchId}}",
+      "harvestAdded": "Harvest Added",
+      "harvestAddedDescription": "{{lotCode}} - {{quantity}} {{unit}}",
+      "addFailed": "Failed to add harvest",
+      "batchDeleted": "Batch Deleted",
+      "unableToDeleteBatch": "Unable to delete batch.",
+      "deleteFailed": "Failed to delete",
+      "batchesDeleted": "Batches Deleted",
+      "batchesDeletedDescription": "{{count}} batch(es) deleted.",
+      "someBatchesDeleteFailed": "Some batches could not be deleted.",
+      "partialDeleteFailure": "Partial delete failure",
+      "partialDeleteFailureDescription": "{{count}} failed. {{message}}"
+    },
+    "export": {
+      "noData": "No data to export",
+      "unavailable": "Export is not available in this environment",
+      "complete": "CSV Export Complete",
+      "completeDescription": "{{count}} row(s) exported.",
+      "columns": {
+        "harvestId": "Harvest ID",
+        "batchId": "Batch ID",
+        "season": "Season",
+        "seasonId": "Season ID",
+        "seasonName": "Season Name",
+        "harvestDate": "Harvest Date",
+        "quantityKg": "Quantity (kg)",
+        "unitPrice": "Unit Price",
+        "revenue": "Revenue",
+        "grade": "Grade",
+        "notes": "Notes",
+        "createdAt": "Created At"
+      }
+    },
+    "print": {
+      "noData": "No data to print",
+      "unavailable": "Print is not available in this environment",
+      "windowBlocked": "Print window blocked",
+      "windowBlockedDescription": "Please allow pop-ups to print harvest summary.",
+      "titleForSeason": "Harvest Summary - Season #{{seasonId}}",
+      "titleAllSeasons": "Harvest Summary - All Seasons",
+      "generatedAt": "Generated at {{time}}"
     }
   },
   "documents": {
     "title": "Documents",
     "subtitle": "Access farming guides, tutorials, and resources",
     "uploadButton": "Upload Document",
+    "thumbnail": "DOC",
+    "tabs": {
+      "all": "All Documents",
+      "favorites": "Favorites",
+      "recent": "Recent"
+    },
+    "filters": {
+      "searchPlaceholder": "Search documents...",
+      "allCrops": "All crops",
+      "allStages": "All stages",
+      "allTopics": "All topics",
+      "sortBy": "Sort by",
+      "clearFilters": "Clear filters",
+      "type": {
+        "all": "All",
+        "guides": "Guides",
+        "templates": "Templates",
+        "announcements": "Announcements",
+        "systemHelp": "System Help"
+      },
+      "sort": {
+        "newest": "Newest",
+        "mostViewed": "Most viewed",
+        "recommended": "Recommended"
+      },
+      "stageOptions": {
+        "planting": "Planting",
+        "growing": "Growing",
+        "harvest": "Harvest",
+        "postHarvest": "Post-Harvest"
+      },
+      "topicOptions": {
+        "bestPractices": "Best Practices",
+        "pestManagement": "Pest Management",
+        "waterManagement": "Water Management",
+        "soilManagement": "Soil Management",
+        "farmPlanning": "Farm Planning",
+        "climateAdaptation": "Climate Adaptation"
+      }
+    },
+    "states": {
+      "loading": "Loading documents...",
+      "emptyTitle": "No Documents Found",
+      "emptyDescription": "We couldn't find any documents matching your search or filters. Try adjusting your criteria.",
+      "clearSearchFilters": "Clear Search & Filters"
+    },
+    "actions": {
+      "openNewTab": "Open new tab",
+      "openNewTabHint": "(Open new tab)",
+      "preview": "Preview",
+      "addFavorite": "Add to favorites",
+      "removeFavorite": "Remove from favorites",
+      "downloadDocument": "Download document",
+      "share": "Share",
+      "print": "Print",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out"
+    },
+    "preview": {
+      "previewLabel": "{{type}} Preview",
+      "information": "Document Information",
+      "description": "Description",
+      "noDescription": "No description provided.",
+      "fileSize": "File Size",
+      "author": "Author",
+      "crop": "Crop",
+      "stage": "Stage",
+      "tags": "Tags",
+      "lastUpdated": "Last Updated",
+      "relatedDocuments": "Related Documents"
+    },
+    "types": {
+      "pdf": "PDF",
+      "image": "Image",
+      "video": "Video",
+      "spreadsheet": "Spreadsheet",
+      "guide": "Guide"
+    },
+    "fallback": {
+      "systemAuthor": "System"
+    },
     "toast": {
       "uploadSuccess": "Document uploaded successfully",
       "deleteSuccess": "Document deleted successfully",
+      "removedFavorite": "Removed from Favorites",
+      "removeFavoriteFailed": "Failed to remove from favorites",
+      "addedFavorite": "Added to Favorites",
+      "addFavoriteFailed": "Failed to add to favorites",
+      "loadFailed": "Failed to load documents",
+      "unknownError": "Unknown error",
       "error": "An error occurred"
     }
   },
@@ -2453,7 +3139,115 @@
         "title": "Failed to Load Dashboard",
         "description": "Unable to load dashboard data. Please try again."
       },
-      "exportReport": "Export Report"
+      "exportReport": "Export Report",
+      "charts": {
+        "seasonStatus": {
+          "description": "Charts Season Status details",
+          "empty": "No charts season status found.",
+          "title": "Charts Season Status"
+        },
+        "userRoles": {
+          "description": "Charts User Roles details",
+          "empty": "No charts user roles found.",
+          "title": "Charts User Roles"
+        }
+      },
+      "exportNotImplemented": "Export Not Implemented",
+      "inventoryHealth": {
+        "actionsFor": "Actions For {{name}}",
+        "dataQuality": {
+          "coverage": "Coverage",
+          "missingExpiryDate": "Missing Expiry Date",
+          "missingMovementHistory": "Missing Movement History",
+          "title": "Inventory Health Data Quality"
+        },
+        "daysOption": "Days Option {{count}}",
+        "description": "Dashboard Inventory Health details",
+        "empty": "No dashboard inventory health found.",
+        "errorTitle": "Error Title",
+        "expiredOnly": "Expired Only",
+        "openInventory": "Open Inventory",
+        "summary": {
+          "expired": "Expired",
+          "expiringSoon": "Expiring Soon",
+          "lowStock": "Low Stock",
+          "noMovement": "No Movement",
+          "slowMovement": "Slow Movement"
+        },
+        "table": {
+          "farm": "Farm",
+          "qtyAtRisk": "Qty At Risk"
+        },
+        "title": "Dashboard Inventory Health",
+        "viewAll": "View All",
+        "lotStatus": {
+          "expired": "Expired",
+          "expiringSoon": "Expiring soon",
+          "lowStock": "Low stock",
+          "noMovement": "No movement",
+          "slowMovement": "Slow movement",
+          "unknownExpiry": "Unknown expiry",
+          "EXPIRED": "Expired",
+          "EXPIRING_SOON": "Expiring soon",
+          "LOW_STOCK": "Low stock",
+          "NO_MOVEMENT": "No movement",
+          "SLOW_MOVEMENT": "Slow movement",
+          "UNKNOWN_EXPIRY": "Unknown expiry"
+        }
+      },
+      "pendingApprovals": {
+        "description": "Dashboard Pending Approvals details",
+        "empty": "No dashboard pending approvals found.",
+        "errorTitle": "Error Title",
+        "review": "Review",
+        "timeUnavailable": "Time Unavailable",
+        "title": "Dashboard Pending Approvals",
+        "severity": {
+          "CRITICAL": "Critical",
+          "HIGH": "High",
+          "MEDIUM": "Medium",
+          "LOW": "Low",
+          "critical": "Critical",
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low"
+        }
+      },
+      "riskySeasons": {
+        "coverage": {
+          "incidentData": "Incident Data",
+          "missing": "Missing {{sources}}",
+          "someUnavailable": "Some Unavailable",
+          "taskData": "Task Data"
+        },
+        "description": "Dashboard Risky Seasons details",
+        "emptyDescription": "Empty Description",
+        "emptyTitle": "Empty Title",
+        "errorDescription": "Error Description",
+        "errorTitle": "Error Title",
+        "limited": "Limited",
+        "loading": "Loading dashboard risky seasons...",
+        "table": {
+          "farmPlot": "Farm Plot",
+          "incidents": "Incidents",
+          "overdue": "Overdue",
+          "risk": "Risk",
+          "riskBasis": "Risk Basis",
+          "season": "Season"
+        },
+        "title": "Dashboard Risky Seasons",
+        "riskBasis": {
+          "OPEN_INCIDENTS": "Open incidents",
+          "OVERDUE_TASKS": "Overdue tasks",
+          "HIGH_FDN_RISK": "High FDN risk",
+          "INVENTORY_RISK": "Inventory risk"
+        },
+        "riskLevel": {
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low"
+        }
+      }
     },
     "profile": {
       "title": "Admin Profile",
@@ -2585,7 +3379,8 @@
         "noRoles": "No roles assigned",
         "roleManagement": "Role Management",
         "addFarmerRole": "Add FARMER Role",
-        "removeFarmerRole": "Remove FARMER Role"
+        "removeFarmerRole": "Remove FARMER Role",
+        "unknownUser": "Unknown User"
       },
       "toast": {
         "activated": "User activated successfully",
@@ -2598,7 +3393,33 @@
         "rolesFailed": "Failed to update roles"
       },
       "confirm": {
-        "delete": "Are you sure you want to delete user \"{{username}}\"?"
+        "delete": "Are you sure you want to delete user \" {{username}}\"?"
+      },
+      "form": {
+        "addDescription": "Add details",
+        "addTitle": "Add",
+        "editDescription": "Edit details",
+        "editTitle": "Edit",
+        "fullNamePlaceholder": "Enter full name...",
+        "loadingRoles": "Loading Roles",
+        "noRolesAvailable": "No Roles Available",
+        "passwordPlaceholder": "Enter password...",
+        "phone": "Phone",
+        "phonePlaceholder": "Enter phone...",
+        "toast": {
+          "created": "Created",
+          "createFailed": "Failed to create. Please try again.",
+          "updated": "Updated",
+          "updateFailed": "Failed to update. Please try again."
+        },
+        "user": "User",
+        "usernamePlaceholder": "Enter username...",
+        "validation": {
+          "emailTaken": "Email Taken",
+          "roleRequired": "Role is required.",
+          "usernameMin": "Username Min",
+          "usernameTaken": "Username Taken"
+        }
       }
     },
     "roles": {
@@ -2623,7 +3444,30 @@
         "deleteFailed": "Failed to delete role. It may be in use by users."
       },
       "confirm": {
-        "delete": "Are you sure you want to delete role \"{{name}}\"?"
+        "delete": "Are you sure you want to delete role \" {{name}}\"?"
+      },
+      "form": {
+        "addDescription": "Add details",
+        "addTitle": "Add",
+        "codeLocked": "Code Locked",
+        "codePlaceholder": "Enter code...",
+        "descriptionPlaceholder": "Enter description...",
+        "editDescription": "Edit details",
+        "editTitle": "Edit",
+        "namePlaceholder": "Enter name...",
+        "requiredHint": "Required Hint",
+        "role": "Role",
+        "toast": {
+          "created": "Created",
+          "createFailed": "Failed to create. Please try again.",
+          "updated": "Updated",
+          "updateFailed": "Failed to update. Please try again."
+        },
+        "validation": {
+          "codeExists": "Code Exists",
+          "codeRequired": "Code is required.",
+          "nameRequired": "Name is required."
+        }
       }
     },
     "crops": {
@@ -2649,13 +3493,44 @@
       "table": {
         "name": "Name",
         "description": "Description",
-        "actions": "Actions"
+        "actions": "Actions",
+        "crop": "Crop"
       },
       "toast": {
         "createSuccess": "Created successfully",
         "updateSuccess": "Updated successfully",
         "deleteSuccess": "Deleted successfully",
-        "deleteError": "Failed to delete"
+        "deleteError": "Failed to delete",
+        "cropDeleteBlocked": "Crop Delete Blocked",
+        "cropDeleted": "Crop Deleted {{name}}",
+        "varietyDeleteBlocked": "Variety Delete Blocked",
+        "varietyDeleted": "Variety Deleted {{name}}"
+      },
+      "actionsMenu": "Actions Menu",
+      "delete": {
+        "confirm": "Confirm {{type}}",
+        "cropWarning": "Crop Warning",
+        "titleCrop": "Title Crop",
+        "titleVariety": "Title Variety",
+        "varietyWarning": "Variety Warning"
+      },
+      "empty": {
+        "noCrops": "No Crops",
+        "noCropsMatching": "No Crops Matching {{query}}",
+        "noVarieties": "No Varieties",
+        "noVarietiesMatching": "No Varieties Matching {{query}}"
+      },
+      "form": {
+        "addCrop": "Add Crop",
+        "addVariety": "Add Variety",
+        "cropNamePlaceholder": "Enter crop name...",
+        "cropRequired": "Crop is required.",
+        "descriptionPlaceholder": "Enter description...",
+        "editCrop": "Edit Crop",
+        "editVariety": "Edit Variety",
+        "nameRequired": "Name is required.",
+        "selectCrop": "Select Crop",
+        "varietyNamePlaceholder": "Enter variety name..."
       }
     },
     "reports": {
@@ -2681,6 +3556,1610 @@
     "buyers": {
       "title": "Buyers",
       "subtitle": "Manage buyer accounts"
+    },
+    "auditLogs": {
+      "empty": "No audit logs found.",
+      "error": {
+        "load": "Load"
+      },
+      "filters": {
+        "action": "Action",
+        "entityType": "Entity Type",
+        "module": "Module",
+        "user": "User"
+      },
+      "subtitle": "Audit Logs overview",
+      "table": {
+        "action": "Action",
+        "entity": "Entity",
+        "module": "Module",
+        "reason": "Reason",
+        "snapshot": "Snapshot",
+        "time": "Time",
+        "user": "User"
+      },
+      "title": "Audit Logs"
+    },
+    "buyerManagement": {
+      "actions": {
+        "activate": "Activate",
+        "addBuyer": "Add Buyer",
+        "importCsv": "Import CSV",
+        "resetPassword": "Reset Password",
+        "suspend": "Suspend",
+        "viewEdit": "View Edit"
+      },
+      "bulk": {
+        "selectedCount": "Selected Count {{count}}"
+      },
+      "detail": {
+        "addDescription": "Add details",
+        "addTitle": "Add",
+        "manageBuyer": "Manage Buyer {{name}}",
+        "tabs": {
+          "general": "General",
+          "history": "History",
+          "kyc": "KYC",
+          "permissions": "Permissions"
+        },
+        "title": "Buyer Management"
+      },
+      "fields": {
+        "accountStatus": "Account Status",
+        "address": "Address",
+        "companyName": "Company Name",
+        "contactName": "Contact Name",
+        "kycStatus": "KYC Status",
+        "paymentTerms": "Payment Terms",
+        "role": "Role",
+        "taxId": "Tax ID"
+      },
+      "filters": {
+        "allKycStatuses": "All KYC statuses",
+        "allRoles": "All roles",
+        "allStatuses": "All statuses",
+        "apply": "Apply",
+        "description": "Buyer Management details",
+        "searchPlaceholder": "Search...",
+        "title": "Buyer Management"
+      },
+      "form": {
+        "addressPlaceholder": "Enter address...",
+        "companyNamePlaceholder": "Enter company name...",
+        "contactNamePlaceholder": "Enter contact name...",
+        "createBuyer": "Create Buyer",
+        "emailPlaceholder": "Enter email...",
+        "paymentTermsPlaceholder": "Enter payment terms...",
+        "phonePlaceholder": "Enter phone...",
+        "taxIdPlaceholder": "Enter tax id...",
+        "updateBuyer": "Update Buyer"
+      },
+      "history": {
+        "unavailable": "Unavailable"
+      },
+      "import": {
+        "browseFiles": "Browse Files",
+        "importCount": "Import Count {{count}}",
+        "invalidRowsSkipped": "Invalid Rows Skipped {{count}}",
+        "requirements": {
+          "columns": "Columns",
+          "roles": "Roles"
+        },
+        "requirementsTitle": "Requirements Title",
+        "stepLabel": "Step Label {{total}} {{label}} {{step}}",
+        "table": {
+          "company": "Company"
+        },
+        "title": "Buyer Management",
+        "unsupported": "Unsupported",
+        "uploadDescription": "Upload Description",
+        "uploadTitle": "Upload Title",
+        "validEntries": "Valid Entries {{count}}",
+        "steps": {
+          "1": "Upload CSV",
+          "2": "Preview and import"
+        }
+      },
+      "kyc": {
+        "pending": "Pending",
+        "rejected": "Rejected",
+        "verified": "Verified",
+        "PENDING": "Pending",
+        "VERIFIED": "Verified",
+        "REJECTED": "Rejected"
+      },
+      "kycPanel": {
+        "currentStatus": "Current Status",
+        "documents": "Documents",
+        "reject": "Reject",
+        "statusDescription": "Status Description",
+        "unavailableDescription": "Unavailable Description",
+        "unavailableTitle": "Unavailable Title",
+        "verify": "Verify"
+      },
+      "loading": "Loading buyer management...",
+      "pagination": {
+        "perPage": "Per Page {{count}}"
+      },
+      "permissions": {
+        "exportData": "Export Data",
+        "exportDataDescription": "Export Data Description",
+        "placeOrders": "Place Orders",
+        "placeOrdersDescription": "Place Orders Description",
+        "save": "Save",
+        "viewPricing": "View Pricing",
+        "viewPricingDescription": "View Pricing Description",
+        "viewReports": "View Reports",
+        "viewReportsDescription": "View Reports Description"
+      },
+      "resetPassword": {
+        "description": "Buyer Management Reset Password details",
+        "emailDescription": "Email Description",
+        "emailTitle": "Email Title",
+        "tempDescription": "Temp Description",
+        "tempTitle": "Temp Title",
+        "title": "Buyer Management Reset Password"
+      },
+      "roles": {
+        "buyer": "Buyer",
+        "distributor": "Distributor",
+        "enterprise": "Enterprise",
+        "BUYER": "Buyer",
+        "DISTRIBUTOR": "Distributor",
+        "ENTERPRISE": "Enterprise"
+      },
+      "stats": {
+        "pendingKyc": "Pending KYC",
+        "suspendedClosed": "Suspended Closed",
+        "totalBuyers": "Total Buyers"
+      },
+      "status": {
+        "active": "Active",
+        "closed": "Closed",
+        "suspended": "Suspended",
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "CLOSED": "Closed"
+      },
+      "subtitle": "Buyer Management overview",
+      "table": {
+        "actionsFor": "Actions For {{name}}",
+        "createdDate": "Created Date",
+        "primaryContact": "Primary Contact"
+      },
+      "title": "Buyer Management",
+      "toast": {
+        "activated": "Activated",
+        "bulkActivated": "Bulk Activated {{count}}",
+        "bulkDeleted": "Bulk Deleted {{count}}",
+        "bulkFailed": "Bulk Failed. Please try again.",
+        "bulkSuspended": "Bulk Suspended {{count}}",
+        "created": "Created",
+        "createFailed": "Failed to create. Please try again.",
+        "csvInvalidFormat": "CSV Invalid Format",
+        "csvNoRows": "CSV No Rows",
+        "deleted": "Deleted",
+        "deletedDescription": "Deleted Description {{name}}",
+        "deleteFailed": "Failed to delete. Please try again.",
+        "emailResetUnavailable": "Email Reset Unavailable",
+        "importUnavailable": "Import Unavailable",
+        "kycUnavailable": "KYC Unavailable",
+        "noSelection": "No items selected",
+        "noSelectionDescription": "Select at least one item to continue.",
+        "noValidRows": "No Valid Rows",
+        "passwordCopied": "Password Copied",
+        "resetPasswordFailed": "Reset Password Failed. Please try again.",
+        "skippedInvalidRows": "Skipped Invalid Rows {{count}}",
+        "statusUpdateFailed": "Status Update Failed. Please try again.",
+        "suspended": "Suspended",
+        "tempPasswordApplied": "Temp Password Applied",
+        "unsupportedBackendFields": "Unsupported Backend Fields",
+        "updated": "Updated",
+        "updateFailed": "Failed to update. Please try again."
+      },
+      "validation": {
+        "companyAndContactRequired": "Company and contact is required.",
+        "invalidRole": "Invalid Role {{role}}"
+      }
+    },
+    "documents": {
+      "actions": {
+        "create": "Create",
+        "deactivate": "Deactivate",
+        "deactivating": "Deactivating",
+        "hardDelete": "Hard Delete",
+        "open": "Open",
+        "permanentlyDelete": "Permanently Delete"
+      },
+      "deactivate": {
+        "confirm": "Confirm",
+        "description": "Documents Deactivate details",
+        "title": "Documents Deactivate"
+      },
+      "empty": "No documents found.",
+      "error": {
+        "load": "Load"
+      },
+      "filters": {
+        "allStatuses": "All statuses",
+        "allTypes": "All Types"
+      },
+      "form": {
+        "createTitle": "Create Title",
+        "documentUrl": "Document URL",
+        "editTitle": "Edit",
+        "titlePlaceholder": "Enter title...",
+        "urlPlaceholder": "Enter url..."
+      },
+      "hardDelete": {
+        "aboutToDelete": "About To Delete",
+        "cannotUndo": "Cannot Undo",
+        "description": "Documents Hard Delete details",
+        "placeholder": "Placeholder",
+        "title": "Documents Hard Delete",
+        "typeDeletePrefix": "Type Delete Prefix",
+        "typeDeleteSuffix": "Type Delete Suffix"
+      },
+      "loading": "Loading documents...",
+      "resultsFound": "Results Found {{count}}",
+      "searchPlaceholder": "Search...",
+      "subtitle": "Documents overview",
+      "table": {
+        "title": "Documents"
+      },
+      "title": "Documents",
+      "toast": {
+        "created": "Created",
+        "deactivated": "Deactivated {{title}}",
+        "deactivateFailed": "Deactivate Failed. Please try again.",
+        "permanentDeleteFailed": "Permanent Delete Failed. Please try again.",
+        "permanentlyDeleted": "Permanently Deleted {{title}}",
+        "saveFailed": "Failed to save. Please try again.",
+        "updated": "Updated"
+      },
+      "tooltip": {
+        "deactivateFirstLine1": "Deactivate First Line1",
+        "deactivateFirstLine2": "Deactivate First Line2"
+      },
+      "validation": {
+        "titleMin": "Title Min",
+        "urlInvalid": "URL Invalid",
+        "urlRequired": "Url is required."
+      },
+      "types": {
+        "POLICY": "Policy",
+        "GUIDE": "Guide",
+        "MANUAL": "Manual",
+        "LEGAL": "Legal",
+        "OTHER": "Other"
+      },
+      "status": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive"
+      }
+    },
+    "farmerManagement": {
+      "actions": {
+        "activate": "Activate",
+        "addFarmer": "Add Farmer",
+        "exportCsv": "Export CSV",
+        "importCsv": "Import CSV",
+        "lock": "Lock",
+        "resetPassword": "Reset Password",
+        "unlock": "Unlock",
+        "viewHistory": "View History"
+      },
+      "auditHistory": {
+        "description": "Farmer Management Audit History details",
+        "filterByType": "Filter By Type",
+        "title": "Farmer Management Audit History",
+        "unavailableDescription": "Unavailable Description",
+        "unavailableTitle": "Unavailable Title"
+      },
+      "bulk": {
+        "selectedCount": "Selected Count {{count}}"
+      },
+      "fields": {
+        "role": "Role"
+      },
+      "filters": {
+        "allRoles": "All roles",
+        "allStatuses": "All statuses",
+        "apply": "Apply",
+        "description": "Farmer Management details",
+        "searchPlaceholder": "Search...",
+        "title": "Farmer Management"
+      },
+      "form": {
+        "addDescription": "Add details",
+        "addTitle": "Add",
+        "createFarmer": "Create Farmer",
+        "editDescription": "Edit details",
+        "editTitle": "Edit",
+        "emailPlaceholder": "Enter email...",
+        "fullNamePlaceholder": "Enter full name...",
+        "phonePlaceholder": "Enter phone...",
+        "sendWelcomeEmail": "Send Welcome Email",
+        "sendWelcomeEmailHelp": "Send Welcome Email Help",
+        "temporaryPassword": "Temporary Password",
+        "temporaryPasswordHelp": "Temporary Password Help",
+        "temporaryPasswordPlaceholder": "Enter temporary password...",
+        "updateFarmer": "Update Farmer"
+      },
+      "import": {
+        "browseFiles": "Browse Files",
+        "importCount": "Import Count {{count}}",
+        "requirements": {
+          "columns": "Columns",
+          "roles": "Roles",
+          "statuses": "Statuses"
+        },
+        "requirementsTitle": "Requirements Title",
+        "rowError": "Row Error {{row}} {{field}} {{message}}",
+        "rowsWithErrorsSkipped": "Rows With Errors Skipped",
+        "stepLabel": "Step Label {{total}} {{label}} {{step}}",
+        "title": "Farmer Management",
+        "unsupported": "Unsupported",
+        "uploadDescription": "Upload Description",
+        "uploadTitle": "Upload Title",
+        "validationErrorsFound": "Validation Errors Found {{count}}",
+        "validEntries": "Valid Entries {{count}}",
+        "steps": {
+          "1": "Upload CSV",
+          "2": "Validate rows",
+          "3": "Import farmers"
+        }
+      },
+      "loading": "Loading farmer management...",
+      "pagination": {
+        "perPage": "Per Page {{count}}"
+      },
+      "resetPassword": {
+        "description": "Farmer Management Reset Password details",
+        "emailDescription": "Email Description",
+        "emailTitle": "Email Title",
+        "tempDescription": "Temp Description",
+        "tempTitle": "Temp Title",
+        "title": "Farmer Management Reset Password"
+      },
+      "roles": {
+        "farmer": "Farmer",
+        "manager": "Manager",
+        "owner": "Owner",
+        "FARMER": "Farmer",
+        "MANAGER": "Manager",
+        "OWNER": "Owner"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "locked": "Locked",
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive",
+        "LOCKED": "Locked"
+      },
+      "subtitle": "Farmer Management overview",
+      "table": {
+        "actionsFor": "Actions For {{name}}",
+        "contact": "Contact",
+        "createdAt": "Created At",
+        "lastLogin": "Last Login",
+        "plotsCount": "Plots Count {{count}}"
+      },
+      "title": "Farmer Management",
+      "toast": {
+        "bulkActivated": "Bulk Activated {{count}}",
+        "bulkDeleted": "Bulk Deleted {{count}}",
+        "bulkFailed": "Bulk Failed. Please try again.",
+        "bulkLocked": "Bulk Locked {{count}}",
+        "created": "Created",
+        "createFailed": "Failed to create. Please try again.",
+        "csvInvalidFormat": "CSV Invalid Format",
+        "csvNoRows": "CSV No Rows",
+        "csvValidationIssues": "CSV Validation Issues {{count}}",
+        "deleted": "Deleted",
+        "deletedDescription": "Deleted Description {{name}}",
+        "deleteFailed": "Failed to delete. Please try again.",
+        "emailResetUnavailable": "Email Reset Unavailable",
+        "importUnavailable": "Import Unavailable",
+        "locked": "Locked",
+        "noSelection": "No items selected",
+        "noSelectionDescription": "Select at least one item to continue.",
+        "passwordCopied": "Password Copied",
+        "resetPasswordFailed": "Reset Password Failed. Please try again.",
+        "statusUpdateFailed": "Status Update Failed. Please try again.",
+        "tempPasswordApplied": "Temp Password Applied",
+        "unlocked": "Unlocked",
+        "updated": "Updated",
+        "updateFailed": "Failed to update. Please try again.",
+        "welcomeEmailUnavailable": "Welcome Email Unavailable"
+      },
+      "validation": {
+        "invalidEmail": "Invalid Email",
+        "nameRequired": "Name is required.",
+        "phoneRequired": "Phone is required.",
+        "unsupportedRole": "Unsupported Role {{role}}",
+        "unsupportedStatus": "Unsupported Status {{status}}"
+      }
+    },
+    "farmsPlots": {
+      "actions": {
+        "viewDetails": "View Details",
+        "viewSeasons": "View Seasons"
+      },
+      "actionsFor": "Actions For {{name}}",
+      "addPlot": {
+        "adding": "Adding",
+        "error": {
+          "addFailed": "Add Failed. Please try again."
+        },
+        "farmLabel": "Farm Label {{name}}",
+        "plotNamePlaceholder": "Enter plot name...",
+        "plotNameRequired": "Plot name is required.",
+        "provinceOptional": "Province Optional",
+        "selectProvinceFirst": "Select Province First",
+        "title": "Farms Plots Add Plot",
+        "wardOptional": "Ward Optional"
+      },
+      "editFarm": {
+        "areaPlaceholder": "Enter area...",
+        "areaRequired": "Area is required.",
+        "error": {
+          "ownerMustBeFarmer": "Owner Must Be Farmer",
+          "updateFailed": "Failed to update. Please try again."
+        },
+        "namePlaceholder": "Enter name...",
+        "nameRequired": "Name is required.",
+        "noFarmers": "No Farmers",
+        "ownerRequiredLabel": "Owner Required Label",
+        "searchFarmers": "Search Farmers",
+        "selectOwner": "Select Owner",
+        "title": "Farms Plots Edit Farm",
+        "validation": {
+          "areaPositive": "Area Positive",
+          "nameRequired": "Name is required.",
+          "ownerRequired": "Owner is required.",
+          "provinceRequired": "Province is required.",
+          "wardRequired": "Ward is required."
+        }
+      },
+      "farmDetails": {
+        "noPlots": "No Plots",
+        "plotsCount": "Plots Count {{count}}",
+        "title": "Farms Plots Farm Details"
+      },
+      "farms": {
+        "all": "All",
+        "emptyDescription": "Empty Description",
+        "emptyTitle": "Empty Title",
+        "loadError": "Failed to load data.",
+        "loading": "Loading farms plots farms...",
+        "searchPlaceholder": "Search..."
+      },
+      "noSoilType": "No Soil Type",
+      "plotDetails": {
+        "loadingSeasons": "Loading Seasons",
+        "noSeasons": "No Seasons",
+        "seasonsCount": "Seasons Count {{count}}",
+        "title": "Farms Plots Plot Details"
+      },
+      "plotFallback": "Plot Fallback",
+      "plots": {
+        "emptyDescription": "Empty Description",
+        "emptyTitle": "Empty Title",
+        "loadError": "Failed to load data.",
+        "loading": "Loading farms plots plots...",
+        "searchPlaceholder": "Search..."
+      },
+      "subtitle": "Farms Plots overview",
+      "table": {
+        "area": "Area",
+        "areaHa": "Area Ha",
+        "farm": "Farm",
+        "location": "Location",
+        "owner": "Owner",
+        "soilType": "Soil Type"
+      },
+      "tabs": {
+        "farms": "Farms",
+        "plots": "Plots"
+      },
+      "title": "Farms Plots",
+      "validation": {
+        "plotNameRequired": "Plot name is required.",
+        "wardProvinceMismatch": "Ward Province Mismatch"
+      },
+      "seasonStatus": {
+        "PLANNED": "Planned",
+        "ACTIVE": "Active",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled",
+        "ARCHIVED": "Archived"
+      }
+    },
+    "incidentsPage": {
+      "actions": {
+        "viewIncident": "View Incident"
+      },
+      "detail": {
+        "noDescription": "No Description",
+        "selectStatus": "Select Status",
+        "title": "Incidents Page",
+        "updateStatus": "Update Status"
+      },
+      "empty": "No incidents page found.",
+      "error": {
+        "load": "Load"
+      },
+      "fallbackIncident": "Fallback Incident",
+      "searchPlaceholder": "Search...",
+      "severity": {
+        "all": "All severities",
+        "high": "High",
+        "low": "Low",
+        "medium": "Medium"
+      },
+      "sort": {
+        "newest": "Newest first",
+        "oldest": "Oldest first"
+      },
+      "status": {
+        "all": "All statuses",
+        "inProgress": "In Progress",
+        "open": "Open",
+        "resolved": "Resolved"
+      },
+      "subtitle": "Incidents Page overview",
+      "table": {
+        "severity": "Severity"
+      },
+      "title": "Incidents Page"
+    },
+    "inventoryRisks": {
+      "detail": {
+        "balances": "Balances",
+        "fallback": "Fallback",
+        "lotCode": "Lot Code",
+        "movements": "Movements",
+        "noBalances": "No Balances",
+        "noMovements": "No Movements",
+        "note": "Note",
+        "qty": "Qty",
+        "quantity": "Quantity",
+        "reference": "Reference",
+        "supplier": "Supplier",
+        "title": "Inventory Risks",
+        "warehouse": "Warehouse"
+      },
+      "empty": "No inventory risks found.",
+      "error": {
+        "loadDetail": "Load Detail",
+        "loadLots": "Load Lots",
+        "loadMovements": "Load Movements"
+      },
+      "filters": {
+        "allItems": "All Items",
+        "days": "Days {{count}}",
+        "lowStockThreshold": "Low Stock Threshold"
+      },
+      "noLotCode": "No Lot Code",
+      "searchPlaceholder": "Search...",
+      "severity": {
+        "all": "All severities",
+        "critical": "Critical",
+        "high": "High",
+        "low": "Low",
+        "medium": "Medium"
+      },
+      "sort": {
+        "expiryAsc": "Expiry date ascending",
+        "expiryDesc": "Expiry date descending",
+        "onHandDesc": "On hand descending"
+      },
+      "status": {
+        "abnormalMovement": "Abnormal Movement",
+        "allLots": "All lots",
+        "expired": "Expired",
+        "expiring": "Expiring",
+        "healthy": "Healthy",
+        "lowStock": "Low Stock",
+        "risk": "Inventory risks",
+        "unknownExpiry": "Unknown Expiry"
+      },
+      "subtitle": "Inventory Risks overview",
+      "table": {
+        "daysToExpiry": "Days To Expiry",
+        "expiry": "Expiry",
+        "itemLot": "Item Lot",
+        "onHand": "On Hand",
+        "severity": "Severity"
+      },
+      "title": "Inventory Risks"
+    },
+    "marketplace": {
+      "common": {
+        "adminBadge": "FarmACM Admin"
+      },
+      "components": {
+        "pagination": {
+          "itemsPerPage": "Items per page:",
+          "next": "Next",
+          "nextPage": "Next page",
+          "previous": "Previous",
+          "previousPage": "Previous page",
+          "showing": "Showing {{start}} to {{end}} of {{total}}"
+        },
+        "reasonPlaceholder": "Enter reason...",
+        "reasonValidation": "Please provide a reason (at least 10 characters)"
+      },
+      "dashboard": {
+        "actions": {
+          "reviewOrders": "Review orders",
+          "reviewProducts": "Review products"
+        },
+        "description": "Live marketplace metrics only. Empty states are shown when product, order, or revenue data is not available yet.",
+        "empty": {
+          "description": "Admin stats are live and currently empty because sellers have not published products and buyers have not placed orders.",
+          "title": "Marketplace has no product or order yet"
+        },
+        "helpers": {
+          "noPendingVerification": "No pending verification.",
+          "requiresVerification": "Requires admin verification."
+        },
+        "loadError": "Failed to load marketplace admin stats.",
+        "loading": "Loading marketplace admin dashboard...",
+        "metrics": {
+          "paymentProofsPending": "Payment proofs pending",
+          "pendingReview": "Pending review",
+          "published": "Published",
+          "totalOrders": "Total orders",
+          "totalProducts": "Total products"
+        },
+        "operations": {
+          "activeOrders": "Active orders",
+          "cancelledOrders": "Cancelled orders",
+          "completedOrders": "Completed orders",
+          "hiddenProducts": "Hidden products",
+          "lastOrderActivity": "Last order activity",
+          "noOrdersYet": "No orders yet",
+          "title": "Operations summary"
+        },
+        "revenue": {
+          "emptyRevenue": "Revenue metric is empty until completed orders are available.",
+          "marketplaceRevenue": "Marketplace revenue",
+          "pendingPaymentDescription": "Review bank transfer proof submissions in the order moderation screen.",
+          "pendingPaymentVerifications": "Pending payment verifications",
+          "pendingProductApprovals": "Pending product approvals",
+          "pendingProductDescription": "Use the moderation screen to publish, hide, or return listings to review.",
+          "title": "Revenue and moderation"
+        },
+        "title": "Marketplace dashboard",
+        "unavailableReasons": {
+          "default": "Some marketplace metrics are unavailable.",
+          "noCompletedOrders": "Revenue data is unavailable because no order has reached completed status.",
+          "noOrders": "No marketplace orders have been created yet.",
+          "noProducts": "No marketplace products are available in the system yet.",
+          "noRevenueData": "Revenue data is unavailable because there are no orders yet."
+        }
+      },
+      "orders": {
+        "actions": {
+          "cancelOrder": "Cancel order",
+          "markVerified": "Mark verified",
+          "rejectProof": "Reject proof"
+        },
+        "audit": {
+          "empty": "No audit log entries for this order yet.",
+          "loadError": "Failed to load audit log.",
+          "loading": "Loading audit log...",
+          "performedBy": "{{user}} • {{date}}",
+          "title": "Audit log"
+        },
+        "cancel": {
+          "description": "This order will be cancelled. The buyer and farmer will be notified.",
+          "reasonLabel": "Reason for cancellation",
+          "reasonPlaceholder": "Explain why this order is being cancelled...",
+          "title": "Cancel Order"
+        },
+        "description": "Review and manage marketplace orders, verify payment proofs, and track order status changes.",
+        "filters": {
+          "all": "All orders"
+        },
+        "detail": {
+          "emptySelection": "Select an order from the list to review shipping, payment proof, and audit history.",
+          "itemQuantityPrice": "{{quantity}} x {{price}}",
+          "note": "Note: {{note}}",
+          "orderItems": "Order items",
+          "payment": "Payment",
+          "paymentProof": "Payment proof",
+          "paymentVerification": "Payment verification",
+          "shipping": "Shipping",
+          "title": "Order detail",
+          "uploadedAt": "Uploaded {{date}}"
+        },
+        "list": {
+          "empty": "No orders matched the current status filter.",
+          "loadError": "Failed to load admin orders.",
+          "loading": "Loading orders...",
+          "participants": "Buyer # {{buyerId}} • Farmer # {{farmerId}}",
+          "paymentSummary": "{{method}} • {{status}}",
+          "title": "Order list"
+        },
+        "paymentStatus": {
+          "pending": "Pending",
+          "rejected": "Rejected",
+          "submitted": "Submitted",
+          "verified": "Verified"
+        },
+        "rejectPayment": {
+          "description": "The buyer will be notified and may need to resubmit proof.",
+          "reasonLabel": "Reason for rejection",
+          "reasonPlaceholder": "Explain why the payment proof is being rejected...",
+          "title": "Reject Payment Proof"
+        },
+        "status": {
+          "cancelled": "Cancelled",
+          "completed": "Completed",
+          "confirmed": "Confirmed",
+          "delivering": "Delivering",
+          "pending": "Pending",
+          "preparing": "Preparing"
+        },
+        "title": "Manage marketplace orders",
+        "toast": {
+          "cancelOrderFailed": "Failed to cancel order. Please try again.",
+          "rejectPaymentFailed": "Failed to reject payment proof. Please try again.",
+          "verifyPaymentFailed": "Failed to verify payment. Please try again."
+        }
+      },
+      "products": {
+        "actions": {
+          "approve": "Approve",
+          "hide": "Hide",
+          "productActions": "Product actions",
+          "publish": "Publish",
+          "reject": "Reject",
+          "returnToReview": "Return to review",
+          "sendToReview": "Send to review"
+        },
+        "description": "Review product listings while keeping current moderation mutations and filters.",
+        "fallback": {
+          "uncategorized": "Uncategorized",
+          "unknownFarm": "Unknown farm"
+        },
+        "filters": {
+          "all": "All products"
+        },
+        "modal": {
+          "hideDescription": "This product will be hidden from the marketplace. The farmer will be notified.",
+          "hideTitle": "Hide Product",
+          "reasonLabel": "Reason for action",
+          "reasonPlaceholder": "Explain why this action is being taken...",
+          "rejectDescription": "This product will be rejected. The farmer will be notified.",
+          "rejectTitle": "Reject Product"
+        },
+        "searchPlaceholder": "Search by product, farm, or seller...",
+        "status": {
+          "active": "Active",
+          "draft": "Draft",
+          "hidden": "Hidden",
+          "inactive": "Inactive",
+          "pendingReview": "Pending review",
+          "published": "Published",
+          "rejected": "Rejected",
+          "soldOut": "Sold out"
+        },
+        "table": {
+          "actions": "Actions",
+          "empty": "No products matched the current moderation filters.",
+          "loadError": "Failed to load admin marketplace products.",
+          "loading": "Loading products...",
+          "price": "Price",
+          "product": "Product",
+          "seller": "Seller",
+          "status": "Status",
+          "traceability": "Traceability"
+        },
+        "title": "Moderate marketplace products",
+        "toast": {
+          "updateStatusFailed": "Failed to update product status. Please try again."
+        }
+      }
+    },
+    "recordMovement": {
+      "atSelectedLocation": "At Selected Location",
+      "currentOnHand": "Current On Hand",
+      "errors": {
+        "recordFailed": "Record Failed. Please try again."
+      },
+      "locationFallback": "Location Fallback {{id}}",
+      "locationOptional": "Location Optional",
+      "movementTypeRequired": "Movement type is required.",
+      "noSeasonLinked": "No Season Linked",
+      "noSpecificLocation": "No Specific Location",
+      "noteOptional": "Note Optional",
+      "notePlaceholder": "Enter note...",
+      "quantityPlaceholder": "Enter quantity...",
+      "quantityRequired": "Quantity is required.",
+      "recording": "Recording",
+      "seasonHelp": "Season Help",
+      "seasonOptional": "Season Optional",
+      "selectedLotMeta": "Selected Lot Meta {{item}} {{supplier}}",
+      "selectSupplyLot": "Select Supply Lot",
+      "selectWarehouse": "Select Warehouse",
+      "supplyLotRequired": "Supply lot is required.",
+      "title": "Record Movement",
+      "typeDescriptions": {
+        "ADJUST": "ADJUST",
+        "IN": "IN",
+        "OUT": "OUT"
+      },
+      "types": {
+        "ADJUST": "ADJUST",
+        "IN": "IN",
+        "OUT": "OUT"
+      },
+      "validation": {
+        "notEnoughAdjustment": "Not Enough Adjustment {{current}} {{adjustment}}",
+        "notEnoughRequested": "Not Enough Requested {{current}} {{requested}}",
+        "quantityPositive": "Quantity Positive",
+        "supplyLotRequired": "Supply lot is required.",
+        "warehouseRequired": "Warehouse is required."
+      },
+      "warehouseRequired": "Warehouse is required.",
+      "warehouseTotal": "Warehouse Total"
+    },
+    "reportsAnalytics": {
+      "actions": {
+        "exportCsv": "Export CSV",
+        "exporting": "Exporting"
+      },
+      "alerts": {
+        "description": "Reports Analytics Alerts details",
+        "title": "Reports Analytics Alerts",
+        "severity": {
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low"
+        }
+      },
+      "chart": {
+        "byDay": "By Day",
+        "byMonth": "By Month",
+        "byWeek": "By Week",
+        "costWithCurrency": "Cost With Currency {{currency}}",
+        "description": {
+          "cost": "Cost",
+          "profit": "Profit",
+          "revenue": "Revenue",
+          "yield": "Yield"
+        },
+        "empty": "No reports analytics chart found.",
+        "granularity": "Granularity",
+        "grossProfitWithCurrency": "Gross Profit With Currency {{currency}}",
+        "hideTable": "Hide Table",
+        "resetFilters": "Reset Filters",
+        "revenueWithCurrency": "Revenue With Currency {{currency}}",
+        "showTable": "Show Table",
+        "title": {
+          "cost": "Cost",
+          "profit": "Profit",
+          "revenue": "Revenue",
+          "yield": "Yield"
+        },
+        "totalCost": "Total Cost",
+        "totalCostWithCurrency": "Total Cost With Currency {{currency}}",
+        "yieldWithUnit": "Yield With Unit {{unit}}"
+      },
+      "costAnalysis": {
+        "bySeason": "By Season",
+        "costPerUnit": "Cost Per Unit {{unit}}",
+        "costPerUnitShort": "Cost Per Unit Short {{unit}}",
+        "empty": "No reports analytics cost analysis found.",
+        "title": "Reports Analytics Cost Analysis",
+        "totalExpense": "Total Expense"
+      },
+      "error": {
+        "loadFailed": "Load Failed. Please try again."
+      },
+      "expensesYield": {
+        "description": "Reports Analytics Expenses Yield details",
+        "expenses": "Expenses",
+        "expensesWithCurrency": "Expenses With Currency {{currency}}",
+        "title": "Reports Analytics Expenses Yield"
+      },
+      "fallback": {
+        "season": "Season {{id}}"
+      },
+      "filterDrawer": {
+        "allRegions": "All Regions",
+        "apply": "Apply",
+        "crops": {
+          "corn": "Corn",
+          "rice": "Rice",
+          "tomato": "Tomato",
+          "wheat": "Wheat"
+        },
+        "cropType": "Crop Type",
+        "description": "Reports Analytics details",
+        "region": "Region",
+        "regions": {
+          "east": "East",
+          "north": "North",
+          "south": "South",
+          "west": "West"
+        },
+        "title": "Reports Analytics",
+        "userRole": "User Role"
+      },
+      "filters": {
+        "allCrops": "All crops",
+        "allFarms": "All farms",
+        "allPlots": "All plots",
+        "allVarieties": "All varieties",
+        "apply": "Apply",
+        "unsavedChanges": "Unsaved Changes"
+      },
+      "inventory": {
+        "empty": "No reports analytics inventory found.",
+        "expiredLots": "Expired Lots {{count}}",
+        "expiringSoonLots": "Expiring Soon Lots {{count}}",
+        "table": {
+          "expired": "Expired",
+          "expiringSoon": "Expiring Soon",
+          "farm": "Farm",
+          "quantityOnHand": "Quantity On Hand {{unit}}",
+          "totalLots": "Total Lots",
+          "warehouse": "Warehouse"
+        },
+        "title": "Reports Analytics Inventory"
+      },
+      "kpi": {
+        "activeSeasons": "Active Seasons",
+        "activeUsers": "Active Users",
+        "dauWau": "Dau Wau",
+        "documents": "Documents",
+        "errorAlerts": "Error Alerts",
+        "last24h": "Last24h",
+        "openVsClosed": "Open Vs Closed",
+        "thisMonth": "This Month",
+        "totalExpenses": "Total Expenses",
+        "uploaded": "Uploaded"
+      },
+      "metrics": {
+        "description": "Reports Analytics Metrics details",
+        "exportTable": "Export Table",
+        "modules": {
+          "incidentManagement": "Incident Management",
+          "inventory": "Inventory",
+          "taskManagement": "Task Management"
+        },
+        "names": {
+          "avgResolutionDays": "Avg Resolution Days",
+          "completionRate": "Completion Rate",
+          "expiredLots": "Expired Lots",
+          "openIncidents": "Open Incidents",
+          "overdueRate": "Overdue Rate",
+          "totalIncidents": "Total Incidents",
+          "totalOnHandQty": "Total On Hand Qty",
+          "totalTasks": "Total Tasks"
+        },
+        "table": {
+          "change": "Change",
+          "lastUpdated": "Last Updated",
+          "metric": "Metric",
+          "module": "Module",
+          "value": "Value"
+        },
+        "title": "Reports Analytics Metrics"
+      },
+      "pageNotAvailable": "Page Not Available",
+      "seasonStatus": {
+        "aboveTarget": "Above Target",
+        "belowTarget": "Below Target",
+        "description": "Reports Analytics Season Status details",
+        "onTarget": "On Target",
+        "title": "Reports Analytics Season Status"
+      },
+      "settings": {
+        "description": "Reports Analytics Settings details",
+        "emailRecipients": "Email Recipients",
+        "emailRecipientsHelp": "Email Recipients Help",
+        "emailRecipientsPlaceholder": "Enter email recipients...",
+        "enableWeeklyReports": "Enable Weekly Reports",
+        "enableWeeklyReportsDescription": "Enable Weekly Reports Description",
+        "reportTypes": "Report Types",
+        "reportTypesOptions": {
+          "criticalAlerts": "Critical Alerts",
+          "financial": "Financial",
+          "systemHealth": "System Health",
+          "userActivity": "User Activity"
+        },
+        "save": "Save",
+        "schedule": {
+          "friday": "Friday",
+          "monday": "Monday",
+          "sunday": "Sunday"
+        },
+        "sendSchedule": "Send Schedule",
+        "title": "Reports Analytics Settings",
+        "weeklySummaryEmail": "Weekly Summary Email"
+      },
+      "subtitleWithLastUpdated": "Subtitle With Last Updated {{date}}",
+      "summary": {
+        "actualYield": "Actual Yield",
+        "actualYieldTooltip": "Actual Yield Tooltip",
+        "allExpenses": "All Expenses",
+        "costPerUnit": "Cost Per Unit {{unit}}",
+        "costPerUnitTooltip": "Cost Per Unit Tooltip",
+        "currencyPerUnitEfficiency": "Currency Per Unit Efficiency {{currency}} {{unit}}",
+        "fromHarvests": "From Harvests",
+        "grossProfit": "Gross Profit",
+        "grossProfitTooltip": "Gross Profit Tooltip",
+        "harvestedInPeriod": "Harvested In Period",
+        "marginPercent": "Margin Percent {{percent}}",
+        "noMargin": "No Margin",
+        "revenue": "Revenue",
+        "revenueTooltip": "Revenue Tooltip",
+        "totalCost": "Total Cost",
+        "totalCostTooltip": "Total Cost Tooltip"
+      },
+      "table": {
+        "avgPrice": "Avg Price",
+        "category": "Category",
+        "categoryBreakdown": "Category Breakdown",
+        "crop": "Crop",
+        "harvests": "Harvests",
+        "margin": "Margin",
+        "noCategoryData": "No Category Data",
+        "noTimeSeriesData": "No Time Series Data",
+        "noVendorData": "No Vendor Data",
+        "period": "Period",
+        "plot": "Plot",
+        "quantityWithUnit": "Quantity With Unit {{unit}}",
+        "season": "Season",
+        "timeSeries": "Time Series",
+        "total": "Total",
+        "variance": "Variance",
+        "variety": "Variety",
+        "vendor": "Vendor",
+        "vendorBreakdown": "Vendor Breakdown"
+      },
+      "tabs": {
+        "cost": "Cost",
+        "profit": "Profit",
+        "revenue": "Revenue",
+        "yield": "Yield"
+      },
+      "title": "Reports Analytics",
+      "toast": {
+        "drilldownApplied": "Drilldown Applied",
+        "exportedRecords": "Exported Records {{count}}",
+        "exportFailed": "Export Failed. Please try again.",
+        "exportingDescription": "Exporting Description",
+        "exportingFormat": "Exporting Format {{format}}",
+        "filtersApplied": "Filters Applied",
+        "filtersReset": "Filters Reset",
+        "invalidDateRange": "Invalid Date Range",
+        "refreshed": "Refreshed",
+        "refreshFailed": "Refresh Failed. Please try again.",
+        "settingsSaved": "Settings Saved",
+        "settingsSavedDescription": "Settings Saved Description"
+      },
+      "unassigned": "Unassigned",
+      "uncategorized": "Uncategorized",
+      "unknown": "Unknown",
+      "userActivity": {
+        "admins": "Admins",
+        "description": "Reports Analytics User Activity details",
+        "title": "Reports Analytics User Activity"
+      },
+      "yield": {
+        "actualWithUnit": "Actual With Unit {{unit}}",
+        "empty": "No reports analytics yield found.",
+        "expectedWithUnit": "Expected With Unit {{unit}}",
+        "seasonsCount": "Seasons Count {{count}}",
+        "title": "Reports Analytics Yield"
+      },
+      "backend": {
+        "warnings": {
+          "noSeasons": "No seasons found for current filters",
+          "noHarvestedYieldWithExpenses": "No harvested yield in selected range while expenses exist",
+          "marketplaceRevenueExcluded": "Marketplace revenue is excluded until marketplace report contract is finalized."
+        },
+        "fallback": {
+          "uncategorized": "Uncategorized",
+          "unassigned": "Unassigned"
+        },
+        "csv": {
+          "headers": {
+            "yield": "farm_name,plot_name,crop_name,variety_name,actual_yield_kg,harvest_count",
+            "cost": "section,key,total_cost,expense_count,period_start",
+            "revenue": "crop_name,plot_name,total_quantity_kg,total_revenue,marketplace_revenue,marketplace_revenue_status,avg_price",
+            "profit": "crop_name,plot_name,total_revenue,marketplace_revenue,marketplace_revenue_status,total_cost,gross_profit,margin_percent"
+          },
+          "sections": {
+            "category": "category",
+            "vendor": "vendor",
+            "time": "time"
+          }
+        }
+      }
+    },
+    "seasonEdit": {
+      "actualYieldPlaceholder": "Enter actual yield... {{unit}}",
+      "actualYieldRequired": "Actual yield is required. {{unit}}",
+      "checkingPendingTasks": "Checking Pending Tasks",
+      "currentStatus": "Current Status {{status}}",
+      "endDateRequired": "End date is required.",
+      "error": {
+        "completeRequiresYieldDate": "Complete Requires Yield Date",
+        "updateFailed": "Failed to update. Please try again."
+      },
+      "notesPlaceholder": "Enter notes...",
+      "pendingTasksWarning": "Pending Tasks Warning {{count}}",
+      "title": "Season Edit",
+      "validation": {
+        "actualYieldRequired": "Actual yield is required.",
+        "endDateRequired": "End date is required."
+      },
+      "warningTitle": "Warning Title"
+    },
+    "systemMonitoring": {
+      "actions": {
+        "createIncident": "Create Incident",
+        "exportLogs": "Export Logs"
+      },
+      "alerts": {
+        "acknowledge": "Acknowledge",
+        "description": "System Monitoring Alerts details",
+        "resolve": "Resolve",
+        "title": "System Monitoring Alerts"
+      },
+      "dateRange": {
+        "last24h": "Last24h",
+        "last24Hours": "Last24 Hours",
+        "last30d": "Last30d",
+        "last7d": "Last7d",
+        "today": "Today"
+      },
+      "download": {
+        "dateRange": "Date Range",
+        "description": "System Monitoring Download details",
+        "download": "Download",
+        "logTypes": "Log Types",
+        "sizeCap": "Size Cap",
+        "title": "System Monitoring Download",
+        "types": {
+          "ai": "AI",
+          "auth": "Auth",
+          "error": "Error",
+          "system": "System"
+        },
+        "unlimited": "Unlimited"
+      },
+      "filters": {
+        "allLevels": "All levels",
+        "allServices": "All services",
+        "allUsers": "All users",
+        "apply": "Apply",
+        "description": "System Monitoring details",
+        "logLevel": "Log Level",
+        "service": "Service",
+        "title": "System Monitoring",
+        "user": "User"
+      },
+      "incident": {
+        "assignedTo": "Assigned To",
+        "createTicket": "Create Ticket",
+        "description": "System Monitoring Incident details",
+        "descriptionPlaceholder": "Enter description...",
+        "selectTeamMember": "Select Team Member",
+        "severity": "Severity",
+        "title": "System Monitoring Incident",
+        "titleLabel": "Title Label",
+        "titlePlaceholder": "Enter title..."
+      },
+      "logDetail": {
+        "description": "System Monitoring Log Detail details",
+        "message": "Message",
+        "stackTrace": "Stack Trace",
+        "timestamp": "Timestamp",
+        "title": "System Monitoring Log Detail"
+      },
+      "logLevel": {
+        "error": "Error",
+        "info": "Info",
+        "security": "Security",
+        "warning": "Warning"
+      },
+      "logs": {
+        "copyLog": "Copy Log",
+        "description": "System Monitoring Logs details",
+        "logs": "Logs",
+        "searchPlaceholder": "Search...",
+        "title": "System Monitoring Logs",
+        "userValue": "User Value {{user}}"
+      },
+      "performance": {
+        "avgLatency": "Avg Latency",
+        "cpuMemoryDescription": "Cpu Memory Description",
+        "cpuMemoryTitle": "Cpu Memory Title",
+        "cpuPercent": "Cpu Percent",
+        "errorRateDescription": "Error Rate Description",
+        "errorRateTitle": "Error Rate Title",
+        "memoryPercent": "Memory Percent",
+        "p95": "P95",
+        "slowestEndpointsDescription": "Slowest Endpoints Description",
+        "slowestEndpointsTitle": "Slowest Endpoints Title"
+      },
+      "services": {
+        "apiGateway": "API Gateway",
+        "authService": "Auth Service",
+        "database": "Database",
+        "fileStorage": "File Storage",
+        "notification": "Notification",
+        "other": "Other"
+      },
+      "severity": {
+        "critical": "Critical",
+        "high": "High",
+        "low": "Low",
+        "medium": "Medium"
+      },
+      "status": {
+        "inProgress": "In Progress",
+        "open": "Open",
+        "resolved": "Resolved"
+      },
+      "subtitle": "System Monitoring overview",
+      "teams": {
+        "adminUser": "Admin User",
+        "devTeam": "Dev Team",
+        "opsTeam": "Ops Team",
+        "securityTeam": "Security Team"
+      },
+      "title": "System Monitoring",
+      "toast": {
+        "alertAcknowledged": "Alert Acknowledged",
+        "alertAcknowledgedDescription": "Alert Acknowledged Description",
+        "alertResolved": "Alert Resolved",
+        "alertResolvedDescription": "Alert Resolved Description",
+        "downloadStarted": "Download Started",
+        "downloadStartedDescription": "Download Started Description {{types}}",
+        "incidentCreated": "Incident Created",
+        "incidentCreatedDescription": "Incident Created Description {{title}}",
+        "logCopied": "Log Copied"
+      },
+      "users": {
+        "system": "System"
+      },
+      "alertStatus": {
+        "new": "New",
+        "acknowledged": "Acknowledged",
+        "resolved": "Resolved"
+      }
+    },
+    "systemSettings": {
+      "actions": {
+        "resetToDefault": "Reset To Default",
+        "saveAll": "Save All"
+      },
+      "addRole": {
+        "create": "Create",
+        "description": "System Settings Add Role details",
+        "descriptionPlaceholder": "Enter description...",
+        "name": "Name",
+        "namePlaceholder": "Enter name...",
+        "title": "System Settings Add Role"
+      },
+      "audit": {
+        "description": "System Settings details",
+        "table": {
+          "action": "Action",
+          "admin": "Admin",
+          "module": "Module",
+          "result": "Result",
+          "time": "Time"
+        },
+        "title": "System Settings"
+      },
+      "backup": {
+        "description": "System Settings Backup details",
+        "download": "Download",
+        "exportConfig": "Export Config",
+        "history": "History",
+        "importConfig": "Import Config",
+        "manualBackup": "Manual Backup",
+        "restore": "Restore",
+        "table": {
+          "dateTime": "Date Time",
+          "size": "Size"
+        },
+        "title": "System Settings Backup",
+        "type": {
+          "auto": "Automatic",
+          "manual": "Manual"
+        }
+      },
+      "integrations": {
+        "apiKey": "API Key",
+        "copyApiKey": "Copy API Key",
+        "description": "System Settings Integrations details",
+        "hideApiKey": "Hide API Key",
+        "paymentApiKeyPlaceholder": "Enter payment api key...",
+        "showApiKey": "Show API Key",
+        "testConnection": "Test Connection",
+        "title": "System Settings Integrations",
+        "status": {
+          "connected": "Connected",
+          "disconnected": "Disconnected"
+        },
+        "services": {
+          "weather": "Weather",
+          "market": "Market prices",
+          "payment": "Payments",
+          "iot": "IoT devices",
+          "ai": "AI assistant"
+        }
+      },
+      "notifications": {
+        "channels": {
+          "email": "Email",
+          "inApp": "In App",
+          "sms": "Sms"
+        },
+        "description": "System Settings Notifications details",
+        "save": "Save",
+        "table": {
+          "topic": "Topic"
+        },
+        "test": "Test",
+        "title": "System Settings Notifications",
+        "topics": {
+          "1": "System Updates",
+          "2": "Security Alerts",
+          "3": "New User Registration",
+          "4": "Document Upload",
+          "5": "Weekly Reports",
+          "6": "Backup Completion",
+          "7": "Critical Errors"
+        }
+      },
+      "preferences": {
+        "applyToAll": "Apply To All",
+        "currencies": {
+          "eur": "Eur",
+          "usd": "Usd",
+          "vnd": "VND"
+        },
+        "currency": "Currency",
+        "dateFormat": "Date Format",
+        "dateFormats": {
+          "ddMMyyyy": "Dd M Myyyy",
+          "MMddyyyy": "M Mddyyyy",
+          "yyyyMMdd": "Yyyy M Mdd"
+        },
+        "description": "System Settings Preferences details",
+        "language": "Language",
+        "languages": {
+          "en": "En",
+          "vi": "Vi",
+          "zh": "Zh"
+        },
+        "theme": "Theme",
+        "themes": {
+          "auto": "Auto",
+          "dark": "Dark",
+          "light": "Light"
+        },
+        "timeZone": "Time Zone",
+        "timeZones": {
+          "utc0": "Utc0",
+          "utc7": "Utc7",
+          "utc8": "Utc8"
+        },
+        "title": "System Settings Preferences",
+        "unitSystem": "Unit System",
+        "unitSystems": {
+          "imperial": "Imperial",
+          "metric": "Metric"
+        }
+      },
+      "restore": {
+        "confirm": "Confirm",
+        "confirmation": "Confirmation",
+        "description": "System Settings Restore details",
+        "title": "System Settings Restore"
+      },
+      "roles": {
+        "addRole": "Add Role",
+        "adminPermissions": "Admin Permissions",
+        "currentRoles": "Current Roles",
+        "description": "System Settings details",
+        "editPermissions": "Edit Permissions",
+        "savePermissions": "Save Permissions",
+        "table": {
+          "module": "Module"
+        },
+        "title": "System Settings",
+        "usersCount": "Users Count {{count}}",
+        "modules": {
+          "plots": "Plot Management",
+          "seasons": "Season Management",
+          "tasks": "Task Workspace",
+          "expenses": "Expense Management",
+          "harvest": "Harvest Management",
+          "sales": "Sale Management",
+          "documents": "Document Management",
+          "reports": "Reports & Analytics"
+        }
+      },
+      "security": {
+        "activeDevices": "Active Devices",
+        "currentDevice": "Current Device",
+        "description": "System Settings Security details",
+        "enable2FA": "Enable2 FA",
+        "enable2FADescription": "Enable2 FA Description",
+        "passwordPolicy": "Password Policy",
+        "passwordPolicyDescription": "Password Policy Description",
+        "save": "Save",
+        "sessionTimeout": "Session Timeout",
+        "sessionTimeoutDescription": "Session Timeout Description",
+        "signOutAllDevices": "Sign Out All Devices",
+        "signOutDevice": "Sign Out Device",
+        "title": "System Settings Security"
+      },
+      "sidebar": {
+        "title": "System Settings Sidebar"
+      },
+      "subtitle": "System Settings overview",
+      "title": "System Settings",
+      "toast": {
+        "allDevicesSignedOut": "All Devices Signed Out",
+        "allDevicesSignedOutDescription": "All Devices Signed Out Description",
+        "appliedToAll": "Applied To All",
+        "appliedToAllDescription": "Applied To All Description",
+        "backupStarted": "Backup Started",
+        "backupStartedDescription": "Backup Started Description",
+        "changesApplied": "Changes Applied",
+        "configExported": "Config Exported",
+        "configExportedDescription": "Config Exported Description",
+        "configImported": "Config Imported",
+        "configImportedDescription": "Config Imported Description",
+        "connectionTestInitiated": "Connection Test Initiated",
+        "deviceSignedOut": "Device Signed Out",
+        "deviceSignedOutDescription": "Device Signed Out Description",
+        "restoreInitiated": "Restore Initiated",
+        "roleCreated": "Role Created",
+        "settingsReset": "Settings Reset",
+        "settingsResetDescription": "Settings Reset Description",
+        "settingsSaved": "Settings Saved",
+        "settingsSavedDescription": "Settings Saved Description",
+        "systemPrefsSaved": "System Prefs Saved",
+        "testingConnection": "Testing Connection {{service}}",
+        "testNotificationSent": "Test Notification Sent",
+        "testNotificationSentDescription": "Test Notification Sent Description {{topic}}"
+      },
+      "status": {
+        "success": "Success",
+        "failed": "Failed",
+        "connected": "Connected",
+        "disconnected": "Disconnected"
+      }
+    },
+    "taskEdit": {
+      "error": {
+        "invalidAssignee": "Invalid Assignee",
+        "updateFailed": "Failed to update. Please try again."
+      },
+      "meta": {
+        "assignee": "Assignee {{assignee}}",
+        "farm": "Farm {{farm}}",
+        "season": "Season {{season}}",
+        "status": "Status {{status}}"
+      },
+      "notesPlaceholder": "Enter notes...",
+      "statusChange": {
+        "description": "Task Edit Status Change details {{from}} {{to}}",
+        "title": "Task Edit Status Change"
+      },
+      "title": "Task Edit",
+      "status": {
+        "PENDING": "Pending",
+        "IN_PROGRESS": "In progress",
+        "DONE": "Done",
+        "OVERDUE": "Overdue",
+        "CANCELLED": "Cancelled"
+      }
+    },
+    "warehouseDetail": {
+      "error": {
+        "loadLocations": "Load Locations"
+      },
+      "generalType": "General Type",
+      "noLocations": "No Locations",
+      "recentMovements": "Recent Movements",
+      "stockLocations": "Stock Locations",
+      "table": {
+        "aisle": "Aisle",
+        "bin": "Bin",
+        "shelf": "Shelf",
+        "zone": "Zone"
+      },
+      "tabs": {
+        "info": "Info",
+        "locations": "Locations {{count}}",
+        "movements": "Movements"
+      }
+    },
+    "portal": {
+      "views": {
+        "dashboard": {
+          "title": "Admin Dashboard",
+          "breadcrumb": "Dashboard"
+        },
+        "marketplaceDashboard": {
+          "title": "Marketplace Dashboard",
+          "breadcrumb": "Marketplace"
+        },
+        "marketplaceProducts": {
+          "title": "Marketplace Products",
+          "breadcrumb": "Marketplace Products"
+        },
+        "marketplaceOrders": {
+          "title": "Marketplace Orders",
+          "breadcrumb": "Marketplace Orders"
+        },
+        "search": {
+          "title": "Search",
+          "breadcrumb": "Search"
+        },
+        "inventory": {
+          "title": "Inventory",
+          "breadcrumb": "Inventory"
+        },
+        "incidents": {
+          "title": "Incidents",
+          "breadcrumb": "Incidents"
+        },
+        "alerts": {
+          "title": "Alerts Center",
+          "breadcrumb": "Alerts"
+        },
+        "auditLogs": {
+          "title": "Audit Logs",
+          "breadcrumb": "Audit Logs"
+        },
+        "usersRoles": {
+          "title": "Users & Roles",
+          "breadcrumb": "Users & Roles"
+        },
+        "farmsPlots": {
+          "title": "Farms & Plots",
+          "breadcrumb": "Farms & Plots"
+        },
+        "cropsVarieties": {
+          "title": "Crops & Varieties",
+          "breadcrumb": "Crops & Varieties"
+        },
+        "reports": {
+          "title": "Reports",
+          "breadcrumb": "Reports"
+        },
+        "documents": {
+          "title": "Documents",
+          "breadcrumb": "Documents"
+        },
+        "profile": {
+          "title": "Admin Profile",
+          "breadcrumb": "Profile"
+        },
+        "settings": {
+          "title": "Preferences",
+          "breadcrumb": "Preferences"
+        }
+      }
     }
   },
   "buyer": {
@@ -3061,6 +5540,155 @@
       }
     }
   },
+  "employee": {
+    "common": {
+      "defaultUserName": "Employee",
+      "unassignedSeason": "Unassigned Season",
+      "seasonFallback": "Season #{{id}}",
+      "taskFallback": "Task #{{id}}"
+    },
+    "actor": {
+      "EMPLOYEE": "Employee",
+      "FARMER": "Farmer",
+      "UNKNOWN": "Unknown"
+    },
+    "status": {
+      "PLANNED": "Planned",
+      "ACTIVE": "Active",
+      "IN_PROGRESS": "In Progress",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "ARCHIVED": "Archived",
+      "UNKNOWN": "Unknown"
+    },
+    "workspace": {
+      "title": "Season Workspace",
+      "subtitle": "Field logs and disease tracking for seasons assigned to you.",
+      "loadingAssignedSeasons": "Loading assigned seasons...",
+      "loadAssignedSeasonsError": "Unable to load assigned seasons.",
+      "emptyTitle": "No active assigned seasons",
+      "emptyDescription": "Workspace opens after a farmer assigns you to an active season.",
+      "openWorkspace": "Open Workspace",
+      "loadingWorkspace": "Loading workspace...",
+      "notFoundTitle": "Assigned season not found",
+      "notFoundDescription": "The season is no longer active for your employee account.",
+      "backToWorkspace": "Back to Workspace"
+    },
+    "tasks": {
+      "title": "Assigned Tasks",
+      "loading": "Loading assigned tasks...",
+      "empty": "You do not have any assigned tasks yet.",
+      "status": {
+        "PENDING": "Pending",
+        "IN_PROGRESS": "In Progress",
+        "DONE": "Done",
+        "OVERDUE": "Overdue",
+        "CANCELLED": "Cancelled"
+      },
+      "actions": {
+        "viewSeasonPlan": "View season plan (read-only)",
+        "acceptTask": "Accept Task",
+        "reportProgress": "Report Progress"
+      },
+      "table": {
+        "task": "Task",
+        "dueDate": "Due Date",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "toast": {
+        "acceptSuccess": "Task accepted.",
+        "acceptError": "Unable to accept task.",
+        "progressSuccess": "Progress updated.",
+        "progressError": "Unable to update progress."
+      },
+      "validation": {
+        "progressRange": "Progress must be between 0 and 100."
+      },
+      "progressDialog": {
+        "title": "Report Task Progress",
+        "taskLabel": "Task:",
+        "progressPercent": "Progress (%)",
+        "note": "Note",
+        "notePlaceholder": "Describe current progress...",
+        "evidenceUrl": "Evidence link (optional)",
+        "submit": "Submit Progress"
+      },
+      "planDialog": {
+        "title": "Season Plan: {{season}}",
+        "loading": "Loading season plan...",
+        "empty": "No tasks available for this season plan."
+      }
+    },
+    "progress": {
+      "title": "Progress Update History",
+      "loading": "Loading progress data...",
+      "empty": "You have not submitted any progress updates yet.",
+      "table": {
+        "task": "Task",
+        "progress": "Progress",
+        "note": "Note",
+        "loggedAt": "Time"
+      }
+    },
+    "payroll": {
+      "title": "My Payroll",
+      "loading": "Loading payroll records...",
+      "empty": "No payroll data yet.",
+      "actions": {
+        "viewDetail": "View Detail"
+      },
+      "table": {
+        "season": "Season",
+        "period": "Payroll Period",
+        "completedTasks": "Completed Tasks",
+        "wagePerTask": "Wage / Task",
+        "totalAmount": "Total Payroll",
+        "generatedAt": "Generated At"
+      },
+      "detail": {
+        "title": "Payroll Period Detail",
+        "loading": "Loading payroll detail...",
+        "error": "Unable to load payroll detail.",
+        "empty": "No detail data available.",
+        "season": "Season",
+        "employee": "Employee",
+        "period": "Payroll Period",
+        "taskCompletion": "Completed / Assigned Tasks",
+        "wagePerTask": "Wage / Task",
+        "totalAmount": "Total Payroll",
+        "generatedAt": "Generated At",
+        "note": "Note"
+      }
+    },
+    "settings": {
+      "title": "Preferences",
+      "description": "Preferences for employee accounts will be added in the next release."
+    },
+    "profile": {
+      "title": "Employee Profile",
+      "role": "Employee",
+      "usernameFallback": "employee",
+      "notifications": {
+        "taskUpdates": {
+          "label": "Receive task updates",
+          "description": "Get notified when new tasks are assigned or schedules change."
+        },
+        "payrollUpdates": {
+          "label": "Receive payroll updates",
+          "description": "Receive alerts when payroll records are generated."
+        }
+      },
+      "editDialog": {
+        "validation": {
+          "fullNameRequired": "Full name is required.",
+          "fullNameTooLong": "Full name is too long.",
+          "phoneTooLong": "Phone number is too long.",
+          "invalidPhone": "Invalid phone number."
+        }
+      }
+    }
+  },
   "profile": {
     "title": "Farmer Profile",
     "editProfile": "Edit Profile",
@@ -3072,6 +5700,20 @@
     "farmer": "Farmer",
     "active": "Active",
     "inactive": "Inactive",
+    "editDialog": {
+      "title": "Edit Profile",
+      "description": "Update your personal contact details.",
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "Enter full name",
+      "phone": "Phone",
+      "phonePlaceholder": "Enter phone number",
+      "location": "Location",
+      "locationDescription": "Select a province/city and ward/commune for your profile.",
+      "updateError": "Failed to update profile.",
+      "successTitle": "Profile Updated",
+      "successDescription": "Your profile information has been saved.",
+      "updateFailed": "Failed to update. Please try again."
+    },
     "contactInfo": {
       "title": "Contact Information",
       "email": "Email",
@@ -3557,6 +6199,10 @@
     "expectedYield": "Expected Yield",
     "activeSeasonsLabel": "Active seasons"
   },
+  "seasonActivity": {
+    "title": "Recent Activity",
+    "description": "Timeline of recent actions"
+  },
   "seasonFilters": {
     "allCrops": "All Crops",
     "allStatus": "All Status",
@@ -3572,6 +6218,11 @@
   "farmDetail": {
     "myFarms": "My Farms",
     "backToFarms": "Back to Farms",
+    "comingSoon": "Coming Soon",
+    "farmId": "Farm ID: #{{id}}",
+    "meta": {
+      "id": "ID: #{{id}}"
+    },
     "notFound": {
       "title": "Farm Not Found",
       "description": "The farm you are looking for does not exist or has been deleted."
@@ -3591,6 +6242,7 @@
       "location": "Location",
       "status": "Status",
       "totalPlots": "Total Plots",
+      "activePlots": "Active Plots",
       "notSpecified": "Not specified",
       "active": "Active",
       "inactive": "Inactive"
@@ -3600,6 +6252,10 @@
       "subtitle": "Manage the plots within this farm",
       "totalPlots": "Total plots: {{count}}",
       "totalArea": "Total area: {{area}}",
+      "refresh": "Refresh",
+      "managePlots": "Manage Plots",
+      "noPlots": "No plots yet",
+      "createToStart": "Create your first plot to start managing your farm land.",
       "inactiveWarningTitle": "This farm is inactive",
       "inactiveWarningDesc": "Activate this farm to create new plots or seasons. You can still view existing plots."
     },
@@ -3647,6 +6303,11 @@
         "ARCHIVED": "Archived",
         "PLANNED": "Planned",
         "Unknown": "Unknown"
+      },
+      "fallback": {
+        "crop": "Crop #{{id}}",
+        "plot": "Plot #{{id}}",
+        "variety": "Variety #{{id}}"
       }
     },
     "stock": {
@@ -3675,6 +6336,7 @@
       "noWarehouse": "No Warehouse Found",
       "noWarehouseDesc": "This farm doesn't have any warehouses yet. Create a warehouse in the Inventory page to start tracking stock.",
       "goToInventory": "Go to Inventory",
+      "itemFallback": "Lot #{{id}}",
       "table": {
         "item": "Item",
         "batchCode": "Batch Code",
@@ -3682,6 +6344,12 @@
         "quantity": "Quantity",
         "status": "Status",
         "expiry": "Expiry"
+      },
+      "statusLabels": {
+        "GOOD": "Good",
+        "DAMAGED": "Damaged",
+        "EXPIRED": "Expired",
+        "UNKNOWN": "Unknown"
       }
     },
     "incidents": {
@@ -3731,13 +6399,383 @@
         "Open": "Open",
         "In Progress": "In Progress",
         "Resolved": "Resolved",
-        "Cancelled": "Cancelled"
+        "Cancelled": "Cancelled",
+        "Unknown": "Unknown"
+      },
+      "severityLabels": {
+        "HIGH": "High",
+        "MEDIUM": "Medium",
+        "LOW": "Low",
+        "UNKNOWN": "Unknown"
       }
     },
     "toast": {
       "farmDeleted": "Farm deleted successfully",
       "farmInactivePlots": "This farm is inactive. Activate it to create plots.",
       "farmInactiveSeasons": "This farm is inactive. Activate it to create seasons."
+    }
+  },
+  "warnings": {
+    "decision": "Decision",
+    "decisions": {
+      "LOCK_1_DAY": "LOCK 1 DAY",
+      "LOCK_PERMANENT": "LOCK PERMANENT",
+      "WARNING": "WARNING"
+    },
+    "descriptionPlaceholder": "Enter description...",
+    "issueDescription": "Issue Description",
+    "issueTitle": "Issue Title",
+    "selectDecision": "Select Decision",
+    "sending": "Sending",
+    "sendWarning": "Send Warning",
+    "toast": {
+      "sendFailed": "Send Failed. Please try again.",
+      "sent": "Sent"
+    },
+    "validation": {
+      "descriptionRequired": "Description is required."
+    },
+    "violationDescription": "Violation Description"
+  },
+  "seasonTabs": {
+    "overview": "Overview",
+    "crop": "Crop",
+    "variety": "Variety",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "totalTasks": "Total Tasks",
+    "incidents": "Incidents"
+  },
+  "expenseDetail": {
+    "title": "Expense Details",
+    "date": "Date",
+    "category": "Category",
+    "amount": "Amount",
+    "status": "Status",
+    "statusPaid": "Paid",
+    "statusPending": "Pending",
+    "statusUnpaid": "Unpaid",
+    "description": "Description",
+    "linkedTo": "Linked To",
+    "vendor": "Vendor",
+    "attachment": "Attachment",
+    "viewReceipt": "View receipt",
+    "openNewTab": "Open in new tab",
+    "notes": "Notes",
+    "saveChanges": "Save Changes"
+  },
+  "seasonDetail": {
+    "exportReport": "Export Report",
+    "saveChanges": "Save Changes",
+    "changesSavedToast": "Changes saved successfully"
+  },
+  "marketplaceSeller": {
+    "common": {
+      "brand": "Seller Portal",
+      "backToProducts": "Back to products",
+      "tryAgain": "Try again"
+    },
+    "tabs": {
+      "brand": "WORKSPACE",
+      "title": "Marketplace workspace",
+      "ariaLabel": "Seller marketplace tabs",
+      "items": {
+        "overview": {
+          "label": "Overview",
+          "description": "Store summary"
+        },
+        "products": {
+          "label": "Products",
+          "description": "Listings and inventory"
+        },
+        "orders": {
+          "label": "Orders",
+          "description": "Customer orders"
+        }
+      }
+    },
+    "products": {
+      "title": "Product management",
+      "subtitle": "Publish, review, and manage inventory for marketplace products.",
+      "addProduct": "Add product",
+      "searchPlaceholder": "Search products...",
+      "loading": "Loading products...",
+      "emptyFiltered": "No products match the current filters.",
+      "loadError": "Failed to load products list."
+    },
+    "filters": {
+      "allStatuses": "All statuses"
+    },
+    "status": {
+      "draft": "Draft",
+      "pendingReview": "Pending review",
+      "published": "Published",
+      "hidden": "Rejected / Hidden",
+      "order": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "preparing": "Preparing",
+        "delivering": "Delivering",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "PENDING_PAYMENT": "Pending payment",
+        "PAYMENT_SUBMITTED": "Receipt submitted",
+        "PAYMENT_VERIFIED": "Payment verified",
+        "CONFIRMED": "Confirmed",
+        "PREPARING": "Preparing",
+        "SHIPPED": "Shipped",
+        "DELIVERED": "Delivered",
+        "COMPLETED": "Completed",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled",
+        "PENDING": "Pending payment",
+        "DELIVERING": "Delivering",
+        "unknown": "Unknown status ({{status}})"
+      }
+    },
+    "table": {
+      "product": "Product",
+      "category": "Category",
+      "price": "Price",
+      "stock": "Stock",
+      "status": "Status",
+      "updated": "Updated",
+      "actions": "Actions",
+      "adminReason": "Admin reason",
+      "available": "Available"
+    },
+    "dashboard": {
+      "loading": "Loading marketplace dashboard...",
+      "unavailableReasons": {
+        "noProducts": "You don't have any products in your marketplace catalog yet.",
+        "noOrders": "No orders have been placed yet.",
+        "noRevenueData": "No revenue data because no orders have been placed.",
+        "noCompletedOrders": "Revenue is shown only when at least one order is completed.",
+        "fallback": "Some dashboard metrics are currently unavailable."
+      },
+      "emptyProducts": {
+        "title": "No products on marketplace yet",
+        "description": "Add your first product to unlock order and revenue metrics on this dashboard.",
+        "actions": {
+          "createFirst": "Create first product",
+          "goToListings": "Go to listings"
+        }
+      },
+      "noOrders": {
+        "title": "Products are listed but no orders yet",
+        "description": "Keep your listings updated and well-stocked. Orders will appear here once placed."
+      },
+      "metrics": {
+        "revenue": "Revenue",
+        "revenueEmpty": "No completed orders yet.",
+        "pendingOrders": "Pending orders",
+        "publishedProducts": "Published products",
+        "pendingReview": "Pending review"
+      },
+      "recentOrders": {
+        "title": "Recent orders",
+        "seeAll": "See all",
+        "itemCount": "{{count}} products",
+        "emptyWithProducts": "No orders placed yet.",
+        "emptyNoProducts": "Orders will appear after you list your first product."
+      },
+      "topProducts": {
+        "title": "Top products",
+        "manageProducts": "Manage products",
+        "emptyWithProducts": "No published products yet.",
+        "emptyNoProducts": "No products available."
+      }
+    },
+    "orders": {
+      "title": "Order management",
+      "subtitle": "Track orders, manage status transitions, and open order details.",
+      "error": "Failed to load seller orders.",
+      "empty": "No orders match the current filters.",
+      "filters": {
+        "all": "All",
+        "ariaLabel": "Order status filter"
+      },
+      "table": {
+        "orderCode": "Order code",
+        "orderDate": "Order date",
+        "customer": "Customer",
+        "total": "Total",
+        "status": "Status",
+        "actions": "Actions",
+        "detail": "Detail",
+        "buyerFallback": "Buyer #{{id}}"
+      }
+    },
+    "orderDetail": {
+      "loading": "Loading order details...",
+      "error": "Failed to load seller order details.",
+      "backToOrders": "Back to orders",
+      "itemsTitle": "Order items",
+      "customerInfo": "Customer information",
+      "paymentShipping": "Payment and shipping",
+      "verificationPrefix": "Verification",
+      "shippingStatus": "Shipping status",
+      "notePrefix": "Note",
+      "summary": {
+        "subtotal": "Subtotal",
+        "shippingFee": "Shipping fee",
+        "total": "Total"
+      },
+      "paymentMethod": {
+        "cod": "Cash on delivery",
+        "bankTransfer": "Bank transfer"
+      },
+      "verificationStatus": {
+        "notRequired": "Not required",
+        "awaitingProof": "Awaiting proof",
+        "submitted": "Submitted",
+        "verified": "Verified",
+        "rejected": "Rejected"
+      }
+    },
+    "productDetail": {
+      "title": "Product details",
+      "loading": "Loading product details...",
+      "updatedLabel": "Listing #{{id}} - Updated {{date}}",
+      "noImage": "No image",
+      "notLinked": "Not linked",
+      "traceableYes": "Yes",
+      "traceableNo": "No",
+      "descriptionFallback": "No product description yet.",
+      "notFound": {
+        "title": "Product not found",
+        "description": "This product does not exist or is not available in your seller account."
+      },
+      "sections": {
+        "listingInfo": "Listing information",
+        "traceability": "Harvest traceability",
+        "description": "Description"
+      },
+      "fields": {
+        "category": "Category",
+        "price": "Price",
+        "listedQuantity": "Listed quantity",
+        "availableQuantity": "Available quantity",
+        "farmer": "Farmer",
+        "region": "Region",
+        "farm": "Farm",
+        "season": "Season",
+        "lot": "Lot",
+        "traceable": "Traceable"
+      },
+      "actions": {
+        "editListing": "Edit listing",
+        "updating": "Updating...",
+        "submitForReview": "Submit for review",
+        "moveToDraft": "Move back to draft",
+        "hideProduct": "Hide product",
+        "resubmitReview": "Resubmit for review",
+        "updateStatus": "Update status"
+      }
+    },
+    "productForm": {
+      "loading": "Loading harvest-based seller workflow...",
+      "notFound": "This product could not be found for your account.",
+      "maxAllowed": "Max allowed: {{quantity}} {{unit}}",
+      "harvestLotFallback": "Harvested lot",
+      "lotsLinkedNotice": "{{count}} harvested lots are already linked to other marketplace listings and excluded here.",
+      "adminReasonPrefix": "Admin reason",
+      "header": {
+        "editTitle": "Edit marketplace listing",
+        "createTitle": "Create marketplace listing",
+        "subtitle": "Create a marketplace listing from harvested lots with full traceability and stock controls."
+      },
+      "sections": {
+        "basicInfo": "Basic information",
+        "descriptions": "Descriptions",
+        "harvestSource": "Harvest source",
+        "preview": "Listing preview"
+      },
+      "fields": {
+        "name": "Listing name",
+        "category": "Category",
+        "price": "Price",
+        "quantityToSell": "Quantity to sell",
+        "imageUrl": "Main image URL",
+        "productImage": "Product image",
+        "shortDescription": "Short description",
+        "fullDescription": "Full description",
+        "farm": "Farm",
+        "season": "Season",
+        "harvestLot": "Harvested lot"
+      },
+      "imageInput": {
+        "uploadTab": "Upload image",
+        "urlTab": "Use URL",
+        "chooseFile": "Choose product image",
+        "fileHint": "JPG, PNG, or WEBP up to 5 MB",
+        "fileInputLabel": "Product image file",
+        "removeSelected": "Remove selected image"
+      },
+      "placeholders": {
+        "name": "Example: Premium jasmine rice from harvest lot 2026",
+        "category": "Grain, vegetable, fruit...",
+        "shortDescription": "A short summary buyers can scan quickly",
+        "fullDescription": "Add packaging notes, harvest quality, shipping notes, or handling instructions",
+        "selectFarm": "Choose your farm",
+        "selectSeason": "Choose a season",
+        "selectLot": "Choose a harvested lot",
+        "pickFarmFirst": "Pick a farm first"
+      },
+      "lotInfo": {
+        "lotCode": "Lot code",
+        "farm": "Farm",
+        "season": "Season",
+        "availableQuantity": "Available quantity",
+        "harvested": "Harvested",
+        "unknown": "Unknown",
+        "na": "N/A"
+      },
+      "selectLotFirst": {
+        "title": "Select a harvested lot first.",
+        "description": "Farm, season, traceability, and quantity limits are driven by that lot."
+      },
+      "preview": {
+        "title": "Listing preview",
+        "imageFallback": "Product image preview",
+        "untitled": "Untitled listing",
+        "shortDescriptionFallback": "Short description preview",
+        "price": "Price",
+        "quantityToSell": "Quantity to sell",
+        "traceability": "Traceability",
+        "traceabilityEnabled": "Enabled from harvest lot",
+        "traceabilityWaiting": "Waiting for lot"
+      },
+      "validation": {
+        "selectLot": "Choose a harvested lot before saving the listing.",
+        "pricePositive": "Price must be greater than 0.",
+        "quantityPositive": "Quantity to sell must be greater than 0.",
+        "quantityExceed": "Quantity to sell cannot exceed {{quantity}} {{unit}} from the selected harvested lot.",
+        "imageUnsupportedType": "Only JPG, PNG, or WEBP product images are supported.",
+        "imageTooLarge": "Product image must be {{size}} or smaller."
+      },
+      "errors": {
+        "save": "Failed to save product.",
+        "updateStatus": "Failed to update product status.",
+        "loadEdit": "Failed to load the product detail or harvest options.",
+        "loadCreate": "Failed to load your harvest-based selling options."
+      },
+      "actions": {
+        "saving": "Saving...",
+        "saveChanges": "Save changes",
+        "createDraft": "Create draft",
+        "updating": "Updating...",
+        "submitForReview": "Submit for review",
+        "moveToDraft": "Move back to draft",
+        "hideProduct": "Hide product",
+        "showProduct": "Show product",
+        "resubmitReview": "Resubmit for review",
+        "updateStatus": "Update status"
+      },
+      "noLots": {
+        "title": "You do not have any harvested lots with remaining quantity ready to sell yet.",
+        "description": "Finish harvest intake first, then come back here to turn a harvested lot into a marketplace listing."
+      }
     }
   }
 }

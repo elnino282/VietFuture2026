@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useProfileMe } from '@/entities/user';
 import { useAuth } from '@/features/auth';
-import type { BreadcrumbPath } from '@/features/shared/layout/types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
-import { ADMIN_VIEW_CONFIG, getAdminBreadcrumbLabel } from '../constants';
+import { ADMIN_VIEW_CONFIG } from '../constants';
+import { useAdminBreadcrumbs } from './useAdminBreadcrumbs';
 import type { AdminView } from '../types';
 
 const LEGACY_ADMIN_VIEW_REDIRECTS: Record<string, string> = {
@@ -16,6 +17,7 @@ const LEGACY_ADMIN_VIEW_REDIRECTS: Record<string, string> = {
 
 export function useAdminPortalShell(initialView: AdminView = 'dashboard') {
   const { user, logout } = useAuth();
+  const { t } = useI18n();
   const { data: profile } = useProfileMe();
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,20 +35,11 @@ export function useAdminPortalShell(initialView: AdminView = 'dashboard') {
 
   const handleLogout = () => {
     logout();
-    toast.success('Signed out successfully');
+    toast.success(t('common.signedOut'));
     navigate('/signin', { replace: true });
   };
 
-  const breadcrumbs: BreadcrumbPath[] = useMemo(() => {
-    const items: BreadcrumbPath[] = [{ label: 'Home', href: 'dashboard' }];
-    const label = getAdminBreadcrumbLabel(currentView);
-
-    if (label) {
-      items.push({ label });
-    }
-
-    return items;
-  }, [currentView]);
+  const breadcrumbs = useAdminBreadcrumbs(currentView);
 
   useEffect(() => {
     const segments = location.pathname.split('/').filter(Boolean);

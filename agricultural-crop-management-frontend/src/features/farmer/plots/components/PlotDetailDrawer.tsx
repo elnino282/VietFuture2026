@@ -2,6 +2,7 @@ import {
   MapPin,
   Edit,
   GitMerge,
+  Scissors,
   QrCode,
   Trash2,
   AlertCircle,
@@ -18,6 +19,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
+import { BackButton } from "@/shared/ui/back-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
   Dialog,
@@ -30,8 +32,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Label } from "@/shared/ui/label";
 import { Separator } from "@/shared/ui/separator";
 import { Badge } from "@/shared/ui/badge";
+import { usePreferences } from "@/shared/contexts";
+import { useTranslation } from "react-i18next";
+import { useSeasons } from "@/entities/season";
 import { PlotStatusChip } from "./PlotStatusChip";
-import type { Plot } from "../types";
+import { getSoilTypeLabel } from "@/features/farmer/shared/plotOptions";
+import type { LinkedSeason, Plot } from "../types";
 
 interface PlotDetailDialogProps {
   plot: Plot | null;
@@ -39,7 +45,9 @@ interface PlotDetailDialogProps {
   onClose: () => void;
   onEdit: () => void;
   onMerge: () => void;
+  onSplit: (plot: Plot) => void;
   onMarkDormant: (plot: Plot) => void;
+  onReactivate: (plot: Plot) => void;
   onGenerateQR: (plot: Plot) => void;
   onDelete: (plotId: string) => void;
 }
@@ -55,31 +63,76 @@ export function PlotDetailDialog({
   onClose,
   onEdit,
   onMerge,
+  onSplit,
   onMarkDormant,
+  onReactivate,
   onGenerateQR,
   onDelete,
 }: PlotDetailDialogProps) {
+  const { t } = useTranslation();
+  const { preferences } = usePreferences();
+  const numericPlotId = plot?.id ? Number.parseInt(plot.id, 10) : 0;
+  const {
+    data: linkedSeasonsData,
+    isLoading: isLoadingLinkedSeasons,
+    error: linkedSeasonsError,
+    refetch: refetchLinkedSeasons,
+  } = useSeasons(
+    { plotId: numericPlotId, page: 0, size: 100 },
+    { enabled: isOpen && numericPlotId > 0 }
+  );
+  const formatDate = (value?: string | null) => {
+    if (!value) return t("plots.detail.noData");
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString(preferences.locale);
+  };
+  const formatSeasonStatus = (status: string) => {
+    const normalized = status.toUpperCase();
+    if (normalized === "ACTIVE") return t("farmDetail.seasons.statusLabels.ACTIVE");
+    if (normalized === "PLANNED") return t("farmDetail.seasons.statusLabels.PLANNED");
+    if (normalized === "COMPLETED") return t("farmDetail.seasons.statusLabels.COMPLETED");
+    if (normalized === "CANCELLED") return t("farmDetail.seasons.statusLabels.CANCELLED");
+    if (normalized === "ARCHIVED") return t("farmDetail.seasons.statusLabels.ARCHIVED");
+    return status;
+  };
+
   if (!plot) return null;
+  const soilTypeLabel = getSoilTypeLabel(plot.soilType, t);
+  const linkedSeasons: LinkedSeason[] =
+    linkedSeasonsData?.items.map((season) => ({
+      id: String(season.id),
+      name: season.seasonName,
+      crop: season.cropName ?? season.varietyName ?? t("plots.detail.noData"),
+      status: season.status ?? "PLANNED",
+      startDate: season.startDate,
+      endDate: season.endDate ?? undefined,
+    })) ?? plot.seasons ?? [];
+  const isDormant = plot.status === "dormant";
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent className="sm:max-w-2xl sm:max-h-[85vh] overflow-y-auto">
         <DialogHeader>
+          <BackButton onClick={onClose} className="w-fit" />
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <MapPin className="w-5 h-5 text-primary" />
             {plot.name}
           </DialogTitle>
           <DialogDescription>
-            Plot ID: {plot.id} • {plot.area.toFixed(1)} hectares
+            {t("plots.detail.description", {
+              id: plot.id,
+              area: plot.area.toFixed(1),
+            })}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="mt-6">
           <TabsList className="grid w-full grid-cols-2 gap-1 rounded-xl p-1 sm:grid-cols-4">
-            <TabsTrigger value="overview" className="rounded-lg data-[state=active]:shadow-sm">Overview</TabsTrigger>
-            <TabsTrigger value="soil" className="rounded-lg data-[state=active]:shadow-sm">Soil Data</TabsTrigger>
-            <TabsTrigger value="seasons" className="rounded-lg data-[state=active]:shadow-sm">Seasons</TabsTrigger>
-            <TabsTrigger value="actions" className="rounded-lg data-[state=active]:shadow-sm">Actions</TabsTrigger>
+            <TabsTrigger value="overview" className="rounded-lg data-[state=active]:shadow-sm">{t("plots.detail.tabs.overview")}</TabsTrigger>
+            <TabsTrigger value="soil" className="rounded-lg data-[state=active]:shadow-sm">{t("plots.detail.tabs.soilData")}</TabsTrigger>
+            <TabsTrigger value="seasons" className="rounded-lg data-[state=active]:shadow-sm">{t("plots.detail.tabs.seasons")}</TabsTrigger>
+            <TabsTrigger value="actions" className="rounded-lg data-[state=active]:shadow-sm">{t("plots.detail.tabs.actions")}</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -92,7 +145,7 @@ export function PlotDetailDialog({
                       <LayoutGrid className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Area</p>
+                      <p className="text-xs text-muted-foreground">{t("plots.detail.area")}</p>
                       <p className="text-lg text-foreground">
                         {plot.area.toFixed(1)} ha
                       </p>
@@ -108,8 +161,8 @@ export function PlotDetailDialog({
                       <Droplets className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Soil Type</p>
-                      <p className="text-lg text-foreground">{plot.soilType}</p>
+                      <p className="text-xs text-muted-foreground">{t("plots.detail.soilType")}</p>
+                      <p className="text-lg text-foreground">{soilTypeLabel}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -122,7 +175,7 @@ export function PlotDetailDialog({
                       <TestTube className="w-5 h-5 text-secondary" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">pH Level</p>
+                      <p className="text-xs text-muted-foreground">{t("plots.detail.phLevel")}</p>
                       <p className="text-lg text-foreground">{plot.pH.toFixed(1)}</p>
                     </div>
                   </div>
@@ -136,7 +189,7 @@ export function PlotDetailDialog({
                       <Activity className="w-5 h-5 text-accent" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Status</p>
+                      <p className="text-xs text-muted-foreground">{t("plots.detail.status")}</p>
                       <div className="mt-1"><PlotStatusChip status={plot.status} /></div>
                     </div>
                   </div>
@@ -146,18 +199,18 @@ export function PlotDetailDialog({
 
             <Card className="border-border">
               <CardHeader>
-                <CardTitle className="text-base">Plot Information</CardTitle>
+                <CardTitle className="text-base">{t("plots.detail.plotInformation")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Created Date</span>
+                  <span className="text-sm text-muted-foreground">{t("plots.detail.createdDate")}</span>
                   <span className="text-sm text-foreground">
-                    {new Date(plot.createdDate).toLocaleDateString()}
+                    {formatDate(plot.createdDate)}
                   </span>
                 </div>
                 {plot.crop && (
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Current Crop</span>
+                    <span className="text-sm text-muted-foreground">{t("plots.detail.currentCrop")}</span>
                     <span className="text-sm text-foreground">{plot.crop}</span>
                   </div>
                 )}
@@ -167,7 +220,7 @@ export function PlotDetailDialog({
             {/* QR Code Preview */}
             <Card className="border-border">
               <CardHeader>
-                <CardTitle className="text-base">QR Code</CardTitle>
+                <CardTitle className="text-base">{t("plots.detail.qrCode")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
@@ -180,7 +233,7 @@ export function PlotDetailDialog({
                     onClick={() => onGenerateQR(plot)}
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Download QR
+                    {t("plots.detail.downloadQR")}
                   </Button>
                 </div>
               </CardContent>
@@ -191,44 +244,41 @@ export function PlotDetailDialog({
           <TabsContent value="soil" className="space-y-4 mt-6">
             <Card className="border-border">
               <CardHeader>
-                <CardTitle className="text-base">Soil Test Results</CardTitle>
+                <CardTitle className="text-base">{t("plots.detail.soilTestResults")}</CardTitle>
                 <CardDescription>
-                  Last updated:{" "}
-                  {plot.soilTestDate
-                    ? new Date(plot.soilTestDate).toLocaleDateString()
-                    : "No data"}
+                  {t("plots.detail.lastUpdated", { date: formatDate(plot.soilTestDate) })}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-xs text-muted-foreground">pH Level</Label>
+                    <Label className="text-xs text-muted-foreground">{t("plots.detail.phLevel")}</Label>
                     <p className="text-2xl text-foreground mt-1">
                       {plot.pH.toFixed(1)}
                     </p>
-                    <p className="text-xs text-primary mt-1">Optimal</p>
+                    <p className="text-xs text-primary mt-1">{t("plots.detail.soilRating.optimal")}</p>
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">
-                      Organic Matter (%)
+                      {t("plots.detail.organicMatter")}
                     </Label>
                     <p className="text-2xl text-foreground mt-1">
-                      {plot.organicMatter?.toFixed(1) || "N/A"}
+                      {plot.organicMatter?.toFixed(1) || t("plots.detail.notAvailable")}
                     </p>
-                    <p className="text-xs text-primary mt-1">Good</p>
+                    <p className="text-xs text-primary mt-1">{t("plots.detail.soilRating.good")}</p>
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">
-                      Electrical Conductivity
+                      {t("plots.detail.electricalConductivity")}
                     </Label>
                     <p className="text-2xl text-foreground mt-1">
-                      {plot.electricalConductivity?.toFixed(1) || "N/A"}
+                      {plot.electricalConductivity?.toFixed(1) || t("plots.detail.notAvailable")}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">dS/m</p>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Soil Type</Label>
-                    <p className="text-2xl text-foreground mt-1">{plot.soilType}</p>
+                    <Label className="text-xs text-muted-foreground">{t("plots.detail.soilType")}</Label>
+                    <p className="text-2xl text-foreground mt-1">{soilTypeLabel}</p>
                   </div>
                 </div>
 
@@ -236,7 +286,7 @@ export function PlotDetailDialog({
 
                 <div className="space-y-2">
                   <Label className="text-sm text-foreground">
-                    Upload Soil Test Report
+                    {t("plots.detail.uploadSoilTestReport")}
                   </Label>
                   <div className="flex gap-2">
                     <Button
@@ -244,7 +294,7 @@ export function PlotDetailDialog({
                       className="flex-1"
                     >
                       <Upload className="w-4 h-4 mr-2" />
-                      Upload PDF/CSV
+                      {t("plots.detail.uploadPdfCsv")}
                     </Button>
                     <Button variant="outline">
                       <FileText className="w-4 h-4" />
@@ -260,11 +310,10 @@ export function PlotDetailDialog({
                   <Info className="w-5 h-5 text-secondary mt-0.5" />
                   <div>
                     <p className="text-sm text-foreground">
-                      Soil Analysis Recommendation
+                      {t("plots.detail.soilRecommendationTitle")}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Based on your soil data, consider applying organic matter to
-                      improve soil structure. Schedule next soil test in 6 months.
+                      {t("plots.detail.soilRecommendationDesc")}
                     </p>
                   </div>
                 </div>
@@ -276,15 +325,32 @@ export function PlotDetailDialog({
           <TabsContent value="seasons" className="space-y-4 mt-6">
             <Card className="border-border">
               <CardHeader>
-                <CardTitle className="text-base">Linked Seasons</CardTitle>
+                <CardTitle className="text-base">{t("plots.detail.linkedSeasons")}</CardTitle>
                 <CardDescription>
-                  Growing seasons associated with this plot
+                  {t("plots.detail.linkedSeasonsDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {plot.seasons && plot.seasons.length > 0 ? (
+                {isLoadingLinkedSeasons ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    {t("common.loading")}
+                  </div>
+                ) : linkedSeasonsError ? (
+                  <div className="space-y-3 py-8 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      {t("farmDetail.seasons.errorDesc")}
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => refetchLinkedSeasons()}
+                    >
+                      {t("common.retry")}
+                    </Button>
+                  </div>
+                ) : linkedSeasons.length > 0 ? (
                   <div className="space-y-3">
-                    {plot.seasons.map((season) => (
+                    {linkedSeasons.map((season) => (
                       <div
                         key={season.id}
                         className="flex items-center justify-between p-3 bg-muted rounded-lg"
@@ -294,20 +360,22 @@ export function PlotDetailDialog({
                           <div>
                             <p className="text-sm text-foreground">{season.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {season.crop} • Started{" "}
-                              {new Date(season.startDate).toLocaleDateString()}
+                              {t("plots.detail.seasonStarted", {
+                                crop: season.crop,
+                                date: formatDate(season.startDate),
+                              })}
                             </p>
                           </div>
                         </div>
                         <Badge
                           variant="outline"
                           className={
-                            season.status === "Active"
+                            season.status.toUpperCase() === "ACTIVE"
                               ? "border-primary text-primary"
                               : "border-border text-muted-foreground"
                           }
                         >
-                          {season.status}
+                          {formatSeasonStatus(season.status)}
                         </Badge>
                       </div>
                     ))}
@@ -316,7 +384,7 @@ export function PlotDetailDialog({
                   <div className="text-center py-8">
                     <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-30" />
                     <p className="text-sm text-muted-foreground">
-                      No seasons linked to this plot
+                      {t("plots.detail.noSeasonsLinked")}
                     </p>
                     <Button
                       size="sm"
@@ -324,7 +392,7 @@ export function PlotDetailDialog({
                       className="mt-3"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Create Season
+                      {t("plots.detail.createSeason")}
                     </Button>
                   </div>
                 )}
@@ -342,7 +410,7 @@ export function PlotDetailDialog({
               }}
             >
               <Edit className="w-4 h-4 mr-2" />
-              Edit Plot Details
+              {t("plots.detail.editPlotDetails")}
             </Button>
 
             <Button
@@ -354,19 +422,35 @@ export function PlotDetailDialog({
               }}
             >
               <GitMerge className="w-4 h-4 mr-2" />
-              Merge/Split Plot
+              {t("plots.mergePlots")}
             </Button>
 
             <Button
               variant="outline"
-              className="w-full justify-start border-accent text-accent"
+              className="w-full justify-start"
               onClick={() => {
-                onMarkDormant(plot);
+                onClose();
+                onSplit(plot);
+              }}
+            >
+              <Scissors className="w-4 h-4 mr-2" />
+              {t("plots.detail.splitPlot")}
+            </Button>
+
+            <Button
+              variant={isDormant ? "default" : "outline"}
+              className={`w-full justify-start ${isDormant ? "" : "border-accent text-accent"}`}
+              onClick={() => {
+                if (isDormant) {
+                  onReactivate(plot);
+                } else {
+                  onMarkDormant(plot);
+                }
                 onClose();
               }}
             >
               <AlertCircle className="w-4 h-4 mr-2" />
-              Mark as Dormant
+              {isDormant ? t("plots.detail.markAsActive") : t("plots.detail.markAsDormant")}
             </Button>
 
             <Button
@@ -375,7 +459,7 @@ export function PlotDetailDialog({
               onClick={() => onGenerateQR(plot)}
             >
               <QrCode className="w-4 h-4 mr-2" />
-              Generate & Print QR Code
+              {t("plots.detail.generatePrintQR")}
             </Button>
 
             <Separator className="bg-border my-4" />
@@ -389,7 +473,7 @@ export function PlotDetailDialog({
               }}
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete Plot
+              {t("farms.dialog.deletePlotTitle")}
             </Button>
           </TabsContent>
         </Tabs>

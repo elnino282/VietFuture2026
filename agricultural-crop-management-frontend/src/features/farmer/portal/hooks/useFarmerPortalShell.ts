@@ -6,6 +6,7 @@ import { useSeason } from '@/shared/contexts';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useFarmerBreadcrumbs } from './useFarmerBreadcrumbs';
 import type { FarmerView } from '../types';
 
 interface UseFarmerPortalShellReturn {
@@ -23,6 +24,7 @@ const WORKSPACE_MODULES = new Set<string>([
   'tasks',
   'expenses',
   'field-logs',
+  'disease',
   'harvest',
   'labor-management',
   'nutrient-inputs',
@@ -65,7 +67,7 @@ const resolveViewFromPath = (pathname: string): FarmerView => {
 export function useFarmerPortalShell(): UseFarmerPortalShellReturn {
   const { t } = useI18n();
   const { user, logout } = useAuth();
-  const { selectedSeasonId, selectedSeason } = useSeason();
+  const { selectedSeasonId } = useSeason();
   const { data: profile } = useProfileMe();
   const navigate = useNavigate();
   const location = useLocation();
@@ -87,83 +89,7 @@ export function useFarmerPortalShell(): UseFarmerPortalShellReturn {
   const userName = profileFullName || sessionFullName || emailUsername || t('portal.farmer');
   const userEmail = profile?.email || user?.email || 'farmer@acm-platform.com';
 
-  /**
-   * Build breadcrumbs based on current view
-   */
-  const pathParts = location.pathname.split('/').filter(Boolean);
-  const isSeasonWorkspaceRoute = pathParts[1] === 'seasons' && pathParts[3] === 'workspace';
-  const isFarmDetailRoute = pathParts[1] === 'farms' && !!pathParts[2];
-  const workspaceSeasonId = Number(pathParts[2]);
-  const workspaceModule = pathParts[4];
-
-  const workspaceModuleLabels: Record<string, string> = {
-    tasks: t('nav.tasks'),
-    expenses: t('nav.expenses'),
-    'field-logs': t('nav.fieldLogs'),
-    harvest: t('nav.harvest'),
-    'labor-management': t('nav.laborManagement'),
-    'nutrient-inputs': t('nav.nutrientInputs'),
-    'irrigation-water-analyses': t('nav.irrigationWaterAnalysis'),
-    'soil-tests': t('nav.soilTests'),
-    reports: t('nav.reports'),
-  };
-
-  const viewLabels: Record<FarmerView, string> = {
-    dashboard: t('nav.dashboard'),
-    search: t('common.search'),
-    farms: t('nav.farms'),
-    plots: t('nav.farms'),
-    seasons: t('nav.seasons'),
-    tasks: t('nav.tasks'),
-    'field-logs': t('nav.fieldLogs'),
-    expenses: t('nav.expenses'),
-    harvest: t('nav.harvest'),
-    'nutrient-inputs': t('nav.nutrientInputs'),
-    'suppliers-supplies': t('nav.suppliersSupplies'),
-    'labor-management': t('nav.laborManagement'),
-    inventory: t('nav.inventory'),
-    'product-warehouse': t('nav.productWarehouse'),
-    'marketplace-workspace': t('nav.marketplace'),
-    'marketplace-dashboard': t('nav.marketplace'),
-    'marketplace-products': t('nav.marketplace'),
-    'marketplace-orders': t('nav.marketplace'),
-    documents: t('nav.documents'),
-    incidents: t('nav.incidents'),
-    'ai-assistant': t('nav.aiAssistant'),
-    crops: t('nav.cropsVarieties'),
-    reports: t('nav.reports'),
-    profile: t('userMenu.profile'),
-    settings: t('userMenu.preferences'),
-  };
-
-  const breadcrumbs: BreadcrumbPath[] = [{ label: t('nav.home'), href: '/farmer/dashboard' }];
-
-  if (isSeasonWorkspaceRoute && Number.isFinite(workspaceSeasonId) && workspaceSeasonId > 0) {
-    breadcrumbs.push({ label: t('nav.seasons'), href: '/farmer/seasons' });
-    breadcrumbs.push({
-      label: selectedSeason?.seasonName ?? `${t('seasons.title')} #${workspaceSeasonId}`,
-      href: `/farmer/seasons/${workspaceSeasonId}/workspace`,
-    });
-
-    if (workspaceModule && WORKSPACE_MODULES.has(workspaceModule)) {
-      breadcrumbs.push({
-        label: workspaceModuleLabels[workspaceModule] ?? workspaceModule,
-      });
-    } else {
-      breadcrumbs.push({
-        label: t('common.details'),
-      });
-    }
-  } else if (isFarmDetailRoute) {
-    breadcrumbs.push({ label: viewLabels.farms, href: '/farmer/farms' });
-    breadcrumbs.push({
-      label: `${t('nav.farms')} #${pathParts[2]}`,
-    });
-  } else if (currentView !== 'dashboard') {
-    breadcrumbs.push({
-      label: viewLabels[currentView] ?? currentView,
-    });
-  }
+  const breadcrumbs = useFarmerBreadcrumbs(currentView);
 
   /**
    * Handle view change with URL navigation sync

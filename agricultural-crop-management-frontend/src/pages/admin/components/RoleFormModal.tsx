@@ -1,4 +1,5 @@
 import {
+  BackButton,
   Button,
   Dialog,
   DialogContent,
@@ -17,7 +18,7 @@ import {
   type RoleCreateRequest,
   type RoleUpdateRequest,
 } from "@/features/admin/shared/api";
-import { Edit, FileText, Loader2, Plus, Save, Shield, X } from "lucide-react";
+import { Edit, FileText, Loader2, Plus, Save, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -54,6 +55,14 @@ export function RoleFormModal({
   >({});
 
   const isEditMode = !!role;
+  const baselineFormData: RoleFormData = role
+    ? {
+        code: role.code || "",
+        name: role.name || "",
+        description: role.description || "",
+      }
+    : initialFormData;
+  const isDirty = JSON.stringify(formData) !== JSON.stringify(baselineFormData);
 
   // Populate form when modal opens
   useEffect(() => {
@@ -77,11 +86,11 @@ export function RoleFormModal({
     const newErrors: Partial<Record<keyof RoleFormData, string>> = {};
 
     if (!isEditMode && (!formData.code || formData.code.trim().length === 0)) {
-      newErrors.code = "Role code is required";
+      newErrors.code = t("admin.roles.form.validation.codeRequired");
     }
 
     if (!formData.name || formData.name.trim().length === 0) {
-      newErrors.name = "Role name is required";
+      newErrors.name = t("admin.roles.form.validation.nameRequired");
     }
 
     setErrors(newErrors);
@@ -102,7 +111,7 @@ export function RoleFormModal({
           description: formData.description || undefined,
         };
         await adminRoleApi.update(Number(role.id), updateData);
-        toast.success("Role updated successfully");
+        toast.success(t("admin.roles.form.toast.updated"));
       } else {
         // Create new role
         const createData: RoleCreateRequest = {
@@ -111,7 +120,7 @@ export function RoleFormModal({
           description: formData.description || undefined,
         };
         await adminRoleApi.create(createData);
-        toast.success("Role created successfully");
+        toast.success(t("admin.roles.form.toast.created"));
       }
       onSuccess();
       onOpenChange(false);
@@ -119,10 +128,10 @@ export function RoleFormModal({
       console.error("Failed to save role:", err);
       const errorCode = err?.response?.data?.code;
       if (errorCode === "ROLE_CODE_EXISTS") {
-        setErrors({ code: "Role code already exists" });
+        setErrors({ code: t("admin.roles.form.validation.codeExists") });
       } else {
         toast.error(
-          isEditMode ? "Failed to update role" : "Failed to create role",
+          isEditMode ? t("admin.roles.form.toast.updateFailed") : t("admin.roles.form.toast.createFailed"),
         );
       }
     } finally {
@@ -131,33 +140,50 @@ export function RoleFormModal({
   };
 
   const handleClose = () => {
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+
     onOpenChange(false);
     setFormData(initialFormData);
     setErrors({});
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen) {
+          onOpenChange(true);
+        } else {
+          handleClose();
+        }
+      }}
+    >
       <DialogContent className="max-w-md rounded-[18px] border-border bg-card shadow-sm">
         <DialogHeader>
+          <BackButton onClick={handleClose} className="w-fit" />
           <DialogTitle className="flex items-center gap-2 text-xl">
             {isEditMode ? (
               <>
                 <Edit className="w-5 h-5 text-primary" />
-                Edit Role
+                {t("admin.roles.form.editTitle")}
               </>
             ) : (
               <>
                 <Plus className="w-5 h-5 text-green-600" />
-                Add New Role
+                {t("admin.roles.form.addTitle")}
               </>
             )}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             {isEditMode
-              ? "Update role information below. Code cannot be changed."
-              : "Fill in the details to create a new role."}{" "}
-            Fields marked with * are required.
+              ? t("admin.roles.form.editDescription")
+              : t("admin.roles.form.addDescription")}{" "}
+            {t("admin.roles.form.requiredHint")}
           </DialogDescription>
         </DialogHeader>
 
@@ -165,13 +191,13 @@ export function RoleFormModal({
           {/* Code (only for create mode) */}
           <div className="space-y-2">
             <Label htmlFor="code">
-              Code <span className="text-destructive">*</span>
+              {t("admin.roles.table.code")} <span className="text-destructive">*</span>
             </Label>
             <div className="relative">
               <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 id="code"
-                placeholder={isEditMode ? "" : "e.g., ADMIN, FARMER, MANAGER"}
+                placeholder={isEditMode ? "" : t("admin.roles.form.codePlaceholder")}
                 value={formData.code}
                 onChange={(e) =>
                   setFormData({ ...formData, code: e.target.value })
@@ -185,7 +211,7 @@ export function RoleFormModal({
             )}
             {isEditMode && (
               <p className="text-xs text-muted-foreground">
-                Code cannot be changed after creation
+                {t("admin.roles.form.codeLocked")}
               </p>
             )}
           </div>
@@ -193,11 +219,11 @@ export function RoleFormModal({
           {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name">
-              Name <span className="text-destructive">*</span>
+              {t("admin.roles.table.name")} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="name"
-              placeholder="Enter role display name"
+              placeholder={t("admin.roles.form.namePlaceholder")}
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
@@ -213,11 +239,11 @@ export function RoleFormModal({
           <div className="space-y-2">
             <Label htmlFor="description" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              Description
+              {t("common.description")}
             </Label>
             <Textarea
               id="description"
-              placeholder="Enter role description (optional)"
+              placeholder={t("admin.roles.form.descriptionPlaceholder")}
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
@@ -235,7 +261,6 @@ export function RoleFormModal({
             disabled={loading}
             className="rounded-[14px]"
           >
-            <X className="w-4 h-4 mr-2" />
             {t("common.cancel")}
           </Button>
           <Button
@@ -248,7 +273,7 @@ export function RoleFormModal({
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            {isEditMode ? "Update" : "Create"} Role
+            {isEditMode ? t("common.update") : t("common.create")} {t("admin.roles.form.role")}
           </Button>
         </DialogFooter>
       </DialogContent>

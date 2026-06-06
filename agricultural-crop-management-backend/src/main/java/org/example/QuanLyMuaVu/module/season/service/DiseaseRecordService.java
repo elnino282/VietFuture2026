@@ -71,6 +71,7 @@ public class DiseaseRecordService {
     FarmAccessPort farmAccessService;
     AuditLogService auditLogService;
     DiseaseRecordMapper diseaseRecordMapper;
+    SeasonWorkspaceAccessService seasonWorkspaceAccessService;
 
     public PageResponse<DiseaseRecordResponse> listDiseaseRecordsBySeason(
             Integer seasonId,
@@ -82,7 +83,48 @@ public class DiseaseRecordService {
             int page,
             int size) {
         Season season = getSeasonForCurrentFarmer(seasonId);
+        return listDiseaseRecordsForResolvedSeason(
+                season,
+                status,
+                severity,
+                q,
+                fromDetectedAt,
+                toDetectedAt,
+                page,
+                size);
+    }
 
+    @Transactional(readOnly = true)
+    public PageResponse<DiseaseRecordResponse> listDiseaseRecordsByAssignedEmployeeSeason(
+            Integer seasonId,
+            String status,
+            String severity,
+            String q,
+            LocalDate fromDetectedAt,
+            LocalDate toDetectedAt,
+            int page,
+            int size) {
+        Season season = getSeasonForCurrentEmployee(seasonId);
+        return listDiseaseRecordsForResolvedSeason(
+                season,
+                status,
+                severity,
+                q,
+                fromDetectedAt,
+                toDetectedAt,
+                page,
+                size);
+    }
+
+    private PageResponse<DiseaseRecordResponse> listDiseaseRecordsForResolvedSeason(
+            Season season,
+            String status,
+            String severity,
+            String q,
+            LocalDate fromDetectedAt,
+            LocalDate toDetectedAt,
+            int page,
+            int size) {
         Specification<DiseaseRecord> spec = buildRecordSpecification(
                 season.getId(),
                 status,
@@ -110,6 +152,17 @@ public class DiseaseRecordService {
     @Transactional(readOnly = true)
     public DiseaseRecordDetailResponse getDiseaseRecordDetail(Integer id) {
         DiseaseRecord diseaseRecord = getDiseaseRecordForCurrentFarmer(id);
+        return getDiseaseRecordDetailForResolvedRecord(diseaseRecord);
+    }
+
+    @Transactional(readOnly = true)
+    public DiseaseRecordDetailResponse getDiseaseRecordDetailForAssignedEmployee(Integer id) {
+        DiseaseRecord diseaseRecord = getDiseaseRecordForCurrentEmployee(id);
+        return getDiseaseRecordDetailForResolvedRecord(diseaseRecord);
+    }
+
+    private DiseaseRecordDetailResponse getDiseaseRecordDetailForResolvedRecord(DiseaseRecord diseaseRecord) {
+        Integer id = diseaseRecord.getId();
         List<DiseaseTreatmentResponse> treatments = diseaseTreatmentRepository
                 .findAllByDiseaseRecord_IdOrderByTreatedAtDescIdDesc(id)
                 .stream()
@@ -130,6 +183,15 @@ public class DiseaseRecordService {
 
     public DiseaseRecordResponse createDiseaseRecord(Integer seasonId, CreateDiseaseRecordRequest request) {
         Season season = getSeasonForCurrentFarmer(seasonId);
+        return createDiseaseRecordForResolvedSeason(season, request);
+    }
+
+    public DiseaseRecordResponse createDiseaseRecordForAssignedEmployee(Integer seasonId, CreateDiseaseRecordRequest request) {
+        Season season = getSeasonForCurrentEmployee(seasonId);
+        return createDiseaseRecordForResolvedSeason(season, request);
+    }
+
+    private DiseaseRecordResponse createDiseaseRecordForResolvedSeason(Season season, CreateDiseaseRecordRequest request) {
         ensureSeasonOpenForDiseaseWrite(season, true);
         validateDetectedAtWithinSeason(season, request.getDetectedAt());
 
@@ -142,7 +204,7 @@ public class DiseaseRecordService {
             throw new AppException(ErrorCode.KEY_INVALID);
         }
 
-        org.example.QuanLyMuaVu.module.identity.entity.User currentUser = farmAccessService.getCurrentUser();
+        org.example.QuanLyMuaVu.module.identity.entity.User currentUser = seasonWorkspaceAccessService.getCurrentUser();
 
         Integer resolvedIncidentId = null;
         if (request.getIncidentId() != null) {
@@ -176,6 +238,18 @@ public class DiseaseRecordService {
 
     public DiseaseRecordResponse updateDiseaseRecord(Integer id, UpdateDiseaseRecordRequest request) {
         DiseaseRecord diseaseRecord = getDiseaseRecordForCurrentFarmer(id);
+        return updateResolvedDiseaseRecord(diseaseRecord, request);
+    }
+
+    public DiseaseRecordResponse updateDiseaseRecordForAssignedEmployee(Integer id, UpdateDiseaseRecordRequest request) {
+        DiseaseRecord diseaseRecord = getDiseaseRecordForCurrentEmployee(id);
+        seasonWorkspaceAccessService.assertCurrentUserCanManageRecord(
+                resolveSeasonOfRecord(diseaseRecord),
+                diseaseRecord.getReportedByUserId());
+        return updateResolvedDiseaseRecord(diseaseRecord, request);
+    }
+
+    private DiseaseRecordResponse updateResolvedDiseaseRecord(DiseaseRecord diseaseRecord, UpdateDiseaseRecordRequest request) {
         Season season = resolveSeasonOfRecord(diseaseRecord);
         ensureSeasonOpenForDiseaseWrite(season, false);
 
@@ -238,6 +312,18 @@ public class DiseaseRecordService {
 
     public void deleteDiseaseRecord(Integer id) {
         DiseaseRecord diseaseRecord = getDiseaseRecordForCurrentFarmer(id);
+        deleteResolvedDiseaseRecord(diseaseRecord);
+    }
+
+    public void deleteDiseaseRecordForAssignedEmployee(Integer id) {
+        DiseaseRecord diseaseRecord = getDiseaseRecordForCurrentEmployee(id);
+        seasonWorkspaceAccessService.assertCurrentUserCanManageRecord(
+                resolveSeasonOfRecord(diseaseRecord),
+                diseaseRecord.getReportedByUserId());
+        deleteResolvedDiseaseRecord(diseaseRecord);
+    }
+
+    private void deleteResolvedDiseaseRecord(DiseaseRecord diseaseRecord) {
         Season season = resolveSeasonOfRecord(diseaseRecord);
         ensureSeasonOpenForDiseaseWrite(season, false);
 
@@ -249,6 +335,16 @@ public class DiseaseRecordService {
     @Transactional(readOnly = true)
     public PageResponse<DiseaseTreatmentResponse> listTreatments(Integer diseaseRecordId, int page, int size) {
         getDiseaseRecordForCurrentFarmer(diseaseRecordId);
+        return listTreatmentsForResolvedRecord(diseaseRecordId, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<DiseaseTreatmentResponse> listTreatmentsForAssignedEmployee(Integer diseaseRecordId, int page, int size) {
+        getDiseaseRecordForCurrentEmployee(diseaseRecordId);
+        return listTreatmentsForResolvedRecord(diseaseRecordId, page, size);
+    }
+
+    private PageResponse<DiseaseTreatmentResponse> listTreatmentsForResolvedRecord(Integer diseaseRecordId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("treatedAt"), Sort.Order.desc("id")));
         Page<DiseaseTreatment> treatmentPage = diseaseTreatmentRepository.findAllByDiseaseRecord_Id(diseaseRecordId, pageable);
 
@@ -262,6 +358,17 @@ public class DiseaseRecordService {
 
     public DiseaseTreatmentResponse createTreatment(Integer diseaseRecordId, CreateDiseaseTreatmentRequest request) {
         DiseaseRecord diseaseRecord = getDiseaseRecordForCurrentFarmer(diseaseRecordId);
+        return createTreatmentForResolvedRecord(diseaseRecord, request);
+    }
+
+    public DiseaseTreatmentResponse createTreatmentForAssignedEmployee(Integer diseaseRecordId, CreateDiseaseTreatmentRequest request) {
+        DiseaseRecord diseaseRecord = getDiseaseRecordForCurrentEmployee(diseaseRecordId);
+        return createTreatmentForResolvedRecord(diseaseRecord, request);
+    }
+
+    private DiseaseTreatmentResponse createTreatmentForResolvedRecord(
+            DiseaseRecord diseaseRecord,
+            CreateDiseaseTreatmentRequest request) {
         Season season = resolveSeasonOfRecord(diseaseRecord);
         ensureSeasonOpenForDiseaseWrite(season, false);
         validateTreatmentDate(diseaseRecord, request.getTreatedAt());
@@ -272,7 +379,8 @@ public class DiseaseRecordService {
 
         ResolvedSupplyReference resolvedSupplyReference = resolveSupplyReference(
                 request.getSupplyItemId(),
-                request.getSupplyLotId());
+                request.getSupplyLotId(),
+                season);
         Expense expense = resolveExpenseForRecordSeason(request.getExpenseId(), diseaseRecord);
 
         TreatmentEffectiveness effectiveness = null;
@@ -280,7 +388,7 @@ public class DiseaseRecordService {
             effectiveness = parseEffectiveness(request.getEffectiveness());
         }
 
-        org.example.QuanLyMuaVu.module.identity.entity.User currentUser = farmAccessService.getCurrentUser();
+        org.example.QuanLyMuaVu.module.identity.entity.User currentUser = seasonWorkspaceAccessService.getCurrentUser();
 
         DiseaseTreatment treatment = DiseaseTreatment.builder()
                 .diseaseRecord(diseaseRecord)
@@ -307,6 +415,18 @@ public class DiseaseRecordService {
 
     public DiseaseTreatmentResponse updateTreatment(Integer id, UpdateDiseaseTreatmentRequest request) {
         DiseaseTreatment treatment = getDiseaseTreatmentForCurrentFarmer(id);
+        return updateResolvedTreatment(treatment, request);
+    }
+
+    public DiseaseTreatmentResponse updateTreatmentForAssignedEmployee(Integer id, UpdateDiseaseTreatmentRequest request) {
+        DiseaseTreatment treatment = getDiseaseTreatmentForCurrentEmployee(id);
+        seasonWorkspaceAccessService.assertCurrentUserCanManageRecord(
+                resolveSeasonOfRecord(treatment.getDiseaseRecord()),
+                treatment.getCreatedByUserId());
+        return updateResolvedTreatment(treatment, request);
+    }
+
+    private DiseaseTreatmentResponse updateResolvedTreatment(DiseaseTreatment treatment, UpdateDiseaseTreatmentRequest request) {
         DiseaseRecord diseaseRecord = treatment.getDiseaseRecord();
         Season season = resolveSeasonOfRecord(diseaseRecord);
         ensureSeasonOpenForDiseaseWrite(season, false);
@@ -331,7 +451,7 @@ public class DiseaseRecordService {
                     ? request.getSupplyLotId()
                     : treatment.getSupplyLotId();
 
-            ResolvedSupplyReference resolvedSupplyReference = resolveSupplyReference(targetSupplyItemId, targetSupplyLotId);
+            ResolvedSupplyReference resolvedSupplyReference = resolveSupplyReference(targetSupplyItemId, targetSupplyLotId, season);
             treatment.setSupplyItemId(resolvedSupplyReference.supplyItemId());
             treatment.setSupplyLotId(resolvedSupplyReference.supplyLotId());
         }
@@ -380,6 +500,18 @@ public class DiseaseRecordService {
 
     public void deleteTreatment(Integer id) {
         DiseaseTreatment treatment = getDiseaseTreatmentForCurrentFarmer(id);
+        deleteResolvedTreatment(treatment);
+    }
+
+    public void deleteTreatmentForAssignedEmployee(Integer id) {
+        DiseaseTreatment treatment = getDiseaseTreatmentForCurrentEmployee(id);
+        seasonWorkspaceAccessService.assertCurrentUserCanManageRecord(
+                resolveSeasonOfRecord(treatment.getDiseaseRecord()),
+                treatment.getCreatedByUserId());
+        deleteResolvedTreatment(treatment);
+    }
+
+    private void deleteResolvedTreatment(DiseaseTreatment treatment) {
         Season season = resolveSeasonOfRecord(treatment.getDiseaseRecord());
         ensureSeasonOpenForDiseaseWrite(season, false);
         diseaseTreatmentRepository.delete(treatment);
@@ -433,6 +565,14 @@ public class DiseaseRecordService {
         return diseaseRecord;
     }
 
+    private DiseaseRecord getDiseaseRecordForCurrentEmployee(Integer id) {
+        DiseaseRecord diseaseRecord = diseaseRecordRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.DISEASE_RECORD_NOT_FOUND));
+        Season season = resolveSeasonOfRecord(diseaseRecord);
+        seasonWorkspaceAccessService.requireActiveEmployeeAssignment(season);
+        return diseaseRecord;
+    }
+
     private DiseaseTreatment getDiseaseTreatmentForCurrentFarmer(Integer id) {
         DiseaseTreatment treatment = diseaseTreatmentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.DISEASE_TREATMENT_NOT_FOUND));
@@ -445,10 +585,29 @@ public class DiseaseRecordService {
         return treatment;
     }
 
+    private DiseaseTreatment getDiseaseTreatmentForCurrentEmployee(Integer id) {
+        DiseaseTreatment treatment = diseaseTreatmentRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.DISEASE_TREATMENT_NOT_FOUND));
+        DiseaseRecord diseaseRecord = treatment.getDiseaseRecord();
+        if (diseaseRecord == null) {
+            throw new AppException(ErrorCode.DISEASE_RECORD_NOT_FOUND);
+        }
+        Season season = resolveSeasonOfRecord(diseaseRecord);
+        seasonWorkspaceAccessService.requireActiveEmployeeAssignment(season);
+        return treatment;
+    }
+
     private Season getSeasonForCurrentFarmer(Integer seasonId) {
         Season season = seasonRepository.findById(seasonId)
                 .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
         farmAccessService.assertCurrentUserCanAccessSeason(season);
+        return season;
+    }
+
+    private Season getSeasonForCurrentEmployee(Integer seasonId) {
+        Season season = seasonRepository.findById(seasonId)
+                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
+        seasonWorkspaceAccessService.requireActiveEmployeeAssignment(season);
         return season;
     }
 
@@ -565,14 +724,14 @@ public class DiseaseRecordService {
         return seasonRepository.findById(seasonId).orElse(null);
     }
 
-    private ResolvedSupplyReference resolveSupplyReference(Integer supplyItemId, Integer supplyLotId) {
+    private ResolvedSupplyReference resolveSupplyReference(Integer supplyItemId, Integer supplyLotId, Season season) {
         Integer resolvedSupplyItemId = supplyItemId;
         Integer resolvedSupplyLotId = supplyLotId;
 
         if (resolvedSupplyLotId != null) {
             SupplyLot supplyLot = supplyLotRepository.findById(resolvedSupplyLotId)
                     .orElseThrow(() -> new AppException(ErrorCode.SUPPLY_LOT_NOT_FOUND));
-            ensureSupplyLotAccessibleForCurrentFarmer(supplyLot.getId());
+            ensureSupplyLotAccessibleForCurrentWorkspace(supplyLot.getId(), season);
 
             Integer lotSupplyItemId = supplyLot.getSupplyItem() != null ? supplyLot.getSupplyItem().getId() : null;
             if (resolvedSupplyItemId != null && lotSupplyItemId != null && !resolvedSupplyItemId.equals(lotSupplyItemId)) {
@@ -583,15 +742,38 @@ public class DiseaseRecordService {
             }
         }
 
-        if (resolvedSupplyItemId != null && !supplyItemRepository.existsById(resolvedSupplyItemId)) {
-            throw new AppException(ErrorCode.SUPPLY_ITEM_NOT_FOUND);
+        if (resolvedSupplyItemId != null) {
+            if (!supplyItemRepository.existsById(resolvedSupplyItemId)) {
+                throw new AppException(ErrorCode.SUPPLY_ITEM_NOT_FOUND);
+            }
+            if (resolvedSupplyLotId == null && !seasonWorkspaceAccessService.isCurrentUserSeasonOwner(season)) {
+                ensureSupplyItemAccessibleForCurrentWorkspace(resolvedSupplyItemId, season);
+            }
         }
 
         return new ResolvedSupplyReference(resolvedSupplyItemId, resolvedSupplyLotId);
     }
 
-    private void ensureSupplyLotAccessibleForCurrentFarmer(Integer supplyLotId) {
-        List<Integer> accessibleFarmIds = farmAccessService.getAccessibleFarmIdsForCurrentUser();
+    private void ensureSupplyItemAccessibleForCurrentWorkspace(Integer supplyItemId, Season season) {
+        Integer farmId = seasonWorkspaceAccessService.resolveSeasonFarmId(season);
+        List<Integer> accessibleFarmIds = farmId != null ? List.of(farmId) : farmAccessService.getAccessibleFarmIdsForCurrentUser();
+        if (accessibleFarmIds == null || accessibleFarmIds.isEmpty()) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        boolean hasPositiveBalance = inventoryBalanceRepository
+                .existsBySupplyLot_SupplyItem_IdAndWarehouse_Farm_IdInAndQuantityGreaterThan(
+                        supplyItemId,
+                        accessibleFarmIds,
+                        BigDecimal.ZERO);
+        if (!hasPositiveBalance) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+    }
+
+    private void ensureSupplyLotAccessibleForCurrentWorkspace(Integer supplyLotId, Season season) {
+        Integer farmId = seasonWorkspaceAccessService.resolveSeasonFarmId(season);
+        List<Integer> accessibleFarmIds = farmId != null ? List.of(farmId) : farmAccessService.getAccessibleFarmIdsForCurrentUser();
         if (accessibleFarmIds == null || accessibleFarmIds.isEmpty()) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }

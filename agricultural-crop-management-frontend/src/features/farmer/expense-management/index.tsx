@@ -220,98 +220,96 @@ export function ExpenseManagement() {
                 </Card>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
-                <div className="space-y-6">
-                    <Card>
-                        <CardContent className="px-6 py-4">
-                            <ExpenseFilters
-                                searchQuery={searchQuery}
-                                setSearchQuery={setSearchQuery}
-                                selectedSeason={selectedSeason}
-                                setSelectedSeason={setSelectedSeason}
-                                seasonOptions={seasonOptions}
-                                selectedCategory={selectedCategory}
-                                setSelectedCategory={setSelectedCategory}
-                                selectedStatus={selectedStatus}
-                                setSelectedStatus={setSelectedStatus}
-                                isSeasonLocked={isWorkspaceScoped}
-                                lockedSeasonLabel={scopedSeasonLabel}
-                            />
-                        </CardContent>
-                    </Card>
+            <div className="space-y-6">
+                <Card>
+                    <CardContent className="px-6 py-4">
+                        <ExpenseFilters
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            selectedSeason={selectedSeason}
+                            setSelectedSeason={setSelectedSeason}
+                            seasonOptions={seasonOptions}
+                            selectedCategory={selectedCategory}
+                            setSelectedCategory={setSelectedCategory}
+                            selectedStatus={selectedStatus}
+                            setSelectedStatus={setSelectedStatus}
+                            isSeasonLocked={isWorkspaceScoped}
+                            lockedSeasonLabel={scopedSeasonLabel}
+                        />
+                    </CardContent>
+                </Card>
 
-                    <Card className="border-border rounded-2xl shadow-sm">
-                        <CardContent className="px-6 py-4">
-                            <Tabs value={activeTab} onValueChange={setActiveTab}>
-                                <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted p-1 rounded-xl">
-                                    <TabsTrigger
-                                        value="list"
-                                        className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
-                                    >
-                                        <FileText className="w-4 h-4 mr-2" />
-                                        {t('expenses.tabs.list')}
-                                    </TabsTrigger>
-                                    <TabsTrigger
-                                        value="analytics"
-                                        className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
-                                    >
-                                        <BarChart3 className="w-4 h-4 mr-2" />
-                                        {t('expenses.tabs.analytics')}
-                                    </TabsTrigger>
-                                </TabsList>
+                <Card className="border-border rounded-2xl shadow-sm">
+                    <CardContent className="px-6 py-4">
+                        <Tabs value={activeTab} onValueChange={setActiveTab}>
+                            <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted p-1 rounded-xl">
+                                <TabsTrigger
+                                    value="list"
+                                    className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+                                >
+                                    <FileText className="w-4 h-4 mr-2" />
+                                    {t('expenses.tabs.list')}
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="analytics"
+                                    className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+                                >
+                                    <BarChart3 className="w-4 h-4 mr-2" />
+                                    {t('expenses.tabs.analytics')}
+                                </TabsTrigger>
+                            </TabsList>
 
-                                <TabsContent value="list" className="space-y-4">
-                                    {error && (
-                                        <div className="rounded-xl border border-border bg-card p-4 text-sm text-destructive space-y-3">
-                                            <div>Failed to load expenses: {error.message}</div>
-                                            <Button size="sm" variant="outline" onClick={() => refetch()}>
-                                                Retry
-                                            </Button>
-                                        </div>
-                                    )}
-                                    {!hasSeason && !isLoading && (
-                                        <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground space-y-3">
-                                            <div>Select a season to view expenses.</div>
-                                            <Button variant="outline" asChild>
-                                                <Link to="/farmer/seasons">Create/Select Season</Link>
-                                            </Button>
-                                        </div>
-                                    )}
-                                    {isLoading ? (
-                                        <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
-                                            Loading expenses...
-                                        </div>
-                                    ) : (
-                                        <ExpenseTable
-                                            filteredExpenses={filteredExpenses}
-                                            totalExpenses={totalCount}
-                                            handleEditExpense={(expense) => {
-                                                if (!ensureSeasonWritable()) return;
-                                                handleEditExpense(expense);
-                                            }}
-                                            handleDeleteExpense={(expense) => {
-                                                if (!ensureSeasonWritable()) return;
-                                                setDeleteTarget(expense);
-                                                setDeleteDialogOpen(true);
-                                            }}
-                                            handleViewExpense={(expense) => setDetailExpense(expense)}
-                                            onAddExpense={() => {
-                                                if (!ensureSeasonWritable()) return;
-                                                handleOpenAddExpense();
-                                            }}
-                                        />
-                                    )}
-                                </TabsContent>
+                            <TabsContent value="list" className="space-y-4">
+                                {error && (
+                                    <div className="rounded-xl border border-border bg-card p-4 text-sm text-destructive space-y-3">
+                                        <div>Failed to load expenses: {error.message}</div>
+                                        <Button size="sm" variant="outline" onClick={() => refetch()}>
+                                            Retry
+                                        </Button>
+                                    </div>
+                                )}
+                                {!hasSeason && !isLoading && (
+                                    <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground space-y-3">
+                                        <div>Select a season to view expenses.</div>
+                                        <Button variant="outline" asChild>
+                                            <Link to="/farmer/seasons">Create/Select Season</Link>
+                                        </Button>
+                                    </div>
+                                )}
+                                {isLoading ? (
+                                    <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
+                                        Loading expenses...
+                                    </div>
+                                ) : (
+                                    <ExpenseTable
+                                        filteredExpenses={filteredExpenses}
+                                        totalExpenses={totalCount}
+                                        handleEditExpense={(expense) => {
+                                            if (!ensureSeasonWritable()) return;
+                                            handleEditExpense(expense);
+                                        }}
+                                        handleDeleteExpense={(expense) => {
+                                            if (!ensureSeasonWritable()) return;
+                                            setDeleteTarget(expense);
+                                            setDeleteDialogOpen(true);
+                                        }}
+                                        handleViewExpense={(expense) => setDetailExpense(expense)}
+                                        onAddExpense={() => {
+                                            if (!ensureSeasonWritable()) return;
+                                            handleOpenAddExpense();
+                                        }}
+                                    />
+                                )}
+                            </TabsContent>
 
-                                <TabsContent value="analytics" className="space-y-6">
-                                    <ExpenseAnalytics />
-                                </TabsContent>
-                            </Tabs>
-                        </CardContent>
-                    </Card>
-                </div>
+                            <TabsContent value="analytics" className="space-y-6">
+                                <ExpenseAnalytics />
+                            </TabsContent>
+                        </Tabs>
+                    </CardContent>
+                </Card>
 
-                <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
                     <BudgetTracker
                         totalExpenses={totalExpenses}
                         budgetUsagePercentage={budgetUsagePercentage}

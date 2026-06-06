@@ -1,4 +1,5 @@
 import {
+    BackButton,
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -97,6 +98,16 @@ export function UsersRolesPage() {
     }
   };
 
+  const closeUserDetail = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("userId");
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+    setShowUserDetail(false);
+    setSelectedUser(null);
+  };
+
   const fetchUsers = async (keywordOverride?: string) => {
     setLoading(true);
     setError(null);
@@ -119,7 +130,7 @@ export function UsersRolesPage() {
         setTotalPages(response.totalPages || 0);
       }
     } catch (err) {
-      setError("Failed to load users");
+      setError(t('admin.users.loadError'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -133,7 +144,7 @@ export function UsersRolesPage() {
       const rolesList = await adminRoleApi.list();
       setRoles(rolesList || []);
     } catch (err) {
-      setError("Failed to load roles");
+      setError(t('admin.roles.loadError'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -435,7 +446,7 @@ export function UsersRolesPage() {
                       <DropdownMenuTrigger asChild>
                         <button
                           className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          aria-label="Actions menu"
+                          aria-label={t('common.actions')}
                         >
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
                         </button>
@@ -651,7 +662,7 @@ export function UsersRolesPage() {
                       <DropdownMenuTrigger asChild>
                         <button
                           className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          aria-label="Actions menu"
+                          aria-label={t('common.actions')}
                         >
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
                         </button>
@@ -743,8 +754,9 @@ export function UsersRolesPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold">{t('admin.users.detail.title')}</h2>
+                <BackButton onClick={closeUserDetail} />
                 <button
-                  onClick={() => setShowUserDetail(false)}
+                  onClick={closeUserDetail}
                   className="p-2 hover:bg-muted rounded"
                 >
                   ✕

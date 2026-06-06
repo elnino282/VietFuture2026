@@ -32,6 +32,7 @@ import type {
 } from "@/features/admin/shared/api";
 import { usePreferences } from "@/shared/contexts";
 import { convertWeight, formatMoney, getWeightUnitLabel } from "@/shared/lib";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -104,36 +105,36 @@ const formatCompactNumber = (num: number, locale: string) =>
     maximumFractionDigits: 1,
   }).format(num);
 
-const buildYieldLabel = (row: YieldAnalyticsRow) => {
+const buildYieldLabel = (row: YieldAnalyticsRow, fallback: string) => {
   const parts = [
     row.farmName,
     row.plotName,
     row.cropName,
     row.varietyName,
   ].filter(Boolean);
-  return parts.length > 0 ? parts.join(" / ") : "Unknown";
+  return parts.length > 0 ? parts.join(" / ") : fallback;
 };
 
 const buildCropPlotLabel = (row: {
   cropName?: string | null;
   plotName?: string | null;
-}) => {
+}, fallback: string) => {
   const parts = [row.cropName, row.plotName].filter(Boolean);
-  return parts.length > 0 ? parts.join(" / ") : "Unknown";
+  return parts.length > 0 ? parts.join(" / ") : fallback;
 };
 
-const getCategoryLabel = (category?: string | null) =>
-  category?.trim() || "Uncategorized";
-const getVendorLabel = (vendor?: string | null) =>
-  vendor?.trim() || "Unassigned";
+const getCategoryLabel = (category: string | null | undefined, fallback: string) =>
+  category?.trim() || fallback;
+const getVendorLabel = (vendor: string | null | undefined, fallback: string) =>
+  vendor?.trim() || fallback;
 
 // Empty state component
-const EmptyState: React.FC<{ onReset?: () => void }> = ({ onReset }) => (
+const EmptyState: React.FC<{ onReset?: () => void; text: string; resetText: string }> = ({ onReset, text, resetText }) => (
   <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground">
-    <p className="mb-2 text-sm">No data for selected filters</p>
+    <p className="mb-2 text-sm">{text}</p>
     {onReset && (
       <Button variant="link" onClick={onReset} className="text-primary text-sm">
-        Reset filters
+        {resetText}
       </Button>
     )}
   </div>
@@ -166,6 +167,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
   drilldownAvailable = false,
   onRowClick,
 }) => {
+  const { t } = useI18n();
   const { preferences } = usePreferences();
   const unitLabel = getWeightUnitLabel(preferences.weightUnit);
   const weightDecimals = preferences.weightUnit === "G" ? 0 : 2;
@@ -179,43 +181,43 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
         preferences.weightUnit,
       );
       return {
-        label: buildYieldLabel(row),
+        label: buildYieldLabel(row, t('admin.reportsAnalytics.unknown')),
         actual,
         harvestCount: row.harvestCount ?? 0,
         row,
       };
     });
-  }, [yieldRows, preferences.weightUnit]);
+  }, [yieldRows, preferences.weightUnit, t]);
 
   const displayCostCategories = useMemo(() => {
     return costRows.map((row) => ({
-      label: getCategoryLabel(row.category),
+      label: getCategoryLabel(row.category, t('admin.reportsAnalytics.uncategorized')),
       totalCost: row.totalCost ?? 0,
       expenseCount: row.expenseCount ?? 0,
       row,
     }));
-  }, [costRows]);
+  }, [costRows, t]);
 
   const displayRevenueData = useMemo(() => {
     return revenueRows.map((row) => ({
-      label: buildCropPlotLabel(row),
+      label: buildCropPlotLabel(row, t('admin.reportsAnalytics.unknown')),
       totalRevenue: row.totalRevenue ?? 0,
       totalQuantity: row.totalQuantity ?? 0,
       avgPrice: row.avgPrice ?? null,
       row,
     }));
-  }, [revenueRows]);
+  }, [revenueRows, t]);
 
   const displayProfitData = useMemo(() => {
     return profitRows.map((row) => ({
-      label: buildCropPlotLabel(row),
+      label: buildCropPlotLabel(row, t('admin.reportsAnalytics.unknown')),
       totalRevenue: row.totalRevenue ?? 0,
       totalCost: row.totalCost ?? 0,
       grossProfit: row.grossProfit ?? 0,
       marginPercent: row.marginPercent ?? null,
       row,
     }));
-  }, [profitRows]);
+  }, [profitRows, t]);
 
   const formatWeightValue = (value: number) =>
     formatNumber(value, preferences.locale, weightDecimals);
@@ -267,25 +269,25 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                 value="yield"
                 className={adminTabsTriggerClass}
               >
-                Yield
+                {t('admin.reportsAnalytics.tabs.yield')}
               </TabsTrigger>
               <TabsTrigger
                 value="cost"
                 className={adminTabsTriggerClass}
               >
-                Cost
+                {t('admin.reportsAnalytics.tabs.cost')}
               </TabsTrigger>
               <TabsTrigger
                 value="revenue"
                 className={adminTabsTriggerClass}
               >
-                Revenue
+                {t('admin.reportsAnalytics.tabs.revenue')}
               </TabsTrigger>
               <TabsTrigger
                 value="profit"
                 className={adminTabsTriggerClass}
               >
-                Profit
+                {t('admin.reportsAnalytics.tabs.profit')}
               </TabsTrigger>
             </TabsList>
           </div>
@@ -300,12 +302,12 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
               }
             >
               <SelectTrigger className="h-8 w-full sm:w-[140px] rounded-[14px] border-border bg-card text-foreground text-sm">
-                <SelectValue placeholder="Granularity" />
+                <SelectValue placeholder={t('admin.reportsAnalytics.chart.granularity')} />
               </SelectTrigger>
               <SelectContent className="rounded-[14px]">
-                <SelectItem value="DAY">By Day</SelectItem>
-                <SelectItem value="WEEK">By Week</SelectItem>
-                <SelectItem value="MONTH">By Month</SelectItem>
+                <SelectItem value="DAY">{t('admin.reportsAnalytics.chart.byDay')}</SelectItem>
+                <SelectItem value="WEEK">{t('admin.reportsAnalytics.chart.byWeek')}</SelectItem>
+                <SelectItem value="MONTH">{t('admin.reportsAnalytics.chart.byMonth')}</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -317,7 +319,9 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
             onClick={() => setShowTable(!showTable)}
             className="h-8 w-full sm:w-auto px-3 rounded-[14px] border-border bg-muted hover:bg-muted/80 text-foreground font-medium text-sm"
           >
-            {showTable ? "Hide table" : "Show table"}
+            {showTable
+              ? t('admin.reportsAnalytics.chart.hideTable')
+              : t('admin.reportsAnalytics.chart.showTable')}
             <ChevronDown
               className={`w-4 h-4 ml-2 transition-transform ${showTable ? "rotate-180" : ""}`}
             />
@@ -332,19 +336,19 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-6">
             <div className="flex flex-col gap-0.5">
               <h3 className="text-lg sm:text-xl font-medium text-foreground">
-                {activeTab === "yield" && "Yield by Farm, Plot, Crop"}
-                {activeTab === "cost" && "Cost Breakdown by Category"}
-                {activeTab === "revenue" && "Revenue by Crop and Plot"}
-                {activeTab === "profit" && "Profit by Crop and Plot"}
+                {activeTab === "yield" && t('admin.reportsAnalytics.chart.title.yield')}
+                {activeTab === "cost" && t('admin.reportsAnalytics.chart.title.cost')}
+                {activeTab === "revenue" && t('admin.reportsAnalytics.chart.title.revenue')}
+                {activeTab === "profit" && t('admin.reportsAnalytics.chart.title.profit')}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {activeTab === "yield" &&
-                  "Actual harvested yield for applied filters"}
-                {activeTab === "cost" && "All expenses grouped by category"}
+                  t('admin.reportsAnalytics.chart.description.yield')}
+                {activeTab === "cost" && t('admin.reportsAnalytics.chart.description.cost')}
                 {activeTab === "revenue" &&
-                  "Total revenue for each crop and plot"}
+                  t('admin.reportsAnalytics.chart.description.revenue')}
                 {activeTab === "profit" &&
-                  "Revenue, cost, and gross profit comparison"}
+                  t('admin.reportsAnalytics.chart.description.profit')}
               </p>
             </div>
           </div>
@@ -352,7 +356,11 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
           {isLoading ? (
             <LoadingSpinner />
           ) : isEmpty ? (
-            <EmptyState onReset={onReset} />
+            <EmptyState
+              onReset={onReset}
+              text={t('admin.reportsAnalytics.chart.empty')}
+              resetText={t('admin.reportsAnalytics.chart.resetFilters')}
+            />
           ) : (
             <ResponsiveContainer width="100%" height={320}>
               {activeTab === "yield" ? (
@@ -403,7 +411,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   <Tooltip
                     formatter={(value: number) => [
                       formatWeightValue(value),
-                      `Yield (${unitLabel})`,
+                      t('admin.reportsAnalytics.chart.yieldWithUnit', { unit: unitLabel }),
                     ]}
                     contentStyle={{
                       borderRadius: "12px",
@@ -421,7 +429,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   />
                   <Bar
                     dataKey="actual"
-                    name={`Yield (${unitLabel})`}
+                    name={t('admin.reportsAnalytics.chart.yieldWithUnit', { unit: unitLabel })}
                     fill={ADMIN_CHART_COLORS.yield}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={100}
@@ -475,7 +483,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   <Tooltip
                     formatter={(value: number) => [
                       formatCurrencyValue(value),
-                      "Total Cost",
+                      t('admin.reportsAnalytics.chart.totalCost'),
                     ]}
                     contentStyle={{
                       borderRadius: "12px",
@@ -493,7 +501,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   />
                   <Bar
                     dataKey="totalCost"
-                    name={`Total Cost (${preferences.currency})`}
+                    name={t('admin.reportsAnalytics.chart.totalCostWithCurrency', { currency: preferences.currency })}
                     fill={ADMIN_CHART_COLORS.cost}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={100}
@@ -547,7 +555,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   <Tooltip
                     formatter={(value: number) => [
                       formatCurrencyValue(value),
-                      "Revenue",
+                      t('admin.reportsAnalytics.summary.revenue'),
                     ]}
                     contentStyle={{
                       borderRadius: "12px",
@@ -565,7 +573,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   />
                   <Bar
                     dataKey="totalRevenue"
-                    name={`Revenue (${preferences.currency})`}
+                    name={t('admin.reportsAnalytics.chart.revenueWithCurrency', { currency: preferences.currency })}
                     fill={ADMIN_CHART_COLORS.revenue}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={100}
@@ -619,9 +627,9 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   <Tooltip
                     formatter={(value: number, name: string) => {
                       const labels: Record<string, string> = {
-                        totalRevenue: "Revenue",
-                        totalCost: "Cost",
-                        grossProfit: "Gross Profit",
+                        totalRevenue: t('admin.reportsAnalytics.summary.revenue'),
+                        totalCost: t('admin.reportsAnalytics.tabs.cost'),
+                        grossProfit: t('admin.reportsAnalytics.summary.grossProfit'),
                       };
                       return [formatCurrencyValue(value), labels[name] || name];
                     }}
@@ -641,21 +649,21 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                   />
                   <Bar
                     dataKey="totalRevenue"
-                    name={`Revenue (${preferences.currency})`}
+                    name={t('admin.reportsAnalytics.chart.revenueWithCurrency', { currency: preferences.currency })}
                     fill={ADMIN_CHART_COLORS.profitRevenue}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={70}
                   />
                   <Bar
                     dataKey="totalCost"
-                    name={`Cost (${preferences.currency})`}
+                    name={t('admin.reportsAnalytics.chart.costWithCurrency', { currency: preferences.currency })}
                     fill={ADMIN_CHART_COLORS.profitCost}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={70}
                   />
                   <Bar
                     dataKey="grossProfit"
-                    name={`Gross Profit (${preferences.currency})`}
+                    name={t('admin.reportsAnalytics.chart.grossProfitWithCurrency', { currency: preferences.currency })}
                     fill={ADMIN_CHART_COLORS.profitGross}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={70}
@@ -677,22 +685,22 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                 <TableHeader>
                   <TableRow className="border-b border-border hover:bg-transparent">
                     <TableHead className="text-sm font-medium text-foreground">
-                      Farm
+                      {t('admin.reportsAnalytics.inventory.table.farm')}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground">
-                      Plot
+                      {t('admin.reportsAnalytics.table.plot')}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground">
-                      Crop
+                      {t('admin.reportsAnalytics.table.crop')}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground">
-                      Variety
+                      {t('admin.reportsAnalytics.table.variety')}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground text-right">
-                      Yield ({unitLabel})
+                      {t('admin.reportsAnalytics.chart.yieldWithUnit', { unit: unitLabel })}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground text-right">
-                      Harvests
+                      {t('admin.reportsAnalytics.table.harvests')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -706,7 +714,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                       <TableRow
                         key={index}
                         onClick={() => handleRowClick("yield", row)}
-                        title={!canDrilldown ? "Page not available" : undefined}
+                        title={!canDrilldown ? t('admin.reportsAnalytics.pageNotAvailable') : undefined}
                         className={`border-b border-border/50 ${canDrilldown ? "hover:bg-muted/50 cursor-pointer" : "cursor-not-allowed"}`}
                       >
                         <TableCell className="text-sm text-foreground font-medium">
@@ -736,7 +744,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                         className="text-sm font-semibold text-foreground"
                         colSpan={4}
                       >
-                        Totals
+                        {t('admin.reportsAnalytics.table.total')}
                       </TableCell>
                       <TableCell className="text-sm font-semibold text-foreground text-right">
                         {formatWeightValue(
@@ -760,19 +768,19 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
               <div className="space-y-6">
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-foreground">
-                    Category breakdown
+                    {t('admin.reportsAnalytics.table.categoryBreakdown')}
                   </div>
                   <Table>
                     <TableHeader>
                       <TableRow className="border-b border-border hover:bg-transparent">
                         <TableHead className="text-sm font-medium text-foreground">
-                          Category
+                          {t('admin.reportsAnalytics.table.category')}
                         </TableHead>
                         <TableHead className="text-sm font-medium text-foreground text-right">
-                          Total Cost ({preferences.currency})
+                          {t('admin.reportsAnalytics.chart.totalCostWithCurrency', { currency: preferences.currency })}
                         </TableHead>
                         <TableHead className="text-sm font-medium text-foreground text-right">
-                          Expenses
+                          {t('admin.reportsAnalytics.expensesYield.expenses')}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -783,7 +791,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                             colSpan={3}
                             className="text-sm text-muted-foreground text-center py-6"
                           >
-                            No category data
+                            {t('admin.reportsAnalytics.table.noCategoryData')}
                           </TableCell>
                         </TableRow>
                       )}
@@ -792,12 +800,12 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                           key={index}
                           onClick={() => handleRowClick("cost", row)}
                           title={
-                            !canDrilldown ? "Page not available" : undefined
+                            !canDrilldown ? t('admin.reportsAnalytics.pageNotAvailable') : undefined
                           }
                           className={`border-b border-border/50 ${canDrilldown ? "hover:bg-muted/50 cursor-pointer" : "cursor-not-allowed"}`}
                         >
                           <TableCell className="text-sm text-foreground font-medium">
-                            {getCategoryLabel(row.category)}
+                            {getCategoryLabel(row.category, t('admin.reportsAnalytics.uncategorized'))}
                           </TableCell>
                           <TableCell className="text-sm text-foreground text-right">
                             {formatCurrencyValue(row.totalCost ?? 0)}
@@ -810,7 +818,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                       {costTotals && (
                         <TableRow className="border-t border-border bg-muted/50">
                           <TableCell className="text-sm font-semibold text-foreground">
-                            Totals
+                            {t('admin.reportsAnalytics.table.total')}
                           </TableCell>
                           <TableCell className="text-sm font-semibold text-foreground text-right">
                             {formatCurrencyValue(costTotals.totalCost ?? 0)}
@@ -826,19 +834,19 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
 
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-foreground">
-                    Vendor breakdown
+                    {t('admin.reportsAnalytics.table.vendorBreakdown')}
                   </div>
                   <Table>
                     <TableHeader>
                       <TableRow className="border-b border-border hover:bg-transparent">
                         <TableHead className="text-sm font-medium text-foreground">
-                          Vendor
+                          {t('admin.reportsAnalytics.table.vendor')}
                         </TableHead>
                         <TableHead className="text-sm font-medium text-foreground text-right">
-                          Total Cost ({preferences.currency})
+                          {t('admin.reportsAnalytics.chart.totalCostWithCurrency', { currency: preferences.currency })}
                         </TableHead>
                         <TableHead className="text-sm font-medium text-foreground text-right">
-                          Expenses
+                          {t('admin.reportsAnalytics.expensesYield.expenses')}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -849,7 +857,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                             colSpan={3}
                             className="text-sm text-muted-foreground text-center py-6"
                           >
-                            No vendor data
+                            {t('admin.reportsAnalytics.table.noVendorData')}
                           </TableCell>
                         </TableRow>
                       )}
@@ -858,12 +866,12 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                           key={index}
                           onClick={() => handleRowClick("cost", row)}
                           title={
-                            !canDrilldown ? "Page not available" : undefined
+                            !canDrilldown ? t('admin.reportsAnalytics.pageNotAvailable') : undefined
                           }
                           className={`border-b border-border/50 ${canDrilldown ? "hover:bg-muted/50 cursor-pointer" : "cursor-not-allowed"}`}
                         >
                           <TableCell className="text-sm text-foreground font-medium">
-                            {getVendorLabel(row.vendorName)}
+                            {getVendorLabel(row.vendorName, t('admin.reportsAnalytics.unassigned'))}
                           </TableCell>
                           <TableCell className="text-sm text-foreground text-right">
                             {formatCurrencyValue(row.totalCost ?? 0)}
@@ -879,16 +887,16 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
 
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-foreground">
-                    Time series
+                    {t('admin.reportsAnalytics.table.timeSeries')}
                   </div>
                   <Table>
                     <TableHeader>
                       <TableRow className="border-b border-border hover:bg-transparent">
                         <TableHead className="text-sm font-medium text-foreground">
-                          Period
+                          {t('admin.reportsAnalytics.table.period')}
                         </TableHead>
                         <TableHead className="text-sm font-medium text-foreground text-right">
-                          Total Cost ({preferences.currency})
+                          {t('admin.reportsAnalytics.chart.totalCostWithCurrency', { currency: preferences.currency })}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -899,7 +907,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                             colSpan={2}
                             className="text-sm text-muted-foreground text-center py-6"
                           >
-                            No time series data
+                            {t('admin.reportsAnalytics.table.noTimeSeriesData')}
                           </TableCell>
                         </TableRow>
                       )}
@@ -908,7 +916,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                           key={index}
                           onClick={() => handleRowClick("cost", row)}
                           title={
-                            !canDrilldown ? "Page not available" : undefined
+                            !canDrilldown ? t('admin.reportsAnalytics.pageNotAvailable') : undefined
                           }
                           className={`border-b border-border/50 ${canDrilldown ? "hover:bg-muted/50 cursor-pointer" : "cursor-not-allowed"}`}
                         >
@@ -932,19 +940,19 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                 <TableHeader>
                   <TableRow className="border-b border-border hover:bg-transparent">
                     <TableHead className="text-sm font-medium text-foreground">
-                      Crop
+                      {t('admin.reportsAnalytics.table.crop')}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground">
-                      Plot
+                      {t('admin.reportsAnalytics.table.plot')}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground text-right">
-                      Quantity ({unitLabel})
+                      {t('admin.reportsAnalytics.table.quantityWithUnit', { unit: unitLabel })}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground text-right">
-                      Revenue ({preferences.currency})
+                      {t('admin.reportsAnalytics.chart.revenueWithCurrency', { currency: preferences.currency })}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground text-right">
-                      Avg Price
+                      {t('admin.reportsAnalytics.table.avgPrice')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -962,7 +970,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                       <TableRow
                         key={index}
                         onClick={() => handleRowClick("revenue", row)}
-                        title={!canDrilldown ? "Page not available" : undefined}
+                        title={!canDrilldown ? t('admin.reportsAnalytics.pageNotAvailable') : undefined}
                         className={`border-b border-border/50 ${canDrilldown ? "hover:bg-muted/50 cursor-pointer" : "cursor-not-allowed"}`}
                       >
                         <TableCell className="text-sm text-foreground font-medium">
@@ -989,7 +997,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                         className="text-sm font-semibold text-foreground"
                         colSpan={2}
                       >
-                        Totals
+                        {t('admin.reportsAnalytics.table.total')}
                       </TableCell>
                       <TableCell className="text-sm font-semibold text-foreground text-right">
                         {formatWeightValue(
@@ -1019,22 +1027,22 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                 <TableHeader>
                   <TableRow className="border-b border-border hover:bg-transparent">
                     <TableHead className="text-sm font-medium text-foreground">
-                      Crop
+                      {t('admin.reportsAnalytics.table.crop')}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground">
-                      Plot
+                      {t('admin.reportsAnalytics.table.plot')}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground text-right">
-                      Revenue ({preferences.currency})
+                      {t('admin.reportsAnalytics.chart.revenueWithCurrency', { currency: preferences.currency })}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground text-right">
-                      Cost ({preferences.currency})
+                      {t('admin.reportsAnalytics.chart.costWithCurrency', { currency: preferences.currency })}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground text-right">
-                      Gross Profit ({preferences.currency})
+                      {t('admin.reportsAnalytics.chart.grossProfitWithCurrency', { currency: preferences.currency })}
                     </TableHead>
                     <TableHead className="text-sm font-medium text-foreground text-right">
-                      Margin
+                      {t('admin.reportsAnalytics.table.margin')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1043,7 +1051,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                     <TableRow
                       key={index}
                       onClick={() => handleRowClick("profit", row)}
-                      title={!canDrilldown ? "Page not available" : undefined}
+                      title={!canDrilldown ? t('admin.reportsAnalytics.pageNotAvailable') : undefined}
                       className={`border-b border-border/50 ${canDrilldown ? "hover:bg-muted/50 cursor-pointer" : "cursor-not-allowed"}`}
                     >
                       <TableCell className="text-sm text-foreground font-medium">
@@ -1079,7 +1087,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                         className="text-sm font-semibold text-foreground"
                         colSpan={2}
                       >
-                        Totals
+                        {t('admin.reportsAnalytics.table.total')}
                       </TableCell>
                       <TableCell className="text-sm font-semibold text-foreground text-right">
                         {formatCurrencyValue(profitTotals.totalRevenue ?? 0)}

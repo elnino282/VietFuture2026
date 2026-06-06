@@ -16,6 +16,7 @@ export { DashboardHeader } from './ui/DashboardHeader';
 export type {
     AppShellProps,
     PortalType,
+    BreadcrumbKind,
     BreadcrumbPath,
     Theme,
     Language,

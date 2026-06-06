@@ -13,6 +13,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import type { LogEntry, LogLevel } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface LogsTableProps {
     paginatedLogs: LogEntry[];
@@ -47,6 +48,8 @@ export function LogsTable({
     handleCopyLog,
     getLogLevelBadge,
 }: LogsTableProps) {
+    const { t } = useI18n();
+
     return (
         <Card className="lg:col-span-2">
             <CardHeader>
@@ -54,9 +57,9 @@ export function LogsTable({
                     <div>
                         <CardTitle className="flex items-center gap-2">
                             <Terminal className="w-5 h-5" />
-                            System Logs
+                            {t('admin.systemMonitoring.logs.title')}
                         </CardTitle>
-                        <CardDescription>Search and filter application logs</CardDescription>
+                        <CardDescription>{t('admin.systemMonitoring.logs.description')}</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -66,7 +69,7 @@ export function LogsTable({
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search logs..."
+                            placeholder={t('admin.systemMonitoring.logs.searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-9"
@@ -77,11 +80,11 @@ export function LogsTable({
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Levels</SelectItem>
-                            <SelectItem value="info">Info</SelectItem>
-                            <SelectItem value="warning">Warning</SelectItem>
-                            <SelectItem value="error">Error</SelectItem>
-                            <SelectItem value="security">Security</SelectItem>
+                            <SelectItem value="all">{t('admin.systemMonitoring.filters.allLevels')}</SelectItem>
+                            <SelectItem value="info">{t('admin.systemMonitoring.logLevel.info')}</SelectItem>
+                            <SelectItem value="warning">{t('admin.systemMonitoring.logLevel.warning')}</SelectItem>
+                            <SelectItem value="error">{t('admin.systemMonitoring.logLevel.error')}</SelectItem>
+                            <SelectItem value="security">{t('admin.systemMonitoring.logLevel.security')}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -100,7 +103,7 @@ export function LogsTable({
                             <div className="flex items-start justify-between gap-2 mb-2">
                                 <div className="flex items-center gap-2">
                                     <Badge variant="secondary" className={getLogLevelBadge(log.level)}>
-                                        {log.level}
+                                        {t(`admin.systemMonitoring.logLevel.${log.level}`, log.level)}
                                     </Badge>
                                     <span className="text-xs text-muted-foreground">{log.service}</span>
                                 </div>
@@ -110,6 +113,7 @@ export function LogsTable({
                                         variant="ghost"
                                         size="icon"
                                         className="h-6 w-6"
+                                        aria-label={t('admin.systemMonitoring.logs.copyLog')}
                                         onClick={(e: React.MouseEvent) => {
                                             e.stopPropagation();
                                             handleCopyLog(log);
@@ -121,7 +125,7 @@ export function LogsTable({
                             </div>
                             <p className="text-sm mb-1">{log.message}</p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span>User: {log.user}</span>
+                                <span>{t('admin.systemMonitoring.logs.userValue', { user: log.user })}</span>
                             </div>
                         </div>
                     ))}
@@ -130,9 +134,9 @@ export function LogsTable({
                 {/* Pagination */}
                 <div className="flex items-center justify-between pt-4 border-t">
                     <span className="text-sm text-muted-foreground">
-                        Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-                        {Math.min(currentPage * itemsPerPage, filteredLogs.length)} of{' '}
-                        {filteredLogs.length} logs
+                        {t('pagination.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('pagination.to')}{' '}
+                        {Math.min(currentPage * itemsPerPage, filteredLogs.length)} {t('pagination.of')}{' '}
+                        {filteredLogs.length} {t('admin.systemMonitoring.logs.logs')}
                     </span>
                     <div className="flex items-center gap-2">
                         <Button
@@ -141,7 +145,7 @@ export function LogsTable({
                             disabled={currentPage === 1}
                             onClick={() => setCurrentPage(currentPage - 1)}
                         >
-                            Previous
+                            {t('pagination.previousPage')}
                         </Button>
                         <Button
                             variant="outline"
@@ -149,7 +153,7 @@ export function LogsTable({
                             disabled={currentPage === totalPages}
                             onClick={() => setCurrentPage(currentPage + 1)}
                         >
-                            Next
+                            {t('pagination.nextPage')}
                         </Button>
                     </div>
                 </div>

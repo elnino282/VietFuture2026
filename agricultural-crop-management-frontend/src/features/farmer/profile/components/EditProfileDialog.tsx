@@ -19,6 +19,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  BackButton,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -123,6 +124,17 @@ export function EditProfileDialog({
       console.error("Error updating profile:", error);
     }
   };
+  const handleClose = () => {
+    if (isSaving) return;
+    if (
+      form.formState.isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+
+    onOpenChange(false);
+  };
 
   return (
     <>
@@ -130,11 +142,16 @@ export function EditProfileDialog({
         open={open}
         onOpenChange={(nextOpen) => {
           if (isSaving && !nextOpen) return;
-          onOpenChange(nextOpen);
+          if (nextOpen) {
+            onOpenChange(true);
+          } else {
+            handleClose();
+          }
         }}
       >
         <DialogContent className="sm:max-w-[560px]" closeDisabled={isSaving}>
           <DialogHeader>
+            <BackButton onClick={handleClose} className="w-fit" />
             <DialogTitle>{t("profile.editDialog.title")}</DialogTitle>
             <DialogDescription>
               {t("profile.editDialog.description")}
@@ -200,7 +217,7 @@ export function EditProfileDialog({
                         const nextProvinceId = address.provinceId ?? undefined;
                         const nextWardId = address.wardId ?? undefined;
                         provinceField.onChange(nextProvinceId);
-                        form.setValue("wardId", nextWardId);
+                        form.setValue("wardId", nextWardId, { shouldDirty: true });
                       }}
                       error={combinedError}
                       disabled={isSaving}
@@ -215,7 +232,7 @@ export function EditProfileDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => onOpenChange(false)}
+                  onClick={handleClose}
                   disabled={isSaving}
                 >
                   {t("common.cancel")}

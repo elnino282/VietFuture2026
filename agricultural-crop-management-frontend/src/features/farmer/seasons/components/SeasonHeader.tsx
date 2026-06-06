@@ -77,7 +77,6 @@ export function SeasonHeader({
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex min-w-0 items-center gap-4">
                 <BackButton
-                  iconOnly
                   onClick={onBack}
                   className="acm-rounded-sm"
                 />

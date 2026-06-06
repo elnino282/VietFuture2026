@@ -18,6 +18,7 @@ import {
   getWeightUnitLabel,
 } from "@/shared/lib";
 import {
+  BackButton,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -26,7 +27,7 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { Edit } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Season } from "../types";
 
@@ -67,6 +68,7 @@ export function EditSeasonDialog({
   const [budgetAmount, setBudgetAmount] = useState("");
   const [notes, setNotes] = useState("");
   const [varietyId, setVarietyId] = useState("");
+  const initialFormRef = useRef<string | null>(null);
 
   const cropId = season?.cropId ?? 0;
   const { data: varieties = [] } = useVarietiesByCrop(cropId);
@@ -109,17 +111,30 @@ export function EditSeasonDialog({
 
   useEffect(() => {
     if (!open || !season) return;
-    setSeasonName(season.name || "");
-    setStartDate(normalizeDate(season.startDate));
-    setPlannedHarvestDate(normalizeDate(season.plannedHarvestDate));
-    setEndDate(normalizeDate(season.endDate));
     const plantCount = season.currentPlantCount ?? season.initialPlantCount;
-    setCurrentPlantCount(plantCount != null ? String(plantCount) : "");
-    setExpectedYieldKg(formatWeightInput(season.expectedYieldKg));
-    setActualYieldKg(formatWeightInput(season.actualYieldKg));
-    setBudgetAmount(season.budgetTotal ? String(season.budgetTotal) : "");
-    setNotes(season.notes || "");
-    setVarietyId(season.varietyId != null ? String(season.varietyId) : "");
+    const nextFormState = {
+      seasonName: season.name || "",
+      startDate: normalizeDate(season.startDate),
+      plannedHarvestDate: normalizeDate(season.plannedHarvestDate),
+      endDate: normalizeDate(season.endDate),
+      currentPlantCount: plantCount != null ? String(plantCount) : "",
+      expectedYieldKg: formatWeightInput(season.expectedYieldKg),
+      actualYieldKg: formatWeightInput(season.actualYieldKg),
+      budgetAmount: season.budgetTotal ? String(season.budgetTotal) : "",
+      notes: season.notes || "",
+      varietyId: season.varietyId != null ? String(season.varietyId) : "",
+    };
+    setSeasonName(nextFormState.seasonName);
+    setStartDate(nextFormState.startDate);
+    setPlannedHarvestDate(nextFormState.plannedHarvestDate);
+    setEndDate(nextFormState.endDate);
+    setCurrentPlantCount(nextFormState.currentPlantCount);
+    setExpectedYieldKg(nextFormState.expectedYieldKg);
+    setActualYieldKg(nextFormState.actualYieldKg);
+    setBudgetAmount(nextFormState.budgetAmount);
+    setNotes(nextFormState.notes);
+    setVarietyId(nextFormState.varietyId);
+    initialFormRef.current = JSON.stringify(nextFormState);
   }, [open, season?.id, preferences.weightUnit]);
 
   const currentPlantValue =
@@ -161,15 +176,43 @@ export function EditSeasonDialog({
 
     onSubmit(id, payload);
   };
+  const currentFormState = {
+    seasonName,
+    startDate,
+    plannedHarvestDate,
+    endDate,
+    currentPlantCount,
+    expectedYieldKg,
+    actualYieldKg,
+    budgetAmount,
+    notes,
+    varietyId,
+  };
+  const isDirty = open && !!initialFormRef.current && initialFormRef.current !== JSON.stringify(currentFormState);
+  const handleClose = () => {
+    if (isSubmitting) return;
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+    onOpenChange(false);
+  };
   const handleOpenChange = (nextOpen: boolean) => {
     if (isSubmitting && !nextOpen) return;
-    onOpenChange(nextOpen);
+    if (!nextOpen) {
+      handleClose();
+      return;
+    }
+    onOpenChange(true);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[600px]" closeDisabled={isSubmitting}>
         <DialogHeader>
+          <BackButton onClick={handleClose} className="w-fit" />
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Edit className="w-5 h-5 text-primary" />
             {t("seasons.dialog.editTitle")}
@@ -350,7 +393,7 @@ export function EditSeasonDialog({
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
             disabled={isSubmitting}
           >
             {t("common.cancel")}

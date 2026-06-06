@@ -10,6 +10,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import type { DateRange } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface PageHeaderProps {
     dateRange: DateRange;
@@ -26,12 +27,14 @@ export function PageHeader({
     setDownloadLogsOpen,
     setIncidentModalOpen,
 }: PageHeaderProps) {
+    const { t } = useI18n();
+
     return (
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h1 className="mb-1">System Monitoring</h1>
+                <h1 className="mb-1">{t('admin.systemMonitoring.title')}</h1>
                 <p className="text-sm text-muted-foreground">
-                    Real-time platform health and performance metrics
+                    {t('admin.systemMonitoring.subtitle')}
                 </p>
             </div>
             <div className="flex items-center gap-3">
@@ -41,23 +44,23 @@ export function PageHeader({
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="today">Today</SelectItem>
-                        <SelectItem value="24h">Last 24h</SelectItem>
-                        <SelectItem value="7d">Last 7 days</SelectItem>
-                        <SelectItem value="30d">Last 30 days</SelectItem>
+                        <SelectItem value="today">{t('admin.systemMonitoring.dateRange.today')}</SelectItem>
+                        <SelectItem value="24h">{t('admin.systemMonitoring.dateRange.last24h')}</SelectItem>
+                        <SelectItem value="7d">{t('admin.systemMonitoring.dateRange.last7d')}</SelectItem>
+                        <SelectItem value="30d">{t('admin.systemMonitoring.dateRange.last30d')}</SelectItem>
                     </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={() => setFilterOpen(true)}>
                     <Filter className="w-4 h-4 mr-2" />
-                    Filters
+                    {t('common.filter')}
                 </Button>
                 <Button variant="outline" onClick={() => setDownloadLogsOpen(true)}>
                     <Download className="w-4 h-4 mr-2" />
-                    Export Logs
+                    {t('admin.systemMonitoring.actions.exportLogs')}
                 </Button>
                 <Button onClick={() => setIncidentModalOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Create Incident
+                    {t('admin.systemMonitoring.actions.createIncident')}
                 </Button>
             </div>
         </div>

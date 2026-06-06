@@ -6,6 +6,7 @@
  */
 
 import { Button } from "@/shared/ui/button";
+import { BackButton } from "@/shared/ui/back-button";
 import {
   Form,
   FormControl,
@@ -32,23 +33,27 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { TFunction } from "i18next";
 import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
+import { PLOT_STATUS_OPTIONS, SOIL_TYPE_OPTIONS } from "@/features/farmer/shared/plotOptions";
 
 // Form validation schema
-const CreatePlotFormSchema = z.object({
-  plotName: z.string().min(1, "Plot name is required"),
-  area: z.number().positive("Area must be greater than 0"),
-  soilType: z.string().optional(),
-  status: z.enum(["IN_USE", "IDLE", "AVAILABLE", "FALLOW", "MAINTENANCE"], {
-    required_error: "Status is required",
-  }),
-});
+const createPlotFormSchema = (t: TFunction) =>
+  z.object({
+    plotName: z.string().min(1, t("farms.validation.plotNameRequired")),
+    area: z.number().positive(t("farms.validation.areaPositive")),
+    soilType: z.string().optional(),
+    status: z.enum(["IN_USE", "IDLE", "AVAILABLE", "FALLOW", "MAINTENANCE"], {
+      required_error: t("farms.validation.statusRequired"),
+    }),
+  });
 
-type CreatePlotFormData = z.infer<typeof CreatePlotFormSchema>;
+type CreatePlotFormData = z.infer<ReturnType<typeof createPlotFormSchema>>;
 
 interface CreatePlotInFarmDialogProps {
   open: boolean;
@@ -58,23 +63,6 @@ interface CreatePlotInFarmDialogProps {
   onCreated?: () => void;
 }
 
-const SOIL_TYPES = [
-  { value: "FERRALSOLS", labelKey: "farms.soilTypes.FERRALSOLS" },
-  { value: "CHERNOZEMS", labelKey: "farms.soilTypes.CHERNOZEMS" },
-  { value: "FLUVISOLS", labelKey: "farms.soilTypes.FLUVISOLS" },
-  { value: "PODZOL", labelKey: "farms.soilTypes.PODZOL" },
-  { value: "PEAT", labelKey: "farms.soilTypes.PEAT" },
-  { value: "ARENOSOLS", labelKey: "farms.soilTypes.ARENOSOLS" },
-];
-
-const PLOT_STATUSES = [
-  { value: "IN_USE", labelKey: "farms.plotStatuses.IN_USE" },
-  { value: "IDLE", labelKey: "farms.plotStatuses.IDLE" },
-  { value: "AVAILABLE", labelKey: "farms.plotStatuses.AVAILABLE" },
-  { value: "FALLOW", labelKey: "farms.plotStatuses.FALLOW" },
-  { value: "MAINTENANCE", labelKey: "farms.plotStatuses.MAINTENANCE" },
-];
-
 export function CreatePlotInFarmDialog({
   open,
   onOpenChange,
@@ -83,8 +71,9 @@ export function CreatePlotInFarmDialog({
   onCreated,
 }: CreatePlotInFarmDialogProps) {
   const { t } = useTranslation();
+  const formSchema = useMemo(() => createPlotFormSchema(t), [t]);
   const form = useForm<CreatePlotFormData>({
-    resolver: zodResolver(CreatePlotFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       plotName: "",
       area: undefined,
@@ -95,19 +84,19 @@ export function CreatePlotInFarmDialog({
 
   const createPlotMutation = useCreatePlotInFarm({
     onSuccess: () => {
-      toast.success("Plot created successfully");
+      toast.success(t("farms.toast.createPlotSuccess"));
       form.reset();
       onOpenChange(false);
       onCreated?.();
     },
     onError: (error: any) => {
       const errorCode = error?.response?.data?.code;
-      let message = "Failed to create plot";
+      let message = t("farms.toast.createPlotError");
 
       if (errorCode === "ERR_FARM_INACTIVE") {
-        message = "This farm is inactive. Activate it to create plots.";
+        message = t("farms.toast.farmInactivePlots");
       } else if (errorCode === "ERR_PLOT_NAME_EXISTS") {
-        message = "A plot with this name already exists.";
+        message = t("farms.errors.plotNameExists");
       } else if (error?.message) {
         message = error.message;
       }
@@ -127,14 +116,35 @@ export function CreatePlotInFarmDialog({
       },
     });
   });
+  const handleClose = () => {
+    if (createPlotMutation.isPending) return;
+    if (
+      form.formState.isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+    form.reset();
+    onOpenChange(false);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen) {
+          onOpenChange(true);
+          return;
+        }
+        handleClose();
+      }}
+    >
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New Plot</DialogTitle>
+          <BackButton onClick={handleClose} className="w-fit" />
+          <DialogTitle>{t("farms.dialog.createPlotTitle")}</DialogTitle>
           <DialogDescription>
-            Add a new plot to <strong>{farmName}</strong>
+            {t("farms.dialog.createPlotInFarmDescription", { farmName })}
           </DialogDescription>
         </DialogHeader>
 
@@ -146,9 +156,9 @@ export function CreatePlotInFarmDialog({
               name="plotName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Plot Name *</FormLabel>
+                  <FormLabel required>{t("farms.form.plotName")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., North Field A1" {...field} />
+                    <Input placeholder={t("farms.form.plotNameExample")} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -161,13 +171,13 @@ export function CreatePlotInFarmDialog({
               name="area"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Area (hectares) *</FormLabel>
+                  <FormLabel required>{t("farms.form.areaHectares")}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       step="0.01"
                       min="0.01"
-                      placeholder="e.g., 2.5"
+                      placeholder={t("farms.form.areaExample")}
                       {...field}
                       onChange={(e) => {
                         const value = parseFloat(e.target.value);
@@ -186,15 +196,15 @@ export function CreatePlotInFarmDialog({
               name="soilType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Soil Type</FormLabel>
+                  <FormLabel>{t("farms.form.soilType")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select soil type" />
+                        <SelectValue placeholder={t("farms.form.selectSoilType")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {SOIL_TYPES.map((type) => (
+                      {SOIL_TYPE_OPTIONS.map((type) => (
                           <SelectItem key={type.value} value={type.value}>
                             {t(type.labelKey)}
                           </SelectItem>
@@ -212,15 +222,15 @@ export function CreatePlotInFarmDialog({
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status *</FormLabel>
+                  <FormLabel required>{t("farms.form.status")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
+                        <SelectValue placeholder={t("farms.form.selectStatus")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {PLOT_STATUSES.map((status) => (
+                      {PLOT_STATUS_OPTIONS.map((status) => (
                           <SelectItem key={status.value} value={status.value}>
                             {t(status.labelKey)}
                           </SelectItem>
@@ -236,16 +246,16 @@ export function CreatePlotInFarmDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={handleClose}
                 disabled={createPlotMutation.isPending}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={createPlotMutation.isPending}>
                 {createPlotMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Create Plot
+                {t("farms.dialog.createPlotTitle")}
               </Button>
             </DialogFooter>
           </form>

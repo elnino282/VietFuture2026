@@ -2,6 +2,7 @@ package org.example.QuanLyMuaVu.module.season.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -49,6 +50,13 @@ public class FieldLog {
 
     @Column(columnDefinition = "TEXT")
     String notes;
+
+    @Column(name = "created_by_user_id")
+    Long createdByUserId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id", insertable = false, updatable = false)
+    org.example.QuanLyMuaVu.module.identity.entity.User createdBy;
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     LocalDateTime createdAt;

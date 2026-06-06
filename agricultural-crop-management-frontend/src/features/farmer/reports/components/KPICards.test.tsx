@@ -12,6 +12,12 @@ vi.mock('@/shared/contexts', () => ({
     }),
 }));
 
+vi.mock('@/hooks/useI18n', () => ({
+    useI18n: () => ({
+        t: (key: string) => key,
+    }),
+}));
+
 describe('KPICards', () => {
     it('renders formatted money values', () => {
         render(

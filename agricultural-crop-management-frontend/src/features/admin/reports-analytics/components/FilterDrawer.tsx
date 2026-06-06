@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface FilterDrawerProps {
     filterOpen: boolean;
@@ -29,57 +30,59 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
     handleFilterClear,
     handleFilterApply,
 }) => {
+    const { t } = useI18n();
+
     return (
         <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
             <SheetContent>
                 <SheetHeader>
-                    <SheetTitle>Filter Reports</SheetTitle>
+                    <SheetTitle>{t('admin.reportsAnalytics.filterDrawer.title')}</SheetTitle>
                     <SheetDescription>
-                        Apply filters to customize your analytics view
+                        {t('admin.reportsAnalytics.filterDrawer.description')}
                     </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-6">
                     <div className="space-y-2">
-                        <Label>Crop Type</Label>
+                        <Label>{t('admin.reportsAnalytics.filterDrawer.cropType')}</Label>
                         <Select value={cropFilter} onValueChange={setCropFilter}>
                             <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Crops</SelectItem>
-                                <SelectItem value="tomato">Tomato</SelectItem>
-                                <SelectItem value="rice">Rice</SelectItem>
-                                <SelectItem value="wheat">Wheat</SelectItem>
-                                <SelectItem value="corn">Corn</SelectItem>
+                                <SelectItem value="all">{t('admin.reportsAnalytics.filters.allCrops')}</SelectItem>
+                                <SelectItem value="tomato">{t('admin.reportsAnalytics.filterDrawer.crops.tomato')}</SelectItem>
+                                <SelectItem value="rice">{t('admin.reportsAnalytics.filterDrawer.crops.rice')}</SelectItem>
+                                <SelectItem value="wheat">{t('admin.reportsAnalytics.filterDrawer.crops.wheat')}</SelectItem>
+                                <SelectItem value="corn">{t('admin.reportsAnalytics.filterDrawer.crops.corn')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <Label>Region</Label>
+                        <Label>{t('admin.reportsAnalytics.filterDrawer.region')}</Label>
                         <Select value={regionFilter} onValueChange={setRegionFilter}>
                             <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Regions</SelectItem>
-                                <SelectItem value="north">North</SelectItem>
-                                <SelectItem value="south">South</SelectItem>
-                                <SelectItem value="east">East</SelectItem>
-                                <SelectItem value="west">West</SelectItem>
+                                <SelectItem value="all">{t('admin.reportsAnalytics.filterDrawer.allRegions')}</SelectItem>
+                                <SelectItem value="north">{t('admin.reportsAnalytics.filterDrawer.regions.north')}</SelectItem>
+                                <SelectItem value="south">{t('admin.reportsAnalytics.filterDrawer.regions.south')}</SelectItem>
+                                <SelectItem value="east">{t('admin.reportsAnalytics.filterDrawer.regions.east')}</SelectItem>
+                                <SelectItem value="west">{t('admin.reportsAnalytics.filterDrawer.regions.west')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <Label>User Role</Label>
+                        <Label>{t('admin.reportsAnalytics.filterDrawer.userRole')}</Label>
                         <Select value={roleFilter} onValueChange={setRoleFilter}>
                             <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Roles</SelectItem>
-                                <SelectItem value="farmer">Farmer</SelectItem>
-                                <SelectItem value="buyer">Buyer</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="all">{t('admin.farmerManagement.filters.allRoles')}</SelectItem>
+                                <SelectItem value="farmer">{t('admin.farmerManagement.roles.farmer')}</SelectItem>
+                                <SelectItem value="buyer">{t('admin.buyerManagement.roles.buyer')}</SelectItem>
+                                <SelectItem value="admin">{t('admin.reportsAnalytics.userActivity.admins')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -90,10 +93,10 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
                             className="flex-1"
                             onClick={handleFilterClear}
                         >
-                            Clear All
+                            {t('common.clearAll')}
                         </Button>
                         <Button className="flex-1" onClick={handleFilterApply}>
-                            Apply Filters
+                            {t('admin.reportsAnalytics.filterDrawer.apply')}
                         </Button>
                     </div>
                 </div>

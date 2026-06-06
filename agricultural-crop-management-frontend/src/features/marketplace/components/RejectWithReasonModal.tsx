@@ -11,6 +11,7 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 type RejectWithReasonModalProps = {
   isOpen: boolean;
@@ -34,14 +35,17 @@ export function RejectWithReasonModal({
   title,
   description,
   reasonLabel,
-  reasonPlaceholder = "Enter reason...",
-  confirmButtonText = "Confirm",
+  reasonPlaceholder,
+  confirmButtonText,
   isLoading = false,
 }: RejectWithReasonModalProps) {
+  const { t } = useI18n();
   const [reason, setReason] = useState("");
   const trimmedReason = reason.trim();
   const isValid = trimmedReason.length >= MIN_REASON_LENGTH && trimmedReason.length <= MAX_REASON_LENGTH;
   const showError = reason.length > 0 && !isValid;
+  const resolvedReasonPlaceholder = reasonPlaceholder ?? t("admin.marketplace.components.reasonPlaceholder");
+  const resolvedConfirmButtonText = confirmButtonText ?? t("common.confirm");
 
   const handleConfirm = () => {
     if (isValid) {
@@ -74,7 +78,7 @@ export function RejectWithReasonModal({
             id="reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder={reasonPlaceholder}
+            placeholder={resolvedReasonPlaceholder}
             rows={5}
             disabled={isLoading}
             maxLength={MAX_REASON_LENGTH}
@@ -83,7 +87,7 @@ export function RejectWithReasonModal({
           />
           <div className="flex items-center justify-between text-xs">
             <span id="reason-error" className={showError ? "text-red-600" : "text-gray-500"}>
-              {showError && "Please provide a reason (at least 10 characters)"}
+              {showError && t("admin.marketplace.components.reasonValidation")}
             </span>
             <span className="text-gray-400">
               {reason.length} / {MAX_REASON_LENGTH}
@@ -93,7 +97,7 @@ export function RejectWithReasonModal({
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             type="button"
@@ -101,7 +105,7 @@ export function RejectWithReasonModal({
             onClick={handleConfirm}
             disabled={!isValid || isLoading}
           >
-            {confirmButtonText}
+            {resolvedConfirmButtonText}
           </Button>
         </DialogFooter>
       </DialogContent>

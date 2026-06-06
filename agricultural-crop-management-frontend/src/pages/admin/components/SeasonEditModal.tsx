@@ -9,8 +9,9 @@ import {
   convertWeightToKg,
   getWeightUnitLabel,
 } from "@/shared/lib";
+import { BackButton } from "@/shared/ui/back-button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, AlertTriangle, Loader2, X } from "lucide-react";
+import { AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface Season {
@@ -75,6 +76,11 @@ export function SeasonEditModal({
   // Check if transitioning to COMPLETED
   const isCompletingNow =
     status === "COMPLETED" && season.status !== "COMPLETED";
+  const isDirty =
+    status !== season.status ||
+    endDate !== (season.endDate || "") ||
+    actualYieldKg !== formatWeightInput(season.actualYieldKg) ||
+    notes !== (season.notes || "");
 
   // Fetch pending task count when COMPLETED is selected
   const { data: pendingTaskCount, isLoading: pendingTasksLoading } = useQuery({
@@ -106,11 +112,11 @@ export function SeasonEditModal({
     onError: (err: any) => {
       const code = err.response?.data?.code;
       const message =
-        err.response?.data?.message || err.message || "Failed to update season";
+        err.response?.data?.message || err.message || t("admin.seasonEdit.error.updateFailed");
 
       if (code === "ERR_SEASON_COMPLETION_REQUIRES_YIELD_AND_DATE") {
         setError(
-          "To complete a season, actual yield and end date are required.",
+          t("admin.seasonEdit.error.completeRequiresYieldDate"),
         );
       } else {
         setError(message);
@@ -125,12 +131,12 @@ export function SeasonEditModal({
     // Frontend validation for COMPLETED status
     if (isCompletingNow) {
       if (!endDate) {
-        setError("End date is required when completing a season");
+        setError(t("admin.seasonEdit.validation.endDateRequired"));
         return;
       }
       if (!actualYieldKg || parseFloat(actualYieldKg) <= 0) {
         setError(
-          "Actual yield (greater than 0) is required when completing a season",
+          t("admin.seasonEdit.validation.actualYieldRequired"),
         );
         return;
       }
@@ -152,25 +158,32 @@ export function SeasonEditModal({
 
     updateMutation.mutate(payload);
   };
+  const handleClose = () => {
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+
+    onClose();
+  };
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
 
       {/* Modal */}
       <div className="relative bg-background border border-border rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-lg font-semibold">Edit Season</h2>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <BackButton onClick={handleClose} className="w-fit" />
+            <h2 className="text-lg font-semibold">{t("admin.seasonEdit.title")}</h2>
+          </div>
         </div>
 
         {/* Content */}
@@ -188,13 +201,15 @@ export function SeasonEditModal({
             <div className="p-3 bg-muted/30 rounded-lg">
               <div className="text-sm font-medium">{season.seasonName}</div>
               <div className="text-xs text-muted-foreground">
-                Current status: {season.status}
+                {t("admin.seasonEdit.currentStatus", {
+                  status: t(`admin.farmsPlots.seasonStatus.${season.status}`, season.status),
+                })}
               </div>
             </div>
 
             {/* Status Dropdown */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Status</label>
+              <label className="text-sm font-medium">{t("common.status")}</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
@@ -202,7 +217,7 @@ export function SeasonEditModal({
               >
                 {SEASON_STATUSES.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {t(`admin.farmsPlots.seasonStatus.${s}`, s)}
                   </option>
                 ))}
               </select>
@@ -213,10 +228,10 @@ export function SeasonEditModal({
               <div className="flex items-start gap-2 p-3 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg text-amber-800 dark:text-amber-300">
                 <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
                 <div className="text-sm">
-                  <strong>⚠️ Warning:</strong>{" "}
+                  <strong>{t("admin.seasonEdit.warningTitle")}</strong>{" "}
                   {pendingTasksLoading
-                    ? "Checking pending tasks..."
-                    : `${pendingTaskCount ?? 0} pending task(s) for this season will be marked as CANCELLED.`}
+                    ? t("admin.seasonEdit.checkingPendingTasks")
+                    : t("admin.seasonEdit.pendingTasksWarning", { count: pendingTaskCount ?? 0 })}
                 </div>
               </div>
             )}
@@ -226,7 +241,7 @@ export function SeasonEditModal({
               <>
                 {/* End Date - Required when completing */}
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">End Date *</label>
+                  <label className="text-sm font-medium">{t("admin.seasonEdit.endDateRequired")}</label>
                   <input
                     type="date"
                     value={endDate}
@@ -239,7 +254,7 @@ export function SeasonEditModal({
                 {/* Actual Yield - Required when completing */}
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">
-                    Actual Yield ({unitLabel}) *
+                    {t("admin.seasonEdit.actualYieldRequired", { unit: unitLabel })}
                   </label>
                   <input
                     type="number"
@@ -248,7 +263,7 @@ export function SeasonEditModal({
                     value={actualYieldKg}
                     onChange={(e) => setActualYieldKg(e.target.value)}
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
-                    placeholder={`Enter actual yield in ${unitLabel}`}
+                    placeholder={t("admin.seasonEdit.actualYieldPlaceholder", { unit: unitLabel })}
                     required
                   />
                 </div>
@@ -257,13 +272,13 @@ export function SeasonEditModal({
 
             {/* Notes */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Notes</label>
+              <label className="text-sm font-medium">{t("common.notes")}</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm resize-none"
-                placeholder="Optional notes..."
+                placeholder={t("admin.seasonEdit.notesPlaceholder")}
               />
             </div>
           </form>
@@ -273,7 +288,7 @@ export function SeasonEditModal({
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-muted/30">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={updateMutation.isPending}
             className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-muted/50 disabled:opacity-50"
           >

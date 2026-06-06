@@ -11,6 +11,7 @@ import {
     Legend,
 } from 'recharts';
 import type { UserActivityFilter } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface UserActivityChartProps {
     filteredUserActivityData: Array<Record<string, string | number>>;
@@ -23,13 +24,15 @@ export const UserActivityChart: React.FC<UserActivityChartProps> = ({
     userActivityFilter,
     setUserActivityFilter,
 }) => {
+    const { t } = useI18n();
+
     return (
         <Card className="lg:col-span-2">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>User Activity</CardTitle>
-                        <CardDescription>Active users over time by role</CardDescription>
+                        <CardTitle>{t('admin.reportsAnalytics.userActivity.title')}</CardTitle>
+                        <CardDescription>{t('admin.reportsAnalytics.userActivity.description')}</CardDescription>
                     </div>
                     <div className="flex gap-2">
                         <Button
@@ -38,7 +41,7 @@ export const UserActivityChart: React.FC<UserActivityChartProps> = ({
                             onClick={() => setUserActivityFilter({ ...userActivityFilter, farmers: !userActivityFilter.farmers })}
                             className={userActivityFilter.farmers ? 'bg-primary hover:bg-primary/90' : ''}
                         >
-                            Farmers
+                            {t('admin.farmerManagement.roles.farmer')}
                         </Button>
                         <Button
                             variant={userActivityFilter.buyers ? 'default' : 'outline'}
@@ -46,7 +49,7 @@ export const UserActivityChart: React.FC<UserActivityChartProps> = ({
                             onClick={() => setUserActivityFilter({ ...userActivityFilter, buyers: !userActivityFilter.buyers })}
                             className={userActivityFilter.buyers ? 'bg-primary hover:bg-primary/90' : ''}
                         >
-                            Buyers
+                            {t('admin.buyerManagement.roles.buyer')}
                         </Button>
                         <Button
                             variant={userActivityFilter.admins ? 'default' : 'outline'}
@@ -54,7 +57,7 @@ export const UserActivityChart: React.FC<UserActivityChartProps> = ({
                             onClick={() => setUserActivityFilter({ ...userActivityFilter, admins: !userActivityFilter.admins })}
                             className={userActivityFilter.admins ? 'bg-primary hover:bg-primary/90' : ''}
                         >
-                            Admins
+                            {t('admin.reportsAnalytics.userActivity.admins')}
                         </Button>
                     </div>
                 </div>
@@ -71,6 +74,7 @@ export const UserActivityChart: React.FC<UserActivityChartProps> = ({
                             <Line
                                 type="monotone"
                                 dataKey="farmers"
+                                name={t('admin.farmerManagement.roles.farmer')}
                                 stroke="#10B981"
                                 strokeWidth={2}
                                 dot={{ r: 4 }}
@@ -81,6 +85,7 @@ export const UserActivityChart: React.FC<UserActivityChartProps> = ({
                             <Line
                                 type="monotone"
                                 dataKey="buyers"
+                                name={t('admin.buyerManagement.roles.buyer')}
                                 stroke="#0891B2"
                                 strokeWidth={2}
                                 dot={{ r: 4 }}
@@ -91,6 +96,7 @@ export const UserActivityChart: React.FC<UserActivityChartProps> = ({
                             <Line
                                 type="monotone"
                                 dataKey="admins"
+                                name={t('admin.reportsAnalytics.userActivity.admins')}
                                 stroke="#8B5CF6"
                                 strokeWidth={2}
                                 dot={{ r: 4 }}

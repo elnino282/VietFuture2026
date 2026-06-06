@@ -1,6 +1,8 @@
 import type { Plot } from '@/entities/plot';
 import { Badge, Skeleton, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { getSoilTypeLabel } from '@/features/farmer/shared/plotOptions';
 
 interface FarmPlotsTableProps {
     plots: Plot[];
@@ -28,20 +30,17 @@ function getStatusBadgeVariant(status: string | null | undefined): 'default' | '
 /**
  * Get human-readable status label
  */
-function getStatusLabel(status: string | null | undefined): string {
-    switch (status?.toUpperCase()) {
+function getStatusLabel(status: string | null | undefined, t: (key: string) => string): string {
+    const normalized = status?.toUpperCase();
+    switch (normalized) {
         case 'IN_USE':
-            return 'In Use';
         case 'IDLE':
-            return 'Idle';
         case 'AVAILABLE':
-            return 'Available';
         case 'FALLOW':
-            return 'Fallow';
         case 'MAINTENANCE':
-            return 'Maintenance';
+            return t(`farms.plotStatuses.${normalized}`);
         default:
-            return status || 'Unknown';
+            return status || t('farmDetail.seasons.statusLabels.Unknown');
     }
 }
 
@@ -50,6 +49,7 @@ function getStatusLabel(status: string | null | undefined): string {
  */
 export function FarmPlotsTable({ plots, isLoading = false }: FarmPlotsTableProps) {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     // Loading state
     if (isLoading) {
@@ -58,10 +58,10 @@ export function FarmPlotsTable({ plots, isLoading = false }: FarmPlotsTableProps
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Plot Name</TableHead>
-                            <TableHead className="text-right">Area (ha)</TableHead>
-                            <TableHead>Soil Type</TableHead>
-                            <TableHead>Status</TableHead>
+                            <TableHead>{t('plots.table.name')}</TableHead>
+                            <TableHead className="text-right">{t('plots.table.area')}</TableHead>
+                            <TableHead>{t('plots.table.soilType')}</TableHead>
+                            <TableHead>{t('plots.table.status')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -83,8 +83,8 @@ export function FarmPlotsTable({ plots, isLoading = false }: FarmPlotsTableProps
     if (!plots || plots.length === 0) {
         return (
             <div className="rounded-md border border-dashed p-8 text-center text-gray-500">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No plots yet</h3>
-                <p>Create your first plot to start managing your farm land.</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('farmDetail.plots.noPlots')}</h3>
+                <p>{t('farmDetail.plots.createToStart')}</p>
             </div>
         );
     }
@@ -94,10 +94,10 @@ export function FarmPlotsTable({ plots, isLoading = false }: FarmPlotsTableProps
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Plot Name</TableHead>
-                        <TableHead className="text-right">Area (ha)</TableHead>
-                        <TableHead>Soil Type</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>{t('plots.table.name')}</TableHead>
+                        <TableHead className="text-right">{t('plots.table.area')}</TableHead>
+                        <TableHead>{t('plots.table.soilType')}</TableHead>
+                        <TableHead>{t('plots.table.status')}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -114,11 +114,11 @@ export function FarmPlotsTable({ plots, isLoading = false }: FarmPlotsTableProps
                                 {plot.area != null ? plot.area.toFixed(2) : '-'}
                             </TableCell>
                             <TableCell>
-                                {plot.soilType || '-'}
+                                {getSoilTypeLabel(plot.soilType, t) || '-'}
                             </TableCell>
                             <TableCell>
                                 <Badge variant={getStatusBadgeVariant(plot.status)}>
-                                    {getStatusLabel(plot.status)}
+                                    {getStatusLabel(plot.status, t)}
                                 </Badge>
                             </TableCell>
                         </TableRow>

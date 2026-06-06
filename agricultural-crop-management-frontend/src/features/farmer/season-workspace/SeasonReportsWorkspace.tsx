@@ -1,5 +1,6 @@
 import { AlertCircle, BarChart3, Wheat } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import { BackButton } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { useAllFarmerHarvests } from "@/entities/harvest";
@@ -46,16 +47,14 @@ export function SeasonReportsWorkspace() {
 
   if (!hasValidSeasonId) {
     return (
-      <div className="p-6">
+      <div className="p-6 space-y-4">
+        <BackButton to="/farmer/seasons" variant="outline" />
         <Card className="rounded-[18px] border border-destructive/20 bg-destructive/5 shadow-sm">
           <CardContent className="p-6 space-y-2">
             <div className="flex items-center gap-2 text-destructive">
               <AlertCircle className="w-4 h-4" />
               <p className="text-sm">{t("seasonWorkspace.invalidSeason")}</p>
             </div>
-            <Button variant="outline" onClick={() => navigate("/farmer/seasons")}>
-              {t("seasonWorkspace.backToSeasons")}
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -106,7 +105,8 @@ export function SeasonReportsWorkspace() {
 
   if (!hasInterimData && !isFinalReport) {
     return (
-      <div className="p-6">
+      <div className="p-6 space-y-4">
+        <BackButton to={`/farmer/seasons/${seasonIdNumber}/workspace`} />
         <Card className="rounded-[18px] border border-amber-300 bg-amber-50 shadow-sm">
           <CardContent className="p-6 space-y-3">
             <div className="flex items-center gap-2 text-amber-700">
@@ -121,10 +121,6 @@ export function SeasonReportsWorkspace() {
                 onClick={() => navigate(`/farmer/seasons/${seasonIdNumber}/workspace/harvest`)}
               >
                 {t("seasonReportsWorkspace.actions.goToHarvest")}
-              </Button>
-              <Button onClick={() => navigate(`/farmer/seasons/${seasonIdNumber}/workspace`)}>
-                <BarChart3 className="w-4 h-4 mr-2" />
-                {t("seasonReportsWorkspace.actions.backToWorkspace")}
               </Button>
             </div>
           </CardContent>

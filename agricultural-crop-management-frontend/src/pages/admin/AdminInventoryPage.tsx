@@ -2,6 +2,7 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
+  BackButton,
   Badge,
   Button,
   CardContent,
@@ -31,6 +32,7 @@ import {
 } from "@/features/admin/shared/ui";
 import { usePreferences } from "@/shared/contexts";
 import { useDebounce } from "@/shared/lib";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, MoreVertical, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -38,26 +40,26 @@ import { useSearchParams } from "react-router-dom";
 
 const WINDOW_OPTIONS = [7, 14, 30, 60, 90];
 const SORT_OPTIONS = [
-  { value: "EXPIRY_ASC", label: "Expiry (Soonest)" },
-  { value: "EXPIRY_DESC", label: "Expiry (Latest)" },
-  { value: "ONHAND_DESC", label: "On-hand (High to Low)" },
+  { value: "EXPIRY_ASC", labelKey: "admin.inventoryRisks.sort.expiryAsc" },
+  { value: "EXPIRY_DESC", labelKey: "admin.inventoryRisks.sort.expiryDesc" },
+  { value: "ONHAND_DESC", labelKey: "admin.inventoryRisks.sort.onHandDesc" },
 ];
 const STATUS_OPTIONS = [
-  { value: "RISK", label: "Risk" },
-  { value: "EXPIRED", label: "Expired" },
-  { value: "EXPIRING", label: "Expiring" },
-  { value: "LOW_STOCK", label: "Low Stock" },
-  { value: "ABNORMAL_MOVEMENT", label: "Abnormal Movement" },
-  { value: "UNKNOWN_EXPIRY", label: "Unknown Expiry" },
-  { value: "ALL", label: "All Lots" },
+  { value: "RISK", labelKey: "admin.inventoryRisks.status.risk" },
+  { value: "EXPIRED", labelKey: "admin.inventoryRisks.status.expired" },
+  { value: "EXPIRING", labelKey: "admin.inventoryRisks.status.expiring" },
+  { value: "LOW_STOCK", labelKey: "admin.inventoryRisks.status.lowStock" },
+  { value: "ABNORMAL_MOVEMENT", labelKey: "admin.inventoryRisks.status.abnormalMovement" },
+  { value: "UNKNOWN_EXPIRY", labelKey: "admin.inventoryRisks.status.unknownExpiry" },
+  { value: "ALL", labelKey: "admin.inventoryRisks.status.allLots" },
 ];
 const SEVERITY_OPTIONS = [
-  { value: "ALL", label: "All Severities" },
-  { value: "CRITICAL", label: "Critical" },
-  { value: "HIGH", label: "High" },
-  { value: "MEDIUM", label: "Medium" },
-  { value: "LOW", label: "Low" },
-  { value: "NONE", label: "None" },
+  { value: "ALL", labelKey: "admin.inventoryRisks.severity.all" },
+  { value: "CRITICAL", labelKey: "admin.inventoryRisks.severity.critical" },
+  { value: "HIGH", labelKey: "admin.inventoryRisks.severity.high" },
+  { value: "MEDIUM", labelKey: "admin.inventoryRisks.severity.medium" },
+  { value: "LOW", labelKey: "admin.inventoryRisks.severity.low" },
+  { value: "NONE", labelKey: "common.none" },
 ];
 
 const parseNumber = (value: string | null) => {
@@ -76,6 +78,7 @@ const formatDate = (value: string | null | undefined, locale: string) => {
 };
 
 export function AdminInventoryPage() {
+  const { t } = useI18n();
   const { preferences } = usePreferences();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(0);
@@ -193,15 +196,19 @@ export function AdminInventoryPage() {
     setSelectedLotId(lotId);
     setDetailOpen(true);
   };
+  const closeDetail = () => {
+    setDetailOpen(false);
+    setSelectedLotId(null);
+  };
 
   const renderStatusBadge = (value: string) => {
     switch (value) {
       case "EXPIRED":
-        return <Badge variant="destructive">Expired</Badge>;
+        return <Badge variant="destructive">{t("admin.inventoryRisks.status.expired")}</Badge>;
       case "EXPIRING":
         return (
           <Badge variant="outline" className="text-amber-600 border-amber-300">
-            Expiring
+            {t("admin.inventoryRisks.status.expiring")}
           </Badge>
         );
       case "LOW_STOCK":
@@ -210,19 +217,19 @@ export function AdminInventoryPage() {
             variant="outline"
             className="text-orange-600 border-orange-300"
           >
-            Low Stock
+            {t("admin.inventoryRisks.status.lowStock")}
           </Badge>
         );
       case "ABNORMAL_MOVEMENT":
         return (
           <Badge variant="outline" className="text-red-600 border-red-300">
-            Abnormal Movement
+            {t("admin.inventoryRisks.status.abnormalMovement")}
           </Badge>
         );
       case "UNKNOWN_EXPIRY":
-        return <Badge variant="secondary">Unknown Expiry</Badge>;
+        return <Badge variant="secondary">{t("admin.inventoryRisks.status.unknownExpiry")}</Badge>;
       case "HEALTHY":
-        return <Badge variant="secondary">Healthy</Badge>;
+        return <Badge variant="secondary">{t("admin.inventoryRisks.status.healthy")}</Badge>;
       default:
         return <Badge variant="outline">{value}</Badge>;
     }
@@ -231,31 +238,31 @@ export function AdminInventoryPage() {
   const renderSeverityBadge = (value: string | null | undefined) => {
     switch (value) {
       case "CRITICAL":
-        return <Badge variant="destructive">Critical</Badge>;
+        return <Badge variant="destructive">{t("admin.inventoryRisks.severity.critical")}</Badge>;
       case "HIGH":
         return (
           <Badge variant="outline" className="text-red-600 border-red-300">
-            High
+            {t("admin.inventoryRisks.severity.high")}
           </Badge>
         );
       case "MEDIUM":
         return (
           <Badge variant="outline" className="text-amber-600 border-amber-300">
-            Medium
+            {t("admin.inventoryRisks.severity.medium")}
           </Badge>
         );
       case "LOW":
-        return <Badge variant="secondary">Low</Badge>;
+        return <Badge variant="secondary">{t("admin.inventoryRisks.severity.low")}</Badge>;
       default:
-        return <Badge variant="outline">{value || "None"}</Badge>;
+        return <Badge variant="outline">{value || t("common.none")}</Badge>;
     }
   };
 
   return (
     <AdminPageContainer>
       <AdminHeaderCard
-        title="Inventory Risks"
-        description="Monitor expiring, expired, low stock, and abnormal movement lots."
+        title={t("admin.inventoryRisks.title")}
+        description={t("admin.inventoryRisks.subtitle")}
       />
 
       <AdminContentCard>
@@ -268,10 +275,10 @@ export function AdminInventoryPage() {
               }
             >
               <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[220px]">
-                <SelectValue placeholder="All farms" />
+                <SelectValue placeholder={t("admin.alerts.farms.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All farms</SelectItem>
+                <SelectItem value="all">{t("admin.alerts.farms.all")}</SelectItem>
                 {(optionsQuery.data?.farms ?? []).map((farm) => (
                   <SelectItem key={farm.id} value={String(farm.id)}>
                     {farm.name}
@@ -287,10 +294,10 @@ export function AdminInventoryPage() {
               }
             >
               <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[220px]">
-                <SelectValue placeholder="All items" />
+                <SelectValue placeholder={t("admin.inventoryRisks.filters.allItems")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All items</SelectItem>
+                <SelectItem value="all">{t("admin.inventoryRisks.filters.allItems")}</SelectItem>
                 {(optionsQuery.data?.items ?? []).map((item) => (
                   <SelectItem key={item.id} value={String(item.id)}>
                     {item.name}
@@ -309,7 +316,7 @@ export function AdminInventoryPage() {
               <SelectContent>
                 {STATUS_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -325,7 +332,7 @@ export function AdminInventoryPage() {
               <SelectContent>
                 {SEVERITY_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -342,7 +349,7 @@ export function AdminInventoryPage() {
                 <SelectContent>
                   {WINDOW_OPTIONS.map((option) => (
                     <SelectItem key={option} value={String(option)}>
-                      {option} days
+                      {t("admin.inventoryRisks.filters.days", { count: option })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -363,7 +370,7 @@ export function AdminInventoryPage() {
                   className="h-9 w-full rounded-[14px] sm:w-[120px]"
                 />
                 <span className="text-xs text-muted-foreground">
-                  Low stock threshold
+                  {t("admin.inventoryRisks.filters.lowStockThreshold")}
                 </span>
               </div>
             )}
@@ -378,7 +385,7 @@ export function AdminInventoryPage() {
               <SelectContent>
                 {SORT_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -387,7 +394,7 @@ export function AdminInventoryPage() {
             <div className="relative w-full sm:w-[260px]">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search item or lot code"
+                placeholder={t("admin.inventoryRisks.searchPlaceholder")}
                 className="h-9 rounded-[14px] pl-9"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
@@ -406,15 +413,15 @@ export function AdminInventoryPage() {
           {lotsQuery.isError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Failed to load inventory lots</AlertTitle>
+              <AlertTitle>{t("admin.inventoryRisks.error.loadLots")}</AlertTitle>
               <AlertDescription className="mt-2 flex items-center justify-between gap-3">
-                <span>{lotsQuery.error?.message || "Please try again."}</span>
+                <span>{lotsQuery.error?.message || t("common.error.description")}</span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => lotsQuery.refetch()}
                 >
-                  Retry
+                  {t("common.retry")}
                 </Button>
               </AlertDescription>
             </Alert>
@@ -427,14 +434,14 @@ export function AdminInventoryPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Item / Lot</TableHead>
-                        <TableHead>Farm</TableHead>
-                        <TableHead>Expiry</TableHead>
-                        <TableHead className="text-right">On hand</TableHead>
-                        <TableHead>Days to expiry</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Severity</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t("admin.inventoryRisks.table.itemLot")}</TableHead>
+                        <TableHead>{t("admin.farmsPlots.table.farm")}</TableHead>
+                        <TableHead>{t("admin.inventoryRisks.table.expiry")}</TableHead>
+                        <TableHead className="text-right">{t("admin.inventoryRisks.table.onHand")}</TableHead>
+                        <TableHead>{t("admin.inventoryRisks.table.daysToExpiry")}</TableHead>
+                        <TableHead>{t("common.status")}</TableHead>
+                        <TableHead>{t("admin.inventoryRisks.table.severity")}</TableHead>
+                        <TableHead className="text-right">{t("common.actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -443,7 +450,7 @@ export function AdminInventoryPage() {
                           <TableCell>
                             <div className="font-medium">{lot.itemName}</div>
                             <div className="text-xs text-muted-foreground">
-                              {lot.lotCode || "No lot code"}
+                              {lot.lotCode || t("admin.inventoryRisks.noLotCode")}
                             </div>
                           </TableCell>
                           <TableCell>{lot.farmName || "-"}</TableCell>
@@ -466,7 +473,7 @@ export function AdminInventoryPage() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8 rounded-[14px]"
-                                  aria-label={`Actions for ${lot.itemName}`}
+                                  aria-label={t("admin.farmsPlots.actionsFor", { name: lot.itemName })}
                                 >
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
@@ -475,7 +482,7 @@ export function AdminInventoryPage() {
                                 <DropdownMenuItem
                                   onSelect={() => handleViewDetail(lot.lotId)}
                                 >
-                                  View details
+                                  {t("admin.farmsPlots.actions.viewDetails")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -491,7 +498,7 @@ export function AdminInventoryPage() {
                       disabled={page === 0}
                       onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
                     >
-                      Previous
+                      {t("pagination.previousPage")}
                     </Button>
                     <Button
                       variant="outline"
@@ -499,13 +506,13 @@ export function AdminInventoryPage() {
                       disabled={page >= (lotsQuery.data?.totalPages ?? 1) - 1}
                       onClick={() => setPage((prev) => prev + 1)}
                     >
-                      Next
+                      {t("pagination.nextPage")}
                     </Button>
                   </div>
                 </>
               ) : (
                 <div className="py-10 text-center text-sm text-muted-foreground">
-                  No inventory lots match the current filters.
+                  {t("admin.inventoryRisks.empty")}
                 </div>
               )}
             </>
@@ -516,7 +523,7 @@ export function AdminInventoryPage() {
       {detailOpen && (
         <div
           className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm cursor-pointer"
-          onClick={() => setDetailOpen(false)}
+          onClick={closeDetail}
         >
           <div
             className="fixed right-0 top-0 h-full w-full max-w-xl bg-card border-l border-border shadow-lg overflow-auto cursor-default"
@@ -525,25 +532,19 @@ export function AdminInventoryPage() {
             <div className="p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">Lot details</h2>
+                  <h2 className="text-lg font-semibold">{t("admin.inventoryRisks.detail.title")}</h2>
                   <p className="text-sm text-muted-foreground">
-                    {detailQuery.data?.itemName || "Inventory lot"}
+                    {detailQuery.data?.itemName || t("admin.inventoryRisks.detail.fallback")}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setDetailOpen(false)}
-                >
-                  X
-                </Button>
+                <BackButton onClick={closeDetail} />
               </div>
 
               {detailQuery.isLoading && <Skeleton className="h-32 w-full" />}
               {detailQuery.isError && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Failed to load lot details</AlertTitle>
+                  <AlertTitle>{t("admin.inventoryRisks.error.loadDetail")}</AlertTitle>
                   <AlertDescription>
                     {detailQuery.error?.message}
                   </AlertDescription>
@@ -554,19 +555,19 @@ export function AdminInventoryPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs text-muted-foreground">Lot code</p>
+                      <p className="text-xs text-muted-foreground">{t("admin.inventoryRisks.detail.lotCode")}</p>
                       <p className="text-sm font-medium">
                         {detailQuery.data.lotCode || "-"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Supplier</p>
+                      <p className="text-xs text-muted-foreground">{t("admin.inventoryRisks.detail.supplier")}</p>
                       <p className="text-sm font-medium">
                         {detailQuery.data.supplierName || "-"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Expiry</p>
+                      <p className="text-xs text-muted-foreground">{t("admin.inventoryRisks.table.expiry")}</p>
                       <p className="text-sm font-medium">
                         {formatDate(
                           detailQuery.data.expiryDate,
@@ -575,7 +576,7 @@ export function AdminInventoryPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">On hand</p>
+                      <p className="text-xs text-muted-foreground">{t("admin.inventoryRisks.table.onHand")}</p>
                       <p className="text-sm font-medium">
                         {formatNumber(
                           Number(detailQuery.data.onHandTotal || 0),
@@ -586,15 +587,15 @@ export function AdminInventoryPage() {
                   </div>
 
                   <div>
-                    <p className="text-sm font-semibold mb-2">Balances</p>
+                    <p className="text-sm font-semibold mb-2">{t("admin.inventoryRisks.detail.balances")}</p>
                     {detailQuery.data.balances.length ? (
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Warehouse</TableHead>
-                            <TableHead>Location</TableHead>
+                            <TableHead>{t("admin.inventoryRisks.detail.warehouse")}</TableHead>
+                            <TableHead>{t("admin.farmsPlots.table.location")}</TableHead>
                             <TableHead className="text-right">
-                              Quantity
+                              {t("admin.inventoryRisks.detail.quantity")}
                             </TableHead>
                           </TableRow>
                         </TableHeader>
@@ -618,7 +619,7 @@ export function AdminInventoryPage() {
                       </Table>
                     ) : (
                       <p className="text-sm text-muted-foreground">
-                        No balances available.
+                        {t("admin.inventoryRisks.detail.noBalances")}
                       </p>
                     )}
                   </div>
@@ -626,14 +627,14 @@ export function AdminInventoryPage() {
               )}
 
               <div>
-                <p className="text-sm font-semibold mb-2">Movements</p>
+                <p className="text-sm font-semibold mb-2">{t("admin.inventoryRisks.detail.movements")}</p>
                 {movementsQuery.isLoading && (
                   <Skeleton className="h-28 w-full" />
                 )}
                 {movementsQuery.isError && (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Failed to load movements</AlertTitle>
+                    <AlertTitle>{t("admin.inventoryRisks.error.loadMovements")}</AlertTitle>
                   </Alert>
                 )}
                 {movementsQuery.data &&
@@ -641,10 +642,10 @@ export function AdminInventoryPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead className="text-right">Qty</TableHead>
-                          <TableHead>Reference</TableHead>
+                          <TableHead>{t("common.date")}</TableHead>
+                          <TableHead>{t("common.type")}</TableHead>
+                          <TableHead className="text-right">{t("admin.inventoryRisks.detail.qty")}</TableHead>
+                          <TableHead>{t("admin.inventoryRisks.detail.reference")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -671,7 +672,7 @@ export function AdminInventoryPage() {
                     </Table>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      No movements recorded.
+                      {t("admin.inventoryRisks.detail.noMovements")}
                     </p>
                   ))}
               </div>

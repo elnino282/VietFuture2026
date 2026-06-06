@@ -21,6 +21,7 @@ import {
 } from "@/shared/ui";
 import { AlertTriangle } from "lucide-react";
 import type { AlertSeverity, IncidentForm } from "../types";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface IncidentTicketDialogProps {
   incidentModalOpen: boolean;
@@ -37,25 +38,27 @@ export function IncidentTicketDialog({
   setIncidentForm,
   handleCreateIncident,
 }: IncidentTicketDialogProps) {
+  const { t } = useI18n();
+
   return (
     <Dialog open={incidentModalOpen} onOpenChange={setIncidentModalOpen}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" />
-            Create Incident Ticket
+            {t('admin.systemMonitoring.incident.title')}
           </DialogTitle>
           <DialogDescription>
-            Report and track system incidents
+            {t('admin.systemMonitoring.incident.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="incident-title">Title *</Label>
+            <Label htmlFor="incident-title">{t('admin.systemMonitoring.incident.titleLabel')} *</Label>
             <Input
               id="incident-title"
-              placeholder="Brief description of the incident"
+              placeholder={t('admin.systemMonitoring.incident.titlePlaceholder')}
               value={incidentForm.title}
               onChange={(e) =>
                 setIncidentForm({ ...incidentForm, title: e.target.value })
@@ -64,10 +67,10 @@ export function IncidentTicketDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="incident-description">Description *</Label>
+            <Label htmlFor="incident-description">{t('common.description')} *</Label>
             <Textarea
               id="incident-description"
-              placeholder="Detailed description of the incident, steps to reproduce, and impact"
+              placeholder={t('admin.systemMonitoring.incident.descriptionPlaceholder')}
               value={incidentForm.description}
               onChange={(e) =>
                 setIncidentForm({
@@ -81,7 +84,7 @@ export function IncidentTicketDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="severity">Severity *</Label>
+              <Label htmlFor="severity">{t('admin.systemMonitoring.incident.severity')} *</Label>
               <Select
                 value={incidentForm.severity}
                 onValueChange={(v: string) =>
@@ -95,16 +98,16 @@ export function IncidentTicketDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="critical">Critical</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="critical">{t('admin.systemMonitoring.severity.critical')}</SelectItem>
+                  <SelectItem value="high">{t('admin.systemMonitoring.severity.high')}</SelectItem>
+                  <SelectItem value="medium">{t('admin.systemMonitoring.severity.medium')}</SelectItem>
+                  <SelectItem value="low">{t('admin.systemMonitoring.severity.low')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
+              <Label htmlFor="status">{t('common.status')} *</Label>
               <Select
                 value={incidentForm.status}
                 onValueChange={(v: string) =>
@@ -118,16 +121,16 @@ export function IncidentTicketDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="open">Open</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="resolved">Resolved</SelectItem>
+                  <SelectItem value="open">{t('admin.systemMonitoring.status.open')}</SelectItem>
+                  <SelectItem value="in-progress">{t('admin.systemMonitoring.status.inProgress')}</SelectItem>
+                  <SelectItem value="resolved">{t('admin.systemMonitoring.status.resolved')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="assigned-to">Assigned To</Label>
+            <Label htmlFor="assigned-to">{t('admin.systemMonitoring.incident.assignedTo')}</Label>
             <Select
               value={incidentForm.assignedTo}
               onValueChange={(v: string) =>
@@ -135,13 +138,13 @@ export function IncidentTicketDialog({
               }
             >
               <SelectTrigger id="assigned-to">
-                <SelectValue placeholder="Select team member" />
+                <SelectValue placeholder={t('admin.systemMonitoring.incident.selectTeamMember')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin-user">Admin User</SelectItem>
-                <SelectItem value="dev-team">Development Team</SelectItem>
-                <SelectItem value="ops-team">Operations Team</SelectItem>
-                <SelectItem value="security-team">Security Team</SelectItem>
+                <SelectItem value="admin-user">{t('admin.systemMonitoring.teams.adminUser')}</SelectItem>
+                <SelectItem value="dev-team">{t('admin.systemMonitoring.teams.devTeam')}</SelectItem>
+                <SelectItem value="ops-team">{t('admin.systemMonitoring.teams.opsTeam')}</SelectItem>
+                <SelectItem value="security-team">{t('admin.systemMonitoring.teams.securityTeam')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -149,10 +152,10 @@ export function IncidentTicketDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setIncidentModalOpen(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleCreateIncident}>
-            Create Ticket
+            {t('admin.systemMonitoring.incident.createTicket')}
           </Button>
         </DialogFooter>
       </DialogContent>

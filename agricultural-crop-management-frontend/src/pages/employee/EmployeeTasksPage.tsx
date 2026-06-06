@@ -5,6 +5,7 @@
   useEmployeeTasks,
 } from "@/entities/labor";
 import {
+  BackButton,
   Badge,
   Button,
   Card,
@@ -26,25 +27,9 @@ import {
   TableRow,
   Textarea,
 } from "@/shared/ui";
+import { useI18n } from "@/hooks/useI18n";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-
-const getTaskStatusLabel = (status?: string) => {
-  switch (status) {
-    case "PENDING":
-      return "Chờ thực hiện";
-    case "IN_PROGRESS":
-      return "Đang thực hiện";
-    case "DONE":
-      return "Hoàn thành";
-    case "OVERDUE":
-      return "Quá hạn";
-    case "CANCELLED":
-      return "Đã hủy";
-    default:
-      return status ?? "-";
-  }
-};
 
 const getTaskStatusClassName = (status?: string) => {
   switch (status) {
@@ -62,6 +47,7 @@ const getTaskStatusClassName = (status?: string) => {
 };
 
 export function EmployeeTasksPage() {
+  const { t } = useI18n();
   const { data: taskPageData, isLoading } = useEmployeeTasks({ page: 0, size: 200 });
   const [progressTaskId, setProgressTaskId] = useState<number | null>(null);
   const [planSeasonId, setPlanSeasonId] = useState<number | null>(null);
@@ -78,7 +64,7 @@ export function EmployeeTasksPage() {
     tasks.forEach((task) => {
       const seasonId = task.seasonId ?? null;
       const key = seasonId ? String(seasonId) : "no-season";
-      const seasonName = task.seasonName || "Unassigned Season";
+      const seasonName = task.seasonName || t("employee.common.unassignedSeason");
       const existing = grouped.get(key);
       if (existing) {
         existing.tasks.push(task);
@@ -89,7 +75,7 @@ export function EmployeeTasksPage() {
     return Array.from(grouped.values()).sort((a, b) =>
       a.seasonName.localeCompare(b.seasonName)
     );
-  }, [tasks]);
+  }, [tasks, t]);
   const selectedTask = useMemo(
     () => tasks.find((task) => task.taskId === progressTaskId) ?? null,
     [progressTaskId, tasks]
@@ -97,32 +83,35 @@ export function EmployeeTasksPage() {
   const selectedPlanSeasonName = useMemo(
     () =>
       tasksBySeason.find((group) => group.seasonId === planSeasonId)?.seasonName
-      ?? (planSeasonId ? `Season #${planSeasonId}` : ""),
-    [planSeasonId, tasksBySeason]
+      ?? (planSeasonId ? t("employee.common.seasonFallback", { id: planSeasonId }) : ""),
+    [planSeasonId, tasksBySeason, t]
   );
   const { data: seasonPlanTasks, isLoading: isSeasonPlanLoading } = useEmployeeSeasonPlan(planSeasonId);
 
   const acceptTaskMutation = useEmployeeAcceptTask({
-    onSuccess: () => toast.success("Đã nhận việc"),
-    onError: (error) => toast.error(error.message || "Không thể nhận việc"),
+    onSuccess: () => toast.success(t("employee.tasks.toast.acceptSuccess")),
+    onError: (error) => toast.error(error.message || t("employee.tasks.toast.acceptError")),
   });
 
   const reportProgressMutation = useEmployeeReportTaskProgress({
     onSuccess: () => {
-      toast.success("Đã cập nhật tiến độ");
+      toast.success(t("employee.tasks.toast.progressSuccess"));
       setProgressTaskId(null);
       setProgressPercent("0");
       setProgressNote("");
       setEvidenceUrl("");
     },
-    onError: (error) => toast.error(error.message || "Không thể cập nhật tiến độ"),
+    onError: (error) => toast.error(error.message || t("employee.tasks.toast.progressError")),
   });
+
+  const getTaskStatusLabel = (status?: string) =>
+    status ? t(`employee.tasks.status.${status}`, status) : t("common.notAvailable");
 
   const handleSubmitProgress = () => {
     if (!progressTaskId) return;
     const parsedPercent = Number(progressPercent);
     if (Number.isNaN(parsedPercent) || parsedPercent < 0 || parsedPercent > 100) {
-      toast.error("Tiến độ phải trong khoảng 0-100");
+      toast.error(t("employee.tasks.validation.progressRange"));
       return;
     }
     reportProgressMutation.mutate({
@@ -134,18 +123,34 @@ export function EmployeeTasksPage() {
       },
     });
   };
+  const closeProgressDialog = () => {
+    const isDirty =
+      progressPercent !== "0" ||
+      progressNote.trim().length > 0 ||
+      evidenceUrl.trim().length > 0;
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+    setProgressTaskId(null);
+    setProgressPercent("0");
+    setProgressNote("");
+    setEvidenceUrl("");
+  };
 
   return (
     <div className="p-4 sm:p-6 max-w-[1500px] mx-auto space-y-4">
       <Card className="rounded-2xl border border-border">
         <CardHeader>
-          <CardTitle>Việc được giao</CardTitle>
+          <CardTitle>{t("employee.tasks.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Đang tải danh sách công việc...</p>
+            <p className="text-sm text-muted-foreground">{t("employee.tasks.loading")}</p>
           ) : tasks.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Bạn chưa có công việc nào được giao.</p>
+            <p className="text-sm text-muted-foreground">{t("employee.tasks.empty")}</p>
           ) : (
             <div className="space-y-6">
               {tasksBySeason.map((group) => (
@@ -159,7 +164,7 @@ export function EmployeeTasksPage() {
                         variant="outline"
                         onClick={() => setPlanSeasonId(group.seasonId)}
                       >
-                        View season plan (read-only)
+                        {t("employee.tasks.actions.viewSeasonPlan")}
                       </Button>
                     )}
                   </div>
@@ -167,10 +172,10 @@ export function EmployeeTasksPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Công việc</TableHead>
-                        <TableHead>Hạn</TableHead>
-                        <TableHead>Trạng thái</TableHead>
-                        <TableHead className="text-right">Thao tác</TableHead>
+                        <TableHead>{t("employee.tasks.table.task")}</TableHead>
+                        <TableHead>{t("employee.tasks.table.dueDate")}</TableHead>
+                        <TableHead>{t("employee.tasks.table.status")}</TableHead>
+                        <TableHead className="text-right">{t("employee.tasks.table.actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -197,12 +202,12 @@ export function EmployeeTasksPage() {
                                   onClick={() => acceptTaskMutation.mutate(task.taskId)}
                                   disabled={acceptTaskMutation.isPending}
                                 >
-                                  Nhận việc
+                                  {t("employee.tasks.actions.acceptTask")}
                                 </Button>
                               )}
                               {task.status !== "CANCELLED" && (
                                 <Button size="sm" onClick={() => setProgressTaskId(task.taskId)}>
-                                  Báo cáo tiến độ
+                                  {t("employee.tasks.actions.reportProgress")}
                                 </Button>
                               )}
                             </div>
@@ -218,17 +223,19 @@ export function EmployeeTasksPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={progressTaskId !== null} onOpenChange={(open) => !open && setProgressTaskId(null)}>
+      <Dialog open={progressTaskId !== null} onOpenChange={(open) => !open && closeProgressDialog()}>
         <DialogContent className="w-[95vw] max-w-lg">
           <DialogHeader>
-            <DialogTitle>Báo cáo tiến độ công việc</DialogTitle>
+            <BackButton onClick={closeProgressDialog} className="w-fit" />
+            <DialogTitle>{t("employee.tasks.progressDialog.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Công việc: <span className="text-foreground">{selectedTask?.title || "-"}</span>
+              {t("employee.tasks.progressDialog.taskLabel")}{" "}
+              <span className="text-foreground">{selectedTask?.title || t("common.notAvailable")}</span>
             </p>
             <div className="space-y-2">
-              <Label>Tiến độ (%)</Label>
+              <Label>{t("employee.tasks.progressDialog.progressPercent")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -238,16 +245,16 @@ export function EmployeeTasksPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Ghi chú</Label>
+              <Label>{t("employee.tasks.progressDialog.note")}</Label>
               <Textarea
                 rows={4}
                 value={progressNote}
                 onChange={(event) => setProgressNote(event.target.value)}
-                placeholder="Mô tả tiến độ hiện tại..."
+                placeholder={t("employee.tasks.progressDialog.notePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Link minh chứng (tuỳ chọn)</Label>
+              <Label>{t("employee.tasks.progressDialog.evidenceUrl")}</Label>
               <Input
                 value={evidenceUrl}
                 onChange={(event) => setEvidenceUrl(event.target.value)}
@@ -256,11 +263,11 @@ export function EmployeeTasksPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setProgressTaskId(null)}>
-              Hủy
+            <Button variant="outline" onClick={closeProgressDialog}>
+              {t("common.cancel")}
             </Button>
             <Button onClick={handleSubmitProgress} disabled={reportProgressMutation.isPending}>
-              Gửi tiến độ
+              {t("employee.tasks.progressDialog.submit")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -269,20 +276,23 @@ export function EmployeeTasksPage() {
       <Dialog open={planSeasonId !== null} onOpenChange={(open) => !open && setPlanSeasonId(null)}>
         <DialogContent className="w-[95vw] max-w-4xl max-h-[85vh] overflow-hidden">
           <DialogHeader>
-            <DialogTitle>Season Plan: {selectedPlanSeasonName}</DialogTitle>
+            <BackButton onClick={() => setPlanSeasonId(null)} className="w-fit" />
+            <DialogTitle>
+              {t("employee.tasks.planDialog.title", { season: selectedPlanSeasonName })}
+            </DialogTitle>
           </DialogHeader>
           {isSeasonPlanLoading ? (
-            <p className="text-sm text-muted-foreground">Loading season plan...</p>
+            <p className="text-sm text-muted-foreground">{t("employee.tasks.planDialog.loading")}</p>
           ) : !seasonPlanTasks || seasonPlanTasks.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No tasks available for this season plan.</p>
+            <p className="text-sm text-muted-foreground">{t("employee.tasks.planDialog.empty")}</p>
           ) : (
             <div className="max-h-[55vh] overflow-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Task</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{t("employee.tasks.table.task")}</TableHead>
+                    <TableHead>{t("employee.tasks.table.dueDate")}</TableHead>
+                    <TableHead>{t("employee.tasks.table.status")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -308,7 +318,7 @@ export function EmployeeTasksPage() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setPlanSeasonId(null)}>
-              Close
+              {t("common.close")}
             </Button>
           </DialogFooter>
         </DialogContent>

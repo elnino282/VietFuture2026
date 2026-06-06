@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Card, CardContent, CardHeader, ConfirmDialog } from '@/shared/ui';
+import { BackButton, Button, Card, CardContent, CardHeader, ConfirmDialog } from '@/shared/ui';
 import { AddressCard } from '../components/AddressCard';
 import { AddressForm } from '../components/AddressForm';
 import {
@@ -183,7 +183,12 @@ export function AddressBookPage() {
   const addressCardData = addresses?.map(toAddressCardData) || [];
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl space-y-4">
+      <BackButton
+        to="/marketplace"
+        confirmOnLeave={showAddForm || !!editingAddress}
+        className="w-fit"
+      />
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <h2 className="text-xl font-bold">Sổ địa chỉ</h2>

@@ -17,6 +17,7 @@ import { useVarietiesByCrop } from "@/entities/variety";
 import { usePreferences } from "@/shared/contexts";
 import { convertWeightToKg, getWeightUnitLabel } from "@/shared/lib";
 import {
+  BackButton,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -153,8 +154,28 @@ export function NewSeasonDialog({
     setNotes("");
   };
 
+  const isDirty =
+    farmId.length > 0 ||
+    plotId.length > 0 ||
+    cropId.length > 0 ||
+    varietyId.length > 0 ||
+    seasonName.trim().length > 0 ||
+    startDate.length > 0 ||
+    plannedHarvestDate.length > 0 ||
+    endDate.length > 0 ||
+    initialPlantCount.length > 0 ||
+    expectedYieldKg.length > 0 ||
+    budgetAmount.length > 0 ||
+    notes.trim().length > 0;
+
   const handleClose = () => {
     if (isSubmitting) return;
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
     resetForm();
     onOpenChange(false);
   };
@@ -190,6 +211,7 @@ export function NewSeasonDialog({
     >
       <DialogContent className="sm:max-w-[600px]" closeDisabled={isSubmitting}>
         <DialogHeader>
+          <BackButton onClick={handleClose} className="w-fit" />
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Calendar className="w-5 h-5 text-primary" />
             {t("seasons.dialog.createTitle")}

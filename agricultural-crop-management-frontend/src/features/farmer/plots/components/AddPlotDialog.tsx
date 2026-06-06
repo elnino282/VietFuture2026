@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ui/button";
+import { BackButton } from "@/shared/ui/back-button";
 import { Input } from "@/shared/ui/input";
 import {
   Dialog,
@@ -20,8 +21,8 @@ import {
 } from "@/shared/ui/select";
 import { Label } from "@/shared/ui/label";
 import type { PlotRequest } from "@/entities/plot";
-import { useSoilTypes } from "@/entities/soil-type";
-import { usePlotStatuses } from "@/entities/plot-status";
+import { useFarms } from "@/entities/farm";
+import { PLOT_STATUS_OPTIONS, SOIL_TYPE_OPTIONS } from "@/features/farmer/shared/plotOptions";
 
 
 
@@ -39,10 +40,9 @@ interface AddPlotDialogProps {
  * 
  * Backend expects:
  * - plotName: string
- * - addressId: number (optional)
  * - area: number (in hectares)
- * - soilTypeId: number
- * - plotStatusId: number
+ * - soilType: string
+ * - status: backend status enum
  */
 export function AddPlotDialog({
   isOpen,
@@ -51,29 +51,45 @@ export function AddPlotDialog({
   isSubmitting = false
 }: AddPlotDialogProps) {
   const { t } = useTranslation();
-  // Fetch soil types from API
-  const { data: soilTypes, isLoading: soilTypesLoading } = useSoilTypes();
-
-  // Fetch plot statuses from API
-  const { data: plotStatuses, isLoading: plotStatusesLoading } = usePlotStatuses();
+  const { data: farmsData, isLoading: isLoadingFarms } = useFarms({ page: 0, size: 100 });
+  const activeFarms = useMemo(
+    () => (farmsData?.content ?? []).filter((farm) => farm.active),
+    [farmsData]
+  );
 
   // Form state
+  const [farmId, setFarmId] = useState("");
   const [plotName, setPlotName] = useState("");
   const [areaValue, setAreaValue] = useState("");
-  const [soilTypeId, setSoilTypeId] = useState<string>("");
-  const [plotStatusId, setPlotStatusId] = useState<string>("1"); // Default to Active
+  const [soilType, setSoilType] = useState<string>("");
+  const [plotStatus, setPlotStatus] = useState<NonNullable<PlotRequest["status"]>>("IN_USE");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const resetForm = () => {
+    setFarmId(activeFarms.length === 1 ? String(activeFarms[0].id) : "");
     setPlotName("");
     setAreaValue("");
-    setSoilTypeId("");
-    setPlotStatusId("1");
+    setSoilType("");
+    setPlotStatus("IN_USE");
     setErrors({});
   };
 
   const handleClose = () => {
     if (isSubmitting) return;
+    const isDirty =
+      plotName.trim().length > 0 ||
+      areaValue.length > 0 ||
+      soilType.length > 0 ||
+      plotStatus !== "IN_USE" ||
+      (farmId.length > 0 && activeFarms.length !== 1);
+
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+
     resetForm();
     onClose();
   };
@@ -83,18 +99,28 @@ export function AddPlotDialog({
     if (!nextOpen) handleClose();
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!farmId && activeFarms.length === 1) {
+      setFarmId(String(activeFarms[0].id));
+    }
+  }, [activeFarms, farmId, isOpen]);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const nextErrors: Record<string, string> = {};
+    if (!farmId) {
+      nextErrors.farmId = t("farms.validation.farmRequired");
+    }
     if (!plotName.trim()) {
-      nextErrors.plotName = t("farms.validation.plotNameRequired", "Plot name is required");
+      nextErrors.plotName = t("farms.validation.plotNameRequired");
     }
     if (!areaValue || parseFloat(areaValue) <= 0) {
-      nextErrors.area = t("farms.validation.areaPositive", "Area must be greater than 0");
+      nextErrors.area = t("farms.validation.areaPositive");
     }
-    if (!soilTypeId) {
-      nextErrors.soilType = t("farms.validation.soilTypeRequired", "Soil type is required");
+    if (!soilType) {
+      nextErrors.soilType = t("farms.validation.soilTypeRequired");
     }
 
     setErrors(nextErrors);
@@ -102,26 +128,12 @@ export function AddPlotDialog({
       return;
     }
 
-    const selectedSoilType = soilTypes?.find((soil) => String(soil.id) === soilTypeId);
-    const selectedStatus = plotStatuses?.find((status) => String(status.id) === plotStatusId);
-
-    const statusName = selectedStatus?.statusName?.toLowerCase() ?? "";
-    const mappedStatus: PlotRequest["status"] =
-      statusName.includes("maint")
-        ? "MAINTENANCE"
-        : statusName.includes("fallow")
-          ? "FALLOW"
-          : statusName.includes("idle") || statusName.includes("dormant")
-            ? "IDLE"
-            : statusName.includes("use") || statusName.includes("active")
-              ? "IN_USE"
-              : "AVAILABLE";
-
     const formData: PlotRequest = {
+      farmId: Number.parseInt(farmId, 10),
       plotName: plotName.trim(),
       area: parseFloat(areaValue),
-      soilType: selectedSoilType?.soilName,
-      status: mappedStatus,
+      soilType,
+      status: plotStatus,
     };
 
     onSubmit(formData);
@@ -131,17 +143,64 @@ export function AddPlotDialog({
     <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="sm:max-w-[560px]" closeDisabled={isSubmitting}>
         <DialogHeader>
+          <BackButton onClick={handleClose} className="w-fit" />
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Plus className="w-5 h-5 text-primary" />
             {t("farms.dialog.createPlotTitle")}
           </DialogTitle>
           <DialogDescription>
-            {t("farms.dialog.createStandalonePlotDescription", "Create a new agricultural plot by entering the details below.")}
+            {t("farms.dialog.createStandalonePlotDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-4">
+            {/* Farm */}
+            <div className="space-y-2">
+              <Label htmlFor="farmId" required>{t("seasons.form.farm")}</Label>
+              <Select
+                value={farmId}
+                onValueChange={(value) => {
+                  setFarmId(value);
+                  setErrors((prev) => ({ ...prev, farmId: "" }));
+                }}
+                required
+                disabled={isSubmitting || isLoadingFarms || activeFarms.length === 0}
+              >
+                <SelectTrigger
+                  id="farmId"
+                  aria-invalid={!!errors.farmId}
+                  aria-describedby={errors.farmId ? "add-plot-farm-error" : undefined}
+                >
+                  <SelectValue
+                    placeholder={
+                      isLoadingFarms
+                        ? t("farms.loading")
+                        : t("seasons.form.selectFarm")
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeFarms.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      {t("farmManagement.noFarms")}
+                    </div>
+                  ) : (
+                    activeFarms.map((farm) => (
+                      <SelectItem key={farm.id} value={String(farm.id)}>
+                        {farm.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              {errors.farmId && (
+                <p id="add-plot-farm-error" className="text-sm text-destructive">
+                  {errors.farmId}
+                </p>
+              )}
+            </div>
+
             {/* Plot Name */}
             <div className="space-y-2">
               <Label htmlFor="plotName" required>{t("farms.form.plotName")}</Label>
@@ -195,25 +254,25 @@ export function AddPlotDialog({
             <div className="space-y-2">
               <Label htmlFor="soilType" required>{t("farms.form.soilType")}</Label>
               <Select
-                value={soilTypeId}
+                value={soilType}
                 onValueChange={(value) => {
-                  setSoilTypeId(value);
+                  setSoilType(value);
                   setErrors((prev) => ({ ...prev, soilType: "" }));
                 }}
                 required
-                disabled={isSubmitting || soilTypesLoading}
+                disabled={isSubmitting}
               >
                 <SelectTrigger
                   id="soilType"
                   aria-invalid={!!errors.soilType}
                   aria-describedby={errors.soilType ? "add-plot-soil-type-error" : undefined}
                 >
-                  <SelectValue placeholder={soilTypesLoading ? t("common.loading") : t("farms.form.selectSoilType")} />
+                  <SelectValue placeholder={t("farms.form.selectSoilType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {soilTypes?.map((soil) => (
-                    <SelectItem key={soil.id} value={String(soil.id)}>
-                      {soil.soilName}
+                  {SOIL_TYPE_OPTIONS.map((soil) => (
+                    <SelectItem key={soil.value} value={soil.value}>
+                      {t(soil.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -227,15 +286,20 @@ export function AddPlotDialog({
 
             {/* Plot Status */}
             <div className="space-y-2">
-              <Label htmlFor="plotStatus" required>{t("common.status")}</Label>
-              <Select value={plotStatusId} onValueChange={setPlotStatusId} required disabled={isSubmitting || plotStatusesLoading}>
+              <Label htmlFor="plotStatus" required>{t("farms.form.status")}</Label>
+              <Select
+                value={plotStatus}
+                onValueChange={(value) => setPlotStatus(value as NonNullable<PlotRequest["status"]>)}
+                required
+                disabled={isSubmitting}
+              >
                 <SelectTrigger id="plotStatus">
-                  <SelectValue placeholder={plotStatusesLoading ? t("common.loading") : t("farms.form.selectStatus")} />
+                  <SelectValue placeholder={t("farms.form.selectStatus")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {plotStatuses?.map((status) => (
-                    <SelectItem key={status.id} value={String(status.id)}>
-                      {status.statusName}
+                  {PLOT_STATUS_OPTIONS.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {t(status.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>

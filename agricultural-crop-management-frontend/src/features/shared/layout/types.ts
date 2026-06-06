@@ -1,6 +1,7 @@
 import type {
   AiDrawerProps,
   AppShellProps,
+  BreadcrumbKind,
   BreadcrumbPath,
   HeaderProps as WidgetHeaderProps,
   Language,
@@ -18,6 +19,7 @@ import type {
 export type {
   AiDrawerProps,
   AppShellProps,
+  BreadcrumbKind,
   BreadcrumbPath,
   Language,
   NavigationItem,

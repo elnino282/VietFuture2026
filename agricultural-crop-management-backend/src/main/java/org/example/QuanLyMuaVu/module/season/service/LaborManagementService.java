@@ -35,6 +35,7 @@ import org.example.QuanLyMuaVu.module.season.dto.request.EmployeeTaskProgressReq
 import org.example.QuanLyMuaVu.module.season.dto.request.UpdatePayrollRecordRequest;
 import org.example.QuanLyMuaVu.module.season.dto.request.UpdateSeasonEmployeeRequest;
 import org.example.QuanLyMuaVu.module.season.dto.response.EmployeeDirectoryResponse;
+import org.example.QuanLyMuaVu.module.season.dto.response.MySeasonResponse;
 import org.example.QuanLyMuaVu.module.season.dto.response.PayrollRecordResponse;
 import org.example.QuanLyMuaVu.module.season.dto.response.SeasonEmployeeResponse;
 import org.example.QuanLyMuaVu.module.season.dto.response.TaskProgressLogResponse;
@@ -343,6 +344,49 @@ public class LaborManagementService {
     // ---------------------------------------------------------------------
     // Employee-side portal
     // ---------------------------------------------------------------------
+
+    @Transactional(readOnly = true)
+    public List<MySeasonResponse> listAssignedSeasonsForCurrentEmployee() {
+        org.example.QuanLyMuaVu.module.identity.entity.User currentEmployee = farmAccessService.getCurrentUser();
+        return seasonEmployeeRepository.findAllByEmployee_IdAndActiveTrue(currentEmployee.getId())
+                .stream()
+                .map(SeasonEmployee::getSeason)
+                .filter(Objects::nonNull)
+                .sorted((left, right) -> Integer.compare(
+                        right.getId() != null ? right.getId() : 0,
+                        left.getId() != null ? left.getId() : 0))
+                .map(season -> MySeasonResponse.builder()
+                        .seasonId(season.getId())
+                        .seasonName(season.getSeasonName())
+                        .farmId(season.getPlot() != null && season.getPlot().getFarm() != null
+                                ? season.getPlot().getFarm().getId()
+                                : null)
+                        .farmName(season.getPlot() != null && season.getPlot().getFarm() != null
+                                ? season.getPlot().getFarm().getName()
+                                : null)
+                        .plotId(season.getPlot() != null ? season.getPlot().getId() : null)
+                        .plotName(season.getPlot() != null ? season.getPlot().getPlotName() : null)
+                        .startDate(season.getStartDate())
+                        .endDate(season.getEndDate())
+                        .plannedHarvestDate(season.getPlannedHarvestDate())
+                        .status(season.getStatus() != null ? season.getStatus().name() : null)
+                        .build())
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Season getAssignedSeasonForCurrentEmployee(Integer seasonId) {
+        org.example.QuanLyMuaVu.module.identity.entity.User currentEmployee = farmAccessService.getCurrentUser();
+        Season season = seasonRepository.findById(seasonId)
+                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
+        SeasonEmployee assignment = seasonEmployeeRepository
+                .findBySeason_IdAndEmployee_Id(season.getId(), currentEmployee.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.SEASON_EMPLOYEE_NOT_FOUND));
+        if (!Boolean.TRUE.equals(assignment.getActive())) {
+            throw new AppException(ErrorCode.SEASON_EMPLOYEE_NOT_FOUND);
+        }
+        return season;
+    }
 
     @Transactional(readOnly = true)
     public PageResponse<TaskResponse> listAssignedTasksForCurrentEmployee(String status, Integer seasonId, int page, int size) {

@@ -7,17 +7,20 @@ import {
     Tooltip as RechartsTooltip,
 } from 'recharts';
 import type { SeasonStatusData } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface SeasonStatusChartProps {
     seasonStatusData: SeasonStatusData[];
 }
 
 export const SeasonStatusChart: React.FC<SeasonStatusChartProps> = ({ seasonStatusData }) => {
+    const { t } = useI18n();
+
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Season Status</CardTitle>
-                <CardDescription>Distribution of season states</CardDescription>
+                <CardTitle>{t('admin.reportsAnalytics.seasonStatus.title')}</CardTitle>
+                <CardDescription>{t('admin.reportsAnalytics.seasonStatus.description')}</CardDescription>
             </CardHeader>
             <CardContent className="flex items-center justify-center">
                 <ResponsiveContainer width="100%" height={300}>

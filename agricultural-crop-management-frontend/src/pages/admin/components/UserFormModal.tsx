@@ -1,4 +1,5 @@
 import {
+  BackButton,
   Button,
   Dialog,
   DialogContent,
@@ -32,7 +33,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 export interface UserFormData {
@@ -76,6 +77,7 @@ export function UserFormModal({
   const [errors, setErrors] = useState<
     Partial<Record<keyof UserFormData, string>>
   >({});
+  const initialFormRef = useRef<string | null>(null);
 
   const isEditMode = !!user;
 
@@ -83,21 +85,25 @@ export function UserFormModal({
   useEffect(() => {
     if (isOpen) {
       fetchRoles();
+      const nextFormData = user
+        ? {
+            username: user.username || "",
+            password: "",
+            email: user.email || "",
+            fullName: user.fullName || "",
+            phone: user.phone || "",
+            roles: user.roles || ["FARMER"],
+            status: user.status || "ACTIVE",
+          }
+        : initialFormData;
       if (user) {
         // Edit mode: populate form with user data
-        setFormData({
-          username: user.username || "",
-          password: "", // Never populate password
-          email: user.email || "",
-          fullName: user.fullName || "",
-          phone: user.phone || "",
-          roles: user.roles || ["FARMER"],
-          status: user.status || "ACTIVE",
-        });
+        setFormData(nextFormData);
       } else {
         // Create mode: reset form
-        setFormData(initialFormData);
+        setFormData(nextFormData);
       }
+      initialFormRef.current = JSON.stringify(nextFormData);
       setErrors({});
     }
   }, [isOpen, user]);
@@ -118,19 +124,19 @@ export function UserFormModal({
     const newErrors: Partial<Record<keyof UserFormData, string>> = {};
 
     if (!formData.username || formData.username.length < 3) {
-      newErrors.username = "Username must be at least 3 characters";
+      newErrors.username = t("admin.users.form.validation.usernameMin");
     }
 
     if (!isEditMode && (!formData.password || formData.password.length < 8)) {
-      newErrors.password = "Password must be at least 8 characters";
+      newErrors.password = t("validation.passwordMinLength");
     }
 
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
+      newErrors.email = t("validation.invalidEmail");
     }
 
     if (formData.roles.length === 0) {
-      newErrors.roles = "At least one role is required";
+      newErrors.roles = t("admin.users.form.validation.roleRequired");
     }
 
     setErrors(newErrors);
@@ -154,7 +160,7 @@ export function UserFormModal({
           roles: formData.roles,
           status: formData.status,
         });
-        toast.success("User updated successfully");
+        toast.success(t("admin.users.form.toast.updated"));
       } else {
         // Create new user
         await adminUsersApi.create({
@@ -165,7 +171,7 @@ export function UserFormModal({
           phone: formData.phone || undefined,
           roles: formData.roles,
         });
-        toast.success("User created successfully");
+        toast.success(t("admin.users.form.toast.created"));
       }
       onSuccess();
       onOpenChange(false);
@@ -173,12 +179,12 @@ export function UserFormModal({
       console.error("Failed to save user:", err);
       const errorCode = err?.response?.data?.code;
       if (errorCode === "ERR_USERNAME_ALREADY_EXISTS") {
-        setErrors({ username: "Username is already taken" });
+        setErrors({ username: t("admin.users.form.validation.usernameTaken") });
       } else if (errorCode === "ERR_EMAIL_ALREADY_EXISTS") {
-        setErrors({ email: "Email is already in use" });
+        setErrors({ email: t("admin.users.form.validation.emailTaken") });
       } else {
         toast.error(
-          isEditMode ? "Failed to update user" : "Failed to create user",
+          isEditMode ? t("admin.users.form.toast.updateFailed") : t("admin.users.form.toast.createFailed"),
         );
       }
     } finally {
@@ -187,8 +193,16 @@ export function UserFormModal({
   };
 
   const handleClose = () => {
+    const isDirty = isOpen && !!initialFormRef.current && initialFormRef.current !== JSON.stringify(formData);
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
     onOpenChange(false);
     setFormData(initialFormData);
+    initialFormRef.current = null;
     setErrors({});
   };
 
@@ -203,27 +217,37 @@ export function UserFormModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          handleClose();
+          return;
+        }
+        onOpenChange(true);
+      }}
+    >
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-[18px] border-border bg-card shadow-sm">
         <DialogHeader>
+          <BackButton onClick={handleClose} className="w-fit" />
           <DialogTitle className="flex items-center gap-2 text-xl">
             {isEditMode ? (
               <>
                 <Edit className="w-5 h-5 text-primary" />
-                Edit User
+                {t("admin.users.form.editTitle")}
               </>
             ) : (
               <>
                 <Plus className="w-5 h-5 text-green-600" />
-                Add New User
+                {t("admin.users.form.addTitle")}
               </>
             )}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             {isEditMode
-              ? "Update user information below."
-              : "Fill in the details to create a new user account."}{" "}
-            Fields marked with * are required.
+              ? t("admin.users.form.editDescription")
+              : t("admin.users.form.addDescription")}{" "}
+            {t("admin.roles.form.requiredHint")}
           </DialogDescription>
         </DialogHeader>
 
@@ -231,13 +255,13 @@ export function UserFormModal({
           {/* Username */}
           <div className="space-y-2">
             <Label htmlFor="username">
-              Username <span className="text-destructive">*</span>
+              {t("admin.users.table.username")} <span className="text-destructive">*</span>
             </Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 id="username"
-                placeholder="Enter username"
+                placeholder={t("admin.users.form.usernamePlaceholder")}
                 value={formData.username}
                 onChange={(e) =>
                   setFormData({ ...formData, username: e.target.value })
@@ -254,12 +278,12 @@ export function UserFormModal({
           {!isEditMode && (
             <div className="space-y-2">
               <Label htmlFor="password">
-                Password <span className="text-destructive">*</span>
+                {t("auth.signIn.password")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter password (min 8 characters)"
+                placeholder={t("admin.users.form.passwordPlaceholder")}
                 value={formData.password}
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
@@ -274,13 +298,13 @@ export function UserFormModal({
 
           {/* Email */}
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("auth.signIn.email")}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 id="email"
                 type="email"
-                placeholder="user@example.com"
+                placeholder={t("auth.signUp.emailPlaceholder")}
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
@@ -295,10 +319,10 @@ export function UserFormModal({
 
           {/* Full Name */}
           <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name</Label>
+            <Label htmlFor="fullName">{t("auth.signUp.fullName")}</Label>
             <Input
               id="fullName"
-              placeholder="Enter full name"
+              placeholder={t("admin.users.form.fullNamePlaceholder")}
               value={formData.fullName}
               onChange={(e) =>
                 setFormData({ ...formData, fullName: e.target.value })
@@ -309,12 +333,12 @@ export function UserFormModal({
 
           {/* Phone */}
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="phone">{t("admin.users.form.phone")}</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 id="phone"
-                placeholder="Enter phone number"
+                placeholder={t("admin.users.form.phonePlaceholder")}
                 value={formData.phone}
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value })
@@ -328,17 +352,17 @@ export function UserFormModal({
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
-              Roles <span className="text-destructive">*</span>
+              {t("admin.users.table.roles")} <span className="text-destructive">*</span>
             </Label>
             <div className="flex flex-wrap gap-2 rounded-[14px] border bg-muted/30 p-3">
               {loadingRoles ? (
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading roles...
+                  {t("admin.users.form.loadingRoles")}
                 </div>
               ) : roles.length === 0 ? (
                 <span className="text-muted-foreground text-sm">
-                  No roles available
+                  {t("admin.users.form.noRolesAvailable")}
                 </span>
               ) : (
                 roles.map((role) => {
@@ -368,7 +392,7 @@ export function UserFormModal({
           {/* Status (only for edit mode) */}
           {isEditMode && (
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">{t("common.status")}</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) =>
@@ -382,19 +406,19 @@ export function UserFormModal({
                   <SelectItem value="ACTIVE">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-green-500" />
-                      Active
+                      {t("common.active")}
                     </div>
                   </SelectItem>
                   <SelectItem value="INACTIVE">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-gray-500" />
-                      Inactive
+                      {t("common.inactive")}
                     </div>
                   </SelectItem>
                   <SelectItem value="LOCKED">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-red-500" />
-                      Locked
+                      {t("admin.users.status.locked")}
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -423,7 +447,7 @@ export function UserFormModal({
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            {isEditMode ? "Update" : "Create"} User
+            {isEditMode ? t("common.update") : t("common.create")} {t("admin.users.form.user")}
           </Button>
         </DialogFooter>
       </DialogContent>

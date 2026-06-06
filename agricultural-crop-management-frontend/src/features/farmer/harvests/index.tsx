@@ -5,7 +5,7 @@ import { HarvestHeader } from "./components/HarvestHeader";
 import { HarvestKPICards } from "./components/HarvestKPICards";
 import { HarvestTable } from "./components/HarvestTable";
 import { HarvestCharts } from "./components/HarvestCharts";
-import { QuickActionsPanel } from "./components/QuickActionsPanel";
+import { SeasonSummaryPanel } from "./components/SeasonSummaryPanel";
 import { AddBatchDialog } from "./components/AddBatchDialog";
 import { HarvestDetailsDialog } from "./components/HarvestDetailsDrawer";
 import { toast } from "sonner";
@@ -21,9 +21,11 @@ import {
 } from "@/shared/ui/select";
 import { useMyWarehouses } from "@/entities/inventory";
 import { useSeasons } from "@/entities/season";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useParams } from "react-router-dom";
 
 export function HarvestManagement() {
+  const { t } = useI18n();
   const { seasonId: workspaceSeasonIdParam } = useParams();
   const workspaceSeasonId = Number(workspaceSeasonIdParam);
   const isWorkspaceScoped = Number.isFinite(workspaceSeasonId) && workspaceSeasonId > 0;
@@ -33,7 +35,7 @@ export function HarvestManagement() {
   const { data: warehousesData } = useMyWarehouses("OUTPUT");
   const outputWarehouses = useMemo(() => warehousesData ?? [], [warehousesData]);
   const seasonOptions = useMemo(() => {
-    const options = [{ value: "all", label: "All Seasons" }];
+    const options = [{ value: "all", label: t("harvests.filters.allSeasons") }];
     if (seasonsData?.items) {
       seasonsData.items.forEach((season) => {
         options.push({
@@ -43,7 +45,7 @@ export function HarvestManagement() {
       });
     }
     return options;
-  }, [seasonsData]);
+  }, [seasonsData, t]);
 
   const {
     // State
@@ -53,6 +55,7 @@ export function HarvestManagement() {
     isAddBatchOpen,
     setIsAddBatchOpen,
     selectedBatch,
+    editingBatch,
     isDetailsDrawerOpen,
     setIsDetailsDrawerOpen,
     selectedBatchIds,
@@ -82,7 +85,7 @@ export function HarvestManagement() {
     handleToggleAllSelection,
     resetForm,
     handleViewDetails,
-    handleQuickAction,
+    handleEditBatch,
     handleExport,
     handlePrint,
     isCreating,
@@ -98,8 +101,8 @@ export function HarvestManagement() {
   const scopedSeasonLabel = useMemo(() => {
     if (!isWorkspaceScoped) return "";
     return seasonOptions.find((option) => option.value === String(workspaceSeasonId))?.label
-      ?? `Mùa vụ #${workspaceSeasonId}`;
-  }, [isWorkspaceScoped, workspaceSeasonId, seasonOptions]);
+      ?? t("seasonWorkspace.fallbackSeasonName", { id: workspaceSeasonId });
+  }, [isWorkspaceScoped, workspaceSeasonId, seasonOptions, t]);
   const selectedSeasonStatus = useMemo(() => {
     if (!seasonsData?.items) return null;
     if (isWorkspaceScoped) {
@@ -115,7 +118,9 @@ export function HarvestManagement() {
   const isHarvestWriteLocked =
     selectedSeasonStatus !== null && selectedSeasonStatus !== "ACTIVE";
   const seasonWriteLockReason = isHarvestWriteLocked
-    ? `Harvest write actions require an ACTIVE season. Current status: ${selectedSeasonStatus}.`
+    ? t("harvests.validation.activeSeasonRequiredWithStatus", {
+        status: selectedSeasonStatus,
+      })
     : undefined;
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -152,12 +157,12 @@ export function HarvestManagement() {
     if (!batch) return;
 
     if (action === "qr") {
-      toast.success("Generating QR Code", {
-        description: `QR for ${batch.batchId}`,
+      toast.success(t("harvests.toast.generatingQr"), {
+        description: t("harvests.toast.qrDescription", { batchId: batch.batchId }),
       });
     } else if (action === "handover") {
-      toast.success("Printing Handover Note", {
-        description: `For batch ${batch.batchId}`,
+      toast.success(t("harvests.toast.printingHandover"), {
+        description: t("harvests.toast.handoverDescription", { batchId: batch.batchId }),
       });
     }
   };
@@ -172,8 +177,8 @@ export function HarvestManagement() {
               return;
             }
             if (outputWarehouses.length === 0) {
-              toast.error("No output warehouses found. Create one before recording harvest.", {
-                description: "Dùng nút Danh sách kho (Mở tab mới) bên dưới để tạo kho.",
+              toast.error(t("harvests.validation.noOutputWarehouses"), {
+                description: t("harvests.validation.noOutputWarehousesDescription"),
               });
               return;
             }
@@ -197,8 +202,8 @@ export function HarvestManagement() {
               }
             }
             if (!nextSeasonMeta || nextSeasonMeta.status !== "ACTIVE") {
-              toast.error("Harvest requires an ACTIVE season", {
-                description: "Select or start an ACTIVE season before adding a harvest batch.",
+              toast.error(t("harvests.validation.activeSeasonRequired"), {
+                description: t("harvests.validation.activeSeasonRequiredDescription"),
               });
               return;
             }
@@ -222,7 +227,7 @@ export function HarvestManagement() {
               <div className="relative w-full sm:w-[320px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search batches..."
+                  placeholder={t("harvests.filters.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   className="pl-10 rounded-xl border-border focus:border-primary"
@@ -231,12 +236,12 @@ export function HarvestManagement() {
 
               {isWorkspaceScoped ? (
                 <div className="rounded-xl border border-border px-3 py-2 text-sm bg-card">
-                  Đang xem: <span className="font-medium">{scopedSeasonLabel}</span>
+                  {t("harvests.filters.viewingSeason")}: <span className="font-medium">{scopedSeasonLabel}</span>
                 </div>
               ) : (
                 <Select value={selectedSeason} onValueChange={setSelectedSeason}>
                   <SelectTrigger className="rounded-xl border-border w-full sm:w-[180px]">
-                    <SelectValue placeholder="All Seasons" />
+                    <SelectValue placeholder={t("harvests.filters.allSeasons")} />
                   </SelectTrigger>
                   <SelectContent>
                     {seasonOptions.map((option) => (
@@ -253,9 +258,9 @@ export function HarvestManagement() {
                 className="rounded-xl"
                 onClick={() => window.open(warehouseListHref, "_blank", "noopener,noreferrer")}
               >
-                Danh sách kho
+                {t("harvests.warehouseDirectory.button")}
                 <ExternalLink className="w-4 h-4 ml-2" />
-                <span className="text-xs">(Mở tab mới)</span>
+                <span className="text-xs">({t("harvests.warehouseDirectory.openNewTab")})</span>
               </Button>
             </div>
           </CardContent>
@@ -264,14 +269,16 @@ export function HarvestManagement() {
         <Card className="mb-6 border border-border rounded-xl shadow-sm">
           <CardContent className="px-6 py-4 space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-foreground">Output Warehouse Directory</h3>
+              <h3 className="text-sm font-semibold text-foreground">
+                {t("harvests.warehouseDirectory.title")}
+              </h3>
               <span className="text-xs text-muted-foreground">
-                {outputWarehouses.length} warehouse(s)
+                {t("harvests.warehouseDirectory.count", { count: outputWarehouses.length })}
               </span>
             </div>
             {outputWarehouses.length === 0 ? (
               <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                No output warehouse available. Please create one before adding harvest batches.
+                {t("harvests.warehouseDirectory.empty")}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -290,11 +297,13 @@ export function HarvestManagement() {
                   >
                     <p className="text-sm font-medium text-foreground">{warehouse.name}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Farm: {warehouse.farmName || "-"}
+                      {t("harvests.warehouseDirectory.farm")}: {warehouse.farmName || "-"}
                     </p>
-                    <p className="text-xs text-muted-foreground">Type: {warehouse.type || "OUTPUT"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("harvests.warehouseDirectory.type")}: {warehouse.type || "OUTPUT"}
+                    </p>
                     <p className="text-xs text-primary mt-2 inline-flex items-center gap-1">
-                      Mở tab mới
+                      {t("harvests.warehouseDirectory.openNewTab")}
                       <ExternalLink className="w-3 h-3" />
                     </p>
                   </button>
@@ -312,40 +321,40 @@ export function HarvestManagement() {
           yieldVsPlan={yieldVsPlan}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-          <div className="space-y-6">
-            <HarvestTable
-              batches={filteredBySearch}
-              totalBatches={filteredBatches.length}
-              selectedBatchIds={selectedBatchIds}
-              onViewDetails={handleViewDetails}
-              onDeleteBatch={handleDeleteBatch}
-              onDeleteSelected={handleDeleteSelectedBatches}
-              onToggleBatchSelection={handleToggleBatchSelection}
-              onToggleAllSelection={handleToggleAllSelection}
-              onExport={handleExport}
-              onPrint={handlePrint}
-              getStatusBadge={getStatusBadge}
-              getGradeBadge={getGradeBadge}
-              disableMutations={isHarvestWriteLocked}
-            />
-
-            <HarvestCharts
-              dailyTrend={dailyTrend}
-              gradeDistribution={gradeDistribution}
-            />
-          </div>
-
-          <QuickActionsPanel
-            onQuickAction={handleQuickAction}
-            summaryStats={summaryStats}
+        <div className="space-y-6">
+          <HarvestTable
+            batches={filteredBySearch}
+            totalBatches={filteredBatches.length}
+            selectedBatchIds={selectedBatchIds}
+            onViewDetails={handleViewDetails}
+            onEditBatch={handleEditBatch}
+            onDeleteBatch={handleDeleteBatch}
+            onDeleteSelected={handleDeleteSelectedBatches}
+            onToggleBatchSelection={handleToggleBatchSelection}
+            onToggleAllSelection={handleToggleAllSelection}
+            onExport={handleExport}
+            onPrint={handlePrint}
+            getStatusBadge={getStatusBadge}
+            getGradeBadge={getGradeBadge}
+            disableMutations={isHarvestWriteLocked}
+          />
+          <SeasonSummaryPanel summaryStats={summaryStats} />
+          <HarvestCharts
+            dailyTrend={dailyTrend}
+            gradeDistribution={gradeDistribution}
           />
         </div>
       </div>
 
       <AddBatchDialog
         open={isAddBatchOpen}
-        onOpenChange={setIsAddBatchOpen}
+        onOpenChange={(open) => {
+          setIsAddBatchOpen(open);
+          if (!open) {
+            resetForm();
+          }
+        }}
+        mode={editingBatch ? "edit" : "create"}
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleAddBatch}

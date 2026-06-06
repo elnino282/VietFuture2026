@@ -15,25 +15,31 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useI18n } from "@/hooks/useI18n";
 import type { Document, DocumentType } from "../types";
 
-const mapApiToDocument = (doc: ApiDocument): Document => ({
+type Translate = (
+  key: string,
+  optionsOrDefault?: Record<string, unknown> | string,
+) => string;
+
+const mapApiToDocument = (doc: ApiDocument, t: Translate): Document => ({
   id: String(doc.documentId),
   documentId: doc.documentId,
   title: doc.title,
   url: doc.url,
   type: mapDocumentType(doc.documentType),
-  thumbnail: "📄",
+  thumbnail: t("documents.thumbnail"),
   tags: [doc.crop, doc.stage, doc.topic].filter(Boolean) as string[],
   crop: doc.crop ?? undefined,
   stage: doc.stage ?? undefined,
-  topic: doc.topic ?? "General",
+  topic: doc.topic ?? "",
   season: undefined,
   updatedAt: doc.createdAt ?? new Date().toISOString(),
   isFavorite: doc.isFavorited ?? false,
   description: doc.description ?? "",
-  fileSize: "N/A",
-  author: "System",
+  fileSize: t("common.notAvailable", "-"),
+  author: t("documents.fallback.systemAuthor"),
   relatedDocs: [],
 });
 
@@ -63,11 +69,11 @@ interface UseDocumentsParams {
 }
 
 export function useDocuments(params?: UseDocumentsParams) {
+  const { t } = useI18n();
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [hoveredDocId, setHoveredDocId] = useState<string | null>(null);
 
-  // Build API params from external params
   const apiParams: DocumentListParams = useMemo(
     () => ({
       tab: params?.tab || "all",
@@ -91,19 +97,16 @@ export function useDocuments(params?: UseDocumentsParams) {
     ],
   );
 
-  // API hooks
   const { data: apiResponse, isLoading, error } = useDocumentsList(apiParams);
   const addFavoriteMutation = useAddFavorite();
   const removeFavoriteMutation = useRemoveFavorite();
   const recordOpenMutation = useRecordDocumentOpen();
 
-  // Transform API response to UI documents
   const documents = useMemo(() => {
     if (!apiResponse?.items) return [];
-    return apiResponse.items.map(mapApiToDocument);
-  }, [apiResponse]);
+    return apiResponse.items.map((doc) => mapApiToDocument(doc, t));
+  }, [apiResponse, t]);
 
-  // Documents are already filtered by backend, return directly
   const filteredDocuments = documents;
 
   const handleToggleFavorite = useCallback(
@@ -116,36 +119,33 @@ export function useDocuments(params?: UseDocumentsParams) {
       if (doc.isFavorite) {
         removeFavoriteMutation.mutate(numericId, {
           onSuccess: () => {
-            toast.success("Removed from Favorites");
+            toast.success(t("documents.toast.removedFavorite"));
           },
           onError: () => {
-            toast.error("Failed to remove from favorites");
+            toast.error(t("documents.toast.removeFavoriteFailed"));
           },
         });
       } else {
         addFavoriteMutation.mutate(numericId, {
           onSuccess: () => {
-            toast.success("Added to Favorites");
+            toast.success(t("documents.toast.addedFavorite"));
           },
           onError: () => {
-            toast.error("Failed to add to favorites");
+            toast.error(t("documents.toast.addFavoriteFailed"));
           },
         });
       }
     },
-    [documents, addFavoriteMutation, removeFavoriteMutation],
+    [documents, addFavoriteMutation, removeFavoriteMutation, t],
   );
 
   const handleOpenDocument = useCallback(
     (doc: Document) => {
-      // Record the open for Recent tab
       recordOpenMutation.mutate(doc.documentId, {
         onSuccess: () => {
-          // Open URL in new tab
           window.open(doc.url, "_blank", "noopener,noreferrer");
         },
         onError: () => {
-          // Still open the document even if recording fails
           window.open(doc.url, "_blank", "noopener,noreferrer");
         },
       });
@@ -155,7 +155,6 @@ export function useDocuments(params?: UseDocumentsParams) {
 
   const handleDownload = useCallback(
     (doc: Document) => {
-      // For documents as links, "download" means open in new tab
       handleOpenDocument(doc);
     },
     [handleOpenDocument],
@@ -191,11 +190,14 @@ export function useDocuments(params?: UseDocumentsParams) {
 
   useEffect(() => {
     if (error) {
-      toast.error("Failed to load documents", {
-        description: error instanceof Error ? error.message : "Unknown error",
+      toast.error(t("documents.toast.loadFailed"), {
+        description:
+          error instanceof Error
+            ? error.message
+            : t("documents.toast.unknownError"),
       });
     }
-  }, [error]);
+  }, [error, t]);
 
   const isEmpty = useMemo(
     () => documents.length === 0 && !isLoading,
@@ -203,26 +205,19 @@ export function useDocuments(params?: UseDocumentsParams) {
   );
 
   return {
-    // State
     selectedDoc,
     isPreviewOpen,
     hoveredDocId,
     filteredDocuments,
     isLoading,
     isEmpty,
-
-    // Setters
     setIsPreviewOpen,
     setHoveredDocId,
     setSelectedDoc,
-
-    // Handlers
     handleToggleFavorite,
     handleDownload,
     handlePreview,
     handleOpenDocument,
-
-    // Utilities
     getDocumentIcon,
     getRelatedDocuments,
   };

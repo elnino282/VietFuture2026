@@ -25,6 +25,7 @@ import {
   isValidDateRange,
   parseFilenameFromDisposition,
 } from "./utils";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 // Default filter values (UI state - allows 'all')
 const DEFAULT_FILTERS: ReportFilters = {
@@ -47,6 +48,8 @@ const toApiParams = (ui: ReportFilters): ReportFilterParams => ({
 });
 
 export const ReportsAnalytics: React.FC = () => {
+  const { t } = useI18n();
+
   // Filter state: draft (UI) and applied (sent to API)
   const [draftFilters, setDraftFilters] =
     useState<ReportFilters>(DEFAULT_FILTERS);
@@ -269,15 +272,15 @@ export const ReportsAnalytics: React.FC = () => {
     setDraftFilters(nextFilters);
     setAppliedFilters(nextFilters);
     setActiveTab(tab);
-    toast.info("Drilldown filters applied");
+    toast.info(t('admin.reportsAnalytics.toast.drilldownApplied'));
   };
 
   const handleRefresh = async () => {
     try {
       await Promise.all([summaryQuery.refetch(), activeQuery.refetch()]);
-      toast.success("Data refreshed successfully");
+      toast.success(t('admin.reportsAnalytics.toast.refreshed'));
     } catch {
-      toast.error("Failed to refresh data");
+      toast.error(t('admin.reportsAnalytics.toast.refreshFailed'));
     }
   };
 
@@ -314,9 +317,9 @@ export const ReportsAnalytics: React.FC = () => {
               ? revenueRows.length
               : profitRows.length;
 
-      toast.success(`Exported ${recordCount} records`);
+      toast.success(t('admin.reportsAnalytics.toast.exportedRecords', { count: recordCount }));
     } catch {
-      toast.error("Failed to export report");
+      toast.error(t('admin.reportsAnalytics.toast.exportFailed'));
     } finally {
       setIsExporting(false);
     }
@@ -339,20 +342,18 @@ export const ReportsAnalytics: React.FC = () => {
       draftFilters.dateTo &&
       !isValidDateRange(draftFilters.dateFrom, draftFilters.dateTo)
     ) {
-      toast.error(
-        "Invalid date range: Start date must be before or equal to end date",
-      );
+      toast.error(t('admin.reportsAnalytics.toast.invalidDateRange'));
       return;
     }
     setAppliedFilters(draftFilters);
-    toast.success("Filters applied");
+    toast.success(t('admin.reportsAnalytics.toast.filtersApplied'));
   };
 
   const handleResetFilters = () => {
     setDraftFilters(DEFAULT_FILTERS);
     setAppliedFilters(DEFAULT_FILTERS);
     setCostGranularity("MONTH");
-    toast.info("Filters reset");
+    toast.info(t('admin.reportsAnalytics.toast.filtersReset'));
   };
 
   return (
@@ -380,7 +381,7 @@ export const ReportsAnalytics: React.FC = () => {
 
       {hasError && (
         <ErrorBanner
-          message="Failed to load report data. Please try again."
+          message={t('admin.reportsAnalytics.error.loadFailed')}
           onRetry={handleRefresh}
           isRetrying={isRefreshing}
         />

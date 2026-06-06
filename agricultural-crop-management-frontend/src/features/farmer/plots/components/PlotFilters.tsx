@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Card, CardContent } from "@/shared/ui/card";
+import { useTranslation } from "react-i18next";
 import {
   Select,
   SelectContent,
@@ -51,6 +52,7 @@ export function PlotFilters({
   statusOptions,
   isLoadingFilterOptions = false,
 }: PlotFiltersProps) {
+  const { t } = useTranslation();
   const hasActiveFilters =
     searchQuery || filterCrop !== "all" || filterStatus !== "all" || filterSoilType !== "all";
 
@@ -62,7 +64,7 @@ export function PlotFilters({
           <div className="relative w-full sm:w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search plots by name or ID"
+              placeholder={t("plots.searchByNameOrId")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-10 pl-10 border-border focus:border-primary"
@@ -72,7 +74,7 @@ export function PlotFilters({
           {/* Crop Filter */}
           <Select value={filterCrop} onValueChange={setFilterCrop} disabled={isLoadingFilterOptions}>
             <SelectTrigger className="w-full border-border focus:border-primary sm:w-[180px]">
-              <SelectValue placeholder="Crop" />
+              <SelectValue placeholder={t("plots.filters.crop")} />
             </SelectTrigger>
             <SelectContent>
               {cropOptions.map((crop) => (
@@ -86,7 +88,7 @@ export function PlotFilters({
           {/* Status Filter */}
           <Select value={filterStatus} onValueChange={setFilterStatus} disabled={isLoadingFilterOptions}>
             <SelectTrigger className="w-full border-border focus:border-primary sm:w-[180px]">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t("plots.filters.status")} />
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((option) => (
@@ -100,7 +102,7 @@ export function PlotFilters({
           {/* Soil Type Filter */}
           <Select value={filterSoilType} onValueChange={setFilterSoilType} disabled={isLoadingFilterOptions}>
             <SelectTrigger className="w-full border-border focus:border-primary sm:w-[180px]">
-              <SelectValue placeholder="Soil Type" />
+              <SelectValue placeholder={t("plots.filters.soilType")} />
             </SelectTrigger>
             <SelectContent>
               {soilTypeOptions.map((type) => (
@@ -115,7 +117,7 @@ export function PlotFilters({
         {hasActiveFilters && (
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
             <p className="text-sm text-muted-foreground">
-              Showing {filteredCount} of {totalCount} plots
+              {t("plots.filters.showingCount", { filtered: filteredCount, total: totalCount })}
             </p>
             <Button
               variant="ghost"
@@ -123,7 +125,7 @@ export function PlotFilters({
               onClick={onClearFilters}
               className="text-primary hover:bg-primary/10"
             >
-              Clear Filters
+              {t("plots.filters.clearFilters")}
             </Button>
           </div>
         )}

@@ -198,6 +198,49 @@ export const suppliesApi = {
   },
 
   /**
+   * GET /api/v1/employee/seasons/:seasonId/supplies/items
+   * Read-only supply items scoped to an assigned employee season.
+   */
+  getEmployeeSeasonSupplyItems: async (
+    seasonId: number,
+    params?: SupplyItemsParams,
+  ): Promise<PageResponse<SupplyItem>> => {
+    const queryParams: Record<string, unknown> = {};
+    if (params?.q) queryParams.q = params.q;
+    if (params?.restricted !== undefined) queryParams.restricted = params.restricted;
+    if (params?.page !== undefined) queryParams.page = params.page;
+    if (params?.size !== undefined) queryParams.size = params.size;
+
+    const response = await httpClient.get(
+      `/api/v1/employee/seasons/${seasonId}/supplies/items`,
+      { params: queryParams },
+    );
+    return parsePageResponse(response.data, SupplyItemSchema);
+  },
+
+  /**
+   * GET /api/v1/employee/seasons/:seasonId/supplies/lots
+   * Read-only supply lots scoped to an assigned employee season.
+   */
+  getEmployeeSeasonSupplyLots: async (
+    seasonId: number,
+    params?: SupplyLotsParams,
+  ): Promise<PageResponse<SupplyLot>> => {
+    const queryParams: Record<string, unknown> = {};
+    if (params?.itemId) queryParams.itemId = params.itemId;
+    if (params?.status) queryParams.status = params.status;
+    if (params?.q) queryParams.q = params.q;
+    if (params?.page !== undefined) queryParams.page = params.page;
+    if (params?.size !== undefined) queryParams.size = params.size;
+
+    const response = await httpClient.get(
+      `/api/v1/employee/seasons/${seasonId}/supplies/lots`,
+      { params: queryParams },
+    );
+    return parsePageResponse(response.data, SupplyLotSchema);
+  },
+
+  /**
    * POST /api/v1/supplies/stock-in
    * Record Stock IN operation
    */

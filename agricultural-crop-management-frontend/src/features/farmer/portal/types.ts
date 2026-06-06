@@ -24,6 +24,7 @@ export type FarmerView =
   | 'marketplace-orders'
   | 'documents'
   | 'incidents'
+  | 'notifications'
   | 'ai-assistant'
   // Keep these for backward compatibility (accessible via other routes)
   | 'crops'

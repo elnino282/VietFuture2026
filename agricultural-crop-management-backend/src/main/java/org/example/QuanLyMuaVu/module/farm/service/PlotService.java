@@ -68,7 +68,7 @@ public class PlotService {
         Farm farm = farmRepository.findByIdAndUser(farmId, currentUser)
                 .orElseThrow(() -> new AccessDeniedException("Access Denied: You do not own this farm."));
 
-        List<Plot> plots = plotRepository.findAllByFarm(farm);
+        List<Plot> plots = plotRepository.findAllByFarmUserIdAndFarmId(currentUser.getId(), farm.getId());
         return plots.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -118,9 +118,15 @@ public class PlotService {
                 .orElseThrow(() -> new RuntimeException("Plot not found or access denied"));
 
         plot.setPlotName(request.getPlotName());
-        plot.setArea(request.getArea());
-        plot.setSoilType(request.getSoilType());
-        plot.setBoundaryGeoJson(request.getBoundaryGeoJson());
+        if (request.getArea() != null) {
+            plot.setArea(request.getArea());
+        }
+        if (request.getSoilType() != null) {
+            plot.setSoilType(request.getSoilType());
+        }
+        if (request.getBoundaryGeoJson() != null) {
+            plot.setBoundaryGeoJson(request.getBoundaryGeoJson());
+        }
         if (request.getStatus() != null) {
             plot.setStatus(request.getStatus().getCode());
         }

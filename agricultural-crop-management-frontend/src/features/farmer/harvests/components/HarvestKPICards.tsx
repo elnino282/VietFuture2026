@@ -9,6 +9,7 @@ import {
 import { Card, CardContent } from "@/shared/ui/card";
 import { usePreferences } from "@/shared/contexts";
 import { formatWeight } from "@/shared/lib";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface HarvestKPICardsProps {
     totalHarvested: number;
@@ -29,6 +30,7 @@ export function HarvestKPICards({
     const hasYieldVsPlan = Number.isFinite(yieldVsPlanValue);
     const isOnTarget = hasYieldVsPlan && yieldVsPlanValue >= 100;
     const { preferences } = usePreferences();
+    const { t } = useI18n();
     const totalHarvestedLabel = formatWeight(
         totalHarvested,
         preferences.weightUnit,
@@ -37,12 +39,11 @@ export function HarvestKPICards({
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-            {/* Total Harvested */}
             <Card className="border-border rounded-2xl shadow-sm">
                 <CardContent className="px-6 py-4">
                     <div className="flex items-start justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Total Harvested</p>
+                            <p className="text-sm text-muted-foreground mb-1">{t("harvests.kpi.totalHarvested")}</p>
                             <p className="text-2xl numeric text-foreground">
                                 {totalHarvestedLabel}
                             </p>
@@ -54,14 +55,13 @@ export function HarvestKPICards({
                 </CardContent>
             </Card>
 
-            {/* Lots Count */}
             <Card className="border-border rounded-2xl shadow-sm">
                 <CardContent className="px-6 py-4">
                     <div className="flex items-start justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Lots Count</p>
+                            <p className="text-sm text-muted-foreground mb-1">{t("harvests.kpi.lotsCount")}</p>
                             <p className="text-2xl numeric text-foreground">{lotsCount}</p>
-                            <p className="text-xs text-muted-foreground mt-1">batches</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t("harvests.kpi.batches")}</p>
                         </div>
                         <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
                             <Package className="w-5 h-5 text-secondary" />
@@ -70,14 +70,13 @@ export function HarvestKPICards({
                 </CardContent>
             </Card>
 
-            {/* Avg Grade */}
             <Card className="border-border rounded-2xl shadow-sm">
                 <CardContent className="px-6 py-4">
                     <div className="flex items-start justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Avg Grade</p>
+                            <p className="text-sm text-muted-foreground mb-1">{t("harvests.kpi.avgGrade")}</p>
                             <p className="text-2xl text-foreground">{avgGrade}</p>
-                            <p className="text-xs text-muted-foreground mt-1">quality</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t("harvests.kpi.quality")}</p>
                         </div>
                         <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
                             <Award className="w-5 h-5 text-accent" />
@@ -86,12 +85,11 @@ export function HarvestKPICards({
                 </CardContent>
             </Card>
 
-            {/* Avg Moisture */}
             <Card className="border-border rounded-2xl shadow-sm">
                 <CardContent className="px-6 py-4">
                     <div className="flex items-start justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Avg Moisture</p>
+                            <p className="text-sm text-muted-foreground mb-1">{t("harvests.kpi.avgMoisture")}</p>
                             <p className="text-2xl numeric text-foreground">{avgMoisture}</p>
                             <p className="text-xs text-muted-foreground mt-1">%</p>
                         </div>
@@ -102,29 +100,28 @@ export function HarvestKPICards({
                 </CardContent>
             </Card>
 
-            {/* Yield vs Plan */}
             <Card className="border-border rounded-2xl shadow-sm">
                 <CardContent className="px-6 py-4">
                     <div className="flex items-start justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground mb-1">Yield vs Plan</p>
+                            <p className="text-sm text-muted-foreground mb-1">{t("harvests.kpi.yieldVsPlan")}</p>
                             <div className="flex items-baseline gap-2">
                                 <p className="text-2xl numeric text-foreground">{yieldVsPlan}</p>
                                 {hasYieldVsPlan && <p className="text-xs text-muted-foreground">%</p>}
                             </div>
                             {!hasYieldVsPlan ? (
                                 <div className="flex items-center gap-1 mt-1">
-                                    <p className="text-xs text-muted-foreground">No plan data</p>
+                                    <p className="text-xs text-muted-foreground">{t("harvests.kpi.noPlanData")}</p>
                                 </div>
                             ) : isOnTarget ? (
                                 <div className="flex items-center gap-1 mt-1">
                                     <TrendingUp className="w-3 h-3 text-primary" />
-                                    <p className="text-xs text-primary">On target</p>
+                                    <p className="text-xs text-primary">{t("harvests.kpi.onTarget")}</p>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-1 mt-1">
                                     <TrendingDown className="w-3 h-3 text-destructive" />
-                                    <p className="text-xs text-destructive">Below plan</p>
+                                    <p className="text-xs text-destructive">{t("harvests.kpi.belowPlan")}</p>
                                 </div>
                             )}
                         </div>

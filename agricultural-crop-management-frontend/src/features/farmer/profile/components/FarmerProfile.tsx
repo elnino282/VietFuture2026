@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, Label, PageContainer, Separator, Switch } from '@/shared/ui';
+import { BackButton, Button, Card, CardContent, Label, PageContainer, Separator, Switch } from '@/shared/ui';
 import { useFarms } from '@/entities/farm';
 import { usePlots } from '@/entities/plot';
 import { useSeasons } from '@/entities/season';
@@ -33,6 +33,9 @@ import type {
   RecentActivity,
 } from '../types';
 import { EditProfileDialog } from './EditProfileDialog';
+
+const farmerCardClass = 'rounded-[18px] border border-border bg-card shadow-sm';
+const farmerContentCardClass = `${farmerCardClass} overflow-hidden`;
 
 export function FarmerProfile() {
   const { t } = useI18n();
@@ -135,23 +138,33 @@ export function FarmerProfile() {
   }
 
   return (
-    <PageContainer variant="narrow" className="space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-foreground">{t('profile.title')}</h1>
-            {isFetching && !profileLoading && (
-              <Loader2 className="w-3 h-3 animate-spin text-primary" />
-            )}
-          </div>
-          <Button
-            onClick={() => setEditDialogOpen(true)}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <User className="w-4 h-4 mr-2" />
-            {t('profile.editProfile')}
-          </Button>
-        </div>
+    <PageContainer>
+      <div className="space-y-6">
+        <BackButton to="/farmer/dashboard" className="w-fit" />
+
+        <Card className={farmerCardClass}>
+          <CardContent className="p-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="min-w-0 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="truncate text-2xl font-bold text-foreground">{t('profile.title')}</h1>
+                  {isFetching && !profileLoading && (
+                    <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                  )}
+                </div>
+              </div>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                <Button
+                  onClick={() => setEditDialogOpen(true)}
+                  className="w-full rounded-[14px] sm:w-auto"
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  {t('profile.editProfile')}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <ProfileHeroCard
           displayName={profileData.displayName}
@@ -185,7 +198,7 @@ export function FarmerProfile() {
         />
 
         {/* Farm Overview Card */}
-        <Card variant="content">
+        <Card className={farmerContentCardClass}>
           <SectionCardHeader icon={Sprout} title={t('profile.farmOverview.title')} />
           <CardContent className="space-y-6 px-6 pb-6 sm:px-8 sm:pb-8">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -243,7 +256,7 @@ export function FarmerProfile() {
         </Card>
 
         {/* Recent Activity Card */}
-        <Card variant="content">
+        <Card className={farmerContentCardClass}>
           <SectionCardHeader icon={Clock} title={t('profile.recentActivity.title')} />
           <CardContent className="px-6 pb-6 sm:px-8 sm:pb-8">
             {recentActivities.length === 0 ? (
@@ -274,10 +287,10 @@ export function FarmerProfile() {
         </Card>
 
         {/* Notifications Card */}
-        <Card variant="content">
+        <Card className={farmerContentCardClass}>
           <SectionCardHeader icon={Bell} title={t('profile.notifications.title')} />
           <CardContent className="space-y-4 px-6 pb-6 sm:px-8 sm:pb-8">
-            <div className="bg-muted border border-border rounded-2xl p-4 flex items-center justify-between">
+            <div className="bg-muted border border-border rounded-2xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
                 <Label htmlFor="task-reminders" className="text-sm font-medium text-foreground">
                   {t('profile.notifications.taskReminders.label')}
@@ -296,7 +309,7 @@ export function FarmerProfile() {
               />
             </div>
 
-            <div className="bg-muted border border-border rounded-2xl p-4 flex items-center justify-between">
+            <div className="bg-muted border border-border rounded-2xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
                 <Label htmlFor="incident-alerts" className="text-sm font-medium text-foreground">
                   {t('profile.notifications.incidentAlerts.label')}
@@ -322,6 +335,7 @@ export function FarmerProfile() {
           onOpenChange={setEditDialogOpen}
           profileData={profileData}
         />
+      </div>
     </PageContainer>
   );
 }

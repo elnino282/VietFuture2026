@@ -23,7 +23,7 @@ import { EditProfileDialog } from './EditProfileDialog';
 
 export function AdminProfile() {
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationPreferences>({
     systemAlerts: true,
@@ -50,7 +50,7 @@ export function AdminProfile() {
 
     const rawJoinedDate = profile?.joinedDate || user?.profile?.joinedDate;
     const joinedDate = rawJoinedDate
-      ? new Date(rawJoinedDate).toLocaleDateString('en-GB', {
+      ? new Date(rawJoinedDate).toLocaleDateString(locale, {
           day: '2-digit', month: 'short', year: 'numeric',
         })
       : t('profile.notAvailable');
@@ -75,7 +75,7 @@ export function AdminProfile() {
       provinceId: profile?.provinceId ?? user?.profile?.provinceId ?? undefined,
       wardId: profile?.wardId ?? user?.profile?.wardId ?? undefined,
     };
-  }, [profile, user, t]);
+  }, [profile, user, t, locale]);
 
   const recentActivities: RecentActivity[] = [];
 

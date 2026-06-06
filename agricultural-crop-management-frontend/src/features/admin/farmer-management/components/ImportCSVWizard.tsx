@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table';
 import { CSVPreviewRow, ValidationError } from '../types';
 import { ROLE_BADGE_COLORS, STATUS_BADGE_COLORS } from '../constants';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface ImportCSVWizardProps {
     open: boolean;
@@ -37,9 +38,11 @@ export function ImportCSVWizard({
     onFileUpload,
     onImportConfirm,
     canImport = false,
-    importUnsupportedMessage = 'Farmer import API is not available yet.',
+    importUnsupportedMessage,
 }: ImportCSVWizardProps) {
+    const { t } = useI18n();
     const validEntriesCount = csvPreview.length - validationErrors.length;
+    const unsupportedMessage = importUnsupportedMessage ?? t('admin.farmerManagement.import.unsupported');
 
     const handleClose = () => {
         onOpenChange(false);
@@ -52,10 +55,14 @@ export function ImportCSVWizard({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Upload className="w-5 h-5" />
-                        Import Farmers from CSV
+                        {t('admin.farmerManagement.import.title')}
                     </DialogTitle>
                     <DialogDescription>
-                        Step {step} of 3: {step === 1 ? 'Upload File' : step === 2 ? 'Review & Validate' : 'Confirm Import'}
+                        {t('admin.farmerManagement.import.stepLabel', {
+                            step,
+                            total: 3,
+                            label: t(`admin.farmerManagement.import.steps.${step}`),
+                        })}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -68,9 +75,9 @@ export function ImportCSVWizard({
                     <div className="space-y-4">
                         <div className="border-2 border-dashed rounded-lg p-8 text-center">
                             <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                            <h4 className="mb-2">Upload CSV File</h4>
+                            <h4 className="mb-2">{t('admin.farmerManagement.import.uploadTitle')}</h4>
                             <p className="text-sm text-muted-foreground mb-4">
-                                Drag and drop your CSV file here, or click to browse
+                                {t('admin.farmerManagement.import.uploadDescription')}
                             </p>
                             <input
                                 type="file"
@@ -81,7 +88,7 @@ export function ImportCSVWizard({
                             />
                             <label htmlFor="csv-upload">
                                 <Button variant="outline" asChild>
-                                    <span>Browse Files</span>
+                                    <span>{t('admin.farmerManagement.import.browseFiles')}</span>
                                 </Button>
                             </label>
                         </div>
@@ -89,11 +96,11 @@ export function ImportCSVWizard({
                             <div className="flex gap-3">
                                 <AlertCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                                 <div className="text-sm">
-                                    <p className="font-medium text-emerald-900 mb-1">CSV Format Requirements:</p>
+                                    <p className="font-medium text-emerald-900 mb-1">{t('admin.farmerManagement.import.requirementsTitle')}</p>
                                     <ul className="text-emerald-800 space-y-1 list-disc list-inside">
-                                        <li>Columns: name, email, phone, role, status</li>
-                                        <li>Role must be: farmer, manager, or owner</li>
-                                        <li>Status must be: active, inactive, or locked</li>
+                                        <li>{t('admin.farmerManagement.import.requirements.columns')}</li>
+                                        <li>{t('admin.farmerManagement.import.requirements.roles')}</li>
+                                        <li>{t('admin.farmerManagement.import.requirements.statuses')}</li>
                                     </ul>
                                 </div>
                             </div>
@@ -109,12 +116,18 @@ export function ImportCSVWizard({
                                     <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                                     <div className="text-sm">
                                         <p className="font-medium text-red-900 mb-2">
-                                            {validationErrors.length} Validation Error{validationErrors.length > 1 ? 's' : ''} Found
+                                            {t('admin.farmerManagement.import.validationErrorsFound', {
+                                                count: validationErrors.length,
+                                            })}
                                         </p>
                                         <ul className="text-red-800 space-y-1">
                                             {validationErrors.map((err, i) => (
                                                 <li key={i}>
-                                                    Row {err.row}, {err.field}: {err.message}
+                                                    {t('admin.farmerManagement.import.rowError', {
+                                                        row: err.row,
+                                                        field: err.field,
+                                                        message: err.message,
+                                                    })}
                                                 </li>
                                             ))}
                                         </ul>
@@ -128,11 +141,11 @@ export function ImportCSVWizard({
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead className="w-12">#</TableHead>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Email</TableHead>
-                                        <TableHead>Phone</TableHead>
-                                        <TableHead>Role</TableHead>
-                                        <TableHead>Status</TableHead>
+                                        <TableHead>{t('common.name')}</TableHead>
+                                        <TableHead>{t('auth.signUp.email')}</TableHead>
+                                        <TableHead>{t('auth.signUp.phoneNumber')}</TableHead>
+                                        <TableHead>{t('admin.farmerManagement.fields.role')}</TableHead>
+                                        <TableHead>{t('common.status')}</TableHead>
                                         <TableHead className="w-12"></TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -147,12 +160,12 @@ export function ImportCSVWizard({
                                                 <TableCell>{row.phone}</TableCell>
                                                 <TableCell>
                                                     <Badge variant="secondary" className={ROLE_BADGE_COLORS[row.role]}>
-                                                        {row.role}
+                                                        {t(`admin.farmerManagement.roles.${row.role}`, row.role)}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant="secondary" className={STATUS_BADGE_COLORS[row.status]}>
-                                                        {row.status}
+                                                        {t(`admin.farmerManagement.status.${row.status}`, row.status)}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>
@@ -170,11 +183,12 @@ export function ImportCSVWizard({
                         </div>
 
                         <p className="text-sm text-muted-foreground">
-                            {validEntriesCount} valid entries will be imported.
-                            Rows with errors will be skipped.
+                            {t('admin.farmerManagement.import.validEntries', { count: validEntriesCount })}
+                            {' '}
+                            {t('admin.farmerManagement.import.rowsWithErrorsSkipped')}
                         </p>
                         {!canImport && (
-                            <p className="text-sm text-destructive">{importUnsupportedMessage}</p>
+                            <p className="text-sm text-destructive">{unsupportedMessage}</p>
                         )}
                     </div>
                 )}
@@ -190,14 +204,14 @@ export function ImportCSVWizard({
                             }
                         }}
                     >
-                        {step === 1 ? 'Cancel' : 'Back'}
+                        {step === 1 ? t('common.cancel') : t('common.back')}
                     </Button>
                     {step === 2 && (
                         <Button
                             onClick={onImportConfirm}
                             disabled={validEntriesCount === 0 || !canImport}
                         >
-                            Import {validEntriesCount} Farmer{validEntriesCount > 1 ? 's' : ''}
+                            {t('admin.farmerManagement.import.importCount', { count: validEntriesCount })}
                         </Button>
                     )}
                 </DialogFooter>

@@ -8,6 +8,7 @@ export type IncidentStatus = 'open' | 'in-progress' | 'resolved';
 
 export interface KPIMetric {
     title: string;
+    titleKey?: string;
     value: string;
     unit: string;
     change: number;

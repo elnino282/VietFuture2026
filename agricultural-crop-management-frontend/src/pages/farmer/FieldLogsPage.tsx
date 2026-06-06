@@ -2,13 +2,14 @@ import { useI18n } from '@/hooks/useI18n';
 import { useOptionalSeason } from '@/shared/contexts';
 import type { AxiosError } from 'axios';
 import { AlertCircle, Calendar, FileText, Loader2, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import {
     useCreateFieldLog,
     useDeleteFieldLog,
+    useEmployeeAssignedSeasons,
     useFieldLogsBySeason,
     useUpdateFieldLog,
     useUserSeasons
@@ -25,6 +26,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
+    BackButton,
     Badge,
     Button,
     Card,
@@ -56,6 +58,12 @@ import {
 const selectTriggerClass =
     'rounded-xl border-2 border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-emerald-300 focus-visible:border-emerald-500 focus-visible:ring-emerald-200/50 data-[placeholder]:text-slate-400 disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-slate-100';
 
+const getActorBadgeClass = (actorType?: string | null) => {
+    if (actorType === 'EMPLOYEE') return 'bg-sky-100 text-sky-800 border-sky-200';
+    if (actorType === 'FARMER') return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    return 'bg-slate-100 text-slate-700 border-slate-200';
+};
+
 // ═══════════════════════════════════════════════════════════════
 // FIELD LOGS PAGE
 // ═══════════════════════════════════════════════════════════════
@@ -63,7 +71,10 @@ const selectTriggerClass =
 export function FieldLogsPage() {
     const { t } = useI18n();
     const seasonContext = useOptionalSeason();
+    const location = useLocation();
     const { seasonId: workspaceSeasonIdParam } = useParams();
+    const workspaceScope = location.pathname.startsWith('/employee') ? 'employee' : 'farmer';
+    const isEmployeeWorkspace = workspaceScope === 'employee';
     const workspaceSeasonId = Number(workspaceSeasonIdParam);
     const isWorkspaceScoped = Number.isFinite(workspaceSeasonId) && workspaceSeasonId > 0;
     const contextSeasonId = seasonContext?.selectedSeasonId ?? null;
@@ -89,9 +100,17 @@ export function FieldLogsPage() {
         logType: '',
         notes: '',
     });
+    const initialFormRef = useRef<string | null>(null);
     
     // Queries
-    const { data: seasons, isLoading: seasonsLoading } = useUserSeasons();
+    const { data: farmerSeasons, isLoading: farmerSeasonsLoading } = useUserSeasons({
+        enabled: !isEmployeeWorkspace,
+    });
+    const { data: employeeSeasons, isLoading: employeeSeasonsLoading } = useEmployeeAssignedSeasons({
+        enabled: isEmployeeWorkspace,
+    });
+    const seasons = isEmployeeWorkspace ? employeeSeasons : farmerSeasons;
+    const seasonsLoading = isEmployeeWorkspace ? employeeSeasonsLoading : farmerSeasonsLoading;
     const { data: logsData, isLoading: logsLoading, isError } = useFieldLogsBySeason(
         selectedSeasonId ?? 0,
         {
@@ -100,7 +119,8 @@ export function FieldLogsPage() {
             page: 0,
             size: 100,
         },
-        { enabled: !!selectedSeasonId }
+        { enabled: !!selectedSeasonId },
+        workspaceScope
     );
 
     useEffect(() => {
@@ -118,26 +138,26 @@ export function FieldLogsPage() {
     const createMutation = useCreateFieldLog(selectedSeasonId ?? 0, {
         onSuccess: () => {
             toast.success(t('fieldLogs.toast.createSuccess'));
-            closeModal();
+            closeModal({ skipConfirm: true });
         },
         onError: (error) => {
             const axiosError = error as AxiosError<{ message?: string }>;
             const message = axiosError.response?.data?.message || t('fieldLogs.toast.createError');
             toast.error(message);
         },
-    });
+    }, workspaceScope);
     
     const updateMutation = useUpdateFieldLog(selectedSeasonId ?? 0, {
         onSuccess: () => {
             toast.success(t('fieldLogs.toast.updateSuccess'));
-            closeModal();
+            closeModal({ skipConfirm: true });
         },
         onError: (error) => {
             const axiosError = error as AxiosError<{ message?: string }>;
             const message = axiosError.response?.data?.message || t('fieldLogs.toast.updateError');
             toast.error(message);
         },
-    });
+    }, workspaceScope);
     
     const deleteMutation = useDeleteFieldLog(selectedSeasonId ?? 0, {
         onSuccess: () => {
@@ -149,7 +169,7 @@ export function FieldLogsPage() {
             const message = axiosError.response?.data?.message || t('fieldLogs.toast.deleteError');
             toast.error(message);
         },
-    });
+    }, workspaceScope);
     
     // Computed values
     const selectedSeason = useMemo(() => 
@@ -157,8 +177,10 @@ export function FieldLogsPage() {
         [seasons, selectedSeasonId]
     );
     const selectedSeasonStatus = useMemo(
-        () => seasonContext?.seasons.find((season) => season.id === selectedSeasonId)?.status ?? null,
-        [seasonContext?.seasons, selectedSeasonId]
+        () => selectedSeason?.status
+            ?? seasonContext?.seasons.find((season) => season.id === selectedSeasonId)?.status
+            ?? null,
+        [seasonContext?.seasons, selectedSeason, selectedSeasonId]
     );
     const isSeasonWriteLocked =
         selectedSeasonStatus === "COMPLETED"
@@ -196,29 +218,47 @@ export function FieldLogsPage() {
     // Handlers
     const openCreateModal = () => {
         if (!ensureSeasonWritable()) return;
-        setEditingLog(null);
-        setFormData({
+        const nextFormData = {
             logDate: new Date().toISOString().split('T')[0],
             logType: '',
             notes: '',
-        });
+        };
+        setEditingLog(null);
+        setFormData(nextFormData);
+        initialFormRef.current = JSON.stringify(nextFormData);
         setIsModalOpen(true);
     };
     
     const openEditModal = (log: FieldLog) => {
         if (!ensureSeasonWritable()) return;
-        setEditingLog(log);
-        setFormData({
+        if (log.canEdit === false) {
+            toast.error(t('fieldLogs.validation.noPermission'));
+            return;
+        }
+        const nextFormData = {
             logDate: log.logDate,
             logType: log.logType,
             notes: log.notes ?? '',
-        });
+        };
+        setEditingLog(log);
+        setFormData(nextFormData);
+        initialFormRef.current = JSON.stringify(nextFormData);
         setIsModalOpen(true);
     };
     
-    const closeModal = () => {
+    const isFormDirty = isModalOpen && initialFormRef.current !== null && initialFormRef.current !== JSON.stringify(formData);
+
+    const closeModal = ({ skipConfirm = false }: { skipConfirm?: boolean } = {}) => {
+        if (
+            !skipConfirm &&
+            isFormDirty &&
+            !window.confirm(t('common.unsavedChangesConfirm', 'You have unsaved changes. Leave this page?'))
+        ) {
+            return;
+        }
         setIsModalOpen(false);
         setEditingLog(null);
+        initialFormRef.current = null;
         setFormData({ logDate: '', logType: '', notes: '' });
     };
     
@@ -267,6 +307,12 @@ export function FieldLogsPage() {
             setDeleteLogId(null);
             return;
         }
+        const target = logs.find((log) => log.id === deleteLogId);
+        if (target?.canDelete === false) {
+            toast.error(t('fieldLogs.validation.noPermission'));
+            setDeleteLogId(null);
+            return;
+        }
         if (deleteLogId) {
             deleteMutation.mutate(deleteLogId);
         }
@@ -274,6 +320,15 @@ export function FieldLogsPage() {
     
     const getLogTypeConfig = (type: string) => {
         return LOG_TYPES.find(t => t.value === type) ?? { label: type, color: 'bg-gray-100 text-gray-800' };
+    };
+
+    const getLogTypeLabel = (type: string) =>
+        t(`fieldLogs.logTypes.${type}`, getLogTypeConfig(type).label);
+
+    const getActorLabel = (actorType?: string | null) => {
+        if (actorType === 'EMPLOYEE') return t('employee.actor.EMPLOYEE');
+        if (actorType === 'FARMER') return t('employee.actor.FARMER');
+        return t('employee.actor.UNKNOWN');
     };
     
     const formatDate = (dateStr: string | null | undefined) => {
@@ -381,7 +436,7 @@ export function FieldLogsPage() {
                                     <SelectItem value="all">{t('fieldLogs.allTypes')}</SelectItem>
                                     {LOG_TYPES.map((type) => (
                                         <SelectItem key={type.value} value={type.value}>
-                                            {type.label}
+                                            {getLogTypeLabel(type.value)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -422,7 +477,7 @@ export function FieldLogsPage() {
                             <CardContent className="px-6 py-4">
                                 <div className="text-2xl font-bold">
                                     {summaryStats.commonType 
-                                        ? getLogTypeConfig(summaryStats.commonType).label 
+                                        ? getLogTypeLabel(summaryStats.commonType)
                                         : '-'}
                                 </div>
                                 <div className="text-sm text-muted-foreground">{t('fieldLogs.summary.commonType')}</div>
@@ -455,6 +510,7 @@ export function FieldLogsPage() {
                                             <TableHead>{t('fieldLogs.table.logDate')}</TableHead>
                                             <TableHead>{t('fieldLogs.table.type')}</TableHead>
                                             <TableHead className="max-w-xs">{t('fieldLogs.table.notes')}</TableHead>
+                                            <TableHead>{t('fieldLogs.table.createdBy')}</TableHead>
                                             <TableHead>{t('fieldLogs.table.createdAt')}</TableHead>
                                             <TableHead className="text-right">{t('fieldLogs.table.actions')}</TableHead>
                                         </TableRow>
@@ -472,11 +528,21 @@ export function FieldLogsPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <Badge className={typeConfig.color}>
-                                                            {typeConfig.label}
+                                                            {getLogTypeLabel(log.logType)}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="max-w-xs truncate">
                                                         {log.notes || '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-sm font-medium">
+                                                                {log.createdByDisplayName ?? log.createdByUsername ?? '-'}
+                                                            </span>
+                                                            <Badge className={getActorBadgeClass(log.createdByType)}>
+                                                                {getActorLabel(log.createdByType)}
+                                                            </Badge>
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell className="text-muted-foreground text-sm">
                                                         {formatDateTime(log.createdAt)}
@@ -487,8 +553,12 @@ export function FieldLogsPage() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() => openEditModal(log)}
-                                                                disabled={isSeasonWriteLocked}
-                                                                title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
+                                                                disabled={isSeasonWriteLocked || log.canEdit === false}
+                                                                title={isSeasonWriteLocked
+                                                                    ? seasonWriteLockReason
+                                                                    : log.canEdit === false
+                                                                        ? t('fieldLogs.validation.noPermission')
+                                                                        : undefined}
                                                             >
                                                                 <Pencil className="w-4 h-4" />
                                                             </Button>
@@ -497,8 +567,12 @@ export function FieldLogsPage() {
                                                                 size="icon"
                                                                 className="text-destructive hover:text-destructive"
                                                                 onClick={() => setDeleteLogId(log.id)}
-                                                                disabled={isSeasonWriteLocked}
-                                                                title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
+                                                                disabled={isSeasonWriteLocked || log.canDelete === false}
+                                                                title={isSeasonWriteLocked
+                                                                    ? seasonWriteLockReason
+                                                                    : log.canDelete === false
+                                                                        ? t('fieldLogs.validation.noPermission')
+                                                                        : undefined}
                                                             >
                                                                 <Trash2 className="w-4 h-4" />
                                                             </Button>
@@ -516,9 +590,19 @@ export function FieldLogsPage() {
             )}
 
             {/* Create/Edit Modal */}
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <Dialog
+                open={isModalOpen}
+                onOpenChange={(nextOpen) => {
+                    if (nextOpen) {
+                        setIsModalOpen(true);
+                        return;
+                    }
+                    closeModal();
+                }}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
+                        <BackButton onClick={() => closeModal()} className="w-fit" />
                         <DialogTitle>
                             {editingLog ? t('fieldLogs.dialog.editTitle') : t('fieldLogs.dialog.createTitle')}
                         </DialogTitle>
@@ -559,7 +643,7 @@ export function FieldLogsPage() {
                                 <SelectContent>
                                     {LOG_TYPES.map((type) => (
                                         <SelectItem key={type.value} value={type.value}>
-                                            {type.label}
+                                            {getLogTypeLabel(type.value)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -586,7 +670,7 @@ export function FieldLogsPage() {
                         )}
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={closeModal}>
+                        <Button variant="outline" onClick={() => closeModal()}>
                             {t('common.cancel')}
                         </Button>
                         <Button 

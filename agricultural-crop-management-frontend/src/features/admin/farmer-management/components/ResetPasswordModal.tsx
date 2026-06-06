@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { Key, Mail } from "lucide-react";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface ResetPasswordModalProps {
   open: boolean;
@@ -20,16 +21,18 @@ export function ResetPasswordModal({
   onOpenChange,
   onResetPassword,
 }: ResetPasswordModalProps) {
+  const { t } = useI18n();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Key className="w-5 h-5" />
-            Reset Password
+            {t('admin.farmerManagement.resetPassword.title')}
           </DialogTitle>
           <DialogDescription>
-            Choose how to reset the farmer's password
+            {t('admin.farmerManagement.resetPassword.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -43,11 +46,10 @@ export function ResetPasswordModal({
               <Mail className="w-5 h-5 text-primary mt-0.5" />
               <div className="text-left">
                 <div className="font-medium text-sm">
-                  Send Reset Link via Email
+                  {t('admin.farmerManagement.resetPassword.emailTitle')}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Farmer will receive an email with instructions to reset their
-                  password
+                  {t('admin.farmerManagement.resetPassword.emailDescription')}
                 </div>
               </div>
             </div>
@@ -62,10 +64,10 @@ export function ResetPasswordModal({
               <Key className="w-5 h-5 text-amber-600 mt-0.5" />
               <div className="text-left">
                 <div className="font-medium text-sm">
-                  Generate Temporary Password
+                  {t('admin.farmerManagement.resetPassword.tempTitle')}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Create a temporary password and copy it to clipboard
+                  {t('admin.farmerManagement.resetPassword.tempDescription')}
                 </div>
               </div>
             </div>
@@ -74,7 +76,7 @@ export function ResetPasswordModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
         </DialogFooter>
       </DialogContent>

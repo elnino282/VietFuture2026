@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import type { BuyerRole, KYCStatus, AccountStatus } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface BuyerFiltersProps {
     searchQuery: string;
@@ -34,6 +35,7 @@ export function BuyerFilters({
     statusFilter,
     onStatusFilterChange,
 }: BuyerFiltersProps) {
+    const { t } = useI18n();
     const activeFilterCount =
         (roleFilter !== 'all' ? 1 : 0) +
         (kycFilter !== 'all' ? 1 : 0) +
@@ -52,7 +54,7 @@ export function BuyerFilters({
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search by company name, contact, or tax ID..."
+                            placeholder={t('admin.buyerManagement.filters.searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
                             className="pl-9"
@@ -65,7 +67,7 @@ export function BuyerFilters({
                             className="w-full md:w-auto"
                         >
                             <Filter className="w-4 h-4 mr-2" />
-                            Filters
+                            {t('common.filter')}
                             {activeFilterCount > 0 && (
                                 <Badge variant="secondary" className="ml-2">
                                     {activeFilterCount}
@@ -74,59 +76,59 @@ export function BuyerFilters({
                         </Button>
                         <SheetContent>
                             <SheetHeader>
-                                <SheetTitle>Filter Buyers</SheetTitle>
-                                <SheetDescription>Apply filters to refine your buyer list</SheetDescription>
+                                <SheetTitle>{t('admin.buyerManagement.filters.title')}</SheetTitle>
+                                <SheetDescription>{t('admin.buyerManagement.filters.description')}</SheetDescription>
                             </SheetHeader>
                             <div className="mt-6 space-y-6">
                                 <div className="space-y-2">
-                                    <Label>Role</Label>
+                                    <Label>{t('admin.buyerManagement.fields.role')}</Label>
                                     <Select value={roleFilter} onValueChange={(v) => onRoleFilterChange(v as any)}>
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">All Roles</SelectItem>
-                                            <SelectItem value="buyer">Buyer</SelectItem>
-                                            <SelectItem value="enterprise">Enterprise</SelectItem>
-                                            <SelectItem value="distributor">Distributor</SelectItem>
+                                            <SelectItem value="all">{t('admin.buyerManagement.filters.allRoles')}</SelectItem>
+                                            <SelectItem value="buyer">{t('admin.buyerManagement.roles.buyer')}</SelectItem>
+                                            <SelectItem value="enterprise">{t('admin.buyerManagement.roles.enterprise')}</SelectItem>
+                                            <SelectItem value="distributor">{t('admin.buyerManagement.roles.distributor')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>KYC Status</Label>
+                                    <Label>{t('admin.buyerManagement.fields.kycStatus')}</Label>
                                     <Select value={kycFilter} onValueChange={(v) => onKycFilterChange(v as any)}>
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">All KYC Statuses</SelectItem>
-                                            <SelectItem value="pending">Pending</SelectItem>
-                                            <SelectItem value="verified">Verified</SelectItem>
-                                            <SelectItem value="rejected">Rejected</SelectItem>
+                                            <SelectItem value="all">{t('admin.buyerManagement.filters.allKycStatuses')}</SelectItem>
+                                            <SelectItem value="pending">{t('admin.buyerManagement.kyc.pending')}</SelectItem>
+                                            <SelectItem value="verified">{t('admin.buyerManagement.kyc.verified')}</SelectItem>
+                                            <SelectItem value="rejected">{t('admin.buyerManagement.kyc.rejected')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Account Status</Label>
+                                    <Label>{t('admin.buyerManagement.fields.accountStatus')}</Label>
                                     <Select value={statusFilter} onValueChange={(v) => onStatusFilterChange(v as any)}>
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">All Statuses</SelectItem>
-                                            <SelectItem value="active">Active</SelectItem>
-                                            <SelectItem value="suspended">Suspended</SelectItem>
-                                            <SelectItem value="closed">Closed</SelectItem>
+                                            <SelectItem value="all">{t('admin.buyerManagement.filters.allStatuses')}</SelectItem>
+                                            <SelectItem value="active">{t('admin.buyerManagement.status.active')}</SelectItem>
+                                            <SelectItem value="suspended">{t('admin.buyerManagement.status.suspended')}</SelectItem>
+                                            <SelectItem value="closed">{t('admin.buyerManagement.status.closed')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <Separator />
                                 <div className="flex gap-2">
                                     <Button variant="outline" className="flex-1" onClick={clearAllFilters}>
-                                        Clear All
+                                        {t('common.clearAll')}
                                     </Button>
                                     <Button className="flex-1" onClick={() => onFilterOpenChange(false)}>
-                                        Apply
+                                        {t('admin.buyerManagement.filters.apply')}
                                     </Button>
                                 </div>
                             </div>

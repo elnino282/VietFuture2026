@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { AlertTriangle } from "lucide-react";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface RestoreModalProps {
   open: boolean;
@@ -20,31 +21,31 @@ export function RestoreModal({
   onOpenChange,
   onConfirmRestore,
 }: RestoreModalProps) {
+  const { t } = useI18n();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-600" />
-            Confirm Restore
+            {t('admin.systemSettings.restore.title')}
           </DialogTitle>
           <DialogDescription>
-            This will restore the system to a previous backup point. Current
-            data will be overwritten.
+            {t('admin.systemSettings.restore.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to restore from this backup? This action
-            cannot be undone.
+            {t('admin.systemSettings.restore.confirmation')}
           </p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button variant="destructive" onClick={onConfirmRestore}>
-            Confirm Restore
+            {t('admin.systemSettings.restore.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

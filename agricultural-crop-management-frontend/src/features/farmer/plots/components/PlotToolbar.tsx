@@ -1,5 +1,6 @@
 import { MapPin, List, Plus, MapIcon, Search, X, GitMerge } from "lucide-react";
 import { Button, Card, CardContent, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui";
+import { useTranslation } from "react-i18next";
 import type { ViewMode } from "../types";
 
 interface PlotToolbarProps {
@@ -68,6 +69,7 @@ export function PlotToolbar({
   onClearFilters,
   showMergeButton = false,
 }: PlotToolbarProps) {
+  const { t } = useTranslation();
   const hasActiveFilters =
     searchQuery || filterCrop !== "all" || filterStatus !== "all" || filterSoilType !== "all";
 
@@ -81,10 +83,10 @@ export function PlotToolbar({
             <div className="flex-shrink-0">
               <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
                 <MapPin className="w-6 h-6 text-primary" />
-                My Plots
+                {t("plots.myPlots")}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                View and manage all farm plots
+                {t("plots.pageSubtitle")}
               </p>
             </div>
 
@@ -97,10 +99,10 @@ export function PlotToolbar({
                   size="sm"
                   onClick={onMergePlots}
                   disabled={selectedCount < 2}
-                  disabledHint="Select at least 2 plots before merging"
+                  disabledHint={t("plots.mergeDisabledHint")}
                 >
                   <GitMerge className="w-4 h-4 mr-2" />
-                  Merge Plots
+                  {t("plots.mergePlots")}
                 </Button>
               )}
 
@@ -117,7 +119,7 @@ export function PlotToolbar({
                   }`}
                 >
                   <List className="w-4 h-4 mr-1.5" />
-                  List
+                  {t("plots.viewMode.list")}
                 </Button>
                 <Button
                   variant={viewMode === "map" ? "default" : "ghost"}
@@ -130,7 +132,7 @@ export function PlotToolbar({
                   }`}
                 >
                   <MapIcon className="w-4 h-4 mr-1.5" />
-                  Map
+                  {t("plots.viewMode.map")}
                 </Button>
               </div>
 
@@ -140,7 +142,7 @@ export function PlotToolbar({
                 size="sm"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Plot
+                {t("plots.addPlot")}
               </Button>
             </div>
           </div>
@@ -154,7 +156,7 @@ export function PlotToolbar({
             <div className="relative w-[320px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search plots..."
+                placeholder={t("plots.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-10 pl-10 border-border focus:border-primary focus:ring-primary"
@@ -164,7 +166,7 @@ export function PlotToolbar({
             {/* Crop Filter */}
             <Select value={filterCrop} onValueChange={setFilterCrop} disabled={isLoadingFilterOptions}>
               <SelectTrigger className="w-[180px] border-border focus:border-primary">
-                <SelectValue placeholder="All crops" />
+                <SelectValue placeholder={t("plots.filters.allPlots")} />
               </SelectTrigger>
               <SelectContent>
                 {cropOptions.map((crop) => (
@@ -178,7 +180,7 @@ export function PlotToolbar({
             {/* Status Filter */}
             <Select value={filterStatus} onValueChange={setFilterStatus} disabled={isLoadingFilterOptions}>
               <SelectTrigger className="w-[180px] border-border focus:border-primary">
-                <SelectValue placeholder="All statuses" />
+                <SelectValue placeholder={t("plots.filters.allStatuses")} />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((option) => (
@@ -192,7 +194,7 @@ export function PlotToolbar({
             {/* Soil Type Filter */}
             <Select value={filterSoilType} onValueChange={setFilterSoilType} disabled={isLoadingFilterOptions}>
               <SelectTrigger className="w-[180px] border-border focus:border-primary">
-                <SelectValue placeholder="All soil types" />
+                <SelectValue placeholder={t("plots.filters.allSoilTypes")} />
               </SelectTrigger>
               <SelectContent>
                 {soilTypeOptions.map((type) => (
@@ -209,10 +211,10 @@ export function PlotToolbar({
         {hasActiveFilters && (
           <div className="border-t border-border px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-muted-foreground">Active filters:</span>
+              <span className="text-xs text-muted-foreground">{t("plots.filters.activeFilters")}</span>
               {filterCrop !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-foreground bg-muted rounded-md">
-                  Crop: {cropOptions.find(c => c.value === filterCrop)?.label}
+                  {t("plots.filters.crop")}: {cropOptions.find(c => c.value === filterCrop)?.label}
                   <button
                     onClick={() => setFilterCrop("all")}
                     className="hover:text-foreground"
@@ -223,7 +225,7 @@ export function PlotToolbar({
               )}
               {filterStatus !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-foreground bg-muted rounded-md">
-                  Status: {statusOptions.find(s => s.value === filterStatus)?.label}
+                  {t("plots.filters.status")}: {statusOptions.find(s => s.value === filterStatus)?.label}
                   <button
                     onClick={() => setFilterStatus("all")}
                     className="hover:text-foreground"
@@ -234,7 +236,7 @@ export function PlotToolbar({
               )}
               {filterSoilType !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-foreground bg-muted rounded-md">
-                  Soil: {soilTypeOptions.find(t => t.value === filterSoilType)?.label}
+                  {t("plots.filters.soil")}: {soilTypeOptions.find(t => t.value === filterSoilType)?.label}
                   <button
                     onClick={() => setFilterSoilType("all")}
                     className="hover:text-foreground"
@@ -250,7 +252,7 @@ export function PlotToolbar({
               onClick={onClearFilters}
               className="text-xs text-primary hover:text-primary/80 hover:bg-primary/10"
             >
-              Clear All
+              {t("common.clearAll")}
             </Button>
           </div>
         )}

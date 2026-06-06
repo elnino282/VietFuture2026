@@ -19,8 +19,8 @@ export type AdminView =
   | "settings";
 
 export type AdminViewConfig = {
-  title: string;
-  breadcrumbLabel?: string;
+  titleKey: string;
+  breadcrumbLabelKey?: string;
 };
 
 // Type definition helpers

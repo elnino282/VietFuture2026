@@ -1,33 +1,6 @@
-import {
-    Wheat,
-    DollarSign,
-    CheckCircle2,
-    AlertTriangle,
-} from "lucide-react";
-import type {
-    SidebarItem,
-    ReportSection,
-} from "./types";
-
 // Note: Mock chart data removed - now using entity API hooks
 // Removed: YIELD_BY_SEASON, YIELD_BY_CROP, YIELD_BY_PLOT, COST_DISTRIBUTION,
 // MONTHLY_COSTS, TASK_PERFORMANCE, PESTICIDE_RECORDS
-
-// Sidebar navigation items
-export const SIDEBAR_ITEMS: SidebarItem[] = [
-    { id: "yield" as ReportSection, label: "Yield & Productivity", icon: Wheat },
-    { id: "cost" as ReportSection, label: "Cost Analysis", icon: DollarSign },
-    {
-        id: "performance" as ReportSection,
-        label: "Task Performance",
-        icon: CheckCircle2,
-    },
-    {
-        id: "pesticide" as ReportSection,
-        label: "Pesticide & Compliance",
-        icon: AlertTriangle,
-    },
-];
 
 // Season options
 export const SEASON_OPTIONS = [

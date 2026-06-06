@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Eye, EyeOff, Pencil } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { Eye, EyeOff, Pencil } from "lucide-react";
 import { useI18n } from "@/hooks/useI18n";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, PageContainer } from "@/shared/ui";
+import { BackButton } from "@/shared/ui/back-button";
 import type { MarketplaceProductStatus } from "@/shared/api";
 import {
   useMarketplaceFarmerProductDetail,
@@ -81,7 +82,6 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
 export function SellerProductDetailPage() {
   const { t, locale } = useI18n();
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const productId = Number(id ?? 0);
 
   const productQuery = useMarketplaceFarmerProductDetail(productId);
@@ -134,9 +134,7 @@ export function SellerProductDetailPage() {
               )}
             </p>
             <div className="flex justify-center">
-              <Button type="button" variant="outline" onClick={() => navigate("/farmer/marketplace-products")}>
-                {t("marketplaceSeller.common.backToProducts", "Back to products")}
-              </Button>
+              <BackButton to="/farmer/marketplace-products" variant="outline" />
             </div>
           </CardContent>
         </Card>
@@ -152,14 +150,7 @@ export function SellerProductDetailPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate("/farmer/marketplace-products")}
-            className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label={t("marketplaceSeller.common.backToProducts", "Back to products")}
-          >
-            <ArrowLeft size={18} />
-          </button>
+          <BackButton to="/farmer/marketplace-products" />
           <div>
             <p className="text-sm font-medium text-primary">
               {t("marketplaceSeller.common.brand", "Seller Portal")}

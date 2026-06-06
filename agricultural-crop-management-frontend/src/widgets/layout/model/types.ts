@@ -34,9 +34,13 @@ export interface Notification {
 /**
  * Breadcrumb Path
  */
+export type BreadcrumbKind = 'portal' | 'module' | 'farm' | 'plot' | 'season' | 'record' | 'action';
+
 export interface BreadcrumbPath {
     label: string;
     href?: string;
+    kind?: BreadcrumbKind;
+    loading?: boolean;
 }
 
 /**

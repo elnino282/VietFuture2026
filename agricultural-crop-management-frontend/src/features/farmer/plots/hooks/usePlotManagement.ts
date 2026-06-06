@@ -1,9 +1,53 @@
 import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
-import { usePlots, useCreatePlot, useDeletePlot, useUpdatePlot, type PlotRequest } from "@/entities/plot";
-import type { Plot, PlotStatus, ViewMode } from "../types";
+import { useTranslation } from "react-i18next";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  plotApi,
+  plotKeys,
+  usePlots,
+  useCreatePlot,
+  useDeletePlot,
+  useUpdatePlot,
+  type PlotRequest,
+} from "@/entities/plot";
+import { farmKeys } from "@/entities/farm";
+import { normalizeSoilTypeCode } from "@/features/farmer/shared/plotOptions";
+import type { Plot, PlotStatus, SplitPlotRequest, ViewMode } from "../types";
 import { transformApiToFeature, mapPlotStatusToApiStatus } from "../utils";
 import { usePlotFilters } from "./usePlotFilters";
+
+const getCanonicalSoilType = (plot: Plot): string | undefined => {
+  const code = normalizeSoilTypeCode(plot.soilType);
+  if (code) return code;
+  return plot.soilType && plot.soilType !== "Unknown" ? plot.soilType : undefined;
+};
+
+const PLOT_STATUS_CODES: NonNullable<PlotRequest["status"]>[] = [
+  "IN_USE",
+  "IDLE",
+  "AVAILABLE",
+  "FALLOW",
+  "MAINTENANCE",
+];
+
+const getCanonicalPlotStatus = (plot: Plot): PlotRequest["status"] => {
+  const statusCode = plot.statusCode as PlotRequest["status"] | undefined;
+  if (statusCode && PLOT_STATUS_CODES.includes(statusCode)) {
+    return statusCode;
+  }
+  return mapPlotStatusToApiStatus(plot.status);
+};
+
+const buildPlotStatusUpdatePayload = (
+  plot: Plot,
+  status: PlotRequest["status"]
+): PlotRequest => ({
+  plotName: plot.name,
+  area: plot.area,
+  soilType: getCanonicalSoilType(plot),
+  status,
+});
 
 /**
  * Return type for the usePlotManagement hook
@@ -47,12 +91,16 @@ export interface UsePlotManagementReturn {
   setIsAddPlotOpen: (open: boolean) => void;
   isMergeWizardOpen: boolean;
   setIsMergeWizardOpen: (open: boolean) => void;
+  isSplitDialogOpen: boolean;
+  setIsSplitDialogOpen: (open: boolean) => void;
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
   mergeStep: number;
   setMergeStep: (step: number) => void;
   selectedPlots: string[];
   setSelectedPlots: (plots: string[]) => void;
+  plotToSplit: Plot | null;
+  setPlotToSplit: (plot: Plot | null) => void;
   plotToDelete: string | null;
   setPlotToDelete: (id: string | null) => void;
 
@@ -63,7 +111,10 @@ export interface UsePlotManagementReturn {
   handleDeletePlot: () => void;
   handleGenerateQR: (plot: Plot) => void;
   handleMarkDormant: (plot: Plot) => void;
-  handleMergePlots: () => void;
+  handleReactivatePlot: (plot: Plot) => void;
+  handleOpenSplitPlot: (plot: Plot) => void;
+  handleSplitPlot: (data: SplitPlotRequest) => void;
+  handleMergePlots: (newPlotName: string) => void;
   handleToggleSelection: (id: string) => void;
   handleToggleAllSelection: () => void;
   handleBulkDelete: () => void;
@@ -78,6 +129,8 @@ export interface UsePlotManagementReturn {
   // Mutation states
   isCreating: boolean;
   isDeleting: boolean;
+  isMerging: boolean;
+  isSplitting: boolean;
 }
 
 /**
@@ -88,6 +141,8 @@ export interface UsePlotManagementReturn {
  * - utils.ts: Transform functions
  */
 export const usePlotManagement = (): UsePlotManagementReturn => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
   // ═══════════════════════════════════════════════════════════════
   // COMPOSED HOOKS
   // ═══════════════════════════════════════════════════════════════
@@ -107,22 +162,22 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
 
   const createMutation = useCreatePlot({
     onSuccess: () => {
-      toast.success("Plot Added Successfully", {
-        description: "New plot has been added to your records",
+      toast.success(t("plots.toast.createSuccess"), {
+        description: t("plots.toast.createSuccessDesc"),
       });
       setIsAddPlotOpen(false);
     },
     onError: (err) => {
-      toast.error("Failed to Add Plot", {
-        description: err.message || "Please try again",
+      toast.error(t("plots.toast.createError"), {
+        description: err.message || t("common.error.description"),
       });
     },
   });
 
   const deleteMutation = useDeletePlot({
     onSuccess: () => {
-      toast.success("Plot Deleted", {
-        description: "The plot has been removed from your records",
+      toast.success(t("plots.toast.deleteSuccess"), {
+        description: t("plots.toast.deleteSuccessDesc"),
       });
       setIsDeleteDialogOpen(false);
       setPlotToDelete(null);
@@ -131,19 +186,155 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
       }
     },
     onError: (err) => {
-      toast.error("Failed to Delete Plot", {
-        description: err.message || "Please try again",
+      toast.error(t("plots.toast.deleteError"), {
+        description: err.message || t("common.error.description"),
       });
     },
   });
 
   const updateMutation = useUpdatePlot({
     onSuccess: () => {
-      toast.success("Plot Status Updated");
+      toast.success(t("plots.toast.statusUpdateSuccess"));
     },
     onError: (err) => {
-      toast.error("Failed to Update Plot", {
-        description: err.message || "Please try again",
+      toast.error(t("plots.toast.updateError"), {
+        description: err.message || t("common.error.description"),
+      });
+    },
+  });
+
+  const mergeMutation = useMutation({
+    mutationFn: async ({ plotIds, newPlotName }: { plotIds: string[]; newPlotName: string }) => {
+      const selectedPlotObjects = plotIds
+        .map((id) => plots.find((plot) => plot.id === id))
+        .filter((plot): plot is Plot => Boolean(plot));
+
+      if (selectedPlotObjects.length < 2) {
+        throw new Error(t("plots.toast.selectAtLeastTwo"));
+      }
+
+      if (selectedPlotObjects.length !== plotIds.length) {
+        throw new Error(t("plots.toast.mergeMissingPlots"));
+      }
+
+      const farmId = selectedPlotObjects[0].farmId;
+      if (!farmId) {
+        throw new Error(t("plots.toast.mergeFarmMissing"));
+      }
+
+      const hasDifferentFarm = selectedPlotObjects.some((plot) => plot.farmId !== farmId);
+      if (hasDifferentFarm) {
+        throw new Error(t("plots.toast.mergeSameFarmRequired"));
+      }
+
+      const mergedSoilType = selectedPlotObjects
+        .map(getCanonicalSoilType)
+        .find((soilType): soilType is string => Boolean(soilType));
+
+      const createdPlot = await plotApi.create({
+        farmId,
+        plotName: newPlotName,
+        area: selectedPlotObjects.reduce((sum, plot) => sum + plot.area, 0),
+        soilType: mergedSoilType,
+        status: getCanonicalPlotStatus(selectedPlotObjects[0]),
+      });
+
+      try {
+        await Promise.all(
+          selectedPlotObjects.map((plot) => plotApi.delete(Number.parseInt(plot.id, 10)))
+        );
+      } catch (error) {
+        await plotApi.delete(createdPlot.id).catch(() => undefined);
+        throw error;
+      }
+
+      return {
+        farmId,
+        mergedCount: selectedPlotObjects.length,
+      };
+    },
+    onSuccess: ({ farmId, mergedCount }) => {
+      toast.success(t("plots.toast.mergeSuccess"), {
+        description: t("plots.toast.mergeSuccessDesc", { count: mergedCount }),
+      });
+      setIsMergeWizardOpen(false);
+      setSelectedPlots([]);
+      setMergeStep(1);
+      queryClient.invalidateQueries({ queryKey: plotKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: plotKeys.byFarm(farmId), exact: false });
+      queryClient.invalidateQueries({ queryKey: farmKeys.detail(farmId) });
+    },
+    onError: (error) => {
+      toast.error(t("plots.toast.mergeError"), {
+        description: error.message || t("common.error.description"),
+      });
+    },
+  });
+
+  const splitMutation = useMutation({
+    mutationFn: async (data: SplitPlotRequest) => {
+      const { sourcePlot, firstPlotName, firstArea, secondPlotName, secondArea } = data;
+      const sourcePlotId = Number.parseInt(sourcePlot.id, 10);
+      if (Number.isNaN(sourcePlotId)) {
+        throw new Error(t("plots.toast.splitMissingPlot"));
+      }
+
+      const farmId = sourcePlot.farmId;
+      if (!farmId) {
+        throw new Error(t("plots.toast.splitFarmMissing"));
+      }
+
+      const soilType = getCanonicalSoilType(sourcePlot);
+      const status = getCanonicalPlotStatus(sourcePlot);
+      const createdPlotIds: number[] = [];
+
+      try {
+        const firstPlot = await plotApi.create({
+          farmId,
+          plotName: firstPlotName,
+          area: firstArea,
+          soilType,
+          status,
+        });
+        createdPlotIds.push(firstPlot.id);
+
+        const secondPlot = await plotApi.create({
+          farmId,
+          plotName: secondPlotName,
+          area: secondArea,
+          soilType,
+          status,
+        });
+        createdPlotIds.push(secondPlot.id);
+
+        await plotApi.delete(sourcePlotId);
+      } catch (error) {
+        await Promise.all(
+          createdPlotIds.map((id) => plotApi.delete(id).catch(() => undefined))
+        );
+        throw error;
+      }
+
+      return {
+        farmId,
+        sourcePlotId,
+        sourceName: sourcePlot.name,
+      };
+    },
+    onSuccess: ({ farmId, sourcePlotId, sourceName }) => {
+      toast.success(t("plots.toast.splitSuccess"), {
+        description: t("plots.toast.splitSuccessDesc", { name: sourceName }),
+      });
+      setIsSplitDialogOpen(false);
+      setPlotToSplit(null);
+      queryClient.invalidateQueries({ queryKey: plotKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: plotKeys.byFarm(farmId), exact: false });
+      queryClient.invalidateQueries({ queryKey: plotKeys.detail(sourcePlotId) });
+      queryClient.invalidateQueries({ queryKey: farmKeys.detail(farmId) });
+    },
+    onError: (error) => {
+      toast.error(t("plots.toast.splitError"), {
+        description: error.message || t("common.error.description"),
       });
     },
   });
@@ -159,9 +350,11 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddPlotOpen, setIsAddPlotOpen] = useState(false);
   const [isMergeWizardOpen, setIsMergeWizardOpen] = useState(false);
+  const [isSplitDialogOpen, setIsSplitDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [mergeStep, setMergeStep] = useState(1);
   const [selectedPlots, setSelectedPlots] = useState<string[]>([]);
+  const [plotToSplit, setPlotToSplit] = useState<Plot | null>(null);
   const [plotToDelete, setPlotToDelete] = useState<string | null>(null);
 
   // ═══════════════════════════════════════════════════════════════
@@ -187,8 +380,8 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
 
   const handleClearFilters = useCallback(() => {
     filters.handleClearFilters();
-    toast.info("Filters cleared");
-  }, [filters]);
+    toast.info(t("plots.toast.filtersCleared"));
+  }, [filters, t]);
 
   const handleViewPlotDetails = useCallback((plot: Plot) => {
     setSelectedPlot(plot);
@@ -197,16 +390,18 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
 
   const handleAddPlot = useCallback((formData: PlotRequest) => {
     // Validate required fields (dialog already validates, but double-check)
-    if (!formData.plotName || !formData.area) {
-      toast.error("Missing Required Fields", {
-        description: "Please fill in all required fields marked with *",
+    if (!formData.farmId || !formData.plotName || !formData.area) {
+      toast.error(t("plots.toast.missingRequiredFields"), {
+        description: !formData.farmId
+          ? t("farms.validation.farmRequired")
+          : t("plots.toast.missingRequiredFieldsDesc"),
       });
       return;
     }
 
     // Use API mutation - formData is already in correct PlotRequest format
     createMutation.mutate(formData);
-  }, [createMutation]);
+  }, [createMutation, t]);
 
   const handleDeletePlot = useCallback(() => {
     if (plotToDelete) {
@@ -218,39 +413,51 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
   }, [plotToDelete, deleteMutation]);
 
   const handleGenerateQR = useCallback((plot: Plot) => {
-    toast.success("QR Code Generated", {
-      description: `QR code for ${plot.name} is ready to download`,
+    toast.success(t("plots.toast.qrGenerated"), {
+      description: t("plots.toast.qrGeneratedDesc", { name: plot.name }),
     });
-  }, []);
+  }, [t]);
 
   const handleMarkDormant = useCallback((plot: Plot) => {
     const plotId = parseInt(plot.id, 10);
     if (!isNaN(plotId)) {
       updateMutation.mutate({
         id: plotId,
-        data: {
-          plotName: plot.name,
-          area: plot.area,
-          status: "IDLE",
-        },
+        data: buildPlotStatusUpdatePayload(plot, "FALLOW"),
       });
     }
   }, [updateMutation]);
 
-  const handleMergePlots = useCallback(() => {
+  const handleReactivatePlot = useCallback((plot: Plot) => {
+    const plotId = parseInt(plot.id, 10);
+    if (!isNaN(plotId)) {
+      updateMutation.mutate({
+        id: plotId,
+        data: buildPlotStatusUpdatePayload(plot, "IN_USE"),
+      });
+    }
+  }, [updateMutation]);
+
+  const handleOpenSplitPlot = useCallback((plot: Plot) => {
+    setPlotToSplit(plot);
+    setIsSplitDialogOpen(true);
+  }, []);
+
+  const handleSplitPlot = useCallback((data: SplitPlotRequest) => {
+    splitMutation.mutate(data);
+  }, [splitMutation]);
+
+  const handleMergePlots = useCallback((newPlotName: string) => {
     if (selectedPlots.length < 2) {
-      toast.error("Select at least 2 plots to merge");
+      toast.error(t("plots.toast.selectAtLeastTwo"));
       return;
     }
 
-    // Merge logic - would need a custom API endpoint
-    toast.success("Plots Merged Successfully", {
-      description: `${selectedPlots.length} plots have been merged`,
+    mergeMutation.mutate({
+      plotIds: selectedPlots,
+      newPlotName,
     });
-    setIsMergeWizardOpen(false);
-    setSelectedPlots([]);
-    setMergeStep(1);
-  }, [selectedPlots, plots]);
+  }, [mergeMutation, selectedPlots, t]);
 
   // Bulk selection handlers
   const handleToggleSelection = useCallback((id: string) => {
@@ -273,7 +480,7 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
 
   const handleBulkDelete = useCallback(() => {
     if (selectedPlots.length === 0) {
-      toast.error("No plots selected");
+      toast.error(t("plots.toast.noPlotsSelected"));
       return;
     }
 
@@ -285,15 +492,15 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
       }
     });
 
-    toast.success("Plots Deleted", {
-      description: `${selectedPlots.length} plot(s) have been deleted`,
+    toast.success(t("plots.toast.bulkDeleteSuccess"), {
+      description: t("plots.toast.bulkDeleteSuccessDesc", { count: selectedPlots.length }),
     });
     setSelectedPlots([]);
-  }, [selectedPlots, deleteMutation]);
+  }, [selectedPlots, deleteMutation, t]);
 
   const handleBulkStatusChange = useCallback((status: PlotStatus) => {
     if (selectedPlots.length === 0) {
-      toast.error("No plots selected");
+      toast.error(t("plots.toast.noPlotsSelected"));
       return;
     }
 
@@ -304,20 +511,19 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
       if (!isNaN(plotId) && plot) {
         updateMutation.mutate({
           id: plotId,
-          data: {
-            plotName: plot.name,
-            area: plot.area,
-            status: mapPlotStatusToApiStatus(status),
-          },
+          data: buildPlotStatusUpdatePayload(plot, mapPlotStatusToApiStatus(status)),
         });
       }
     });
 
-    toast.success("Status Updated", {
-      description: `${selectedPlots.length} plot(s) updated to ${status}`,
+    toast.success(t("plots.toast.statusUpdateSuccess"), {
+      description: t("plots.toast.bulkStatusUpdateSuccessDesc", {
+        count: selectedPlots.length,
+        status: t(`plots.status.${status === "at-risk" ? "atRisk" : status}`),
+      }),
     });
     setSelectedPlots([]);
-  }, [selectedPlots, plots, updateMutation]);
+  }, [selectedPlots, plots, updateMutation, t]);
 
   const handleClearSelection = useCallback(() => {
     setSelectedPlots([]);
@@ -367,12 +573,16 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
     setIsAddPlotOpen,
     isMergeWizardOpen,
     setIsMergeWizardOpen,
+    isSplitDialogOpen,
+    setIsSplitDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
     mergeStep,
     setMergeStep,
     selectedPlots,
     setSelectedPlots,
+    plotToSplit,
+    setPlotToSplit,
     plotToDelete,
     setPlotToDelete,
 
@@ -383,6 +593,9 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
     handleDeletePlot,
     handleGenerateQR,
     handleMarkDormant,
+    handleReactivatePlot,
+    handleOpenSplitPlot,
+    handleSplitPlot,
     handleMergePlots,
     handleToggleSelection,
     handleToggleAllSelection,
@@ -398,6 +611,8 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
     // Mutation states
     isCreating: createMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isMerging: mergeMutation.isPending,
+    isSplitting: splitMutation.isPending,
   };
 };
 

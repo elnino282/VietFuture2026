@@ -1,8 +1,6 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { MessageSquare } from "lucide-react";
-import { Button, PageContainer, QueryError, Skeleton } from "@/shared/ui";
-import { toast } from "sonner";
+import { PageContainer, QueryError, Skeleton } from "@/shared/ui";
 import { usePlotManagement } from "./hooks/usePlotManagement";
 import { PlotToolbar } from "./components/PlotToolbar";
 import { PlotListView } from "./components/PlotListView";
@@ -10,6 +8,7 @@ import { PlotMapView } from "./components/PlotMapView";
 import { PlotDetailDialog } from "./components/PlotDetailDrawer";
 import { AddPlotDialog } from "./components/AddPlotDialog";
 import { MergePlotsWizard } from "./components/MergePlotsWizard";
+import { SplitPlotDialog } from "./components/SplitPlotDialog";
 import { DeletePlotDialog } from "./components/DeletePlotDialog";
 
 /**
@@ -52,12 +51,16 @@ export function PlotManagement() {
     setIsAddPlotOpen,
     isMergeWizardOpen,
     setIsMergeWizardOpen,
+    isSplitDialogOpen,
+    setIsSplitDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
     mergeStep,
     setMergeStep,
     selectedPlots,
     setSelectedPlots,
+    plotToSplit,
+    setPlotToSplit,
     setPlotToDelete,
     handleClearFilters,
     handleViewPlotDetails,
@@ -65,6 +68,9 @@ export function PlotManagement() {
     handleDeletePlot,
     handleGenerateQR,
     handleMarkDormant,
+    handleReactivatePlot,
+    handleOpenSplitPlot,
+    handleSplitPlot,
     handleMergePlots,
     handleToggleSelection,
     handleToggleAllSelection,
@@ -73,6 +79,8 @@ export function PlotManagement() {
     handleClearSelection,
     selectedCount,
     isCreating,
+    isMerging,
+    isSplitting,
   } = usePlotManagement();
 
   const plotIdParam = searchParams.get("plotId");
@@ -178,21 +186,6 @@ export function PlotManagement() {
         )}
       </PageContainer>
 
-      {/* AI Assistant Floating Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Button
-          size="lg"
-          className="rounded-full h-14 w-14 shadow-lg bg-secondary hover:bg-secondary/90 text-white"
-          onClick={() =>
-            toast.info("AI Assistant", {
-              description: "Ask me anything about your plots",
-            })
-          }
-        >
-          <MessageSquare className="w-6 h-6" />
-        </Button>
-      </div>
-
       {/* Plot Detail Dialog */}
       <PlotDetailDialog
         plot={selectedPlot}
@@ -200,7 +193,9 @@ export function PlotManagement() {
         onClose={handleCloseDrawer}
         onEdit={() => setIsAddPlotOpen(true)}
         onMerge={() => setIsMergeWizardOpen(true)}
+        onSplit={handleOpenSplitPlot}
         onMarkDormant={handleMarkDormant}
+        onReactivate={handleReactivatePlot}
         onGenerateQR={handleGenerateQR}
         onDelete={(id) => {
           setPlotToDelete(id);
@@ -226,6 +221,19 @@ export function PlotManagement() {
         mergeStep={mergeStep}
         setMergeStep={setMergeStep}
         onConfirm={handleMergePlots}
+        isMerging={isMerging}
+      />
+
+      {/* Split Plot Dialog */}
+      <SplitPlotDialog
+        isOpen={isSplitDialogOpen}
+        plot={plotToSplit}
+        onClose={() => {
+          setIsSplitDialogOpen(false);
+          setPlotToSplit(null);
+        }}
+        onConfirm={handleSplitPlot}
+        isSplitting={isSplitting}
       />
 
       {/* Delete Plot Dialog */}

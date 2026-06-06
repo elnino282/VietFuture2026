@@ -8,6 +8,7 @@ import {
 } from "@/shared/ui/dropdown-menu";
 import { Button } from "@/shared/ui/button";
 import type { Farm } from "@/entities/farm";
+import { useTranslation } from "react-i18next";
 
 interface FarmActionsMenuProps {
     farm: Farm;
@@ -28,6 +29,8 @@ export function FarmActionsMenu({
     onEdit,
     onDelete,
 }: FarmActionsMenuProps) {
+    const { t } = useTranslation();
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -41,7 +44,7 @@ export function FarmActionsMenu({
                     }}
                 >
                     <MoreVertical className="h-4 w-4" />
-                    <span className="sr-only">Open menu</span>
+                    <span className="sr-only">{t("farmManagement.actions.openMenu")}</span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[180px]">
@@ -52,7 +55,7 @@ export function FarmActionsMenu({
                     }}
                 >
                     <Eye className="mr-2 h-4 w-4" />
-                    <span>View details</span>
+                    <span>{t("farmManagement.actions.viewDetails")}</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
@@ -62,7 +65,7 @@ export function FarmActionsMenu({
                     }}
                 >
                     <Edit className="mr-2 h-4 w-4" />
-                    <span>Edit</span>
+                    <span>{t("common.edit")}</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
@@ -75,7 +78,7 @@ export function FarmActionsMenu({
                     className="text-red-600 focus:text-red-600 focus:bg-red-50"
                 >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    <span>Delete</span>
+                    <span>{t("common.delete")}</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

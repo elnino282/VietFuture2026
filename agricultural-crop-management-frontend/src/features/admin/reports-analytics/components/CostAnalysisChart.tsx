@@ -9,6 +9,7 @@ import {
     getWeightUnitLabel,
 } from '@/shared/lib';
 import type { CostReport } from '@/services/api.admin';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface CostAnalysisChartProps {
     data: CostReport[];
@@ -16,13 +17,14 @@ interface CostAnalysisChartProps {
 }
 
 export const CostAnalysisChart: React.FC<CostAnalysisChartProps> = ({ data, isLoading }) => {
+    const { t } = useI18n();
     const { preferences } = usePreferences();
     const unitLabel = getWeightUnitLabel(preferences.weightUnit);
     const formatNumber = (value: number) => new Intl.NumberFormat(preferences.locale).format(value);
 
     // Transform data for the chart
     const chartData = data.map(item => ({
-        name: item.seasonName || `Season ${item.seasonId}`,
+        name: item.seasonName || t('admin.reportsAnalytics.fallback.season', { id: item.seasonId }),
         expense: Number(item.totalExpense) || 0,
         costPerUnit: convertCostPerKg(Number(item.costPerKg) || 0, preferences.weightUnit),
         yield: convertWeight(Number(item.totalYieldKg) || 0, preferences.weightUnit),
@@ -32,7 +34,7 @@ export const CostAnalysisChart: React.FC<CostAnalysisChartProps> = ({ data, isLo
         return (
             <Card className="col-span-2">
                 <CardHeader>
-                    <CardTitle>Cost Analysis</CardTitle>
+                    <CardTitle>{t('admin.reportsAnalytics.costAnalysis.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Skeleton className="h-[300px] w-full" />
@@ -45,11 +47,11 @@ export const CostAnalysisChart: React.FC<CostAnalysisChartProps> = ({ data, isLo
         return (
             <Card className="col-span-2">
                 <CardHeader>
-                    <CardTitle>Cost Analysis</CardTitle>
+                    <CardTitle>{t('admin.reportsAnalytics.costAnalysis.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                        <p>No cost data available for the selected year.</p>
+                        <p>{t('admin.reportsAnalytics.costAnalysis.empty')}</p>
                     </div>
                 </CardContent>
             </Card>
@@ -59,7 +61,7 @@ export const CostAnalysisChart: React.FC<CostAnalysisChartProps> = ({ data, isLo
     return (
         <Card className="col-span-2">
             <CardHeader>
-                <CardTitle>Cost Analysis by Season</CardTitle>
+                <CardTitle>{t('admin.reportsAnalytics.costAnalysis.bySeason')}</CardTitle>
             </CardHeader>
             <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -86,12 +88,12 @@ export const CostAnalysisChart: React.FC<CostAnalysisChartProps> = ({ data, isLo
                         <Tooltip
                             formatter={(value: number, name: string) => {
                                 if (name === 'expense') {
-                                    return [formatMoney(value, preferences.currency, preferences.locale), 'Total Expense'];
+                                    return [formatMoney(value, preferences.currency, preferences.locale), t('admin.reportsAnalytics.costAnalysis.totalExpense')];
                                 }
                                 if (name === 'costPerUnit') {
                                     return [
                                         `${formatMoney(value, preferences.currency, preferences.locale)}/${unitLabel}`,
-                                        `Cost per ${unitLabel}`
+                                        t('admin.reportsAnalytics.costAnalysis.costPerUnit', { unit: unitLabel })
                                     ];
                                 }
                                 return [value, name];
@@ -101,14 +103,14 @@ export const CostAnalysisChart: React.FC<CostAnalysisChartProps> = ({ data, isLo
                         <Bar
                             yAxisId="left"
                             dataKey="expense"
-                            name="Total Expense"
+                            name={t('admin.reportsAnalytics.costAnalysis.totalExpense')}
                             fill="#F59E0B"
                             radius={[4, 4, 0, 0]}
                         />
                         <Bar
                             yAxisId="right"
                             dataKey="costPerUnit"
-                            name={`Cost/${unitLabel}`}
+                            name={t('admin.reportsAnalytics.costAnalysis.costPerUnitShort', { unit: unitLabel })}
                             fill="#3BA55D"
                             radius={[4, 4, 0, 0]}
                         />

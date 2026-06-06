@@ -1,7 +1,9 @@
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Button } from "@/shared/ui/button";
+import { useTranslation } from "react-i18next";
 import { PlotStatusChip } from "./PlotStatusChip";
 import { PlotActionsMenu } from "./PlotActionsMenu";
+import { getSoilTypeLabel } from "@/features/farmer/shared/plotOptions";
 import type { Plot } from "../types";
 
 interface PlotMobileCardProps {
@@ -25,6 +27,8 @@ export function PlotMobileCard({
     onViewDetails,
     onDelete,
 }: PlotMobileCardProps) {
+    const { t } = useTranslation();
+
     return (
         <div className="bg-card rounded-lg border border-gray-200 p-4 shadow-sm">
             {/* Header: Checkbox + Title + Actions */}
@@ -36,7 +40,7 @@ export function PlotMobileCard({
                 />
                 <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 truncate">{plot.name}</h3>
-                    <p className="text-sm text-gray-500 mt-0.5">ID: {plot.id}</p>
+                    <p className="text-sm text-gray-500 mt-0.5">{t("plots.meta.id", { id: plot.id })}</p>
                 </div>
                 <PlotActionsMenu
                     plot={plot}
@@ -49,7 +53,7 @@ export function PlotMobileCard({
             <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
                 <span>{plot.area} ha</span>
                 <span>•</span>
-                <span>{plot.soilType}</span>
+                <span>{getSoilTypeLabel(plot.soilType, t)}</span>
                 <span>•</span>
                 <span>pH {plot.pH.toFixed(1)}</span>
             </div>
@@ -64,9 +68,9 @@ export function PlotMobileCard({
                 </div>
             ) : (
                 <div className="flex items-center gap-2 mb-3">
-                    <span className="text-sm text-gray-400">No crop</span>
+                    <span className="text-sm text-gray-400">{t("plots.noCrop")}</span>
                     <Button variant="link" size="sm" className="h-auto p-0 text-xs">
-                        Assign
+                        {t("plots.actions.assign")}
                     </Button>
                 </div>
             )}

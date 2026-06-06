@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link as LinkIcon, Upload, X } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { MarketplaceFarmerProductUpsertRequest, MarketplaceProductStatus } from "@/shared/api";
 import {
+  BackButton,
   Button,
   Card,
   CardContent,
@@ -220,6 +221,25 @@ export function SellerProductFormPage() {
   const productModerationReason = product?.rejectionReason ?? product?.statusReason ?? null;
   const imagePreviewSrc = selectedImagePreview ?? form.imageUrl.trim();
   const isSavingProduct = createMutation.isPending || updateMutation.isPending || uploadImageMutation.isPending;
+  const initialForm = useMemo<ProductFormState>(() => {
+    if (!isEdit || !product) {
+      return EMPTY_FORM;
+    }
+
+    return {
+      name: product.name,
+      category: product.category ?? "",
+      shortDescription: product.shortDescription ?? "",
+      description: product.description ?? "",
+      price: String(product.price),
+      stockQuantity: String(product.stockQuantity),
+      imageUrl: product.imageUrl ?? "",
+      selectedFarmId: product.farmId ? String(product.farmId) : "",
+      selectedSeasonId: product.seasonId ? String(product.seasonId) : "",
+      selectedLotId: product.lotId ? String(product.lotId) : "",
+    };
+  }, [isEdit, product]);
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm) || !!selectedImageFile;
 
   function updateForm(patch: Partial<ProductFormState>) {
     setForm((current) => ({ ...current, ...patch }));
@@ -434,9 +454,7 @@ export function SellerProductFormPage() {
               >
                 {t("marketplaceSeller.common.tryAgain", "Try again")}
               </Button>
-              <Button type="button" variant="outline" onClick={() => navigate("/farmer/marketplace-products")}>
-                {t("marketplaceSeller.common.backToProducts", "Back to products")}
-              </Button>
+              <BackButton to="/farmer/marketplace-products" variant="outline" />
             </div>
           </CardContent>
         </Card>
@@ -453,9 +471,7 @@ export function SellerProductFormPage() {
             <p className="text-sm text-muted-foreground">
               {t("marketplaceSeller.productForm.notFound", "This product could not be found for your account.")}
             </p>
-            <Button type="button" variant="outline" onClick={() => navigate("/farmer/marketplace-products")}>
-              {t("marketplaceSeller.common.backToProducts", "Back to products")}
-            </Button>
+            <BackButton to="/farmer/marketplace-products" variant="outline" />
           </CardContent>
         </Card>
       </div>
@@ -480,9 +496,7 @@ export function SellerProductFormPage() {
                 "Finish harvest intake first, then come back here to turn a harvested lot into a marketplace listing.",
               )}
             </p>
-            <Button type="button" variant="outline" onClick={() => navigate("/farmer/marketplace-products")}>
-              {t("marketplaceSeller.common.backToProducts", "Back to products")}
-            </Button>
+            <BackButton to="/farmer/marketplace-products" variant="outline" />
           </CardContent>
         </Card>
       </div>
@@ -510,12 +524,11 @@ export function SellerProductFormPage() {
             )}
           </p>
         </div>
-        <Link
+        <BackButton
           to="/farmer/marketplace-products"
-          className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-        >
-          {t("marketplaceSeller.common.backToProducts", "Back to products")}
-        </Link>
+          confirmOnLeave={isDirty && !isSavingProduct}
+          variant="outline"
+        />
       </div>
 
       <form

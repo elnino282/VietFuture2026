@@ -7,6 +7,7 @@ export type {
     FieldLogUpdateRequest,
     SeasonMinimal,
     LogType,
+    ActorType,
 } from './model/types';
 
 export {
@@ -17,6 +18,7 @@ export {
     SeasonMinimalSchema,
     LogTypeSchema,
     LOG_TYPES,
+    ActorTypeSchema,
 } from './model/schemas';
 
 export { fieldLogKeys } from './model/keys';
@@ -26,6 +28,7 @@ export {
     useFieldLogsBySeason,
     useFieldLogById,
     useUserSeasons,
+    useEmployeeAssignedSeasons,
     useCreateFieldLog,
     useUpdateFieldLog,
     useDeleteFieldLog,

@@ -26,11 +26,15 @@ public interface ProductWarehouseLotRepository extends JpaRepository<ProductWare
 
     Optional<ProductWarehouseLot> findByHarvest_Id(Integer harvestId);
 
+    List<ProductWarehouseLot> findAllByHarvest_IdIn(Collection<Integer> harvestIds);
+
     Optional<ProductWarehouseLot> findByLotCode(String lotCode);
 
     Optional<ProductWarehouseLot> findByIdAndStatus(Integer id, ProductWarehouseLotStatus status);
 
     Optional<ProductWarehouseLot> findByIdAndOnHandQuantityGreaterThan(Integer id, BigDecimal onHandQuantity);
+
+    List<ProductWarehouseLot> findAllBySeason_IdIn(List<Integer> seasonIds);
 
     @Query("""
             SELECT l FROM ProductWarehouseLot l

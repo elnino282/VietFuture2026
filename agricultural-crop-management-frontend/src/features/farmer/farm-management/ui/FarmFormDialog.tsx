@@ -5,6 +5,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
+    BackButton,
     Button,
     Input,
     Label,
@@ -57,15 +58,30 @@ export function FarmFormDialog({
         const { form, handleSubmit, isSubmitting } = createHook;
         const nameError = form.formState.errors.name?.message;
         const areaError = form.formState.errors.area?.message;
+        const closeCreateWithConfirm = () => {
+            if (isSubmitting) return;
+            if (
+                form.formState.isDirty &&
+                !window.confirm(t('common.unsavedChangesConfirm', 'You have unsaved changes. Leave this page?'))
+            ) {
+                return;
+            }
+            onOpenChange(false);
+        };
         const handleCreateOpenChange = (nextOpen: boolean) => {
             if (isSubmitting && !nextOpen) return;
-            onOpenChange(nextOpen);
+            if (!nextOpen) {
+                closeCreateWithConfirm();
+                return;
+            }
+            onOpenChange(true);
         };
 
         return (
             <Dialog open={open} onOpenChange={handleCreateOpenChange}>
                 <DialogContent className="sm:max-w-[500px]" closeDisabled={isSubmitting}>
                     <DialogHeader>
+                        <BackButton onClick={closeCreateWithConfirm} className="w-fit" />
                         <DialogTitle>{t('farms.dialog.createFarmTitle')}</DialogTitle>
                         <DialogDescription>
                             {t('farms.dialog.createFarmDescription')}
@@ -147,7 +163,7 @@ export function FarmFormDialog({
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => onOpenChange(false)}
+                                onClick={closeCreateWithConfirm}
                                 disabled={isSubmitting}
                             >
                                 {t('common.cancel')}
@@ -166,15 +182,30 @@ export function FarmFormDialog({
     const { form, handleSubmit, isSubmitting } = updateHook;
     const nameError = form.formState.errors.name?.message;
     const areaError = form.formState.errors.area?.message;
+    const closeEditWithConfirm = () => {
+        if (isSubmitting) return;
+        if (
+            form.formState.isDirty &&
+            !window.confirm(t('common.unsavedChangesConfirm', 'You have unsaved changes. Leave this page?'))
+        ) {
+            return;
+        }
+        onOpenChange(false);
+    };
     const handleEditOpenChange = (nextOpen: boolean) => {
         if (isSubmitting && !nextOpen) return;
-        onOpenChange(nextOpen);
+        if (!nextOpen) {
+            closeEditWithConfirm();
+            return;
+        }
+        onOpenChange(true);
     };
 
     return (
         <Dialog open={open} onOpenChange={handleEditOpenChange}>
             <DialogContent className="sm:max-w-[500px]" closeDisabled={isSubmitting}>
                 <DialogHeader>
+                    <BackButton onClick={closeEditWithConfirm} className="w-fit" />
                     <DialogTitle>{t('farms.dialog.editFarmTitle')}</DialogTitle>
                     <DialogDescription>
                         {t('farms.dialog.editFarmDescription')}
@@ -251,7 +282,7 @@ export function FarmFormDialog({
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={() => onOpenChange(false)}
+                            onClick={closeEditWithConfirm}
                         disabled={isSubmitting}
                     >
                         {t('common.cancel')}

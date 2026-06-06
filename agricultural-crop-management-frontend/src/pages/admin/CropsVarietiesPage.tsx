@@ -97,7 +97,7 @@ export function CropsVarietiesPage() {
         setCrops(Array.isArray(response.result) ? response.result : []);
       }
     } catch (err) {
-      setError("Failed to load crops");
+      setError(t("admin.crops.loadCropsError"));
       console.error(err);
     } finally {
       setLoading(false);
@@ -113,7 +113,7 @@ export function CropsVarietiesPage() {
         setVarieties(Array.isArray(response.result) ? response.result : []);
       }
     } catch (err) {
-      setError("Failed to load varieties");
+      setError(t("admin.crops.loadVarietiesError"));
       console.error(err);
     } finally {
       setLoading(false);
@@ -216,14 +216,14 @@ export function CropsVarietiesPage() {
         await adminCropApi.delete(deleteConfirm.id);
         setToast({
           type: "success",
-          message: `Crop "${deleteConfirm.name}" deleted successfully`,
+          message: t("admin.crops.toast.cropDeleted", { name: deleteConfirm.name }),
         });
         fetchCrops();
       } else {
         await adminVarietyApi.delete(deleteConfirm.id);
         setToast({
           type: "success",
-          message: `Variety "${deleteConfirm.name}" deleted successfully`,
+          message: t("admin.crops.toast.varietyDeleted", { name: deleteConfirm.name }),
         });
         fetchVarieties();
       }
@@ -233,8 +233,8 @@ export function CropsVarietiesPage() {
       const errorMessage =
         err?.response?.data?.message ||
         (deleteConfirm.type === "crop"
-          ? "Cannot delete this crop. It may have varieties or be referenced in seasons."
-          : "Cannot delete this variety. It may be referenced in seasons.");
+          ? t("admin.crops.toast.cropDeleteBlocked")
+          : t("admin.crops.toast.varietyDeleteBlocked"));
       setToast({ type: "error", message: errorMessage });
       setDeleteConfirm(null);
     } finally {
@@ -279,7 +279,7 @@ export function CropsVarietiesPage() {
                 type="text"
                 value={cropSearchQuery}
                 onChange={(e) => setCropSearchQuery(e.target.value)}
-                placeholder="Search crops..."
+                placeholder={t("admin.crops.searchCrops")}
                 className="w-full pl-9 pr-3 py-2 border border-border rounded-[14px] bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
@@ -288,7 +288,7 @@ export function CropsVarietiesPage() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50 transition-colors"
             >
               <Search className="h-4 w-4" />
-              Search
+              {t("common.search")}
             </button>
           </div>
 
@@ -296,8 +296,8 @@ export function CropsVarietiesPage() {
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
                 {filteredCrops.length}{" "}
-                {filteredCrops.length === 1 ? "crop" : "crops"}
-                {cropSearchQuery && ` (filtered from ${crops.length})`}
+                {filteredCrops.length === 1 ? t("admin.crops.count.crop") : t("admin.crops.count.crops")}
+                {cropSearchQuery && ` (${t("admin.crops.filteredFrom")} ${crops.length})`}
               </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -306,7 +306,7 @@ export function CropsVarietiesPage() {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90"
               >
                 <Plus className="h-4 w-4" />
-                Add Crop
+                {t("admin.crops.addCrop")}
               </button>
               <button
                 onClick={fetchCrops}
@@ -325,13 +325,13 @@ export function CropsVarietiesPage() {
           <thead className="bg-muted/50 border-b border-border">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Name
+                {t("admin.crops.table.name")}
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Description
+                {t("admin.crops.table.description")}
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Actions
+                {t("admin.crops.table.actions")}
               </th>
             </tr>
           </thead>
@@ -343,7 +343,7 @@ export function CropsVarietiesPage() {
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
                   <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                  Loading...
+                  {t("common.loading")}
                 </td>
               </tr>
             ) : error ? (
@@ -356,7 +356,7 @@ export function CropsVarietiesPage() {
                       onClick={fetchCrops}
                       className="text-sm text-primary hover:underline"
                     >
-                      Try again
+                      {t("common.tryAgain")}
                     </button>
                   </div>
                 </td>
@@ -369,8 +369,8 @@ export function CropsVarietiesPage() {
                 >
                   <Leaf className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   {cropSearchQuery
-                    ? `No crops found matching "${cropSearchQuery}"`
-                    : "No crops found"}
+                    ? t("admin.crops.empty.noCropsMatching", { query: cropSearchQuery })
+                    : t("admin.crops.empty.noCrops")}
                 </td>
               </tr>
             ) : (
@@ -390,7 +390,7 @@ export function CropsVarietiesPage() {
                       <DropdownMenuTrigger asChild>
                         <button
                           className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          aria-label="Actions menu"
+                          aria-label={t("admin.crops.actionsMenu")}
                         >
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
                         </button>
@@ -401,7 +401,7 @@ export function CropsVarietiesPage() {
                           className="cursor-pointer"
                         >
                           <Edit className="mr-2 h-4 w-4" />
-                          Edit
+                          {t("common.edit")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -415,7 +415,7 @@ export function CropsVarietiesPage() {
                           className="cursor-pointer text-destructive focus:text-destructive"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                          {t("common.delete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -441,7 +441,7 @@ export function CropsVarietiesPage() {
                 type="text"
                 value={varietySearchQuery}
                 onChange={(e) => setVarietySearchQuery(e.target.value)}
-                placeholder="Search varieties..."
+                placeholder={t("admin.crops.searchVarieties")}
                 className="w-full pl-9 pr-3 py-2 border border-border rounded-[14px] bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
@@ -450,7 +450,7 @@ export function CropsVarietiesPage() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50 transition-colors"
             >
               <Search className="h-4 w-4" />
-              Search
+              {t("common.search")}
             </button>
           </div>
 
@@ -463,7 +463,7 @@ export function CropsVarietiesPage() {
                 }
                 className="w-full sm:w-auto px-3 py-2 border border-border rounded-[14px] bg-card text-sm"
               >
-                <option value="">All Crops</option>
+                <option value="">{t("seasonFilters.allCrops")}</option>
                 {crops.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.cropName}
@@ -472,8 +472,8 @@ export function CropsVarietiesPage() {
               </select>
               <span className="text-sm text-muted-foreground">
                 {filteredVarieties.length}{" "}
-                {filteredVarieties.length === 1 ? "variety" : "varieties"}
-                {varietySearchQuery && ` (filtered from ${varieties.length})`}
+                {filteredVarieties.length === 1 ? t("admin.crops.count.variety") : t("admin.crops.count.varieties")}
+                {varietySearchQuery && ` (${t("admin.crops.filteredFrom")} ${varieties.length})`}
               </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -482,7 +482,7 @@ export function CropsVarietiesPage() {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90"
               >
                 <Plus className="h-4 w-4" />
-                Add Variety
+                {t("admin.crops.addVariety")}
               </button>
               <button
                 onClick={fetchVarieties}
@@ -501,16 +501,16 @@ export function CropsVarietiesPage() {
           <thead className="bg-muted/50 border-b border-border">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Name
+                {t("admin.crops.table.name")}
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Crop
+                {t("admin.crops.table.crop")}
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Description
+                {t("admin.crops.table.description")}
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                Actions
+                {t("admin.crops.table.actions")}
               </th>
             </tr>
           </thead>
@@ -522,7 +522,7 @@ export function CropsVarietiesPage() {
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
                   <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                  Loading...
+                  {t("common.loading")}
                 </td>
               </tr>
             ) : error ? (
@@ -535,7 +535,7 @@ export function CropsVarietiesPage() {
                       onClick={fetchVarieties}
                       className="text-sm text-primary hover:underline"
                     >
-                      Try again
+                      {t("common.tryAgain")}
                     </button>
                   </div>
                 </td>
@@ -548,8 +548,8 @@ export function CropsVarietiesPage() {
                 >
                   <Sprout className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   {varietySearchQuery
-                    ? `No varieties found matching "${varietySearchQuery}"`
-                    : "No varieties found"}
+                    ? t("admin.crops.empty.noVarietiesMatching", { query: varietySearchQuery })
+                    : t("admin.crops.empty.noVarieties")}
                 </td>
               </tr>
             ) : (
@@ -574,7 +574,7 @@ export function CropsVarietiesPage() {
                       <DropdownMenuTrigger asChild>
                         <button
                           className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          aria-label="Actions menu"
+                          aria-label={t("admin.crops.actionsMenu")}
                         >
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
                         </button>
@@ -585,7 +585,7 @@ export function CropsVarietiesPage() {
                           className="cursor-pointer"
                         >
                           <Edit className="mr-2 h-4 w-4" />
-                          Edit
+                          {t("common.edit")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -599,7 +599,7 @@ export function CropsVarietiesPage() {
                           className="cursor-pointer text-destructive focus:text-destructive"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                          {t("common.delete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -617,8 +617,8 @@ export function CropsVarietiesPage() {
   return (
     <AdminPageContainer>
       <AdminHeaderCard
-        title="Crops & Varieties"
-        description="Manage the catalog of crops and varieties"
+        title={t("admin.crops.title")}
+        description={t("admin.crops.subtitle")}
       />
 
       {/* Tab Navigation */}
@@ -634,7 +634,7 @@ export function CropsVarietiesPage() {
           )}
         >
           <Leaf className="inline-block h-4 w-4 mr-2" />
-          Crops
+          {t("admin.crops.tabs.crops")}
         </button>
         <button
           onClick={() => setActiveTab("varieties")}
@@ -646,7 +646,7 @@ export function CropsVarietiesPage() {
           )}
         >
           <Sprout className="inline-block h-4 w-4 mr-2" />
-          Varieties
+          {t("admin.crops.tabs.varieties")}
         </button>
         </div>
       </div>
@@ -661,7 +661,7 @@ export function CropsVarietiesPage() {
           <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-md mx-4">
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h3 className="text-lg font-semibold">
-                {editingCrop ? "Edit Crop" : "Add Crop"}
+                {editingCrop ? t("admin.crops.form.editCrop") : t("admin.crops.form.addCrop")}
               </h3>
               <button
                 onClick={() => setShowCropForm(false)}
@@ -672,24 +672,24 @@ export function CropsVarietiesPage() {
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Name *</label>
+                <label className="block text-sm font-medium mb-1">{t("admin.crops.form.nameRequired")}</label>
                 <input
                   type="text"
                   value={cropName}
                   onChange={(e) => setCropName(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
-                  placeholder="e.g., Rice, Corn, Wheat"
+                  placeholder={t("admin.crops.form.cropNamePlaceholder")}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Description
+                  {t("common.description")}
                 </label>
                 <textarea
                   value={cropDescription}
                   onChange={(e) => setCropDescription(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm min-h-[80px]"
-                  placeholder="Optional description"
+                  placeholder={t("admin.crops.form.descriptionPlaceholder")}
                 />
               </div>
             </div>
@@ -718,7 +718,7 @@ export function CropsVarietiesPage() {
           <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-md mx-4">
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h3 className="text-lg font-semibold">
-                {editingVariety ? "Edit Variety" : "Add Variety"}
+                {editingVariety ? t("admin.crops.form.editVariety") : t("admin.crops.form.addVariety")}
               </h3>
               <button
                 onClick={() => setShowVarietyForm(false)}
@@ -729,13 +729,13 @@ export function CropsVarietiesPage() {
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Crop *</label>
+                <label className="block text-sm font-medium mb-1">{t("admin.crops.form.cropRequired")}</label>
                 <select
                   value={varietyCropId || ""}
                   onChange={(e) => setVarietyCropId(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
                 >
-                  <option value="">Select a crop</option>
+                  <option value="">{t("admin.crops.form.selectCrop")}</option>
                   {crops.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.cropName}
@@ -744,24 +744,24 @@ export function CropsVarietiesPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Name *</label>
+                <label className="block text-sm font-medium mb-1">{t("admin.crops.form.nameRequired")}</label>
                 <input
                   type="text"
                   value={varietyName}
                   onChange={(e) => setVarietyName(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
-                  placeholder="e.g., Jasmine 85, Golden Grain"
+                  placeholder={t("admin.crops.form.varietyNamePlaceholder")}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Description
+                  {t("common.description")}
                 </label>
                 <textarea
                   value={varietyDescription}
                   onChange={(e) => setVarietyDescription(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm min-h-[80px]"
-                  placeholder="Optional description"
+                  placeholder={t("admin.crops.form.descriptionPlaceholder")}
                 />
               </div>
             </div>
@@ -790,12 +790,19 @@ export function CropsVarietiesPage() {
           <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-md">
             <div className="p-4 border-b border-border">
               <h2 className="text-lg font-semibold text-destructive">
-                Delete {deleteConfirm.type === "crop" ? "Crop" : "Variety"}
+                {deleteConfirm.type === "crop"
+                  ? t("admin.crops.delete.titleCrop")
+                  : t("admin.crops.delete.titleVariety")}
               </h2>
             </div>
             <div className="p-4">
               <p className="text-sm text-muted-foreground mb-4">
-                Are you sure you want to delete the {deleteConfirm.type}{" "}
+                {t("admin.crops.delete.confirm", {
+                  type:
+                    deleteConfirm.type === "crop"
+                      ? t("admin.crops.count.crop")
+                      : t("admin.crops.count.variety"),
+                })}{" "}
                 <strong className="text-foreground">
                   "{deleteConfirm.name}"
                 </strong>
@@ -803,8 +810,8 @@ export function CropsVarietiesPage() {
               </p>
               <p className="text-xs text-muted-foreground">
                 {deleteConfirm.type === "crop"
-                  ? "This action cannot be undone. The crop must not have any varieties or be referenced in seasons."
-                  : "This action cannot be undone. The variety must not be referenced in any seasons."}
+                  ? t("admin.crops.delete.cropWarning")
+                  : t("admin.crops.delete.varietyWarning")}
               </p>
             </div>
             <div className="flex justify-end gap-2 p-4 border-t border-border">
@@ -813,7 +820,7 @@ export function CropsVarietiesPage() {
                 disabled={deleteLoading}
                 className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50 disabled:opacity-50"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handleDelete}
@@ -823,12 +830,12 @@ export function CropsVarietiesPage() {
                 {deleteLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Deleting...
+                    {t("common.deleting")}
                   </>
                 ) : (
                   <>
                     <Trash2 className="h-4 w-4" />
-                    Delete
+                    {t("common.delete")}
                   </>
                 )}
               </button>

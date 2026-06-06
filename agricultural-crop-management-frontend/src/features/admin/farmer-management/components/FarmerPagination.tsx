@@ -7,6 +7,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { ITEMS_PER_PAGE_OPTIONS } from '../constants';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface FarmerPaginationProps {
     currentPage: number;
@@ -25,6 +26,7 @@ export function FarmerPagination({
     onPageChange,
     onItemsPerPageChange,
 }: FarmerPaginationProps) {
+    const { t } = useI18n();
     const startItem = (currentPage - 1) * itemsPerPage + 1;
     const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
@@ -46,7 +48,7 @@ export function FarmerPagination({
         <div className="flex items-center justify-between p-4 border-t">
             <div className="flex items-center gap-4">
                 <span className="text-sm text-muted-foreground">
-                    Showing {startItem} to {endItem} of {totalItems} results
+                    {t('pagination.showing')} {startItem} {t('pagination.to')} {endItem} {t('pagination.of')} {totalItems} {t('pagination.results')}
                 </span>
                 <Select
                     value={String(itemsPerPage)}
@@ -61,7 +63,7 @@ export function FarmerPagination({
                     <SelectContent>
                         {ITEMS_PER_PAGE_OPTIONS.map(option => (
                             <SelectItem key={option} value={String(option)}>
-                                {option} / page
+                                {t('admin.farmerManagement.pagination.perPage', { count: option })}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -74,7 +76,7 @@ export function FarmerPagination({
                     disabled={currentPage === 1}
                     onClick={() => onPageChange(currentPage - 1)}
                 >
-                    Previous
+                    {t('pagination.previousPage')}
                 </Button>
                 {pageNumbers.map((page, index, arr) => {
                     const prevPage = arr[index - 1];
@@ -98,7 +100,7 @@ export function FarmerPagination({
                     disabled={currentPage === totalPages}
                     onClick={() => onPageChange(currentPage + 1)}
                 >
-                    Next
+                    {t('pagination.nextPage')}
                 </Button>
             </div>
         </div>

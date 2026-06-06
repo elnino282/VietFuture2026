@@ -22,5 +22,6 @@ public class HarvestResponse {
     String grade;
     BigDecimal revenue;
     String note;
+    String status;
     LocalDateTime createdAt;
 }

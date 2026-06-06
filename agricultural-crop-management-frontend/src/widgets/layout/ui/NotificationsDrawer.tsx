@@ -40,7 +40,10 @@ export function NotificationsDrawer({
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="w-full sm:w-[400px]">
+            <SheetContent
+                side="right"
+                className="w-full sm:w-[520px] sm:max-w-[520px] lg:w-[560px] lg:max-w-[560px]"
+            >
                 <SheetHeader>
                     <SheetTitle className="flex items-center justify-between">
                         <span className="flex items-center gap-2">

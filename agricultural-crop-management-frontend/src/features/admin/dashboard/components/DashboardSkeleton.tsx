@@ -61,9 +61,9 @@ export function DashboardSkeleton() {
                 </AdminContentCard>
             </div>
 
-            {/* Tables Skeleton - 2 columns */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {[...Array(2)].map((_, i) => (
+            {/* Review panels skeleton */}
+            <div className="space-y-6">
+                {[...Array(3)].map((_, i) => (
                     <AdminContentCard key={i}>
                         <CardHeader>
                             <Skeleton className="h-6 w-40" />

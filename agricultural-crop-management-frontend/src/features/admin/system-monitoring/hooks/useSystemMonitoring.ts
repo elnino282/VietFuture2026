@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import {
     LOG_LEVEL_BADGE_COLORS,
     PLACEHOLDER_ALERTS,
@@ -20,6 +21,8 @@ import type {
 } from '../types';
 
 export function useSystemMonitoring() {
+    const { t } = useI18n();
+
     // UI state
     const [dateRange, setDateRange] = useState<DateRange>('24h');
     const [filterOpen, setFilterOpen] = useState(false);
@@ -72,28 +75,39 @@ export function useSystemMonitoring() {
                     : alert
             )
         );
-        toast.success(`Alert ${action}d`, {
-            description: `Alert has been ${action}d successfully.`,
-        });
+        toast.success(
+            action === 'acknowledge'
+                ? t('admin.systemMonitoring.toast.alertAcknowledged')
+                : t('admin.systemMonitoring.toast.alertResolved'),
+            {
+                description: action === 'acknowledge'
+                    ? t('admin.systemMonitoring.toast.alertAcknowledgedDescription')
+                    : t('admin.systemMonitoring.toast.alertResolvedDescription'),
+            }
+        );
     };
+
+    const getDownloadTypeLabel = (type: string) => t(`admin.systemMonitoring.download.types.${type}`, type);
 
     // Download logs handler
     const handleDownloadLogs = () => {
         const types = Object.entries(downloadConfig.types)
             .filter(([_, enabled]) => enabled)
-            .map(([type]) => type)
+            .map(([type]) => getDownloadTypeLabel(type))
             .join(', ');
 
-        toast.success('Download started', {
-            description: `Downloading ${types} logs for the selected period.`,
+        toast.success(t('admin.systemMonitoring.toast.downloadStarted'), {
+            description: t('admin.systemMonitoring.toast.downloadStartedDescription', { types }),
         });
         setDownloadLogsOpen(false);
     };
 
     // Create incident handler
     const handleCreateIncident = () => {
-        toast.success('Incident ticket created', {
-            description: `Ticket "${incidentForm.title}" has been created and assigned.`,
+        toast.success(t('admin.systemMonitoring.toast.incidentCreated'), {
+            description: t('admin.systemMonitoring.toast.incidentCreatedDescription', {
+                title: incidentForm.title,
+            }),
         });
         setIncidentModalOpen(false);
         setIncidentForm({
@@ -108,7 +122,7 @@ export function useSystemMonitoring() {
     // Copy log to clipboard
     const handleCopyLog = (log: LogEntry) => {
         navigator.clipboard.writeText(JSON.stringify(log, null, 2));
-        toast.success('Log copied to clipboard');
+        toast.success(t('admin.systemMonitoring.toast.logCopied'));
     };
 
     // Clear all filters

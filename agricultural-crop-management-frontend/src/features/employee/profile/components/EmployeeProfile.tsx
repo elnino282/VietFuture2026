@@ -7,7 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useProfileMe } from "@/entities/user";
 import { useAuth } from "@/features/auth";
-import { AddressDisplay } from "@/shared/ui";
+import { useI18n } from "@/hooks/useI18n";
+import { AddressDisplay, BackButton } from "@/shared/ui";
 import {
   Briefcase,
   Calendar,
@@ -19,7 +20,6 @@ import {
   User,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import type {
   EmployeeProfileData,
   NotificationPreferences,
@@ -29,7 +29,7 @@ import { EditProfileDialog } from "./EditProfileDialog";
 
 export function EmployeeProfile() {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, locale } = useI18n();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationPreferences>({
     taskUpdates: true,
@@ -45,7 +45,7 @@ export function EmployeeProfile() {
   const hasSessionProfile = !!user?.profile;
 
   const profileData: EmployeeProfileData = useMemo(() => {
-    const rawUsername = profile?.username || user?.username || "employee";
+    const rawUsername = profile?.username || user?.username || t("employee.profile.usernameFallback");
     const username = rawUsername.includes("@")
       ? rawUsername.split("@")[0]
       : rawUsername;
@@ -61,12 +61,12 @@ export function EmployeeProfile() {
 
     const rawJoinedDate = profile?.joinedDate || user?.profile?.joinedDate;
     const joinedDate = rawJoinedDate
-      ? new Date(rawJoinedDate).toLocaleDateString("en-GB", {
+      ? new Date(rawJoinedDate).toLocaleDateString(locale, {
           day: "2-digit",
           month: "short",
           year: "numeric",
         })
-      : t("profile.notAvailable", { defaultValue: "Not available" });
+      : t("profile.notAvailable");
 
     return {
       id: Number(profile?.id ?? user?.profile?.id ?? user?.id ?? 0),
@@ -82,11 +82,11 @@ export function EmployeeProfile() {
           ? "active"
           : "inactive",
       joinedDate,
-      lastLogin: t("profile.notAvailable", { defaultValue: "Not available" }),
+      lastLogin: t("profile.notAvailable"),
       provinceId: profile?.provinceId ?? user?.profile?.provinceId ?? undefined,
       wardId: profile?.wardId ?? user?.profile?.wardId ?? undefined,
     };
-  }, [profile, user, t]);
+  }, [locale, profile, t, user]);
 
   const recentActivities: RecentActivity[] = [];
 
@@ -111,13 +111,16 @@ export function EmployeeProfile() {
     <div className="min-h-screen acm-main-content pb-20">
       <div className="space-y-6 p-4 sm:p-6 max-w-[1280px] mx-auto">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-foreground">
-              {t("employee.profile.title", { defaultValue: "Employee Profile" })}
-            </h1>
-            {isFetching && !profileLoading && (
-              <Loader2 className="w-3 h-3 animate-spin text-primary" />
-            )}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <BackButton to="/employee/tasks" className="w-fit" />
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-foreground">
+                {t("employee.profile.title")}
+              </h1>
+              {isFetching && !profileLoading && (
+                <Loader2 className="w-3 h-3 animate-spin text-primary" />
+              )}
+            </div>
           </div>
           <div className="w-full sm:w-auto">
             <Button
@@ -153,13 +156,13 @@ export function EmployeeProfile() {
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="bg-muted text-foreground">
                       <Briefcase className="w-3 h-3 mr-1" />
-                      {t("employee.profile.role", { defaultValue: "Employee" })}
+                      {t("employee.profile.role")}
                     </Badge>
                     <Badge className="bg-primary/10 text-primary border-primary/20">
                       <div className="w-2 h-2 rounded-full bg-primary mr-1.5" />
                       {profileData.status === "active"
                         ? t("profile.active")
-                        : t("profile.inactive", { defaultValue: "Inactive" })}
+                        : t("profile.inactive")}
                     </Badge>
                   </div>
 
@@ -224,7 +227,7 @@ export function EmployeeProfile() {
                 </div>
                 <p className="text-base text-foreground">
                   {profileData.email ||
-                    t("profile.notAvailable", { defaultValue: "Not available" })}
+                    t("profile.notAvailable")}
                 </p>
               </div>
 
@@ -235,7 +238,7 @@ export function EmployeeProfile() {
                 </div>
                 <p className="text-base font-mono text-foreground">
                   {profileData.phone ||
-                    t("profile.notAvailable", { defaultValue: "Not available" })}
+                    t("profile.notAvailable")}
                 </p>
               </div>
             </div>
@@ -249,7 +252,7 @@ export function EmployeeProfile() {
                 wardCode={profileData.wardId ?? null}
                 fallback={
                   profileData.address ||
-                  t("profile.notAvailable", { defaultValue: "Not available" })
+                  t("profile.notAvailable")
                 }
                 className="text-base text-foreground"
               />
@@ -314,16 +317,11 @@ export function EmployeeProfile() {
                     >
                       {t(
                         "employee.profile.notifications.taskUpdates.label",
-                        { defaultValue: "Receive task updates" },
                       )}
                     </Label>
                     <p className="text-xs text-muted-foreground">
                       {t(
                         "employee.profile.notifications.taskUpdates.description",
-                        {
-                          defaultValue:
-                            "Get notified when new tasks are assigned or schedules change.",
-                        },
                       )}
                     </p>
                   </div>
@@ -348,16 +346,11 @@ export function EmployeeProfile() {
                     >
                       {t(
                         "employee.profile.notifications.payrollUpdates.label",
-                        { defaultValue: "Receive payroll updates" },
                       )}
                     </Label>
                     <p className="text-xs text-muted-foreground">
                       {t(
                         "employee.profile.notifications.payrollUpdates.description",
-                        {
-                          defaultValue:
-                            "Receive alerts when payroll records are generated.",
-                        },
                       )}
                     </p>
                   </div>

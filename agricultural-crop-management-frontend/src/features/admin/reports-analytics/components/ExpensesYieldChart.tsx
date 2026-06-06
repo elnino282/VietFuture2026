@@ -12,12 +12,14 @@ import {
 import { usePreferences } from '@/shared/contexts';
 import { convertWeight, formatMoney, getWeightUnitLabel } from '@/shared/lib';
 import type { ExpensesData } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface ExpensesYieldChartProps {
     expensesData: ExpensesData[];
 }
 
 export const ExpensesYieldChart: React.FC<ExpensesYieldChartProps> = ({ expensesData }) => {
+    const { t } = useI18n();
     const { preferences } = usePreferences();
     const unitLabel = getWeightUnitLabel(preferences.weightUnit);
     const displayData = expensesData.map((item) => ({
@@ -28,8 +30,8 @@ export const ExpensesYieldChart: React.FC<ExpensesYieldChartProps> = ({ expenses
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Expenses & Yield per Season</CardTitle>
-                <CardDescription>Comparative analysis of costs and productivity</CardDescription>
+                <CardTitle>{t('admin.reportsAnalytics.expensesYield.title')}</CardTitle>
+                <CardDescription>{t('admin.reportsAnalytics.expensesYield.description')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -43,13 +45,13 @@ export const ExpensesYieldChart: React.FC<ExpensesYieldChartProps> = ({ expenses
                                 if (name === 'expenses') {
                                     return [
                                         formatMoney(value, preferences.currency, preferences.locale),
-                                        'Expenses'
+                                        t('admin.reportsAnalytics.expensesYield.expenses')
                                     ];
                                 }
                                 if (name === 'yield') {
                                     return [
                                         new Intl.NumberFormat(preferences.locale).format(value),
-                                        `Yield (${unitLabel})`
+                                        t('admin.reportsAnalytics.chart.yieldWithUnit', { unit: unitLabel })
                                     ];
                                 }
                                 return [value, name];
@@ -60,14 +62,14 @@ export const ExpensesYieldChart: React.FC<ExpensesYieldChartProps> = ({ expenses
                             yAxisId="left"
                             dataKey="expenses"
                             fill="#F59E0B"
-                            name={`Expenses (${preferences.currency})`}
+                            name={t('admin.reportsAnalytics.expensesYield.expensesWithCurrency', { currency: preferences.currency })}
                             radius={[8, 8, 0, 0]}
                         />
                         <Bar
                             yAxisId="right"
                             dataKey="yield"
                             fill="#10B981"
-                            name={`Yield (${unitLabel})`}
+                            name={t('admin.reportsAnalytics.chart.yieldWithUnit', { unit: unitLabel })}
                             radius={[8, 8, 0, 0]}
                         />
                     </BarChart>

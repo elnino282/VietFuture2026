@@ -3,16 +3,24 @@ package org.example.QuanLyMuaVu.module.season.mapper;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.example.QuanLyMuaVu.module.season.dto.response.DiseaseRecordDetailResponse;
 import org.example.QuanLyMuaVu.module.season.dto.response.DiseaseRecordResponse;
 import org.example.QuanLyMuaVu.module.season.dto.response.DiseaseTreatmentResponse;
 import org.example.QuanLyMuaVu.module.season.entity.DiseaseRecord;
 import org.example.QuanLyMuaVu.module.season.entity.DiseaseTreatment;
 import org.example.QuanLyMuaVu.module.season.entity.Season;
+import org.example.QuanLyMuaVu.module.season.service.SeasonWorkspaceAccessService;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DiseaseRecordMapper {
+
+    SeasonWorkspaceAccessService seasonWorkspaceAccessService;
 
     public DiseaseRecordResponse toDiseaseRecordResponse(
             DiseaseRecord diseaseRecord,
@@ -55,6 +63,10 @@ public class DiseaseRecordMapper {
                 .varietyName(varietyName)
                 .reportedByUserId(diseaseRecord.getReportedByUserId())
                 .reportedByUsername(diseaseRecord.getReportedBy() != null ? diseaseRecord.getReportedBy().getUsername() : null)
+                .reportedByDisplayName(seasonWorkspaceAccessService.resolveDisplayName(diseaseRecord.getReportedBy()))
+                .reportedByType(seasonWorkspaceAccessService.resolveActorType(season, diseaseRecord.getReportedBy()))
+                .canEdit(seasonWorkspaceAccessService.canCurrentUserManageRecord(season, diseaseRecord.getReportedByUserId()))
+                .canDelete(seasonWorkspaceAccessService.canCurrentUserManageRecord(season, diseaseRecord.getReportedByUserId()))
                 .incidentId(diseaseRecord.getIncidentId())
                 .diseaseName(diseaseRecord.getDiseaseName())
                 .symptomSummary(diseaseRecord.getSymptomSummary())
@@ -97,6 +109,16 @@ public class DiseaseRecordMapper {
                 .notes(treatment.getNotes())
                 .createdByUserId(treatment.getCreatedByUserId())
                 .createdByUsername(treatment.getCreatedBy() != null ? treatment.getCreatedBy().getUsername() : null)
+                .createdByDisplayName(seasonWorkspaceAccessService.resolveDisplayName(treatment.getCreatedBy()))
+                .createdByType(seasonWorkspaceAccessService.resolveActorType(
+                        treatment.getDiseaseRecord() != null ? treatment.getDiseaseRecord().getSeason() : null,
+                        treatment.getCreatedBy()))
+                .canEdit(seasonWorkspaceAccessService.canCurrentUserManageRecord(
+                        treatment.getDiseaseRecord() != null ? treatment.getDiseaseRecord().getSeason() : null,
+                        treatment.getCreatedByUserId()))
+                .canDelete(seasonWorkspaceAccessService.canCurrentUserManageRecord(
+                        treatment.getDiseaseRecord() != null ? treatment.getDiseaseRecord().getSeason() : null,
+                        treatment.getCreatedByUserId()))
                 .createdAt(treatment.getCreatedAt())
                 .updatedAt(treatment.getUpdatedAt())
                 .build();

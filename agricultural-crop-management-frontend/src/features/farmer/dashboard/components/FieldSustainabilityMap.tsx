@@ -20,6 +20,7 @@ interface FieldSustainabilityMapProps {
 }
 
 const GOOGLE_MAPS_SCRIPT_ID = 'google-maps-js';
+const GOOGLE_MAPS_SCRIPT_LOAD_ERROR = 'GOOGLE_MAPS_SCRIPT_LOAD_ERROR';
 let googleMapsPromise: Promise<void> | null = null;
 
 function ensureGoogleMaps(apiKey: string): Promise<void> {
@@ -36,7 +37,7 @@ function ensureGoogleMaps(apiKey: string): Promise<void> {
       existingScript.addEventListener('load', () => resolve(), { once: true });
       existingScript.addEventListener(
         'error',
-        () => reject(new Error('Failed to load Google Maps script')),
+        () => reject(new Error(GOOGLE_MAPS_SCRIPT_LOAD_ERROR)),
         { once: true }
       );
       return;
@@ -48,7 +49,7 @@ function ensureGoogleMaps(apiKey: string): Promise<void> {
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Google Maps script'));
+    script.onerror = () => reject(new Error(GOOGLE_MAPS_SCRIPT_LOAD_ERROR));
     document.head.appendChild(script);
   });
 
@@ -146,15 +147,10 @@ function toUnavailableReasonMessage(
     return null;
   }
   if (reason === 'MISSING_BOUNDARY_AND_FARM_LOCATION') {
-    return t('dashboard.fdn.map.unavailableNoBoundaryNoFarmLocation', {
-      defaultValue:
-        'No valid field boundary and no farm location available to define a real map viewport.',
-    });
+    return t('dashboard.fdn.map.unavailableNoBoundaryNoFarmLocation');
   }
   if (reason === 'NO_FIELDS_FOR_FILTERS') {
-    return t('dashboard.fdn.map.noFieldMatch', {
-      defaultValue: 'No field matches current filters.',
-    });
+    return t('dashboard.fdn.map.noFieldMatch');
   }
   return reason;
 }
@@ -193,6 +189,10 @@ function pickInitialCenter(
   return null;
 }
 
+function formatFdnLevel(level: FdnAlertLevel, t: (key: string) => string): string {
+  return t(`dashboard.fdn.map.${level}`);
+}
+
 export function FieldSustainabilityMap({
   mapData,
   isLoading,
@@ -224,10 +224,7 @@ export function FieldSustainabilityMap({
         optionMap.set(
           String(item.farmId),
           item.farmName ??
-            t('dashboard.fdn.map.farmFallback', {
-              defaultValue: 'Farm {{id}}',
-              id: item.farmId,
-            })
+            t('dashboard.fdn.map.farmFallback', { id: item.farmId })
         );
       }
     });
@@ -281,22 +278,14 @@ export function FieldSustainabilityMap({
 
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
-      setGoogleError(
-        t('dashboard.fdn.map.missingKey', {
-          defaultValue: 'Missing VITE_GOOGLE_MAPS_API_KEY.',
-        })
-      );
+      setGoogleError(t('dashboard.fdn.map.missingKey'));
       return;
     }
 
     const viewportCenter = mapData?.defaultViewport?.center ?? null;
     const initialCenter = pickInitialCenter(filteredBoundaryItems, viewportCenter);
     if (!initialCenter) {
-      setGoogleError(
-        t('dashboard.fdn.map.noViewport', {
-          defaultValue: 'No real viewport center available for map rendering.',
-        })
-      );
+      setGoogleError(t('dashboard.fdn.map.noViewport'));
       return;
     }
 
@@ -304,11 +293,7 @@ export function FieldSustainabilityMap({
       .then(() => {
         const googleMaps = (window as Window & { google?: any }).google;
         if (!googleMaps || !mapContainerRef.current) {
-          setGoogleError(
-            t('dashboard.fdn.map.unavailable', {
-              defaultValue: 'Google Maps is unavailable.',
-            })
-          );
+          setGoogleError(t('dashboard.fdn.map.unavailable'));
           return;
         }
 
@@ -350,7 +335,11 @@ export function FieldSustainabilityMap({
         setGoogleError(null);
       })
       .catch((error: Error) => {
-        setGoogleError(error.message);
+        setGoogleError(
+          error.message === GOOGLE_MAPS_SCRIPT_LOAD_ERROR
+            ? t('dashboard.fdn.map.scriptLoadError')
+            : error.message
+        );
       });
   }, [filteredBoundaryItems, mapData?.defaultViewport, t]);
 
@@ -397,25 +386,16 @@ export function FieldSustainabilityMap({
   const mapUnavailableReason = apiErrorMessage
     ? apiErrorMessage
     : !hasApiKey
-      ? t('dashboard.fdn.map.missingKey', {
-          defaultValue: 'Missing VITE_GOOGLE_MAPS_API_KEY.',
-        })
+      ? t('dashboard.fdn.map.missingKey')
       : googleError
         ? googleError
         : !hasBoundaryToRender && missingBoundaryCount > 0
-          ? t('dashboard.fdn.map.allMissingBoundary', {
-              defaultValue:
-                'All fields in current filters are missing valid boundary GeoJSON, so the map cannot be rendered.',
-            })
+          ? t('dashboard.fdn.map.allMissingBoundary')
           : !hasAnyFilteredField
-            ? t('dashboard.fdn.map.noFieldMatch', {
-                defaultValue: 'No field matches current filters.',
-              })
+            ? t('dashboard.fdn.map.noFieldMatch')
             : !hasBoundaryToRender
               ? mapUnavailableReasonFromApi ??
-                t('dashboard.fdn.map.noGeometryForFilters', {
-                  defaultValue: 'No valid field geometry available for current filters.',
-                })
+                t('dashboard.fdn.map.noGeometryForFilters')
               : null;
 
   const shouldRenderMap = hasBoundaryToRender && !mapUnavailableReason;
@@ -424,9 +404,7 @@ export function FieldSustainabilityMap({
     return (
       <Card className="border-border acm-card-elevated">
         <CardHeader>
-          <CardTitle>
-            {t('dashboard.fdn.map.title', { defaultValue: 'Field Sustainability Map' })}
-          </CardTitle>
+          <CardTitle>{t('dashboard.fdn.map.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Skeleton className="h-[420px] w-full" />
@@ -438,22 +416,14 @@ export function FieldSustainabilityMap({
   return (
     <Card className="border-border acm-card-elevated acm-hover-surface">
       <CardHeader className="space-y-3">
-        <CardTitle>
-          {t('dashboard.fdn.map.title', { defaultValue: 'Field Sustainability Map' })}
-        </CardTitle>
+        <CardTitle>{t('dashboard.fdn.map.title')}</CardTitle>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <Select value={selectedFarm} onValueChange={setSelectedFarm}>
             <SelectTrigger>
-              <SelectValue
-                placeholder={t('dashboard.fdn.map.filterFarm', {
-                  defaultValue: 'Filter farm',
-                })}
-              />
+              <SelectValue placeholder={t('dashboard.fdn.map.filterFarm')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">
-                {t('dashboard.fdn.map.allFarms', { defaultValue: 'All farms' })}
-              </SelectItem>
+              <SelectItem value="all">{t('dashboard.fdn.map.allFarms')}</SelectItem>
               {farmOptions.map((farm) => (
                 <SelectItem key={farm.value} value={farm.value}>
                   {farm.label}
@@ -463,16 +433,10 @@ export function FieldSustainabilityMap({
           </Select>
           <Select value={selectedCrop} onValueChange={setSelectedCrop}>
             <SelectTrigger>
-              <SelectValue
-                placeholder={t('dashboard.fdn.map.filterCrop', {
-                  defaultValue: 'Filter crop',
-                })}
-              />
+              <SelectValue placeholder={t('dashboard.fdn.map.filterCrop')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">
-                {t('dashboard.fdn.map.allCrops', { defaultValue: 'All crops' })}
-              </SelectItem>
+              <SelectItem value="all">{t('dashboard.fdn.map.allCrops')}</SelectItem>
               {cropOptions.map((crop) => (
                 <SelectItem key={crop} value={crop}>
                   {crop}
@@ -482,25 +446,13 @@ export function FieldSustainabilityMap({
           </Select>
           <Select value={selectedLevel} onValueChange={setSelectedLevel}>
             <SelectTrigger>
-              <SelectValue
-                placeholder={t('dashboard.fdn.map.filterAlert', {
-                  defaultValue: 'Filter alert level',
-                })}
-              />
+              <SelectValue placeholder={t('dashboard.fdn.map.filterAlert')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">
-                {t('dashboard.fdn.map.allLevels', { defaultValue: 'All alert levels' })}
-              </SelectItem>
-              <SelectItem value="low">
-                {t('dashboard.fdn.map.low', { defaultValue: 'Low' })}
-              </SelectItem>
-              <SelectItem value="medium">
-                {t('dashboard.fdn.map.medium', { defaultValue: 'Medium' })}
-              </SelectItem>
-              <SelectItem value="high">
-                {t('dashboard.fdn.map.high', { defaultValue: 'High' })}
-              </SelectItem>
+              <SelectItem value="all">{t('dashboard.fdn.map.allLevels')}</SelectItem>
+              <SelectItem value="low">{t('dashboard.fdn.map.low')}</SelectItem>
+              <SelectItem value="medium">{t('dashboard.fdn.map.medium')}</SelectItem>
+              <SelectItem value="high">{t('dashboard.fdn.map.high')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -509,15 +461,15 @@ export function FieldSustainabilityMap({
         <div className="flex items-center gap-6 text-base">
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full" style={{ background: colorByLevel('low') }} />
-            <span>{t('dashboard.fdn.map.low', { defaultValue: 'Low' })}</span>
+            <span>{t('dashboard.fdn.map.low')}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full" style={{ background: colorByLevel('medium') }} />
-            <span>{t('dashboard.fdn.map.medium', { defaultValue: 'Medium' })}</span>
+            <span>{t('dashboard.fdn.map.medium')}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full" style={{ background: colorByLevel('high') }} />
-            <span>{t('dashboard.fdn.map.high', { defaultValue: 'High' })}</span>
+            <span>{t('dashboard.fdn.map.high')}</span>
           </div>
         </div>
 
@@ -529,49 +481,34 @@ export function FieldSustainabilityMap({
               <div className="h-[420px] p-4 bg-muted/20 flex flex-col gap-3 overflow-auto">
                 <p className="text-base text-foreground font-medium">
                   {!hasApiKey
-                    ? t('dashboard.fdn.map.configRequiredTitle', {
-                        defaultValue: 'Map configuration required',
-                      })
+                    ? t('dashboard.fdn.map.configRequiredTitle')
                     : apiErrorMessage
-                      ? t('dashboard.fdn.map.apiErrorTitle', {
-                          defaultValue: 'Map data is temporarily unavailable',
-                        })
+                      ? t('dashboard.fdn.map.apiErrorTitle')
                       : missingBoundaryCount > 0
-                        ? t('dashboard.fdn.map.missingBoundaryTitle', {
-                            defaultValue: 'Fields require boundary update',
-                          })
-                        : t('dashboard.fdn.map.fallbackTitle', {
-                            defaultValue: 'Map is currently unavailable',
-                          })}
+                        ? t('dashboard.fdn.map.missingBoundaryTitle')
+                        : t('dashboard.fdn.map.fallbackTitle')}
                 </p>
                 {mapUnavailableReason && (
                   <p className="acm-body-text text-muted-foreground">{mapUnavailableReason}</p>
                 )}
                 <p className="acm-body-text text-muted-foreground">
-                  {t('dashboard.fdn.map.fallbackHint', {
-                    defaultValue:
-                      'You can still review field sustainability in list view and add missing boundaries from farm management.',
-                  })}
+                  {t('dashboard.fdn.map.fallbackHint')}
                 </p>
                 <Link
                   to="/farmer/farms"
                   className="inline-flex w-fit rounded-md border border-border px-3 py-2 acm-body-text acm-hover-surface hover:bg-muted"
                 >
-                  {t('dashboard.fdn.map.manageFieldsCta', {
-                    defaultValue: 'Go to Farms & Plots',
-                  })}
+                  {t('dashboard.fdn.map.manageFieldsCta')}
                 </Link>
                 {missingBoundaryCount > 0 && (
                   <div className="rounded-md border border-border bg-background p-3 space-y-2">
                     <p className="acm-body-text font-medium">
-                      {t('dashboard.fdn.map.missingBoundaryListTitle', {
-                        defaultValue: 'Fields missing boundary GeoJSON',
-                      })}
+                      {t('dashboard.fdn.map.missingBoundaryListTitle')}
                     </p>
                     <ul className="space-y-1 acm-body-text">
                       {filteredMissingBoundaryItems.map((item) => (
                         <li key={`missing-boundary-${item.fieldId}`} className="text-muted-foreground">
-                          {item.fieldName} ({item.farmName ?? 'N/A'})
+                          {item.fieldName} ({item.farmName ?? t('common.notAvailable')})
                         </li>
                       ))}
                     </ul>
@@ -579,15 +516,11 @@ export function FieldSustainabilityMap({
                 )}
                 <div className="rounded-md border border-border bg-background p-3">
                   <p className="acm-body-text font-medium mb-2">
-                    {t('dashboard.fdn.map.listFallbackTitle', {
-                      defaultValue: 'Field list fallback',
-                    })}
+                    {t('dashboard.fdn.map.listFallbackTitle')}
                   </p>
                   {filteredItems.length === 0 ? (
                     <p className="acm-body-text text-muted-foreground">
-                      {t('dashboard.fdn.map.noFieldMatch', {
-                        defaultValue: 'No field matches current filters.',
-                      })}
+                      {t('dashboard.fdn.map.noFieldMatch')}
                     </p>
                   ) : (
                     <ul className="space-y-2 acm-body-text">
@@ -595,7 +528,7 @@ export function FieldSustainabilityMap({
                         <li key={item.fieldId} className="flex items-center justify-between gap-2">
                           <span className="text-foreground">{item.fieldName}</span>
                           <span className="text-muted-foreground">
-                            {formatPercent(item.fdnTotal)} | {item.fdnLevel}
+                            {formatPercent(item.fdnTotal)} | {formatFdnLevel(item.fdnLevel, t)}
                           </span>
                         </li>
                       ))}
@@ -611,31 +544,30 @@ export function FieldSustainabilityMap({
               <>
                 <div>
                   <p className="acm-body-text text-muted-foreground">
-                    {t('dashboard.fdn.map.field', { defaultValue: 'Field' })}
+                    {t('dashboard.fdn.map.field')}
                   </p>
                   <p className="text-lg font-semibold">{selectedItem.fieldName}</p>
                   <p className="acm-body-text text-muted-foreground">
-                    {selectedItem.farmName ?? 'N/A'} | {selectedItem.cropName} | {selectedItem.seasonName}
+                    {selectedItem.farmName ?? t('common.notAvailable')} | {selectedItem.cropName} | {selectedItem.seasonName}
                   </p>
                   {selectedItem.boundaryIssue && (
                     <p className="acm-body-text text-amber-700">
                       {t('dashboard.fdn.map.boundaryIssue', {
-                        defaultValue: 'Boundary issue: {{issue}}',
                         issue: selectedItem.boundaryIssue,
                       })}
                     </p>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2 acm-body-text">
-                  <div>{t('dashboard.fdn.map.fdnTotal', { defaultValue: 'FDN total' })}</div>
+                  <div>{t('dashboard.fdn.map.fdnTotal')}</div>
                   <div className="font-medium">{formatPercent(selectedItem.fdnTotal)}</div>
-                  <div>{t('dashboard.fdn.map.fdnMineral', { defaultValue: 'FDN mineral' })}</div>
+                  <div>{t('dashboard.fdn.map.fdnMineral')}</div>
                   <div className="font-medium">{formatPercent(selectedItem.fdnMineral)}</div>
-                  <div>{t('dashboard.fdn.map.fdnOrganic', { defaultValue: 'FDN organic' })}</div>
+                  <div>{t('dashboard.fdn.map.fdnOrganic')}</div>
                   <div className="font-medium">{formatPercent(selectedItem.fdnOrganic)}</div>
-                  <div>{t('dashboard.fdn.map.nue', { defaultValue: 'NUE' })}</div>
+                  <div>{t('dashboard.fdn.map.nue')}</div>
                   <div className="font-medium">{formatPercent(selectedItem.nue)}</div>
-                  <div>{t('dashboard.fdn.map.confidence', { defaultValue: 'Confidence' })}</div>
+                  <div>{t('dashboard.fdn.map.confidence')}</div>
                   <div className="font-medium">
                     {selectedItem.confidence !== null && Number.isFinite(selectedItem.confidence)
                       ? `${Math.round(selectedItem.confidence * 100)}%`
@@ -644,25 +576,22 @@ export function FieldSustainabilityMap({
                 </div>
                 <div className="space-y-1">
                   <p className="text-base font-medium">
-                    {t('dashboard.fdn.map.inputBreakdown', { defaultValue: 'N input breakdown' })}
+                    {t('dashboard.fdn.map.inputBreakdown')}
                   </p>
                   <p className="acm-body-text text-muted-foreground">
-                    Mineral {formatInput(selectedItem.inputsBreakdown.mineralFertilizerN)} | Organic{' '}
-                    {formatInput(selectedItem.inputsBreakdown.organicFertilizerN)} | Irrigation{' '}
+                    {t('dashboard.fdn.map.input.mineral')} {formatInput(selectedItem.inputsBreakdown.mineralFertilizerN)} |{' '}
+                    {t('dashboard.fdn.map.input.organic')} {formatInput(selectedItem.inputsBreakdown.organicFertilizerN)} |{' '}
+                    {t('dashboard.fdn.map.input.irrigation')}{' '}
                     {formatInput(selectedItem.inputsBreakdown.irrigationWaterN)}
                   </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-base font-medium">
-                    {t('dashboard.fdn.map.assistant', {
-                      defaultValue: 'Assistant recommendations',
-                    })}
+                    {t('dashboard.fdn.map.assistant')}
                   </p>
                   {selectedItem.recommendations.length === 0 ? (
                     <p className="acm-body-text text-muted-foreground">
-                      {t('dashboard.fdn.map.noRecommendation', {
-                        defaultValue: 'No recommendation available.',
-                      })}
+                      {t('dashboard.fdn.map.noRecommendation')}
                     </p>
                   ) : (
                     <ul className="space-y-1">
@@ -677,9 +606,7 @@ export function FieldSustainabilityMap({
               </>
             ) : (
               <p className="acm-body-text text-muted-foreground">
-                {t('dashboard.fdn.map.noFieldMatch', {
-                  defaultValue: 'No field matches current filters.',
-                })}
+                {t('dashboard.fdn.map.noFieldMatch')}
               </p>
             )}
           </div>
@@ -688,8 +615,6 @@ export function FieldSustainabilityMap({
         {missingBoundaryCount > 0 && (
           <p className="acm-body-text text-amber-700">
             {t('dashboard.fdn.map.missingGeometry', {
-              defaultValue:
-                '{{count}} field(s) are missing valid boundary geometry and cannot be rendered on the map.',
               count: missingBoundaryCount,
             })}
           </p>

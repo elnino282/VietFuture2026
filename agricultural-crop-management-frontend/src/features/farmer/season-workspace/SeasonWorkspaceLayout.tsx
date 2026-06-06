@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/shared/ui/badge";
+import { BackButton } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import {
@@ -536,16 +537,14 @@ export function SeasonWorkspaceLayout() {
 
   if (!hasValidSeasonId) {
     return (
-      <div className="p-6">
+      <div className="p-6 space-y-4">
+        <BackButton to="/farmer/seasons" variant="outline" />
         <Card className="border border-destructive/20 bg-destructive/5">
           <CardContent className="p-6">
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
               <div className="space-y-2">
                 <p className="text-sm text-foreground">{t("seasonWorkspace.invalidSeason")}</p>
-                <Button variant="outline" onClick={() => navigate("/farmer/seasons")}>
-                  {t("seasonWorkspace.backToSeasons")}
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -556,6 +555,7 @@ export function SeasonWorkspaceLayout() {
 
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-6">
+      <BackButton to="/farmer/seasons" className="w-fit" />
       <Card className="border border-border rounded-2xl acm-card-elevated">
         <CardContent className="p-6 space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-4">

@@ -1,6 +1,6 @@
 import { inventoryKeys } from "@/entities/inventory";
 import type { PageResponse } from "@/shared/api/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { suppliesKeys } from "../model/keys";
 import type {
   CreateSupplyItemRequest,
@@ -11,6 +11,7 @@ import type {
   SuppliersParams,
   SupplyItem,
   SupplyItemsParams,
+  SupplyLot,
   SupplyLotsParams,
   UpdateSupplyItemRequest,
   UpdateSupplierRequest,
@@ -286,10 +287,28 @@ export function useSupplyItems(params?: SupplyItemsParams) {
   });
 }
 
-export function useAllSupplyItems() {
+export function useAllSupplyItems(
+  options?: Omit<UseQueryOptions<SupplyItem[], Error>, "queryKey" | "queryFn">,
+) {
   return useQuery({
     queryKey: [...suppliesKeys.all, "all-items"],
     queryFn: () => suppliesApi.getAllSupplyItems(),
+    ...options,
+  });
+}
+
+export function useEmployeeSeasonSupplyItems(
+  seasonId: number,
+  params?: SupplyItemsParams,
+  options?: Omit<UseQueryOptions<PageResponse<SupplyItem>, Error>, "queryKey" | "queryFn">,
+) {
+  return useQuery({
+    queryKey: suppliesKeys.employeeSeasonItems(seasonId, params),
+    queryFn: () => suppliesApi.getEmployeeSeasonSupplyItems(seasonId, params),
+    enabled: seasonId > 0,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
+    ...options,
   });
 }
 
@@ -469,10 +488,29 @@ export function useDeleteSupplyItem() {
 // SUPPLY LOTS
 // ═══════════════════════════════════════════════════════════════
 
-export function useSupplyLots(params?: SupplyLotsParams) {
+export function useSupplyLots(
+  params?: SupplyLotsParams,
+  options?: Omit<UseQueryOptions<PageResponse<SupplyLot>, Error>, "queryKey" | "queryFn">,
+) {
   return useQuery({
     queryKey: suppliesKeys.lots(params),
     queryFn: () => suppliesApi.getSupplyLots(params),
+    ...options,
+  });
+}
+
+export function useEmployeeSeasonSupplyLots(
+  seasonId: number,
+  params?: SupplyLotsParams,
+  options?: Omit<UseQueryOptions<PageResponse<SupplyLot>, Error>, "queryKey" | "queryFn">,
+) {
+  return useQuery({
+    queryKey: suppliesKeys.employeeSeasonLots(seasonId, params),
+    queryFn: () => suppliesApi.getEmployeeSeasonSupplyLots(seasonId, params),
+    enabled: seasonId > 0,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
+    ...options,
   });
 }
 

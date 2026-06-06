@@ -24,5 +24,11 @@ public class FieldLogResponse {
     LocalDate logDate;
     String logType;
     String notes;
+    Long createdByUserId;
+    String createdByUsername;
+    String createdByDisplayName;
+    String createdByType;
+    Boolean canEdit;
+    Boolean canDelete;
     LocalDateTime createdAt;
 }

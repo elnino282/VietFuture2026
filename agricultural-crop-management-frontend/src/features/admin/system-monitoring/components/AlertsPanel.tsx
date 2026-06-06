@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Alert, AlertSeverity } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface AlertsPanelProps {
     alerts: Alert[];
@@ -19,14 +20,16 @@ export function AlertsPanel({
     getSeverityBadge,
     getStatusBadge,
 }: AlertsPanelProps) {
+    const { t } = useI18n();
+
     return (
         <Card className="lg:col-span-1">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5" />
-                    Recent Alerts
+                    {t('admin.systemMonitoring.alerts.title')}
                 </CardTitle>
-                <CardDescription>System alerts and notifications</CardDescription>
+                <CardDescription>{t('admin.systemMonitoring.alerts.description')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 max-h-[500px] overflow-y-auto">
                 {alerts.map((alert) => (
@@ -36,10 +39,10 @@ export function AlertsPanel({
                     >
                         <div className="flex items-start justify-between gap-2">
                             <Badge variant="secondary" className={getSeverityBadge(alert.severity)}>
-                                {alert.severity}
+                                {t(`admin.systemMonitoring.severity.${alert.severity}`, alert.severity)}
                             </Badge>
                             <Badge variant="secondary" className={getStatusBadge(alert.status)}>
-                                {alert.status}
+                                {t(`admin.systemMonitoring.alertStatus.${alert.status}`, alert.status)}
                             </Badge>
                         </div>
                         <div>
@@ -58,7 +61,7 @@ export function AlertsPanel({
                                     className="flex-1 text-xs"
                                     onClick={() => handleAlertAction(alert.id, 'acknowledge')}
                                 >
-                                    Acknowledge
+                                    {t('admin.systemMonitoring.alerts.acknowledge')}
                                 </Button>
                                 <Button
                                     variant="outline"
@@ -66,7 +69,7 @@ export function AlertsPanel({
                                     className="flex-1 text-xs"
                                     onClick={() => handleAlertAction(alert.id, 'resolve')}
                                 >
-                                    Resolve
+                                    {t('admin.systemMonitoring.alerts.resolve')}
                                 </Button>
                             </div>
                         )}

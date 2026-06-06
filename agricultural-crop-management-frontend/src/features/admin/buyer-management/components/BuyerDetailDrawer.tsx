@@ -17,6 +17,7 @@ import {
     XCircle,
 } from 'lucide-react';
 import type { AccountStatus, Buyer, BuyerFormData, BuyerRole, KYCStatus } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface BuyerDetailDrawerProps {
     open: boolean;
@@ -47,49 +48,53 @@ export function BuyerDetailDrawer({
     getKYCBadge,
     kycActionsSupported = false,
 }: BuyerDetailDrawerProps) {
+    const { t } = useI18n();
+
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent className="w-full sm:w-[700px] overflow-y-auto">
                 <SheetHeader>
                     <SheetTitle className="flex items-center gap-2">
                         <Building2 className="w-5 h-5" />
-                        {buyer ? 'Buyer Details' : 'Add New Buyer'}
+                        {buyer ? t('admin.buyerManagement.detail.title') : t('admin.buyerManagement.detail.addTitle')}
                     </SheetTitle>
                     <SheetDescription>
-                        {buyer ? `Manage ${buyer.companyName}` : 'Create a new buyer account'}
+                        {buyer
+                            ? t('admin.buyerManagement.detail.manageBuyer', { name: buyer.companyName })
+                            : t('admin.buyerManagement.detail.addDescription')}
                     </SheetDescription>
                 </SheetHeader>
 
                 <Tabs value={activeTab} onValueChange={onTabChange} className="mt-6">
                     <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="general">General</TabsTrigger>
+                        <TabsTrigger value="general">{t('admin.buyerManagement.detail.tabs.general')}</TabsTrigger>
                         <TabsTrigger value="kyc" disabled={!buyer}>
-                            KYC
+                            {t('admin.buyerManagement.detail.tabs.kyc')}
                         </TabsTrigger>
                         <TabsTrigger value="permissions" disabled={!buyer}>
-                            Permissions
+                            {t('admin.buyerManagement.detail.tabs.permissions')}
                         </TabsTrigger>
                         <TabsTrigger value="history" disabled={!buyer}>
-                            History
+                            {t('admin.buyerManagement.detail.tabs.history')}
                         </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="general" className="space-y-6 mt-6">
                         <div className="space-y-2">
-                            <Label htmlFor="companyName">Company Name *</Label>
+                            <Label htmlFor="companyName">{t('admin.buyerManagement.fields.companyName')} *</Label>
                             <Input
                                 id="companyName"
-                                placeholder="Enter company name"
+                                placeholder={t('admin.buyerManagement.form.companyNamePlaceholder')}
                                 value={formData.companyName}
                                 onChange={(e) => onFormDataChange({ ...formData, companyName: e.target.value })}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="taxId">Tax/VAT ID *</Label>
+                            <Label htmlFor="taxId">{t('admin.buyerManagement.fields.taxId')} *</Label>
                             <Input
                                 id="taxId"
-                                placeholder="VAT-123456789"
+                                placeholder={t('admin.buyerManagement.form.taxIdPlaceholder')}
                                 value={formData.taxId}
                                 onChange={(e) => onFormDataChange({ ...formData, taxId: e.target.value })}
                             />
@@ -98,42 +103,42 @@ export function BuyerDetailDrawer({
                         <Separator />
 
                         <div className="space-y-2">
-                            <Label htmlFor="contactName">Contact Name *</Label>
+                            <Label htmlFor="contactName">{t('admin.buyerManagement.fields.contactName')} *</Label>
                             <Input
                                 id="contactName"
-                                placeholder="Enter contact name"
+                                placeholder={t('admin.buyerManagement.form.contactNamePlaceholder')}
                                 value={formData.contactName}
                                 onChange={(e) => onFormDataChange({ ...formData, contactName: e.target.value })}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email Address *</Label>
+                            <Label htmlFor="email">{t('auth.signUp.email')} *</Label>
                             <Input
                                 id="email"
                                 type="email"
-                                placeholder="buyer@example.com"
+                                placeholder={t('admin.buyerManagement.form.emailPlaceholder')}
                                 value={formData.email}
                                 onChange={(e) => onFormDataChange({ ...formData, email: e.target.value })}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number *</Label>
+                            <Label htmlFor="phone">{t('auth.signUp.phoneNumber')} *</Label>
                             <Input
                                 id="phone"
                                 type="tel"
-                                placeholder="+1 234 567 8900"
+                                placeholder={t('admin.buyerManagement.form.phonePlaceholder')}
                                 value={formData.phone}
                                 onChange={(e) => onFormDataChange({ ...formData, phone: e.target.value })}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="address">Address</Label>
+                            <Label htmlFor="address">{t('admin.buyerManagement.fields.address')}</Label>
                             <Textarea
                                 id="address"
-                                placeholder="Enter company address"
+                                placeholder={t('admin.buyerManagement.form.addressPlaceholder')}
                                 value={formData.address}
                                 onChange={(e) => onFormDataChange({ ...formData, address: e.target.value })}
                                 rows={3}
@@ -144,7 +149,7 @@ export function BuyerDetailDrawer({
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="role">Role *</Label>
+                                <Label htmlFor="role">{t('admin.buyerManagement.fields.role')} *</Label>
                                 <Select
                                     value={formData.role}
                                     onValueChange={(v) => onFormDataChange({ ...formData, role: v as BuyerRole })}
@@ -153,15 +158,15 @@ export function BuyerDetailDrawer({
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="buyer">Buyer</SelectItem>
-                                        <SelectItem value="enterprise">Enterprise</SelectItem>
-                                        <SelectItem value="distributor">Distributor</SelectItem>
+                                        <SelectItem value="buyer">{t('admin.buyerManagement.roles.buyer')}</SelectItem>
+                                        <SelectItem value="enterprise">{t('admin.buyerManagement.roles.enterprise')}</SelectItem>
+                                        <SelectItem value="distributor">{t('admin.buyerManagement.roles.distributor')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="accountStatus">Account Status *</Label>
+                                <Label htmlFor="accountStatus">{t('admin.buyerManagement.fields.accountStatus')} *</Label>
                                 <Select
                                     value={formData.accountStatus}
                                     onValueChange={(v) => onFormDataChange({ ...formData, accountStatus: v as AccountStatus })}
@@ -170,19 +175,19 @@ export function BuyerDetailDrawer({
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="active">Active</SelectItem>
-                                        <SelectItem value="suspended">Suspended</SelectItem>
-                                        <SelectItem value="closed">Closed</SelectItem>
+                                        <SelectItem value="active">{t('admin.buyerManagement.status.active')}</SelectItem>
+                                        <SelectItem value="suspended">{t('admin.buyerManagement.status.suspended')}</SelectItem>
+                                        <SelectItem value="closed">{t('admin.buyerManagement.status.closed')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="paymentTerms">Payment Terms</Label>
+                            <Label htmlFor="paymentTerms">{t('admin.buyerManagement.fields.paymentTerms')}</Label>
                             <Input
                                 id="paymentTerms"
-                                placeholder="e.g., Net 30, Cash on delivery"
+                                placeholder={t('admin.buyerManagement.form.paymentTermsPlaceholder')}
                                 value={formData.paymentTerms}
                                 onChange={(e) => onFormDataChange({ ...formData, paymentTerms: e.target.value })}
                             />
@@ -192,10 +197,10 @@ export function BuyerDetailDrawer({
 
                         <div className="flex gap-3">
                             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             <Button className="flex-1" onClick={onSave}>
-                                {buyer ? 'Update Buyer' : 'Create Buyer'}
+                                {buyer ? t('admin.buyerManagement.form.updateBuyer') : t('admin.buyerManagement.form.createBuyer')}
                             </Button>
                         </div>
                     </TabsContent>
@@ -205,13 +210,13 @@ export function BuyerDetailDrawer({
                             <>
                                 <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
                                     <div>
-                                        <p className="font-medium text-sm">Current KYC Status</p>
+                                        <p className="font-medium text-sm">{t('admin.buyerManagement.kycPanel.currentStatus')}</p>
                                         <p className="text-xs text-muted-foreground mt-1">
-                                            Verification status for this buyer
+                                            {t('admin.buyerManagement.kycPanel.statusDescription')}
                                         </p>
                                     </div>
                                     <Badge variant="secondary" className={getKYCBadge(buyer.kycStatus)}>
-                                        {buyer.kycStatus}
+                                        {t(`admin.buyerManagement.kyc.${buyer.kycStatus}`, buyer.kycStatus)}
                                     </Badge>
                                 </div>
 
@@ -219,15 +224,15 @@ export function BuyerDetailDrawer({
 
                                 <div>
                                     <div className="flex items-center justify-between mb-4">
-                                        <h4>KYC Documents</h4>
+                                        <h4>{t('admin.buyerManagement.kycPanel.documents')}</h4>
                                     </div>
                                     <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
                                         <div className="flex items-center gap-2 text-foreground mb-2">
                                             <Info className="w-4 h-4" />
-                                            KYC backend integration is not available yet.
+                                            {t('admin.buyerManagement.kycPanel.unavailableTitle')}
                                         </div>
                                         <p>
-                                            This tab is read-only for now. Verification/rejection actions are disabled until a dedicated KYC API is provided.
+                                            {t('admin.buyerManagement.kycPanel.unavailableDescription')}
                                         </p>
                                     </div>
                                 </div>
@@ -242,7 +247,7 @@ export function BuyerDetailDrawer({
                                         disabled={!kycActionsSupported || buyer.kycStatus === 'rejected'}
                                     >
                                         <XCircle className="w-4 h-4 mr-2" />
-                                        Reject KYC
+                                        {t('admin.buyerManagement.kycPanel.reject')}
                                     </Button>
                                     <Button
                                         className="flex-1 bg-emerald-600 hover:bg-emerald-700"
@@ -250,7 +255,7 @@ export function BuyerDetailDrawer({
                                         disabled={!kycActionsSupported || buyer.kycStatus === 'verified'}
                                     >
                                         <CheckCircle className="w-4 h-4 mr-2" />
-                                        Verify KYC
+                                        {t('admin.buyerManagement.kycPanel.verify')}
                                     </Button>
                                 </div>
                             </>
@@ -264,10 +269,10 @@ export function BuyerDetailDrawer({
                                     <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
                                         <div className="flex-1">
                                             <Label htmlFor="canPlaceOrders" className="cursor-pointer">
-                                                Place Orders
+                                                {t('admin.buyerManagement.permissions.placeOrders')}
                                             </Label>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                Allow buyer to place purchase orders
+                                                {t('admin.buyerManagement.permissions.placeOrdersDescription')}
                                             </p>
                                         </div>
                                         <Switch id="canPlaceOrders" defaultChecked />
@@ -276,10 +281,10 @@ export function BuyerDetailDrawer({
                                     <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
                                         <div className="flex-1">
                                             <Label htmlFor="canViewPricing" className="cursor-pointer">
-                                                View Pricing
+                                                {t('admin.buyerManagement.permissions.viewPricing')}
                                             </Label>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                Allow buyer to view product pricing
+                                                {t('admin.buyerManagement.permissions.viewPricingDescription')}
                                             </p>
                                         </div>
                                         <Switch id="canViewPricing" defaultChecked />
@@ -288,10 +293,10 @@ export function BuyerDetailDrawer({
                                     <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
                                         <div className="flex-1">
                                             <Label htmlFor="canExportData" className="cursor-pointer">
-                                                Export Data
+                                                {t('admin.buyerManagement.permissions.exportData')}
                                             </Label>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                Allow buyer to export reports and data
+                                                {t('admin.buyerManagement.permissions.exportDataDescription')}
                                             </p>
                                         </div>
                                         <Switch id="canExportData" />
@@ -300,10 +305,10 @@ export function BuyerDetailDrawer({
                                     <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
                                         <div className="flex-1">
                                             <Label htmlFor="canViewReports" className="cursor-pointer">
-                                                View Reports
+                                                {t('admin.buyerManagement.permissions.viewReports')}
                                             </Label>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                Allow buyer to access analytics and reports
+                                                {t('admin.buyerManagement.permissions.viewReportsDescription')}
                                             </p>
                                         </div>
                                         <Switch id="canViewReports" defaultChecked />
@@ -314,10 +319,10 @@ export function BuyerDetailDrawer({
 
                                 <div className="flex gap-3">
                                     <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-                                        Cancel
+                                        {t('common.cancel')}
                                     </Button>
                                     <Button className="flex-1" disabled>
-                                        Save Permissions
+                                        {t('admin.buyerManagement.permissions.save')}
                                     </Button>
                                 </div>
                             </>
@@ -330,17 +335,17 @@ export function BuyerDetailDrawer({
                                 <div className="flex items-center gap-2">
                                     <Button variant="outline" size="sm" className="flex-1">
                                         <Filter className="w-4 h-4 mr-2" />
-                                        Filter
+                                        {t('common.filter')}
                                     </Button>
                                     <Button variant="outline" size="sm" className="flex-1">
                                         <Download className="w-4 h-4 mr-2" />
-                                        Export
+                                        {t('common.export')}
                                     </Button>
                                 </div>
 
                                 <div className="space-y-3">
                                     <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
-                                        Audit history endpoint is not available for buyer management yet.
+                                        {t('admin.buyerManagement.history.unavailable')}
                                     </div>
                                 </div>
                             </>

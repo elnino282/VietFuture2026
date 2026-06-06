@@ -2,6 +2,7 @@ import { CheckCircle, Lock, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 
 interface BulkActionToolbarProps {
@@ -17,6 +18,7 @@ export function BulkActionToolbar({
     onSelectAll,
     onBulkAction,
 }: BulkActionToolbarProps) {
+    const { t } = useI18n();
     if (selectedCount === 0) return null;
 
     return (
@@ -29,7 +31,7 @@ export function BulkActionToolbar({
                             onCheckedChange={onSelectAll}
                         />
                         <span className="text-sm">
-                            {selectedCount} farmer{selectedCount > 1 ? 's' : ''} selected
+                            {t('admin.farmerManagement.bulk.selectedCount', { count: selectedCount })}
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -39,7 +41,7 @@ export function BulkActionToolbar({
                             onClick={() => onBulkAction('activate')}
                         >
                             <CheckCircle className="w-4 h-4 mr-2" />
-                            Activate
+                            {t('admin.farmerManagement.actions.activate')}
                         </Button>
                         <Button
                             variant="outline"
@@ -47,7 +49,7 @@ export function BulkActionToolbar({
                             onClick={() => onBulkAction('lock')}
                         >
                             <Lock className="w-4 h-4 mr-2" />
-                            Lock
+                            {t('admin.farmerManagement.actions.lock')}
                         </Button>
                         <Button
                             variant="outline"
@@ -56,7 +58,7 @@ export function BulkActionToolbar({
                             className="text-red-600 hover:text-red-700"
                         >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
+                            {t('common.delete')}
                         </Button>
                     </div>
                 </div>

@@ -21,6 +21,7 @@ import type {
     ErrorRateDataPoint,
     SlowPageDataPoint,
 } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface PerformanceChartsProps {
     cpuMemoryData: PerformanceDataPoint[];
@@ -33,6 +34,15 @@ export function PerformanceCharts({
     errorRateData,
     slowestPagesData,
 }: PerformanceChartsProps) {
+    const { t } = useI18n();
+    const serviceLabelMap: Record<string, string> = {
+        'API Gateway': t('admin.systemMonitoring.services.apiGateway'),
+        Database: t('admin.systemMonitoring.services.database'),
+        'Auth Service': t('admin.systemMonitoring.services.authService'),
+        'File Storage': t('admin.systemMonitoring.services.fileStorage'),
+        Other: t('admin.systemMonitoring.services.other'),
+    };
+
     return (
         <>
             {/* Performance Charts Row */}
@@ -40,8 +50,8 @@ export function PerformanceCharts({
                 {/* CPU/Memory Chart */}
                 <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>CPU & Memory Usage</CardTitle>
-                        <CardDescription>Resource utilization over time</CardDescription>
+                        <CardTitle>{t('admin.systemMonitoring.performance.cpuMemoryTitle')}</CardTitle>
+                        <CardDescription>{t('admin.systemMonitoring.performance.cpuMemoryDescription')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
@@ -57,7 +67,7 @@ export function PerformanceCharts({
                                     stroke="#3BA55D"
                                     strokeWidth={2}
                                     dot={{ r: 4 }}
-                                    name="CPU %"
+                                    name={t('admin.systemMonitoring.performance.cpuPercent')}
                                 />
                                 <Line
                                     type="monotone"
@@ -65,7 +75,7 @@ export function PerformanceCharts({
                                     stroke="#10B981"
                                     strokeWidth={2}
                                     dot={{ r: 4 }}
-                                    name="Memory %"
+                                    name={t('admin.systemMonitoring.performance.memoryPercent')}
                                 />
                             </LineChart>
                         </ResponsiveContainer>
@@ -75,8 +85,8 @@ export function PerformanceCharts({
                 {/* Error Rate Donut */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Error Rate by Service</CardTitle>
-                        <CardDescription>Distribution of errors</CardDescription>
+                        <CardTitle>{t('admin.systemMonitoring.performance.errorRateTitle')}</CardTitle>
+                        <CardDescription>{t('admin.systemMonitoring.performance.errorRateDescription')}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex items-center justify-center">
                         <ResponsiveContainer width="100%" height={300}>
@@ -89,7 +99,7 @@ export function PerformanceCharts({
                                     outerRadius={100}
                                     paddingAngle={5}
                                     dataKey="value"
-                                    label={(entry) => entry.service}
+                                    label={(entry) => serviceLabelMap[entry.service] ?? entry.service}
                                 >
                                     {errorRateData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -105,8 +115,8 @@ export function PerformanceCharts({
             {/* Slowest Pages Bar Chart */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Top 10 Slowest Endpoints</CardTitle>
-                    <CardDescription>Average latency and 95th percentile</CardDescription>
+                    <CardTitle>{t('admin.systemMonitoring.performance.slowestEndpointsTitle')}</CardTitle>
+                    <CardDescription>{t('admin.systemMonitoring.performance.slowestEndpointsDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -116,8 +126,8 @@ export function PerformanceCharts({
                             <YAxis dataKey="page" type="category" width={200} stroke="#6b7280" />
                             <RechartsTooltip />
                             <Legend />
-                            <Bar dataKey="latency" fill="#F59E0B" name="Avg Latency (ms)" radius={[0, 8, 8, 0]} />
-                            <Bar dataKey="p95" fill="#EF4444" name="95th Percentile (ms)" radius={[0, 8, 8, 0]} />
+                            <Bar dataKey="latency" fill="#F59E0B" name={t('admin.systemMonitoring.performance.avgLatency')} radius={[0, 8, 8, 0]} />
+                            <Bar dataKey="p95" fill="#EF4444" name={t('admin.systemMonitoring.performance.p95')} radius={[0, 8, 8, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </CardContent>

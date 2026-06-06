@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Wheat,
 } from "lucide-react";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 export interface SummaryStats {
   actualYield: number;
@@ -48,6 +49,7 @@ export const ReportsSummaryCards: React.FC<ReportsSummaryCardsProps> = ({
   onDrilldown,
   drilldownAvailable = false,
 }) => {
+  const { t } = useI18n();
   const { preferences } = usePreferences();
   const unitLabel = getWeightUnitLabel(preferences.weightUnit);
   const safeStats: SummaryStats = stats ?? {
@@ -74,7 +76,7 @@ export const ReportsSummaryCards: React.FC<ReportsSummaryCardsProps> = ({
   const costPerUnitLabel =
     costPerUnit != null
       ? `${formatMoney(costPerUnit, preferences.currency, preferences.locale)}/${unitLabel}`
-      : "—";
+      : t('common.notAvailable');
 
   // Convert monetary values from VND (backend canonical) to display currency
   const displayTotalCost = convertToDisplayCurrency(
@@ -93,54 +95,57 @@ export const ReportsSummaryCards: React.FC<ReportsSummaryCardsProps> = ({
   const cards = [
     {
       id: "yield" as const,
-      title: "Actual Yield",
+      title: t('admin.reportsAnalytics.summary.actualYield'),
       value: formattedYield,
-      subtitle: "Harvested in period",
+      subtitle: t('admin.reportsAnalytics.summary.harvestedInPeriod'),
       icon: Wheat,
       bgColor: "bg-success/10",
       iconColor: "text-success",
-      tooltip: "Total actual yield harvested in the selected period",
+      tooltip: t('admin.reportsAnalytics.summary.actualYieldTooltip'),
     },
     {
       id: "cost" as const,
-      title: "Total Cost",
+      title: t('admin.reportsAnalytics.summary.totalCost'),
       value: formatMoney(
         displayTotalCost,
         preferences.currency,
         preferences.locale,
       ),
-      subtitle: "All expenses",
+      subtitle: t('admin.reportsAnalytics.summary.allExpenses'),
       icon: Coins,
       bgColor: "bg-warning/10",
       iconColor: "text-warning",
-      tooltip: "Sum of all expenses in the selected period",
+      tooltip: t('admin.reportsAnalytics.summary.totalCostTooltip'),
     },
     {
-      title: `Cost per ${unitLabel}`,
+      title: t('admin.reportsAnalytics.summary.costPerUnit', { unit: unitLabel }),
       value: costPerUnitLabel,
-      subtitle: `${preferences.currency}/${unitLabel} efficiency`,
+      subtitle: t('admin.reportsAnalytics.summary.currencyPerUnitEfficiency', {
+        currency: preferences.currency,
+        unit: unitLabel,
+      }),
       icon: Calculator,
       bgColor: "bg-info/10",
       iconColor: "text-info",
-      tooltip: "Average cost per unit produced",
+      tooltip: t('admin.reportsAnalytics.summary.costPerUnitTooltip'),
     },
     {
       id: "revenue" as const,
-      title: "Revenue",
+      title: t('admin.reportsAnalytics.summary.revenue'),
       value: formatMoney(
         displayRevenue,
         preferences.currency,
         preferences.locale,
       ),
-      subtitle: "From harvests",
+      subtitle: t('admin.reportsAnalytics.summary.fromHarvests'),
       icon: DollarSign,
       bgColor: "bg-success/10",
       iconColor: "text-success",
-      tooltip: "Total revenue from harvest sales",
+      tooltip: t('admin.reportsAnalytics.summary.revenueTooltip'),
     },
     {
       id: "profit" as const,
-      title: "Gross Profit",
+      title: t('admin.reportsAnalytics.summary.grossProfit'),
       value: formatMoney(
         displayGrossProfit,
         preferences.currency,
@@ -148,13 +153,15 @@ export const ReportsSummaryCards: React.FC<ReportsSummaryCardsProps> = ({
       ),
       subtitle:
         safeStats.marginPercent != null
-          ? `${safeStats.marginPercent.toFixed(1)}% margin`
-          : "— margin",
+          ? t('admin.reportsAnalytics.summary.marginPercent', {
+              percent: safeStats.marginPercent.toFixed(1),
+            })
+          : t('admin.reportsAnalytics.summary.noMargin'),
       icon: TrendingUp,
       bgColor: displayGrossProfit >= 0 ? "bg-success/10" : "bg-destructive/10",
       iconColor:
         safeStats.grossProfit >= 0 ? "text-success" : "text-destructive",
-      tooltip: "Revenue minus total costs",
+      tooltip: t('admin.reportsAnalytics.summary.grossProfitTooltip'),
     },
   ];
 
@@ -213,7 +220,7 @@ export const ReportsSummaryCards: React.FC<ReportsSummaryCardsProps> = ({
                 tabIndex={isClickable ? 0 : undefined}
                 aria-disabled={!isClickable && card.id ? true : undefined}
                 title={
-                  !isClickable && card.id ? "Page not available" : undefined
+                  !isClickable && card.id ? t('admin.reportsAnalytics.pageNotAvailable') : undefined
                 }
                 className={`!rounded-[18px] border-border bg-card shadow-sm transition-shadow duration-200 ${
                   isClickable

@@ -1,6 +1,7 @@
-import { useState } from "react";
 import { useEmployeePayrollDetail, useEmployeePayrollRecords } from "@/entities/labor";
+import { useI18n } from "@/hooks/useI18n";
 import {
+  BackButton,
   Button,
   Card,
   CardContent,
@@ -13,22 +14,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui";
+import { useState } from "react";
 
-const formatDate = (value?: string | null) => {
+const formatDate = (value: string | null | undefined, locale: string) => {
   if (!value) return "-";
   try {
-    return new Date(value).toLocaleString("vi-VN");
+    return new Date(value).toLocaleString(locale);
   } catch {
     return value;
   }
 };
 
-const formatMoney = (value?: number | null) => {
+const formatMoney = (value: number | null | undefined, locale: string) => {
   if (value === undefined || value === null) return "-";
-  return value.toLocaleString("vi-VN");
+  return value.toLocaleString(locale);
 };
 
 export function EmployeePayrollPage() {
+  const { t, locale } = useI18n();
   const [selectedPayrollId, setSelectedPayrollId] = useState<number | null>(null);
   const { data, isLoading } = useEmployeePayrollRecords({ page: 0, size: 200 });
   const {
@@ -40,42 +43,43 @@ export function EmployeePayrollPage() {
   const payroll = data?.items ?? [];
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto">
+    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto space-y-4">
+      <BackButton to="/employee/tasks" className="w-fit" />
       <Card className="rounded-2xl border border-border">
         <CardHeader>
-          <CardTitle>Bảng lương của tôi</CardTitle>
+          <CardTitle>{t("employee.payroll.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Đang tải bảng lương...</p>
+            <p className="text-sm text-muted-foreground">{t("employee.payroll.loading")}</p>
           ) : payroll.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Chưa có dữ liệu lương.</p>
+            <p className="text-sm text-muted-foreground">{t("employee.payroll.empty")}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Mùa vụ</TableHead>
-                  <TableHead>Kỳ lương</TableHead>
-                  <TableHead>Task hoàn thành</TableHead>
-                  <TableHead>Đơn giá / task</TableHead>
-                  <TableHead>Tổng lương</TableHead>
-                  <TableHead>Ngày tính</TableHead>
-                  <TableHead className="text-right">Thao tác</TableHead>
+                  <TableHead>{t("employee.payroll.table.season")}</TableHead>
+                  <TableHead>{t("employee.payroll.table.period")}</TableHead>
+                  <TableHead>{t("employee.payroll.table.completedTasks")}</TableHead>
+                  <TableHead>{t("employee.payroll.table.wagePerTask")}</TableHead>
+                  <TableHead>{t("employee.payroll.table.totalAmount")}</TableHead>
+                  <TableHead>{t("employee.payroll.table.generatedAt")}</TableHead>
+                  <TableHead className="text-right">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {payroll.map((record) => (
                   <TableRow key={record.id}>
-                    <TableCell>{record.seasonName || "-"}</TableCell>
+                    <TableCell>{record.seasonName || t("common.notAvailable")}</TableCell>
                     <TableCell>
                       {record.periodStart || "-"} - {record.periodEnd || "-"}
                     </TableCell>
                     <TableCell>
                       {record.totalCompletedTasks} / {record.totalAssignedTasks}
                     </TableCell>
-                    <TableCell>{formatMoney(record.wagePerTask)}</TableCell>
-                    <TableCell>{formatMoney(record.totalAmount)}</TableCell>
-                    <TableCell>{formatDate(record.generatedAt)}</TableCell>
+                    <TableCell>{formatMoney(record.wagePerTask, locale)}</TableCell>
+                    <TableCell>{formatMoney(record.totalAmount, locale)}</TableCell>
+                    <TableCell>{formatDate(record.generatedAt, locale)}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         type="button"
@@ -83,7 +87,7 @@ export function EmployeePayrollPage() {
                         size="sm"
                         onClick={() => setSelectedPayrollId(record.id)}
                       >
-                        Xem chi tiết
+                        {t("employee.payroll.actions.viewDetail")}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -95,62 +99,62 @@ export function EmployeePayrollPage() {
       </Card>
 
       {selectedPayrollId !== null ? (
-        <Card className="mt-4 rounded-2xl border border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Chi tiết kỳ lương</CardTitle>
-            <Button type="button" variant="ghost" onClick={() => setSelectedPayrollId(null)}>
-              Đóng
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {isDetailLoading ? (
-              <p className="text-sm text-muted-foreground">Đang tải chi tiết kỳ lương...</p>
-            ) : isDetailError ? (
-              <p className="text-sm text-destructive">Không thể tải chi tiết bảng lương.</p>
-            ) : !payrollDetail ? (
-              <p className="text-sm text-muted-foreground">Không có dữ liệu chi tiết.</p>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
+        <>
+          <BackButton onClick={() => setSelectedPayrollId(null)} className="w-fit" />
+          <Card className="rounded-2xl border border-border">
+            <CardHeader>
+              <CardTitle>{t("employee.payroll.detail.title")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isDetailLoading ? (
+                <p className="text-sm text-muted-foreground">{t("employee.payroll.detail.loading")}</p>
+              ) : isDetailError ? (
+                <p className="text-sm text-destructive">{t("employee.payroll.detail.error")}</p>
+              ) : !payrollDetail ? (
+                <p className="text-sm text-muted-foreground">{t("employee.payroll.detail.empty")}</p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs text-muted-foreground">Mùa vụ</p>
-                  <p className="text-sm font-medium">{payrollDetail.seasonName || "-"}</p>
+                  <p className="text-xs text-muted-foreground">{t("employee.payroll.detail.season")}</p>
+                  <p className="text-sm font-medium">{payrollDetail.seasonName || t("common.notAvailable")}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Nhân công</p>
-                  <p className="text-sm font-medium">{payrollDetail.employeeName || "-"}</p>
+                  <p className="text-xs text-muted-foreground">{t("employee.payroll.detail.employee")}</p>
+                  <p className="text-sm font-medium">{payrollDetail.employeeName || t("common.notAvailable")}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Kỳ lương</p>
+                  <p className="text-xs text-muted-foreground">{t("employee.payroll.detail.period")}</p>
                   <p className="text-sm font-medium">
                     {payrollDetail.periodStart || "-"} - {payrollDetail.periodEnd || "-"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Task hoàn thành / giao</p>
+                  <p className="text-xs text-muted-foreground">{t("employee.payroll.detail.taskCompletion")}</p>
                   <p className="text-sm font-medium">
                     {payrollDetail.totalCompletedTasks} / {payrollDetail.totalAssignedTasks}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Đơn giá / task</p>
-                  <p className="text-sm font-medium">{formatMoney(payrollDetail.wagePerTask)}</p>
+                  <p className="text-xs text-muted-foreground">{t("employee.payroll.detail.wagePerTask")}</p>
+                  <p className="text-sm font-medium">{formatMoney(payrollDetail.wagePerTask, locale)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Tổng lương</p>
-                  <p className="text-sm font-medium">{formatMoney(payrollDetail.totalAmount)}</p>
+                  <p className="text-xs text-muted-foreground">{t("employee.payroll.detail.totalAmount")}</p>
+                  <p className="text-sm font-medium">{formatMoney(payrollDetail.totalAmount, locale)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Ngày tính</p>
-                  <p className="text-sm font-medium">{formatDate(payrollDetail.generatedAt)}</p>
+                  <p className="text-xs text-muted-foreground">{t("employee.payroll.detail.generatedAt")}</p>
+                  <p className="text-sm font-medium">{formatDate(payrollDetail.generatedAt, locale)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Ghi chú</p>
-                  <p className="text-sm font-medium">{payrollDetail.note || "-"}</p>
+                  <p className="text-xs text-muted-foreground">{t("employee.payroll.detail.note")}</p>
+                  <p className="text-sm font-medium">{payrollDetail.note || t("common.notAvailable")}</p>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
       ) : null}
     </div>
   );

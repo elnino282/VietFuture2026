@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Badge } from "@/shared/ui/badge";
 import { usePreferences } from "@/shared/contexts";
 import { convertToDisplayCurrency, formatMoney } from "@/shared/lib";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
     useExpenseCostAiSuggestion,
     useExpenseCostInsightsSummary,
@@ -25,9 +26,6 @@ interface InsightRow {
     amount?: number;
 }
 
-const FALLBACK_DISCLAIMER =
-    "AI suggestions are references only. Do not auto-apply expense or budget changes.";
-
 const getSafeAmount = (value: number | null | undefined) =>
     typeof value === "number" && Number.isFinite(value) ? value : 0;
 
@@ -36,7 +34,10 @@ const getTopCategory = (rows: ExpenseCostCategoryBreakdown[]) =>
         .filter((row) => row.category && typeof row.amount === "number")
         .sort((left, right) => getSafeAmount(right.amount) - getSafeAmount(left.amount))[0];
 
-const buildExpenseRows = (expenses: Expense[]): InsightRow[] => {
+const buildExpenseRows = (
+    expenses: Expense[],
+    t: (key: string, optionsOrDefault?: Record<string, unknown> | string) => string,
+): InsightRow[] => {
     if (expenses.length === 0) {
         return [];
     }
@@ -44,7 +45,7 @@ const buildExpenseRows = (expenses: Expense[]): InsightRow[] => {
     const totalsByCategory = new Map<string, number>();
     let totalAmount = 0;
     for (const expense of expenses) {
-        const category = expense.category?.trim() || "Uncategorized";
+        const category = expense.category?.trim() || t("expenses.insights.uncategorized");
         const amount = getSafeAmount(expense.amount);
         totalAmount += amount;
         totalsByCategory.set(category, (totalsByCategory.get(category) ?? 0) + amount);
@@ -83,8 +84,11 @@ const buildExpenseRows = (expenses: Expense[]): InsightRow[] => {
         rows.push({
             id: "top-category",
             kind: "info",
-            title: "Highest cost category",
-            description: `${topCategory[0]} accounts for ${percent.toFixed(1)}% of recorded spend.`,
+            title: t("expenses.insights.local.highestCostCategory.title"),
+            description: t("expenses.insights.local.highestCostCategory.description", {
+                category: topCategory[0],
+                percent: percent.toFixed(1),
+            }),
             amount: topCategory[1],
         });
     }
@@ -92,8 +96,10 @@ const buildExpenseRows = (expenses: Expense[]): InsightRow[] => {
     rows.push({
         id: "avg-expense",
         kind: "info",
-        title: "Average expense amount",
-        description: `Average amount across ${expenses.length} expenses.`,
+        title: t("expenses.insights.local.averageExpense.title"),
+        description: t("expenses.insights.local.averageExpense.description", {
+            count: expenses.length,
+        }),
         amount: averageAmount,
     });
 
@@ -101,8 +107,10 @@ const buildExpenseRows = (expenses: Expense[]): InsightRow[] => {
         rows.push({
             id: "missing-receipts",
             kind: "warning",
-            title: "Expenses missing receipt proof",
-            description: `${missingReceipts} expense record(s) have no attachment.`,
+            title: t("expenses.insights.local.missingReceipts.title"),
+            description: t("expenses.insights.local.missingReceipts.description", {
+                count: missingReceipts,
+            }),
         });
     }
 
@@ -110,12 +118,17 @@ const buildExpenseRows = (expenses: Expense[]): InsightRow[] => {
         const deltaPercent = previousTotal > 0
             ? ((recentTotal - previousTotal) / previousTotal) * 100
             : 100;
-        const trendLabel = deltaPercent >= 0 ? "up" : "down";
+        const trendLabel = deltaPercent >= 0
+            ? t("expenses.insights.local.recentTrend.up")
+            : t("expenses.insights.local.recentTrend.down");
         rows.push({
             id: "recent-trend",
             kind: deltaPercent >= 30 ? "warning" : "info",
-            title: "Recent 30-day trend",
-            description: `Spend is ${trendLabel} ${Math.abs(deltaPercent).toFixed(1)}% vs the previous 30 days.`,
+            title: t("expenses.insights.local.recentTrend.title"),
+            description: t("expenses.insights.local.recentTrend.description", {
+                trend: trendLabel,
+                percent: Math.abs(deltaPercent).toFixed(1),
+            }),
             amount: recentTotal,
         });
     }
@@ -125,6 +138,7 @@ const buildExpenseRows = (expenses: Expense[]): InsightRow[] => {
 
 export function AIOptimizationTips({ seasonId, expenses }: CostInsightsPanelProps) {
     const { preferences } = usePreferences();
+    const { t } = useI18n();
     const hasSeason = typeof seasonId === "number" && seasonId > 0;
     const {
         data: summary,
@@ -154,8 +168,10 @@ export function AIOptimizationTips({ seasonId, expenses }: CostInsightsPanelProp
             rows.push({
                 id: "summary-top-category",
                 kind: "info",
-                title: "Top category from seasonal summary",
-                description: `${topCategory.category} is currently the largest cost category in this season summary.`,
+                title: t("expenses.insights.summary.topCategory.title"),
+                description: t("expenses.insights.summary.topCategory.description", {
+                    category: topCategory.category,
+                }),
                 amount: getSafeAmount(topCategory.amount),
             });
         }
@@ -164,18 +180,20 @@ export function AIOptimizationTips({ seasonId, expenses }: CostInsightsPanelProp
             rows.push({
                 id: `summary-warning-${index}`,
                 kind: "warning",
-                title: "Budget/cost warning",
+                title: t("expenses.insights.summary.warningTitle"),
                 description: warning,
             });
         }
 
         return rows;
-    }, [summary]);
+    }, [summary, t]);
 
-    const localRows = useMemo(() => buildExpenseRows(expenses), [expenses]);
+    const localRows = useMemo(() => buildExpenseRows(expenses, t), [expenses, t]);
     const insightRows = summaryRows.length > 0 ? summaryRows : localRows;
     const aiSuggestion = aiSuggestionMutation.data?.aiSuggestionText;
-    const disclaimer = aiSuggestionMutation.data?.disclaimer ?? summary?.disclaimer ?? FALLBACK_DISCLAIMER;
+    const disclaimer = aiSuggestionMutation.data?.disclaimer
+        ?? summary?.disclaimer
+        ?? t("expenses.insights.fallbackDisclaimer");
 
     if (!hasSeason) {
         return (
@@ -183,10 +201,10 @@ export function AIOptimizationTips({ seasonId, expenses }: CostInsightsPanelProp
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base text-foreground flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-secondary" />
-                        Cost insights
+                        {t("expenses.insights.title")}
                     </CardTitle>
                     <CardDescription className="text-xs text-muted-foreground">
-                        Select a season to view insights.
+                        {t("expenses.insights.selectSeason")}
                     </CardDescription>
                 </CardHeader>
             </Card>
@@ -198,32 +216,36 @@ export function AIOptimizationTips({ seasonId, expenses }: CostInsightsPanelProp
             <CardHeader className="pb-3">
                 <CardTitle className="text-base text-foreground flex items-center gap-2">
                     <BarChart3 className="w-5 h-5 text-secondary" />
-                    Cost insights
+                    {t("expenses.insights.title")}
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground">
-                    Built from recorded expenses and seasonal cost summary.
+                    {t("expenses.insights.description")}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
                 {isSummaryLoading && insightRows.length === 0 && (
                     <div className="rounded-xl border border-border bg-card p-3 text-xs text-muted-foreground">
-                        Loading cost insights...
+                        {t("expenses.insights.loading")}
                     </div>
                 )}
 
                 {isSummaryError && insightRows.length === 0 && (
                     <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive space-y-2">
-                        <div>Failed to load seasonal summary: {summaryError?.message ?? "Unknown error"}</div>
+                        <div>
+                            {t("expenses.insights.summaryLoadError", {
+                                error: summaryError?.message ?? t("expenses.insights.unknownError"),
+                            })}
+                        </div>
                         <Button size="sm" variant="outline" onClick={() => refetchSummary()}>
                             <RefreshCcw className="w-3.5 h-3.5 mr-2" />
-                            Retry
+                            {t("common.retry")}
                         </Button>
                     </div>
                 )}
 
                 {insightRows.length === 0 && !isSummaryLoading && (
                     <div className="rounded-xl border border-border bg-card p-3 text-xs text-muted-foreground">
-                        No expense records yet. Add expenses to generate cost insights.
+                        {t("expenses.insights.empty")}
                     </div>
                 )}
 
@@ -267,24 +289,26 @@ export function AIOptimizationTips({ seasonId, expenses }: CostInsightsPanelProp
                         disabled={aiSuggestionMutation.isPending}
                     >
                         <Sparkles className="w-4 h-4 mr-2" />
-                        {aiSuggestionMutation.isPending ? "Analyzing with AI..." : "Analyze with AI"}
+                        {aiSuggestionMutation.isPending
+                            ? t("expenses.insights.aiAnalyzing")
+                            : t("expenses.insights.aiAnalyze")}
                     </Button>
 
                     {aiSuggestionMutation.isError && (
                         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
-                            {aiSuggestionMutation.error?.message ?? "Failed to analyze with AI."}
+                            {aiSuggestionMutation.error?.message ?? t("expenses.insights.aiError")}
                         </div>
                     )}
 
                     {aiSuggestion && (
                         <div className="rounded-xl border border-border bg-card p-3">
-                            <p className="text-xs text-muted-foreground mb-2">AI suggestion</p>
+                            <p className="text-xs text-muted-foreground mb-2">{t("expenses.insights.aiSuggestion")}</p>
                             <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">{aiSuggestion}</p>
                         </div>
                     )}
 
                     <p className="text-[11px] text-muted-foreground">
-                        <strong>Disclaimer:</strong> {disclaimer}
+                        <strong>{t("expenses.insights.disclaimerLabel")}</strong> {disclaimer}
                     </p>
                 </div>
             </CardContent>

@@ -48,7 +48,7 @@ export interface CreatePlotRequest {
     plotName: string;
     area: number;
     soilType: string;
-    status: 'IN_USE' | 'IDLE';
+    status: 'IN_USE' | 'IDLE' | 'AVAILABLE' | 'FALLOW' | 'MAINTENANCE';
 }
 
 

@@ -1,19 +1,21 @@
 import { useState } from 'react';
 import { useDeleteFarm as useDeleteFarmEntity } from '@/entities/farm';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Feature hook for deleting a farm with conflict detection
  * Handles backend errors when farm has plots or seasons
  */
 export function useDeleteFarm() {
+    const { t } = useTranslation();
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [farmToDelete, setFarmToDelete] = useState<{ id: number; name: string } | null>(null);
 
     const mutation = useDeleteFarmEntity({
         onSuccess: (data, variables) => {
             // Use variables.name instead of farmToDelete state to avoid race conditions
-            toast.success(`Farm "${variables.name}" deleted successfully`);
+            toast.success(t('farms.toast.deleteFarmNamedSuccess', { name: variables.name }));
             setIsConfirmOpen(false);
             setFarmToDelete(null);
         },
@@ -24,10 +26,10 @@ export function useDeleteFarm() {
             // Check for conflict errors (400/409) indicating plots/seasons exist
             if (statusCode === 400 || statusCode === 409) {
                 toast.error(
-                    message || 'Cannot delete farm because it still has plots or seasons. Please remove them first.'
+                    message || t('farms.toast.deleteFarmConflict')
                 );
             } else {
-                toast.error(message || 'Failed to delete farm');
+                toast.error(message || t('farms.toast.deleteError'));
             }
         },
     });

@@ -33,7 +33,11 @@ const LOCALE_OPTIONS = [
     { value: 'en-US', labelKey: 'preferences.unitSettings.localeEnglish' },
 ];
 
-export function PreferencesForm() {
+type PreferencesFormProps = {
+    onDirtyChange?: (dirty: boolean) => void;
+};
+
+export function PreferencesForm({ onDirtyChange }: PreferencesFormProps) {
     const { t } = useI18n();
     const { preferences, isLoading } = usePreferences();
     const updatePreferences = useUpdatePreferences();
@@ -53,6 +57,10 @@ export function PreferencesForm() {
             || weightUnit !== preferences.weightUnit
             || locale !== preferences.locale;
     }, [currency, weightUnit, locale, preferences]);
+
+    useEffect(() => {
+        onDirtyChange?.(isDirty);
+    }, [isDirty, onDirtyChange]);
 
     const handleSave = async () => {
         updatePreferences.mutate(

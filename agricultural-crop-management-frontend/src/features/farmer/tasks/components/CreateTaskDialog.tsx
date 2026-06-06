@@ -10,6 +10,7 @@ import {
 } from "@/shared/ui/select";
 import { Textarea } from "@/shared/ui/textarea";
 import {
+  BackButton,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -144,11 +145,38 @@ export function CreateTaskDialog({
   // Use active seasons for dropdown, fallback to all seasons
   const availableSeasons = activeSeasons.length > 0 ? activeSeasons : seasons;
   const lockedSeasonLabel = availableSeasons.find((season) => season.id === effectiveSeasonId)?.seasonName;
+  const isDirty =
+    title.trim().length > 0 ||
+    dueDate.length > 0 ||
+    notes.trim().length > 0 ||
+    selectedPlot.length > 0 ||
+    taskType.length > 0 ||
+    assignee.length > 0 ||
+    (!hideSeasonSelector && selectedSeason.length > 0);
+  const confirmMessage = t(
+    "common.unsavedChangesConfirm",
+    "You have unsaved changes. Leave this page?",
+  );
+
+  const closeWithConfirm = () => {
+    if (isDirty && !window.confirm(confirmMessage)) return;
+    onOpenChange(false);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen) {
+          onOpenChange(true);
+          return;
+        }
+        closeWithConfirm();
+      }}
+    >
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
+          <BackButton onClick={closeWithConfirm} className="w-fit" />
           <DialogTitle>{t("tasks.dialog.createTitle", "Create New Task")}</DialogTitle>
           <DialogDescription>
             {t("tasks.dialog.createDescription", "Add a new task to the workspace")}
@@ -288,7 +316,7 @@ export function CreateTaskDialog({
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={closeWithConfirm}
           >
             {t("common.cancel", "Cancel")}
           </Button>

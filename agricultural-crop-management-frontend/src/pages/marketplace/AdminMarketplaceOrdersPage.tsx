@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import type { MarketplaceOrderStatus } from "@/shared/api";
 import { Badge, Button, CardContent, CardHeader, CardTitle } from "@/shared/ui";
+import { BackButton } from "@/shared/ui/back-button";
 import {
   AdminContentCard,
   AdminFilterCard,
@@ -18,15 +19,16 @@ import {
 } from "@/features/marketplace/hooks";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
 import { RejectWithReasonModal, PaginationControls } from "@/features/marketplace/components";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
-const statusFilters: Array<{ value: "ALL" | MarketplaceOrderStatus; label: string }> = [
-  { value: "ALL", label: "All" },
-  { value: "PENDING", label: "Pending" },
-  { value: "CONFIRMED", label: "Confirmed" },
-  { value: "PREPARING", label: "Preparing" },
-  { value: "DELIVERING", label: "Delivering" },
-  { value: "COMPLETED", label: "Completed" },
-  { value: "CANCELLED", label: "Cancelled" },
+const statusFilters: Array<{ value: "ALL" | MarketplaceOrderStatus; labelKey: string }> = [
+  { value: "ALL", labelKey: "admin.marketplace.orders.filters.all" },
+  { value: "PENDING", labelKey: "admin.marketplace.orders.status.pending" },
+  { value: "CONFIRMED", labelKey: "admin.marketplace.orders.status.confirmed" },
+  { value: "PREPARING", labelKey: "admin.marketplace.orders.status.preparing" },
+  { value: "DELIVERING", labelKey: "admin.marketplace.orders.status.delivering" },
+  { value: "COMPLETED", labelKey: "admin.marketplace.orders.status.completed" },
+  { value: "CANCELLED", labelKey: "admin.marketplace.orders.status.cancelled" },
 ];
 
 function statusVariant(status: MarketplaceOrderStatus) {
@@ -36,22 +38,42 @@ function statusVariant(status: MarketplaceOrderStatus) {
   return "secondary" as const;
 }
 
-function paymentStatusLabel(status: string) {
+function orderStatusLabel(status: MarketplaceOrderStatus, t: ReturnType<typeof useI18n>["t"]) {
   switch (status) {
     case "PENDING":
-      return "Pending";
+      return t("admin.marketplace.orders.status.pending");
+    case "CONFIRMED":
+      return t("admin.marketplace.orders.status.confirmed");
+    case "PREPARING":
+      return t("admin.marketplace.orders.status.preparing");
+    case "DELIVERING":
+      return t("admin.marketplace.orders.status.delivering");
+    case "COMPLETED":
+      return t("admin.marketplace.orders.status.completed");
+    case "CANCELLED":
+      return t("admin.marketplace.orders.status.cancelled");
+    default:
+      return status;
+  }
+}
+
+function paymentStatusLabel(status: string, t: ReturnType<typeof useI18n>["t"]) {
+  switch (status) {
+    case "PENDING":
+      return t("admin.marketplace.orders.paymentStatus.pending");
     case "SUBMITTED":
-      return "Submitted";
+      return t("admin.marketplace.orders.paymentStatus.submitted");
     case "VERIFIED":
-      return "Verified";
+      return t("admin.marketplace.orders.paymentStatus.verified");
     case "REJECTED":
-      return "Rejected";
+      return t("admin.marketplace.orders.paymentStatus.rejected");
     default:
       return status;
   }
 }
 
 export function AdminMarketplaceOrdersPage() {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [status, setStatus] = useState<"ALL" | MarketplaceOrderStatus>("ALL");
   const [page, setPage] = useState(0);
@@ -77,6 +99,11 @@ export function AdminMarketplaceOrdersPage() {
   const auditLogsQuery = useMarketplaceAdminOrderAuditLogs(selectedOrderId);
   const verifyMutation = useMarketplaceUpdateAdminOrderPaymentVerificationMutation(selectedOrderId || 0);
   const cancelMutation = useMarketplaceUpdateAdminOrderStatusMutation(selectedOrderId || 0);
+  const closeSelectedOrder = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("orderId");
+    setSearchParams(next, { replace: true });
+  };
 
   const openRejectPaymentModal = (orderId: number) => {
     setRejectPaymentModalState({ isOpen: true, orderId });
@@ -97,7 +124,7 @@ export function AdminMarketplaceOrdersPage() {
       await Promise.all([selectedOrderQuery.refetch(), auditLogsQuery.refetch()]);
       closeRejectPaymentModal();
     } catch {
-      toast.error("Failed to reject payment proof. Please try again.");
+      toast.error(t("admin.marketplace.orders.toast.rejectPaymentFailed"));
       // Keep modal open on error so user can retry
     }
   };
@@ -118,7 +145,7 @@ export function AdminMarketplaceOrdersPage() {
       await Promise.all([selectedOrderQuery.refetch(), auditLogsQuery.refetch()]);
       closeCancelOrderModal();
     } catch {
-      toast.error("Failed to cancel order. Please try again.");
+      toast.error(t("admin.marketplace.orders.toast.cancelOrderFailed"));
       // Keep modal open on error so user can retry
     }
   };
@@ -126,9 +153,9 @@ export function AdminMarketplaceOrdersPage() {
   return (
     <AdminPageContainer>
       <AdminHeaderCard
-        title="Manage marketplace orders"
-        description="Review and manage marketplace orders, verify payment proofs, and track order status changes."
-        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">FarmACM Admin</span>}
+        title={t("admin.marketplace.orders.title")}
+        description={t("admin.marketplace.orders.description")}
+        metadata={<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{t("admin.marketplace.common.adminBadge")}</span>}
       />
 
       <AdminFilterCard>
@@ -146,7 +173,7 @@ export function AdminMarketplaceOrdersPage() {
             }}
             className="rounded-[14px]"
           >
-            {option.label}
+            {t(option.labelKey)}
           </Button>
         ))}
       </div>
@@ -156,7 +183,7 @@ export function AdminMarketplaceOrdersPage() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         <AdminContentCard>
           <CardHeader className="border-b border-border/50">
-            <CardTitle>Order list</CardTitle>
+            <CardTitle>{t("admin.marketplace.orders.list.title")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 p-4">
             {(ordersQuery.data?.items ?? []).map((order) => (
@@ -169,23 +196,31 @@ export function AdminMarketplaceOrdersPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-semibold text-foreground">{order.orderCode}</p>
-                    <p className="text-xs text-muted-foreground">Buyer #{order.buyerUserId} • Farmer #{order.farmerUserId}</p>
                     <p className="text-xs text-muted-foreground">
-                      {order.payment.method} • {paymentStatusLabel(order.payment.verificationStatus)}
+                      {t("admin.marketplace.orders.list.participants", {
+                        buyerId: order.buyerUserId,
+                        farmerId: order.farmerUserId,
+                      })}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("admin.marketplace.orders.list.paymentSummary", {
+                        method: order.payment.method,
+                        status: paymentStatusLabel(order.payment.verificationStatus, t),
+                      })}
                     </p>
                     <p className="text-xs text-muted-foreground/60">{formatDateTime(order.createdAt)}</p>
                   </div>
                   <div className="text-right">
-                    <Badge variant={statusVariant(order.status)}>{order.status}</Badge>
+                    <Badge variant={statusVariant(order.status)}>{orderStatusLabel(order.status, t)}</Badge>
                     <p className="mt-2 font-semibold text-primary">{formatVnd(order.totalAmount)}</p>
                   </div>
                 </div>
               </button>
             ))}
-            {ordersQuery.isLoading ? <p className="p-4 text-sm text-muted-foreground">Loading orders...</p> : null}
-            {ordersQuery.isError ? <p className="p-4 text-sm text-destructive">Failed to load admin orders.</p> : null}
+            {ordersQuery.isLoading ? <p className="p-4 text-sm text-muted-foreground">{t("admin.marketplace.orders.list.loading")}</p> : null}
+            {ordersQuery.isError ? <p className="p-4 text-sm text-destructive">{t("admin.marketplace.orders.list.loadError")}</p> : null}
             {!ordersQuery.isLoading && !ordersQuery.isError && (ordersQuery.data?.items ?? []).length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">No orders matched the current status filter.</p>
+              <p className="p-4 text-sm text-muted-foreground">{t("admin.marketplace.orders.list.empty")}</p>
             ) : null}
           </CardContent>
         </AdminContentCard>
@@ -194,46 +229,53 @@ export function AdminMarketplaceOrdersPage() {
           <div className="space-y-6">
             <AdminContentCard>
               <CardHeader className="border-b border-border/50">
+                <BackButton onClick={closeSelectedOrder} className="mb-3 w-fit" />
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <CardTitle>Order detail</CardTitle>
+                    <CardTitle>{t("admin.marketplace.orders.detail.title")}</CardTitle>
                     <p className="mt-2 text-sm text-muted-foreground">{selectedOrder.orderCode}</p>
                   </div>
-                  <Badge variant={statusVariant(selectedOrder.status)}>{selectedOrder.status}</Badge>
+                  <Badge variant={statusVariant(selectedOrder.status)}>{orderStatusLabel(selectedOrder.status, t)}</Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6 p-6">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="rounded-xl border border-border p-4 text-sm text-muted-foreground">
-                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/60">Shipping</p>
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/60">{t("admin.marketplace.orders.detail.shipping")}</p>
                     <p className="mt-3 font-medium text-foreground">{selectedOrder.shippingRecipientName}</p>
                     <p>{selectedOrder.shippingPhone}</p>
                     <p>{selectedOrder.shippingAddressLine}</p>
-                    {selectedOrder.note ? <p className="mt-3 text-muted-foreground">Note: {selectedOrder.note}</p> : null}
+                    {selectedOrder.note ? (
+                      <p className="mt-3 text-muted-foreground">
+                        {t("admin.marketplace.orders.detail.note", { note: selectedOrder.note })}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="rounded-xl border border-border p-4 text-sm text-muted-foreground">
-                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/60">Payment</p>
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground/60">{t("admin.marketplace.orders.detail.payment")}</p>
                     <p className="mt-3 font-medium text-foreground">{selectedOrder.payment.method}</p>
-                    <p>{paymentStatusLabel(selectedOrder.payment.verificationStatus)}</p>
+                    <p>{paymentStatusLabel(selectedOrder.payment.verificationStatus, t)}</p>
                     <p className="mt-3 text-lg font-semibold text-primary">{formatVnd(selectedOrder.totalAmount)}</p>
                   </div>
                 </div>
 
                 {selectedOrder.payment.proofFileName ? (
                   <div className="rounded-xl border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
-                    <p className="font-medium text-foreground">Payment proof</p>
+                    <p className="font-medium text-foreground">{t("admin.marketplace.orders.detail.paymentProof")}</p>
                     <p className="mt-2">{selectedOrder.payment.proofFileName}</p>
                     {selectedOrder.payment.proofUploadedAt ? (
                       <p className="mt-1 text-xs text-muted-foreground/60">
-                        Uploaded {formatDateTime(selectedOrder.payment.proofUploadedAt)}
+                        {t("admin.marketplace.orders.detail.uploadedAt", {
+                          date: formatDateTime(selectedOrder.payment.proofUploadedAt),
+                        })}
                       </p>
                     ) : null}
                   </div>
                 ) : null}
 
                 <div className="rounded-xl border border-border p-4">
-                  <p className="mb-3 text-sm font-medium text-foreground">Payment verification</p>
+                  <p className="mb-3 text-sm font-medium text-foreground">{t("admin.marketplace.orders.detail.paymentVerification")}</p>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       disabled={verifyMutation.isPending}
@@ -245,18 +287,18 @@ export function AdminMarketplaceOrdersPage() {
                           });
                           await Promise.all([selectedOrderQuery.refetch(), auditLogsQuery.refetch()]);
                         } catch {
-                          toast.error("Failed to verify payment. Please try again.");
+                          toast.error(t("admin.marketplace.orders.toast.verifyPaymentFailed"));
                         }
                       }}
                     >
-                      Mark verified
+                      {t("admin.marketplace.orders.actions.markVerified")}
                     </Button>
                     <Button
                       variant="outline"
                       disabled={verifyMutation.isPending}
                       onClick={() => openRejectPaymentModal(selectedOrder.id)}
                     >
-                      Reject proof
+                      {t("admin.marketplace.orders.actions.rejectProof")}
                     </Button>
                     {selectedOrder.status !== "CANCELLED" ? (
                       <Button
@@ -264,7 +306,7 @@ export function AdminMarketplaceOrdersPage() {
                         disabled={cancelMutation.isPending}
                         onClick={() => openCancelOrderModal(selectedOrder.id)}
                       >
-                        Cancel order
+                        {t("admin.marketplace.orders.actions.cancelOrder")}
                       </Button>
                     ) : null}
                   </div>
@@ -272,7 +314,7 @@ export function AdminMarketplaceOrdersPage() {
 
                 <div>
                   <p className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Order items
+                    {t("admin.marketplace.orders.detail.orderItems")}
                   </p>
                   <div className="space-y-3">
                     {selectedOrder.items.map((item) => (
@@ -280,7 +322,10 @@ export function AdminMarketplaceOrdersPage() {
                         <div>
                           <p className="font-medium text-foreground">{item.productName}</p>
                           <p className="text-sm text-muted-foreground">
-                            {item.quantity} x {formatVnd(item.unitPriceSnapshot)}
+                            {t("admin.marketplace.orders.detail.itemQuantityPrice", {
+                              quantity: item.quantity,
+                              price: formatVnd(item.unitPriceSnapshot),
+                            })}
                           </p>
                         </div>
                         <p className="font-semibold text-foreground">{formatVnd(item.lineTotal)}</p>
@@ -293,22 +338,25 @@ export function AdminMarketplaceOrdersPage() {
 
             <AdminContentCard>
               <CardHeader className="border-b border-border/50">
-                <CardTitle>Audit log</CardTitle>
+                <CardTitle>{t("admin.marketplace.orders.audit.title")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 p-6">
-                {auditLogsQuery.isLoading ? <p className="text-sm text-muted-foreground">Loading audit log...</p> : null}
-                {auditLogsQuery.isError ? <p className="text-sm text-destructive">Failed to load audit log.</p> : null}
+                {auditLogsQuery.isLoading ? <p className="text-sm text-muted-foreground">{t("admin.marketplace.orders.audit.loading")}</p> : null}
+                {auditLogsQuery.isError ? <p className="text-sm text-destructive">{t("admin.marketplace.orders.audit.loadError")}</p> : null}
                 {(auditLogsQuery.data ?? []).map((log) => (
                   <div key={log.id} className="rounded-xl border border-border p-4">
                     <p className="font-medium text-foreground">{log.operation}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {log.performedBy} • {formatDateTime(log.performedAt)}
+                      {t("admin.marketplace.orders.audit.performedBy", {
+                        user: log.performedBy,
+                        date: formatDateTime(log.performedAt),
+                      })}
                     </p>
                     {log.reason ? <p className="mt-2 text-sm text-muted-foreground">{log.reason}</p> : null}
                   </div>
                 ))}
                 {!auditLogsQuery.isLoading && !auditLogsQuery.isError && (auditLogsQuery.data ?? []).length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No audit log entries for this order yet.</p>
+                  <p className="text-sm text-muted-foreground">{t("admin.marketplace.orders.audit.empty")}</p>
                 ) : null}
               </CardContent>
             </AdminContentCard>
@@ -316,7 +364,7 @@ export function AdminMarketplaceOrdersPage() {
         ) : (
           <AdminContentCard>
             <CardContent className="p-8 text-sm text-muted-foreground">
-              Select an order from the list to review shipping, payment proof, and audit history.
+              {t("admin.marketplace.orders.detail.emptySelection")}
             </CardContent>
           </AdminContentCard>
         )}
@@ -340,10 +388,10 @@ export function AdminMarketplaceOrdersPage() {
         isOpen={rejectPaymentModalState.isOpen}
         onClose={closeRejectPaymentModal}
         onConfirm={handleRejectPaymentConfirm}
-        title="Reject Payment Proof"
-        description="The buyer will be notified and may need to resubmit proof."
-        reasonLabel="Reason for rejection"
-        reasonPlaceholder="Explain why the payment proof is being rejected..."
+        title={t("admin.marketplace.orders.rejectPayment.title")}
+        description={t("admin.marketplace.orders.rejectPayment.description")}
+        reasonLabel={t("admin.marketplace.orders.rejectPayment.reasonLabel")}
+        reasonPlaceholder={t("admin.marketplace.orders.rejectPayment.reasonPlaceholder")}
         isLoading={verifyMutation.isPending}
       />
 
@@ -351,10 +399,10 @@ export function AdminMarketplaceOrdersPage() {
         isOpen={cancelOrderModalState.isOpen}
         onClose={closeCancelOrderModal}
         onConfirm={handleCancelOrderConfirm}
-        title="Cancel Order"
-        description="This order will be cancelled. The buyer and farmer will be notified."
-        reasonLabel="Reason for cancellation"
-        reasonPlaceholder="Explain why this order is being cancelled..."
+        title={t("admin.marketplace.orders.cancel.title")}
+        description={t("admin.marketplace.orders.cancel.description")}
+        reasonLabel={t("admin.marketplace.orders.cancel.reasonLabel")}
+        reasonPlaceholder={t("admin.marketplace.orders.cancel.reasonPlaceholder")}
         isLoading={cancelMutation.isPending}
       />
     </AdminPageContainer>

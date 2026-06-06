@@ -35,6 +35,7 @@ import {
 } from "@/features/admin/shared/ui";
 import { usePreferences } from "@/shared/contexts";
 import { useDebounce } from "@/shared/lib";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
   keepPreviousData,
   useMutation,
@@ -46,22 +47,22 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 const STATUS_OPTIONS = [
-  { value: "ALL", label: "All statuses" },
-  { value: "OPEN", label: "Open" },
-  { value: "IN_PROGRESS", label: "In Progress" },
-  { value: "RESOLVED", label: "Resolved" },
+  { value: "ALL", labelKey: "admin.incidentsPage.status.all" },
+  { value: "OPEN", labelKey: "admin.incidentsPage.status.open" },
+  { value: "IN_PROGRESS", labelKey: "admin.incidentsPage.status.inProgress" },
+  { value: "RESOLVED", labelKey: "admin.incidentsPage.status.resolved" },
 ];
 
 const SEVERITY_OPTIONS = [
-  { value: "ALL", label: "All severities" },
-  { value: "LOW", label: "Low" },
-  { value: "MEDIUM", label: "Medium" },
-  { value: "HIGH", label: "High" },
+  { value: "ALL", labelKey: "admin.incidentsPage.severity.all" },
+  { value: "LOW", labelKey: "admin.incidentsPage.severity.low" },
+  { value: "MEDIUM", labelKey: "admin.incidentsPage.severity.medium" },
+  { value: "HIGH", labelKey: "admin.incidentsPage.severity.high" },
 ];
 
 const SORT_OPTIONS = [
-  { value: "NEWEST", label: "Newest" },
-  { value: "OLDEST", label: "Oldest" },
+  { value: "NEWEST", labelKey: "admin.incidentsPage.sort.newest" },
+  { value: "OLDEST", labelKey: "admin.incidentsPage.sort.oldest" },
 ];
 
 const parseNumber = (value: string | null) => {
@@ -80,6 +81,7 @@ const formatDate = (value: string | null | undefined, locale: string) => {
 };
 
 export function AdminIncidentsPage() {
+  const { t } = useI18n();
   const { preferences } = usePreferences();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(0);
@@ -214,11 +216,11 @@ export function AdminIncidentsPage() {
   const renderSeverityBadge = (value?: string | null) => {
     switch (value) {
       case "HIGH":
-        return <Badge variant="destructive">High</Badge>;
+        return <Badge variant="destructive">{t("admin.incidentsPage.severity.high")}</Badge>;
       case "MEDIUM":
-        return <Badge variant="warning">Medium</Badge>;
+        return <Badge variant="warning">{t("admin.incidentsPage.severity.medium")}</Badge>;
       case "LOW":
-        return <Badge variant="secondary">Low</Badge>;
+        return <Badge variant="secondary">{t("admin.incidentsPage.severity.low")}</Badge>;
       default:
         return <Badge variant="outline">-</Badge>;
     }
@@ -230,21 +232,21 @@ export function AdminIncidentsPage() {
         return (
           <Badge variant="destructive" className="gap-1">
             <AlertCircle className="h-3 w-3" />
-            Open
+            {t("admin.incidentsPage.status.open")}
           </Badge>
         );
       case "IN_PROGRESS":
         return (
           <Badge variant="info" className="gap-1">
             <Clock className="h-3 w-3" />
-            In Progress
+            {t("admin.incidentsPage.status.inProgress")}
           </Badge>
         );
       case "RESOLVED":
         return (
           <Badge variant="success" className="gap-1">
             <CheckCircle2 className="h-3 w-3" />
-            Resolved
+            {t("admin.incidentsPage.status.resolved")}
           </Badge>
         );
       default:
@@ -260,8 +262,8 @@ export function AdminIncidentsPage() {
   return (
     <AdminPageContainer>
       <AdminHeaderCard
-        title="Incidents"
-        description="Review and update incident status system-wide."
+        title={t("admin.incidentsPage.title")}
+        description={t("admin.incidentsPage.subtitle")}
       />
 
       <AdminContentCard>
@@ -274,10 +276,10 @@ export function AdminIncidentsPage() {
               }
             >
               <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[220px]">
-                <SelectValue placeholder="All farms" />
+                <SelectValue placeholder={t("admin.alerts.farms.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All farms</SelectItem>
+                <SelectItem value="all">{t("admin.alerts.farms.all")}</SelectItem>
                 {(optionsQuery.data?.farms ?? []).map((farm) => (
                   <SelectItem key={farm.id} value={String(farm.id)}>
                     {farm.name}
@@ -296,7 +298,7 @@ export function AdminIncidentsPage() {
               <SelectContent>
                 {STATUS_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -312,7 +314,7 @@ export function AdminIncidentsPage() {
               <SelectContent>
                 {SEVERITY_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -328,7 +330,7 @@ export function AdminIncidentsPage() {
               <SelectContent>
                 {SORT_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -336,7 +338,7 @@ export function AdminIncidentsPage() {
 
             <div className="relative w-full sm:w-[260px]">
               <Input
-                placeholder="Search title or description"
+                placeholder={t("admin.incidentsPage.searchPlaceholder")}
                 className="h-9 rounded-[14px]"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
@@ -355,17 +357,17 @@ export function AdminIncidentsPage() {
           {incidentsQuery.isError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Failed to load incidents</AlertTitle>
+              <AlertTitle>{t("admin.incidentsPage.error.load")}</AlertTitle>
               <AlertDescription className="mt-2 flex items-center justify-between gap-3">
                 <span>
-                  {incidentsQuery.error?.message || "Please try again."}
+                  {incidentsQuery.error?.message || t("common.error.description")}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => incidentsQuery.refetch()}
                 >
-                  Retry
+                  {t("common.retry")}
                 </Button>
               </AlertDescription>
             </Alert>
@@ -378,19 +380,19 @@ export function AdminIncidentsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Farm</TableHead>
-                        <TableHead>Severity</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t("admin.alerts.table.title")}</TableHead>
+                        <TableHead>{t("admin.farmsPlots.table.farm")}</TableHead>
+                        <TableHead>{t("admin.incidentsPage.table.severity")}</TableHead>
+                        <TableHead>{t("common.status")}</TableHead>
+                        <TableHead>{t("admin.alerts.table.created")}</TableHead>
+                        <TableHead className="text-right">{t("common.actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {incidentsQuery.data.items.map((incident) => (
                         <TableRow key={incident.incidentId}>
                           <TableCell className="font-medium">
-                            {incident.incidentType || "Incident"}
+                            {incident.incidentType || t("admin.incidentsPage.fallbackIncident")}
                           </TableCell>
                           <TableCell>{incident.farmName || "-"}</TableCell>
                           <TableCell>
@@ -410,7 +412,7 @@ export function AdminIncidentsPage() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8 rounded-[14px]"
-                                  aria-label={`Actions for ${incident.incidentType || "incident"}`}
+                                  aria-label={t("admin.farmsPlots.actionsFor", { name: incident.incidentType || t("admin.incidentsPage.fallbackIncident") })}
                                 >
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
@@ -419,7 +421,7 @@ export function AdminIncidentsPage() {
                                 <DropdownMenuItem
                                   onSelect={() => handleView(incident)}
                                 >
-                                  View incident
+                                  {t("admin.incidentsPage.actions.viewIncident")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -441,7 +443,7 @@ export function AdminIncidentsPage() {
                         disabled={page === 0}
                         onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
                       >
-                        Previous
+                        {t("pagination.previousPage")}
                       </Button>
                       <Button
                         variant="outline"
@@ -451,14 +453,14 @@ export function AdminIncidentsPage() {
                         }
                         onClick={() => setPage((prev) => prev + 1)}
                       >
-                        Next
+                        {t("pagination.nextPage")}
                       </Button>
                     </div>
                   </div>
                 </>
               ) : (
                 <div className="py-10 text-center text-sm text-muted-foreground">
-                  No incidents match the current filters.
+                  {t("admin.incidentsPage.empty")}
                 </div>
               )}
             </>
@@ -478,7 +480,7 @@ export function AdminIncidentsPage() {
             <div className="p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">Incident detail</h2>
+                  <h2 className="text-lg font-semibold">{t("admin.incidentsPage.detail.title")}</h2>
                   <p className="text-sm text-muted-foreground">
                     {selectedIncident.incidentType}
                   </p>
@@ -487,6 +489,7 @@ export function AdminIncidentsPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setDetailOpen(false)}
+                  aria-label={t("common.close")}
                 >
                   X
                 </Button>
@@ -494,21 +497,21 @@ export function AdminIncidentsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-muted-foreground">Farm</p>
+                  <p className="text-xs text-muted-foreground">{t("admin.farmsPlots.table.farm")}</p>
                   <p className="text-sm font-medium">
                     {selectedIncident.farmName || "-"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Status</p>
+                  <p className="text-xs text-muted-foreground">{t("common.status")}</p>
                   <div>{renderStatusBadge(selectedIncident.status)}</div>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Severity</p>
+                  <p className="text-xs text-muted-foreground">{t("admin.incidentsPage.table.severity")}</p>
                   <div>{renderSeverityBadge(selectedIncident.severity)}</div>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Created</p>
+                  <p className="text-xs text-muted-foreground">{t("admin.alerts.table.created")}</p>
                   <p className="text-sm font-medium">
                     {formatDate(selectedIncident.createdAt, preferences.locale)}
                   </p>
@@ -516,14 +519,14 @@ export function AdminIncidentsPage() {
               </div>
 
               <div>
-                <p className="text-sm font-semibold mb-2">Description</p>
+                <p className="text-sm font-semibold mb-2">{t("common.description")}</p>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {selectedIncident.description || "No description provided."}
+                  {selectedIncident.description || t("admin.incidentsPage.detail.noDescription")}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm font-semibold mb-2">Update status</p>
+                <p className="text-sm font-semibold mb-2">{t("admin.incidentsPage.detail.updateStatus")}</p>
                 <Select
                   value={selectedIncident.status || ""}
                   onValueChange={(nextStatus) =>
@@ -534,14 +537,14 @@ export function AdminIncidentsPage() {
                   }
                 >
                   <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[200px]">
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t("admin.incidentsPage.detail.selectStatus")} />
                   </SelectTrigger>
                   <SelectContent>
                     {STATUS_OPTIONS.filter(
                       (option) => option.value !== "ALL",
                     ).map((option) => (
                       <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                        {t(option.labelKey)}
                       </SelectItem>
                     ))}
                   </SelectContent>

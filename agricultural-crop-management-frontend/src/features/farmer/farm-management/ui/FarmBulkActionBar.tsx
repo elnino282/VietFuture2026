@@ -7,6 +7,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/shared/ui/select";
+import { useTranslation } from "react-i18next";
 
 interface FarmBulkActionBarProps {
     selectedCount: number;
@@ -27,6 +28,8 @@ export function FarmBulkActionBar({
     onBulkDelete,
     onBulkStatusChange,
 }: FarmBulkActionBarProps) {
+    const { t } = useTranslation();
+
     if (selectedCount === 0) return null;
 
     return (
@@ -35,7 +38,7 @@ export function FarmBulkActionBar({
                 {/* Selected Count */}
                 <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-md">
                     <span className="text-sm font-medium text-foreground">
-                        {selectedCount} selected
+                        {t("farmManagement.selectedCount", { count: selectedCount })}
                     </span>
                 </div>
 
@@ -45,11 +48,11 @@ export function FarmBulkActionBar({
                 {/* Change Status */}
                 <Select onValueChange={(value) => onBulkStatusChange(value === "active")}>
                     <SelectTrigger className="w-[160px] h-9">
-                        <SelectValue placeholder="Change Status" />
+                        <SelectValue placeholder={t("farmManagement.actions.changeStatus")} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="active">{t("common.active")}</SelectItem>
+                        <SelectItem value="inactive">{t("common.inactive")}</SelectItem>
                     </SelectContent>
                 </Select>
 
@@ -61,7 +64,7 @@ export function FarmBulkActionBar({
                     className="h-9"
                 >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
+                    {t("common.delete")}
                 </Button>
 
                 {/* Divider */}
@@ -75,7 +78,7 @@ export function FarmBulkActionBar({
                     className="h-9 w-9 p-0"
                 >
                     <X className="w-4 h-4" />
-                    <span className="sr-only">Clear selection</span>
+                    <span className="sr-only">{t("farmManagement.actions.clearSelection")}</span>
                 </Button>
             </div>
         </div>

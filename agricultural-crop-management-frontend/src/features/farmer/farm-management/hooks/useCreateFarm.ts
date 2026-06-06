@@ -65,7 +65,7 @@ export function useCreateFarm(onSuccessCallback?: (farm: FarmDetailResponse) => 
             }
 
             toast.error(message, {
-                description: errorCode ? t('common.errorCode', { code: errorCode }) : undefined,
+                description: errorCode ? t('farms.errors.errorCode', { code: errorCode }) : undefined,
             });
         },
     });

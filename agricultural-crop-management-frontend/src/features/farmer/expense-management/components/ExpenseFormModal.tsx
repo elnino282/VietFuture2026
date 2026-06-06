@@ -1,5 +1,4 @@
 import {
-    X,
     Upload,
     Save,
     Edit,
@@ -17,6 +16,7 @@ import {
     DialogFooter,
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
+import { BackButton } from "@/shared/ui/back-button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
@@ -31,6 +31,7 @@ import type { Expense, ExpenseFormData, ExpenseStatus, TaskOption } from "../typ
 import { usePreferences } from "@/shared/contexts";
 import { formatMoney } from "@/shared/lib";
 import { useTranslation } from "react-i18next";
+import { useEffect, useRef } from "react";
 
 interface ExpenseFormModalProps {
     isOpen: boolean;
@@ -81,9 +82,32 @@ export function ExpenseFormModal({
         : undefined;
     const statusError = showValidationErrors && !formData.status ? t("expenses.form.statusRequired") : undefined;
     const isFormDisabled = isSubmitting;
+    const initialFormRef = useRef<string | null>(null);
+    const normalizeFormData = (data: ExpenseFormData) => JSON.stringify({
+        ...data,
+        attachmentFile: data.attachmentFile?.name ?? null,
+    });
+
+    useEffect(() => {
+        if (!isOpen) {
+            initialFormRef.current = null;
+            return;
+        }
+
+        if (!initialFormRef.current) {
+            initialFormRef.current = normalizeFormData(formData);
+        }
+    }, [formData, isOpen]);
+
+    const isDirty =
+        isOpen &&
+        !!initialFormRef.current &&
+        initialFormRef.current !== normalizeFormData(formData);
+    const confirmMessage = t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?");
 
     const handleClose = () => {
         if (isSubmitting) return;
+        if (isDirty && !window.confirm(confirmMessage)) return;
         setIsOpen(false);
         resetForm();
     };
@@ -135,11 +159,16 @@ export function ExpenseFormModal({
             open={isOpen}
             onOpenChange={(open) => {
                 if (isSubmitting && !open) return;
-                setIsOpen(open);
+                if (!open) {
+                    handleClose();
+                    return;
+                }
+                setIsOpen(true);
             }}
         >
             <DialogContent className="sm:max-w-[720px]" closeDisabled={isSubmitting}>
                 <DialogHeader>
+                    <BackButton onClick={handleClose} className="w-fit" />
                     <DialogTitle className="flex items-center gap-2 text-foreground">
                         {selectedExpense ? (
                             <>
@@ -483,7 +512,6 @@ export function ExpenseFormModal({
                         disabled={isSubmitting}
                         disabledHint={t("expenses.dialog.savingHint")}
                     >
-                        <X className="w-4 h-4 mr-2" />
                         {t("common.cancel")}
                     </Button>
                     <Button

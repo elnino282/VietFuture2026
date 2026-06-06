@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface PaginationControlsProps {
   currentPage: number; // 0-indexed
@@ -27,6 +28,7 @@ export function PaginationControls({
   onPageSizeChange,
   pageSizeOptions = [10, 25, 50, 100],
 }: PaginationControlsProps) {
+  const { t } = useI18n();
   const startItem = currentPage * pageSize + 1;
   const endItem = Math.min((currentPage + 1) * pageSize, totalElements);
 
@@ -37,10 +39,14 @@ export function PaginationControls({
     <div className="flex items-center justify-between px-2">
       <div className="flex items-center gap-4">
         <p className="text-sm text-muted-foreground">
-          Showing {startItem} to {endItem} of {totalElements}
+          {t('admin.marketplace.components.pagination.showing', {
+            start: startItem,
+            end: endItem,
+            total: totalElements,
+          })}
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Items per page:</span>
+          <span className="text-sm text-muted-foreground">{t('admin.marketplace.components.pagination.itemsPerPage')}</span>
           <Select
             value={pageSize.toString()}
             onValueChange={(value) => onPageSizeChange(Number(value))}
@@ -64,19 +70,19 @@ export function PaginationControls({
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={isFirstPage}
-          aria-label="Previous page"
+          aria-label={t('admin.marketplace.components.pagination.previousPage')}
         >
           <ChevronLeft className="h-4 w-4" />
-          Previous
+          {t('admin.marketplace.components.pagination.previous')}
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={isLastPage}
-          aria-label="Next page"
+          aria-label={t('admin.marketplace.components.pagination.nextPage')}
         >
-          Next
+          {t('admin.marketplace.components.pagination.next')}
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

@@ -8,6 +8,7 @@ import {
     Area,
 } from 'recharts';
 import type { KPIMetric } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface KPIMetricCardProps {
     metric: KPIMetric;
@@ -15,6 +16,7 @@ interface KPIMetricCardProps {
 }
 
 export function KPIMetricCard({ metric, index }: KPIMetricCardProps) {
+    const { t } = useI18n();
     const Icon = metric.icon;
     const isWarning = parseFloat(metric.value) > metric.threshold;
 
@@ -40,7 +42,9 @@ export function KPIMetricCard({ metric, index }: KPIMetricCardProps) {
                         <h2 className="font-numeric">{metric.value}</h2>
                         <span className="text-sm text-muted-foreground">{metric.unit}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{metric.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {metric.titleKey ? t(metric.titleKey, metric.title) : metric.title}
+                    </p>
                 </div>
                 {/* Sparkline */}
                 <div className="h-8">

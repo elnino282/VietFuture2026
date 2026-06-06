@@ -173,11 +173,11 @@ export const PLACEHOLDER_AUDIT_LOGS: AuditLog[] = [
 ];
 
 export const SECTION_NAV: SectionNavItem[] = [
-    { id: 'system', label: 'System Preferences', icon: Globe },
-    { id: 'roles', label: 'Role & Permission', icon: Shield },
-    { id: 'security', label: 'Security', icon: Lock },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'integrations', label: 'Integrations', icon: Plug },
-    { id: 'backup', label: 'Backup & Restore', icon: Database },
-    { id: 'audit', label: 'Audit Log', icon: FileText },
+    { id: 'system', labelKey: 'admin.systemSettings.sections.system', icon: Globe },
+    { id: 'roles', labelKey: 'admin.systemSettings.sections.roles', icon: Shield },
+    { id: 'security', labelKey: 'admin.systemSettings.sections.security', icon: Lock },
+    { id: 'notifications', labelKey: 'admin.systemSettings.sections.notifications', icon: Bell },
+    { id: 'integrations', labelKey: 'admin.systemSettings.sections.integrations', icon: Plug },
+    { id: 'backup', labelKey: 'admin.systemSettings.sections.backup', icon: Database },
+    { id: 'audit', labelKey: 'admin.systemSettings.sections.audit', icon: FileText },
 ];

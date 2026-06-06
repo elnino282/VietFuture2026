@@ -17,4 +17,8 @@ public class HarvestSummaryResponse {
     BigDecimal yieldVsPlanPercent;
     BigDecimal expectedYieldKg;
     BigDecimal actualYieldKg;
+    BigDecimal totalStoredKg;
+    BigDecimal totalSoldKg;
+    BigDecimal totalProcessingKg;
+    BigDecimal premiumGradePercentage;
 }

@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface AddRoleModalProps {
   open: boolean;
@@ -21,34 +22,36 @@ export function AddRoleModal({
   onOpenChange,
   onCreateRole,
 }: AddRoleModalProps) {
+  const { t } = useI18n();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Role</DialogTitle>
+          <DialogTitle>{t('admin.systemSettings.addRole.title')}</DialogTitle>
           <DialogDescription>
-            Create a new user role with custom permissions
+            {t('admin.systemSettings.addRole.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="roleName">Role Name</Label>
-            <Input id="roleName" placeholder="e.g., Auditor, Manager" />
+            <Label htmlFor="roleName">{t('admin.systemSettings.addRole.name')}</Label>
+            <Input id="roleName" placeholder={t('admin.systemSettings.addRole.namePlaceholder')} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="roleDescription">Description</Label>
+            <Label htmlFor="roleDescription">{t('common.description')}</Label>
             <Input
               id="roleDescription"
-              placeholder="Brief description of this role"
+              placeholder={t('admin.systemSettings.addRole.descriptionPlaceholder')}
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={onCreateRole}>
-            Create Role
+            {t('admin.systemSettings.addRole.create')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import { useDocumentsMeta } from "@/entities/document";
+import { useI18n } from "@/hooks/useI18n";
 import { Search, X } from "lucide-react";
 import type {
   DocumentFiltersState,
@@ -16,29 +17,34 @@ import type {
 
 // Type chip options
 const TYPE_CHIPS = [
-  { value: "", label: "All" },
-  { value: "GUIDE", label: "Guides" },
-  { value: "TEMPLATE", label: "Templates" },
-  { value: "ANNOUNCEMENT", label: "Announcements" },
-  { value: "SYSTEM_HELP", label: "System Help" },
+  { value: "", labelKey: "documents.filters.type.all" },
+  { value: "GUIDE", labelKey: "documents.filters.type.guides" },
+  { value: "TEMPLATE", labelKey: "documents.filters.type.templates" },
+  { value: "ANNOUNCEMENT", labelKey: "documents.filters.type.announcements" },
+  { value: "SYSTEM_HELP", labelKey: "documents.filters.type.systemHelp" },
 ] as const;
 
 // Sort options
 const SORT_OPTIONS = [
-  { value: "NEWEST", label: "Newest" },
-  { value: "MOST_VIEWED", label: "Most viewed" },
-  { value: "RECOMMENDED", label: "Recommended" },
+  { value: "NEWEST", labelKey: "documents.filters.sort.newest" },
+  { value: "MOST_VIEWED", labelKey: "documents.filters.sort.mostViewed" },
+  { value: "RECOMMENDED", labelKey: "documents.filters.sort.recommended" },
 ] as const;
 
 // Fallback options if meta is not loaded
-const DEFAULT_STAGES = ["Planting", "Growing", "Harvest", "Post-Harvest"];
+const DEFAULT_STAGES = [
+  { value: "Planting", labelKey: "documents.filters.stageOptions.planting" },
+  { value: "Growing", labelKey: "documents.filters.stageOptions.growing" },
+  { value: "Harvest", labelKey: "documents.filters.stageOptions.harvest" },
+  { value: "Post-Harvest", labelKey: "documents.filters.stageOptions.postHarvest" },
+];
 const DEFAULT_TOPICS = [
-  "Best Practices",
-  "Pest Management",
-  "Water Management",
-  "Soil Management",
-  "Farm Planning",
-  "Climate Adaptation",
+  { value: "Best Practices", labelKey: "documents.filters.topicOptions.bestPractices" },
+  { value: "Pest Management", labelKey: "documents.filters.topicOptions.pestManagement" },
+  { value: "Water Management", labelKey: "documents.filters.topicOptions.waterManagement" },
+  { value: "Soil Management", labelKey: "documents.filters.topicOptions.soilManagement" },
+  { value: "Farm Planning", labelKey: "documents.filters.topicOptions.farmPlanning" },
+  { value: "Climate Adaptation", labelKey: "documents.filters.topicOptions.climateAdaptation" },
 ];
 
 interface DocumentFilterBarProps {
@@ -57,10 +63,15 @@ export function DocumentFilterBar({
   onClearFilters,
   hasActiveFilters,
 }: DocumentFilterBarProps) {
+  const { t } = useI18n();
   const { data: meta } = useDocumentsMeta();
 
-  const stages = meta?.stages?.length ? meta.stages : DEFAULT_STAGES;
-  const topics = meta?.topics?.length ? meta.topics : DEFAULT_TOPICS;
+  const stages = meta?.stages?.length
+    ? meta.stages.map((stage) => ({ value: stage, label: stage }))
+    : DEFAULT_STAGES.map((stage) => ({ value: stage.value, label: t(stage.labelKey) }));
+  const topics = meta?.topics?.length
+    ? meta.topics.map((topic) => ({ value: topic, label: topic }))
+    : DEFAULT_TOPICS.map((topic) => ({ value: topic.value, label: t(topic.labelKey) }));
   const crops = meta?.crops ?? [];
 
   return (
@@ -69,7 +80,7 @@ export function DocumentFilterBar({
       <div className="relative flex-1 min-w-[200px] max-w-[320px]">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Search documents..."
+          placeholder={t("documents.filters.searchPlaceholder")}
           value={filters.q}
           onChange={(e) => onFilterChange("q", e.target.value)}
           className="pl-10 rounded-lg border-border focus:border-primary"
@@ -96,7 +107,7 @@ export function DocumentFilterBar({
                 : "bg-background hover:bg-muted"
             }`}
           >
-            {chip.label}
+            {t(chip.labelKey)}
           </Button>
         ))}
       </div>
@@ -109,10 +120,10 @@ export function DocumentFilterBar({
         }
       >
         <SelectTrigger className="w-[140px] rounded-lg border-border">
-          <SelectValue placeholder="All crops" />
+          <SelectValue placeholder={t("documents.filters.allCrops")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All crops</SelectItem>
+          <SelectItem value="all">{t("documents.filters.allCrops")}</SelectItem>
           {crops.map((crop) => (
             <SelectItem key={crop.id} value={String(crop.id)}>
               {crop.name}
@@ -129,13 +140,13 @@ export function DocumentFilterBar({
         }
       >
         <SelectTrigger className="w-[130px] rounded-lg border-border">
-          <SelectValue placeholder="All stages" />
+          <SelectValue placeholder={t("documents.filters.allStages")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All stages</SelectItem>
+          <SelectItem value="all">{t("documents.filters.allStages")}</SelectItem>
           {stages.map((stage) => (
-            <SelectItem key={stage} value={stage}>
-              {stage}
+            <SelectItem key={stage.value} value={stage.value}>
+              {stage.label}
             </SelectItem>
           ))}
         </SelectContent>
@@ -149,13 +160,13 @@ export function DocumentFilterBar({
         }
       >
         <SelectTrigger className="w-[150px] rounded-lg border-border">
-          <SelectValue placeholder="All topics" />
+          <SelectValue placeholder={t("documents.filters.allTopics")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All topics</SelectItem>
+          <SelectItem value="all">{t("documents.filters.allTopics")}</SelectItem>
           {topics.map((topic) => (
-            <SelectItem key={topic} value={topic}>
-              {topic}
+            <SelectItem key={topic.value} value={topic.value}>
+              {topic.label}
             </SelectItem>
           ))}
         </SelectContent>
@@ -169,12 +180,12 @@ export function DocumentFilterBar({
         }
       >
         <SelectTrigger className="w-[140px] rounded-lg border-border">
-          <SelectValue placeholder="Sort by" />
+          <SelectValue placeholder={t("documents.filters.sortBy")} />
         </SelectTrigger>
         <SelectContent>
           {SORT_OPTIONS.map((option) => (
             <SelectItem key={option.value} value={option.value}>
-              {option.label}
+              {t(option.labelKey)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -189,7 +200,7 @@ export function DocumentFilterBar({
           className="text-muted-foreground hover:text-foreground gap-1"
         >
           <X className="w-3 h-3" />
-          Clear filters
+          {t("documents.filters.clearFilters")}
         </Button>
       )}
     </div>

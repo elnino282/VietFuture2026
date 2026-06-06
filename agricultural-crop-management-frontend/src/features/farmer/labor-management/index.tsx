@@ -41,10 +41,13 @@ import {
   PageContainer,
 } from "@/shared/ui";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
-import { Calendar, RefreshCw, Trash2, UserPlus } from "lucide-react";
+import { Calendar, ExternalLink, RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+
+const LABOR_WORKSPACE_TABS = ["employees", "assignment", "progress", "payroll"] as const;
+type LaborWorkspaceTab = (typeof LABOR_WORKSPACE_TABS)[number];
 
 const formatDate = (value?: string | null, locale = "en-US") => {
   if (!value) return "-";
@@ -95,6 +98,7 @@ const getTaskStatusClassName = (status?: string) => {
 export function LaborManagementPage() {
   const { t, locale } = useI18n();
   const { seasonId: workspaceSeasonIdParam } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const workspaceSeasonId = Number(workspaceSeasonIdParam);
   const isWorkspaceScoped = Number.isFinite(workspaceSeasonId) && workspaceSeasonId > 0;
 
@@ -253,6 +257,18 @@ export function LaborManagementPage() {
   );
 
   const canMutateSeason = !!selectedSeasonId && !isSeasonLocked;
+  const tabParam = searchParams.get("tab");
+  const activeTab: LaborWorkspaceTab = LABOR_WORKSPACE_TABS.includes(tabParam as LaborWorkspaceTab)
+    ? (tabParam as LaborWorkspaceTab)
+    : "employees";
+
+  const handleTabChange = (value: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("tab", value);
+      return next;
+    });
+  };
 
   const handleAddSeasonEmployee = () => {
     if (!canMutateSeason) {
@@ -411,10 +427,11 @@ export function LaborManagementPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="employees" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList>
           <TabsTrigger value="employees">{t("laborWorkspace.tabs.employees")}</TabsTrigger>
           <TabsTrigger value="assignment">{t("laborWorkspace.tabs.assignment")}</TabsTrigger>
+          <TabsTrigger value="progress">{t("laborWorkspace.tabs.progress")}</TabsTrigger>
           <TabsTrigger value="payroll">{t("laborWorkspace.tabs.payroll")}</TabsTrigger>
         </TabsList>
 
@@ -696,7 +713,9 @@ export function LaborManagementPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
 
+        <TabsContent value="progress" className="space-y-4">
           <Card className="rounded-2xl border border-border">
             <CardHeader>
               <CardTitle className="text-base">{t("laborWorkspace.sections.progress.title")}</CardTitle>
@@ -714,6 +733,7 @@ export function LaborManagementPage() {
                       <TableHead>{t("laborWorkspace.progressTable.task")}</TableHead>
                       <TableHead>{t("laborWorkspace.progressTable.progress")}</TableHead>
                       <TableHead>{t("laborWorkspace.progressTable.note")}</TableHead>
+                      <TableHead>{t("laborWorkspace.progressTable.evidence")}</TableHead>
                       <TableHead>{t("laborWorkspace.progressTable.time")}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -724,6 +744,21 @@ export function LaborManagementPage() {
                         <TableCell>{log.taskTitle || t("laborWorkspace.taskFallback", { id: log.taskId })}</TableCell>
                         <TableCell>{log.progressPercent}%</TableCell>
                         <TableCell className="max-w-[320px] truncate">{log.note || "-"}</TableCell>
+                        <TableCell>
+                          {log.evidenceUrl ? (
+                            <a
+                              href={log.evidenceUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                            >
+                              {t("laborWorkspace.progressTable.openEvidence")}
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
                         <TableCell>{formatDate(log.loggedAt, locale)}</TableCell>
                       </TableRow>
                     ))}

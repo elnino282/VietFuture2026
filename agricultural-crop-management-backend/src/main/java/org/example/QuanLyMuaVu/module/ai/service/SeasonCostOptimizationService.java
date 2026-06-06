@@ -52,11 +52,11 @@ public class SeasonCostOptimizationService {
     static final int MAX_INVENTORY_USAGE_ROWS = 12;
     static final int MAX_TEXT_LENGTH = 280;
     static final String DEFAULT_QUESTION_VI =
-            "Hay giai thich tinh hinh chi phi mua vu nay va goi y toi uu chi phi tham khao.";
+            "Hãy giải thích tình hình chi phí mùa vụ này và gợi ý tối ưu chi phí tham khảo.";
     static final String DEFAULT_QUESTION_EN =
             "Please explain this season's cost situation and suggest reference cost optimization actions.";
     static final String DISCLAIMER_MESSAGE_VI =
-            "AI chi ho tro quyet dinh tham khao, khong thay the tu van tai chinh/chuyen gia nong nghiep va khong tu dong sua expense, budget, inventory.";
+            "AI chỉ hỗ trợ quyết định tham khảo, không thay thế tư vấn tài chính/chuyên gia nông nghiệp và không tự động sửa chi phí, ngân sách hoặc tồn kho.";
     static final String DISCLAIMER_MESSAGE_EN =
             "AI provides reference-only guidance, does not replace financial/agronomy experts, and does not auto-edit expenses, budget, or inventory.";
     static final String NOT_AVAILABLE_TEXT = "N/A";
@@ -341,12 +341,12 @@ public class SeasonCostOptimizationService {
 
         if (budgetAmount.compareTo(BigDecimal.ZERO) <= 0) {
             warnings.add(vietnamese
-                    ? "Khong co budget hop le, can cap nhat budgetAmount de theo doi vuot ngan sach."
+                    ? "Không có ngân sách hợp lệ. Hãy cập nhật ngân sách mùa vụ để theo dõi nguy cơ vượt ngân sách."
                     : "No valid budget found. Please update budgetAmount to monitor overruns.");
         } else {
             if (totalExpense.compareTo(budgetAmount) > 0) {
                 warnings.add(vietnamese
-                        ? "Tong chi phi dang vuot ngan sach mua vu."
+                        ? "Tổng chi phí đang vượt ngân sách mùa vụ."
                         : "Total costs are currently exceeding the seasonal budget.");
             }
 
@@ -354,7 +354,7 @@ public class SeasonCostOptimizationService {
             if (remainingBudget.compareTo(BigDecimal.ZERO) >= 0
                     && remainingBudget.compareTo(lowRemainingThreshold) <= 0) {
                 warnings.add(vietnamese
-                        ? "Ngan sach con lai dang thap (<=10% budget)."
+                        ? "Ngân sách còn lại đang thấp (<=10% ngân sách)."
                         : "Remaining budget is low (<=10% of budget).");
             }
         }
@@ -364,7 +364,7 @@ public class SeasonCostOptimizationService {
                 && topCostCategories.getFirst().getPercentageOfTotal()
                         .compareTo(HIGH_CATEGORY_SHARE_RATIO.multiply(ONE_HUNDRED)) >= 0) {
             warnings.add(vietnamese
-                    ? "Mot nhom chi phi dang chiem ty trong rat cao, can ra soat de tranh mat can doi."
+                    ? "Một nhóm chi phí đang chiếm tỷ trọng rất cao. Hãy rà soát để tránh mất cân đối."
                     : "A single cost category is taking a very high share. Review for balance risk.");
         }
 
@@ -372,14 +372,14 @@ public class SeasonCostOptimizationService {
             BigDecimal treatmentRatio = treatmentCost.divide(totalExpense, 4, RoundingMode.HALF_UP);
             if (treatmentRatio.compareTo(HIGH_TREATMENT_SHARE_RATIO) >= 0) {
                 warnings.add(vietnamese
-                        ? "Chi phi thuoc/dieu tri dang chiem ty le cao trong tong chi phi."
+                        ? "Chi phí thuốc hoặc điều trị đang chiếm tỷ lệ cao trong tổng chi phí."
                         : "Treatment/pesticide costs are consuming a high share of total costs.");
             }
         }
 
         if (expectedYieldKg == null) {
             warnings.add(vietnamese
-                    ? "Thieu expectedYieldKg nen chua tinh duoc costPerExpectedKg."
+                    ? "Thiếu sản lượng dự kiến nên chưa tính được chi phí trên mỗi kg dự kiến."
                     : "Missing expectedYieldKg, so costPerExpectedKg cannot be computed yet.");
         }
 
@@ -389,30 +389,30 @@ public class SeasonCostOptimizationService {
     private String buildInstruction(String question, boolean includeInventory, boolean inventoryEmpty, boolean vietnamese) {
         StringBuilder sb = new StringBuilder();
         if (vietnamese) {
-            sb.append("Cau hoi cua nguoi dung: ").append(question).append("\n\n");
-            sb.append("Ban chi duoc giai thich va goi y dua tren tong hop backend da tinh san.\n");
-            sb.append("Khong duoc tu tinh lai so lieu goc neu backend da cung cap.\n\n");
-            sb.append("Tra loi dung format:\n");
-            sb.append("a. Tom tat buc tranh chi phi mua vu\n");
-            sb.append("b. Du lieu con thieu\n");
-            sb.append("c. Huong toi uu chi phi tham khao\n");
-            sb.append("d. Vat tu su dung hien co co the can nhac\n");
-            sb.append("e. Rui ro/canh bao\n");
-            sb.append("f. Buoc tiep theo nen ghi nhan tren he thong\n\n");
-            sb.append("Rang buoc an toan bat buoc:\n");
-            sb.append("- AI chi ho tro quyet dinh, khong thay the tu van tai chinh/chuyen gia nong nghiep.\n");
-            sb.append("- Khong tu dong chinh sua expense, budget, inventory hoac quyet dinh mua vat tu.\n");
-            sb.append("- Khong khang dinh loi nhuan neu thieu du lieu revenue.\n");
-            sb.append("- Neu thieu du lieu, phai noi ro can bo sung thong tin gi.\n");
+            sb.append("Câu hỏi của người dùng: ").append(question).append("\n\n");
+            sb.append("Bạn chỉ được giải thích và gợi ý dựa trên tổng hợp backend đã tính sẵn.\n");
+            sb.append("Không được tự tính lại số liệu gốc nếu backend đã cung cấp.\n\n");
+            sb.append("Trả lời đúng định dạng:\n");
+            sb.append("a. Tóm tắt bức tranh chi phí mùa vụ\n");
+            sb.append("b. Dữ liệu còn thiếu\n");
+            sb.append("c. Hướng tối ưu chi phí tham khảo\n");
+            sb.append("d. Vật tư sử dụng hiện có có thể cân nhắc\n");
+            sb.append("e. Rủi ro/cảnh báo\n");
+            sb.append("f. Bước tiếp theo nên ghi nhận trên hệ thống\n\n");
+            sb.append("Ràng buộc an toàn bắt buộc:\n");
+            sb.append("- AI chỉ hỗ trợ quyết định, không thay thế tư vấn tài chính/chuyên gia nông nghiệp.\n");
+            sb.append("- Không tự động chỉnh sửa chi phí, ngân sách, tồn kho hoặc quyết định mua vật tư.\n");
+            sb.append("- Không khẳng định lợi nhuận nếu thiếu dữ liệu doanh thu.\n");
+            sb.append("- Nếu thiếu dữ liệu, phải nói rõ cần bổ sung thông tin gì.\n");
             if (!includeInventory) {
-                sb.append("- Request khong bao gom inventory summary, khong goi y vat tu cu the.\n");
+                sb.append("- Request không bao gồm tóm tắt tồn kho, không gợi ý vật tư cụ thể.\n");
             } else if (inventoryEmpty) {
-                sb.append("- Khong co inventory usage summary noi bo, khong goi y mua vat tu tu dong.\n");
+                sb.append("- Không có tóm tắt sử dụng tồn kho nội bộ, không tự động gợi ý mua vật tư.\n");
             } else {
-                sb.append("- Chi goi y vat tu dua tren inventory usage summary noi bo da cung cap.\n");
+                sb.append("- Chỉ gợi ý vật tư dựa trên tóm tắt sử dụng tồn kho nội bộ đã cung cấp.\n");
             }
-            sb.append("Bat buoc ket thuc bang dong disclaimer: ");
-            sb.append("'Goi y toi uu chi phi chi mang tinh tham khao, vui long tham van chuyen gia truoc khi ap dung.'");
+            sb.append("Bắt buộc kết thúc bằng dòng disclaimer: ");
+            sb.append("'Gợi ý tối ưu chi phí chỉ mang tính tham khảo, vui lòng tham vấn chuyên gia trước khi áp dụng.'");
             return sb.toString();
         }
 
@@ -449,7 +449,7 @@ public class SeasonCostOptimizationService {
             boolean vietnamese) {
         StringBuilder sb = new StringBuilder();
         sb.append(vietnamese
-                ? "Tom tat chi phi mua vu duoc backend tinh san:\n"
+                ? "Tóm tắt chi phí mùa vụ được backend tính sẵn:\n"
                 : "Precomputed seasonal cost summary from backend:\n");
         sb.append("- SeasonId: ").append(summary.getSeasonId()).append("\n");
         sb.append("- SeasonName: ").append(safeText(summary.getSeasonName())).append("\n");
@@ -463,10 +463,10 @@ public class SeasonCostOptimizationService {
         sb.append("- LaborCost: ").append(toPlain(summary.getLaborCost())).append("\n");
         sb.append("- PesticideTreatmentCost: ").append(toPlain(summary.getPesticideTreatmentCost())).append("\n\n");
 
-        sb.append(vietnamese ? "Expense by category:\n" : "Expense by category:\n");
+        sb.append(vietnamese ? "Chi phí theo danh mục:\n" : "Expense by category:\n");
         if (summary.getExpenseByCategory() == null || summary.getExpenseByCategory().isEmpty()) {
             sb.append(vietnamese
-                    ? "- Chua co du lieu chi phi theo nhom.\n"
+                    ? "- Chưa có dữ liệu chi phí theo nhóm.\n"
                     : "- No grouped expense data is currently available.\n");
         } else {
             for (SeasonCostCategoryBreakdown category : summary.getExpenseByCategory()) {
@@ -478,10 +478,10 @@ public class SeasonCostOptimizationService {
         }
         sb.append("\n");
 
-        sb.append(vietnamese ? "Inventory usage summary:\n" : "Inventory usage summary:\n");
+        sb.append(vietnamese ? "Tóm tắt sử dụng vật tư:\n" : "Inventory usage summary:\n");
         if (summary.getInventoryUsageSummary() == null || summary.getInventoryUsageSummary().isEmpty()) {
             sb.append(vietnamese
-                    ? "- Chua co du lieu su dung vat tu theo stock movement.\n"
+                    ? "- Chưa có dữ liệu sử dụng vật tư theo biến động kho.\n"
                     : "- No inventory usage data from stock movements is available.\n");
         } else {
             for (SeasonInventoryUsageSummary row : summary.getInventoryUsageSummary()) {
@@ -494,10 +494,10 @@ public class SeasonCostOptimizationService {
         }
         sb.append("\n");
 
-        sb.append(vietnamese ? "Warnings hien tai:\n" : "Current warnings:\n");
+        sb.append(vietnamese ? "Cảnh báo hiện tại:\n" : "Current warnings:\n");
         if (summary.getWarnings() == null || summary.getWarnings().isEmpty()) {
             sb.append(vietnamese
-                    ? "- Khong co canh bao nghiem trong tu bo rule hien tai.\n"
+                    ? "- Không có cảnh báo nghiêm trọng từ bộ quy tắc hiện tại.\n"
                     : "- No severe warnings from the current rule set.\n");
         } else {
             for (String warning : summary.getWarnings()) {
@@ -508,13 +508,13 @@ public class SeasonCostOptimizationService {
 
         if (StringUtils.hasText(additionalNote)) {
             sb.append(vietnamese
-                    ? "Ghi chu bo sung tu nguoi dung:\n"
+                    ? "Ghi chú bổ sung từ người dùng:\n"
                     : "Additional user note:\n");
             sb.append("- ").append(safeText(additionalNote)).append("\n\n");
         }
 
         sb.append(vietnamese
-                ? "Chi dung du lieu tren, khong suy dien them du lieu ngoai he thong."
+                ? "Chỉ dùng dữ liệu trên, không suy diễn thêm dữ liệu ngoài hệ thống."
                 : "Use only the data above. Do not infer extra data outside the system.");
         return sb.toString();
     }

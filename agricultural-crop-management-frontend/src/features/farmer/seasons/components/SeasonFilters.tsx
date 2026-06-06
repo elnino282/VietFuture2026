@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { FilterState } from '../types';
 
 interface SeasonFiltersProps {
@@ -28,6 +29,8 @@ export function SeasonFilters({
   uniqueCrops,
   uniqueYears,
 }: SeasonFiltersProps) {
+  const { t } = useI18n();
+
   return (
     <Card variant="filter">
       <CardContent className="px-6 py-4">
@@ -35,10 +38,10 @@ export function SeasonFilters({
           {/* Crop Filter */}
           <Select value={filters.crop} onValueChange={(value) => setFilters({ ...filters, crop: value })}>
             <SelectTrigger className="w-[180px] border-border acm-rounded-sm h-9 text-sm">
-              <SelectValue placeholder="All Crops" />
+              <SelectValue placeholder={t("seasonFilters.allCrops")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Crops</SelectItem>
+              <SelectItem value="all">{t("seasonFilters.allCrops")}</SelectItem>
               {uniqueCrops.map((crop) => (
                 <SelectItem key={crop} value={crop}>
                   {crop}
@@ -55,25 +58,25 @@ export function SeasonFilters({
             }
           >
             <SelectTrigger className="w-[180px] border-border acm-rounded-sm h-9 text-sm">
-              <SelectValue placeholder="All Status" />
+              <SelectValue placeholder={t("seasonFilters.allStatus")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="PLANNED">Planned</SelectItem>
-              <SelectItem value="ACTIVE">Active</SelectItem>
-              <SelectItem value="COMPLETED">Completed</SelectItem>
-              <SelectItem value="CANCELLED">Cancelled</SelectItem>
-              <SelectItem value="ARCHIVED">Archived</SelectItem>
+              <SelectItem value="all">{t("seasonFilters.allStatus")}</SelectItem>
+              <SelectItem value="PLANNED">{t("seasonFilters.planned")}</SelectItem>
+              <SelectItem value="ACTIVE">{t("seasonFilters.active")}</SelectItem>
+              <SelectItem value="COMPLETED">{t("seasonFilters.completed")}</SelectItem>
+              <SelectItem value="CANCELLED">{t("seasonFilters.cancelled")}</SelectItem>
+              <SelectItem value="ARCHIVED">{t("seasonFilters.archived")}</SelectItem>
             </SelectContent>
           </Select>
 
           {/* Year Filter */}
           <Select value={filters.year} onValueChange={(value) => setFilters({ ...filters, year: value })}>
             <SelectTrigger className="w-[180px] border-border acm-rounded-sm h-9 text-sm">
-              <SelectValue placeholder="All Years" />
+              <SelectValue placeholder={t("seasonFilters.allYears")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Years</SelectItem>
+              <SelectItem value="all">{t("seasonFilters.allYears")}</SelectItem>
               {uniqueYears.map((year) => (
                 <SelectItem key={year} value={year}>
                   {year}
@@ -86,7 +89,7 @@ export function SeasonFilters({
           <div className="relative w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search seasons (min 2 characters)..."
+              placeholder={t("seasonFilters.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 border-border acm-rounded-sm h-9 text-sm"
@@ -102,7 +105,7 @@ export function SeasonFilters({
               className="h-9 text-sm text-muted-foreground hover:text-foreground"
             >
               <X className="w-3 h-3 mr-1" />
-              Clear
+              {t("seasonFilters.clear")}
             </Button>
           )}
         </div>

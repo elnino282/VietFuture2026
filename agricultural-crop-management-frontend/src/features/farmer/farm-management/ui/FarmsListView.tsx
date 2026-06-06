@@ -1,9 +1,10 @@
-import { Checkbox } from "@/shared/ui/checkbox";
 import { useIsMobile } from "@/components/ui/use-mobile";
 import type { Farm } from "@/entities/farm";
 import { AddressDisplay, Badge } from "@/shared/ui";
+import { Checkbox } from "@/shared/ui/checkbox";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FarmActionsMenu } from "./FarmActionsMenu";
 import { FarmBulkActionBar } from "./FarmBulkActionBar";
 import { FarmsCardView } from "./FarmsCardView";
@@ -26,7 +27,7 @@ interface FarmsListViewProps {
 
 /**
  * FarmsListView Component
- * 
+ *
  * Main table view for farm management with:
  * - Sortable columns
  * - Bulk selection and actions
@@ -47,6 +48,7 @@ export function FarmsListView({
     onClearSelection,
 }: FarmsListViewProps) {
     const isMobile = useIsMobile();
+    const { t } = useTranslation();
     const [sortColumn, setSortColumn] = useState<SortColumn>(null);
     const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
@@ -86,9 +88,8 @@ export function FarmsListView({
                     bValue = b.name.toLowerCase();
                     break;
                 case "area":
-                    // Handle both string and number types
-                    aValue = typeof a.area === 'string' ? parseFloat(a.area) || 0 : (a.area || 0);
-                    bValue = typeof b.area === 'string' ? parseFloat(b.area) || 0 : (b.area || 0);
+                    aValue = typeof a.area === "string" ? parseFloat(a.area) || 0 : (a.area || 0);
+                    bValue = typeof b.area === "string" ? parseFloat(b.area) || 0 : (b.area || 0);
                     break;
                 case "status":
                     aValue = a.active ? "active" : "inactive";
@@ -105,10 +106,8 @@ export function FarmsListView({
     // Handle column sort
     const handleSort = (column: SortColumn) => {
         if (sortColumn === column) {
-            // Toggle direction if same column
             setSortDirection(sortDirection === "asc" ? "desc" : "asc");
         } else {
-            // New column, default to ascending
             setSortColumn(column);
             setSortDirection("asc");
         }
@@ -128,9 +127,9 @@ export function FarmsListView({
 
     // Format area value
     const formatArea = (area: string | number | null | undefined): string => {
-        if (!area) return "—";
-        const numArea = typeof area === 'string' ? parseFloat(area) : area;
-        return isNaN(numArea) ? "—" : numArea.toFixed(2);
+        if (!area) return "-";
+        const numArea = typeof area === "string" ? parseFloat(area) : area;
+        return isNaN(numArea) ? "-" : numArea.toFixed(2);
     };
 
     return (
@@ -139,7 +138,6 @@ export function FarmsListView({
             <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full table-fixed">
-                        {/* Define column widths: Checkbox(12px), Name(25%), Area(15%), Address ID(20%), Status(20%), Actions(12px) */}
                         <colgroup>
                             <col className="w-12" />
                             <col className="w-[25%]" />
@@ -169,7 +167,7 @@ export function FarmsListView({
                                         onClick={() => handleSort("name")}
                                         className="group flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
                                     >
-                                        Name
+                                        {t("farmManagement.table.name")}
                                         {renderSortIcon("name")}
                                     </button>
                                 </th>
@@ -180,14 +178,16 @@ export function FarmsListView({
                                         onClick={() => handleSort("area")}
                                         className="group flex items-center justify-end text-xs font-medium text-muted-foreground hover:text-foreground transition-colors ml-auto uppercase tracking-wider"
                                     >
-                                        Area (ha)
+                                        {t("farmManagement.table.area")}
                                         {renderSortIcon("area")}
                                     </button>
                                 </th>
 
                                 {/* Address */}
                                 <th className="px-4 py-3 text-left">
-                                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Address</span>
+                                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                        {t("farmManagement.table.address")}
+                                    </span>
                                 </th>
 
                                 {/* Status - Sortable */}
@@ -196,14 +196,14 @@ export function FarmsListView({
                                         onClick={() => handleSort("status")}
                                         className="group flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
                                     >
-                                        Status
+                                        {t("farmManagement.table.status")}
                                         {renderSortIcon("status")}
                                     </button>
                                 </th>
 
                                 {/* Actions */}
                                 <th className="px-4 py-3">
-                                    <span className="sr-only">Actions</span>
+                                    <span className="sr-only">{t("common.actions")}</span>
                                 </th>
                             </tr>
                         </thead>
@@ -263,7 +263,7 @@ export function FarmsListView({
                                         {/* Status */}
                                         <td className="px-4 py-3.5">
                                             <Badge variant={farm.active ? "default" : "secondary"}>
-                                                {farm.active ? "Active" : "Inactive"}
+                                                {farm.active ? t("common.active") : t("common.inactive")}
                                             </Badge>
                                         </td>
 
@@ -288,10 +288,10 @@ export function FarmsListView({
                 {/* Footer with row count */}
                 <div className="px-6 py-3 bg-muted border-t border-border">
                     <p className="text-sm text-muted-foreground">
-                        Showing <span className="font-semibold text-foreground">{sortedFarms.length}</span> farm{sortedFarms.length !== 1 ? 's' : ''}
+                        {t("farmManagement.showingFarms", { count: sortedFarms.length })}
                         {selectedFarms.length > 0 && (
-                            <span className="ml-2">
-                                • <span className="font-semibold text-blue-600">{selectedFarms.length}</span> selected
+                            <span className="ml-2 font-semibold text-blue-600">
+                                {t("farmManagement.selectedCountInline", { count: selectedFarms.length })}
                             </span>
                         )}
                     </p>
@@ -308,6 +308,3 @@ export function FarmsListView({
         </>
     );
 }
-
-
-

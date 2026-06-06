@@ -4,6 +4,7 @@ import { useI18n } from '@/hooks/useI18n';
 import { useDebounce } from '@/shared/lib';
 import {
     AsyncState,
+    BackButton,
     Badge,
     Button,
     Card,
@@ -299,6 +300,7 @@ export function TasksWorkspacePage() {
       <Dialog open={completeDialogOpen} onOpenChange={setCompleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
+            <BackButton onClick={() => setCompleteDialogOpen(false)} className="w-fit" />
             <DialogTitle>{t('tasks.dialog.completeTitle')}</DialogTitle>
             <DialogDescription>
               {t('tasks.dialog.completeDescription')}

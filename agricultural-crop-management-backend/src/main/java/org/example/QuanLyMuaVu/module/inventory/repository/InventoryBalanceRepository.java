@@ -22,6 +22,11 @@ public interface InventoryBalanceRepository extends JpaRepository<InventoryBalan
 
     boolean existsBySupplyLot_IdAndWarehouse_Farm_IdIn(Integer supplyLotId, List<Integer> farmIds);
 
+    boolean existsBySupplyLot_SupplyItem_IdAndWarehouse_Farm_IdInAndQuantityGreaterThan(
+            Integer supplyItemId,
+            List<Integer> farmIds,
+            BigDecimal quantity);
+
     /**
      * Find inventory balance with pessimistic write lock for upsert operations.
      * Used for IN movements and positive ADJUST movements.

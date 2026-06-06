@@ -3,9 +3,10 @@ import {
   adminFarmApi,
   type AdminPlotCreateRequest,
 } from "@/services/api.admin";
+import { BackButton } from "@/shared/ui/back-button";
 import { useVietnameseAddress } from "@/shared/ui/address-selector";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, Loader2, X } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 interface AddPlotModalProps {
@@ -51,6 +52,12 @@ export function AddPlotModal({
     handleProvinceChange, // Automatically resets ward to null!
     handleWardChange,
   } = useVietnameseAddress();
+  const isDirty =
+    formData.plotName.trim().length > 0 ||
+    formData.area.trim().length > 0 ||
+    formData.soilType.trim().length > 0 ||
+    selectedProvince != null ||
+    selectedWard != null;
 
   // Create mutation
   const createMutation = useMutation({
@@ -65,12 +72,12 @@ export function AddPlotModal({
     },
     onError: (err: any) => {
       const message =
-        err.response?.data?.message || err.message || "Failed to add plot";
+        err.response?.data?.message || err.message || t("admin.farmsPlots.addPlot.error.addFailed");
       if (
         message.includes("Ward does not belong") ||
         err.response?.data?.code === "ERR_WARD_NOT_IN_PROVINCE"
       ) {
-        setError("Ward does not belong to selected province");
+        setError(t("admin.farmsPlots.validation.wardProvinceMismatch"));
       } else {
         setError(message);
       }
@@ -83,7 +90,7 @@ export function AddPlotModal({
 
     // Validation
     if (!formData.plotName.trim()) {
-      setError("Plot name is required");
+      setError(t("admin.farmsPlots.validation.plotNameRequired"));
       return;
     }
 
@@ -108,28 +115,34 @@ export function AddPlotModal({
     setError(null);
     handleProvinceChange(null);
   };
+  const handleClose = () => {
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+
+    handleReset();
+    onClose();
+  };
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
 
       {/* Modal */}
       <div className="relative bg-background border border-border rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <div>
-            <h2 className="text-lg font-semibold">Add Plot</h2>
-            <p className="text-sm text-muted-foreground">Farm: {farmName}</p>
+          <div className="space-y-2">
+            <BackButton onClick={handleClose} className="w-fit" />
+            <h2 className="text-lg font-semibold">{t("admin.farmsPlots.addPlot.title")}</h2>
+            <p className="text-sm text-muted-foreground">{t("admin.farmsPlots.addPlot.farmLabel", { name: farmName })}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
         {/* Content */}
@@ -145,7 +158,7 @@ export function AddPlotModal({
 
             {/* Plot Name */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Plot Name *</label>
+              <label className="text-sm font-medium">{t("admin.farmsPlots.addPlot.plotNameRequired")}</label>
               <input
                 type="text"
                 value={formData.plotName}
@@ -153,13 +166,13 @@ export function AddPlotModal({
                   setFormData((prev) => ({ ...prev, plotName: e.target.value }))
                 }
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
-                placeholder="Enter plot name"
+                placeholder={t("admin.farmsPlots.addPlot.plotNamePlaceholder")}
               />
             </div>
 
             {/* Area */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Area (ha)</label>
+              <label className="text-sm font-medium">{t("admin.farmsPlots.table.areaHa")}</label>
               <input
                 type="number"
                 step="0.01"
@@ -169,13 +182,13 @@ export function AddPlotModal({
                   setFormData((prev) => ({ ...prev, area: e.target.value }))
                 }
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
-                placeholder="Optional"
+                placeholder={t("common.optional")}
               />
             </div>
 
             {/* Soil Type */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Soil Type</label>
+              <label className="text-sm font-medium">{t("admin.farmsPlots.table.soilType")}</label>
               <input
                 type="text"
                 value={formData.soilType}
@@ -183,13 +196,13 @@ export function AddPlotModal({
                   setFormData((prev) => ({ ...prev, soilType: e.target.value }))
                 }
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
-                placeholder="Optional"
+                placeholder={t("common.optional")}
               />
             </div>
 
             {/* Province - Optional */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Province (Optional)</label>
+              <label className="text-sm font-medium">{t("admin.farmsPlots.addPlot.provinceOptional")}</label>
               <select
                 value={selectedProvince ?? ""}
                 onChange={(e) => {
@@ -200,7 +213,7 @@ export function AddPlotModal({
                 disabled={isLoadingProvinces}
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm"
               >
-                <option value="">None</option>
+                <option value="">{t("common.none")}</option>
                 {provinces.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -211,7 +224,7 @@ export function AddPlotModal({
 
             {/* Ward - Optional, disabled until province selected */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Ward (Optional)</label>
+              <label className="text-sm font-medium">{t("admin.farmsPlots.addPlot.wardOptional")}</label>
               <select
                 value={selectedWard ?? ""}
                 onChange={(e) =>
@@ -224,10 +237,10 @@ export function AddPlotModal({
               >
                 <option value="">
                   {isLoadingWards
-                    ? "Loading..."
+                    ? t("common.loading")
                     : !selectedProvince
-                      ? "Select province first"
-                      : "None"}
+                      ? t("admin.farmsPlots.addPlot.selectProvinceFirst")
+                      : t("common.none")}
                 </option>
                 {wards.map((w) => (
                   <option key={w.id} value={w.id}>
@@ -243,7 +256,7 @@ export function AddPlotModal({
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-muted/30">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={createMutation.isPending}
             className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-muted/50 disabled:opacity-50"
           >
@@ -258,7 +271,7 @@ export function AddPlotModal({
             {createMutation.isPending && (
               <Loader2 className="h-4 w-4 animate-spin" />
             )}
-            {createMutation.isPending ? "Adding..." : "Add Plot"}
+            {createMutation.isPending ? t("admin.farmsPlots.addPlot.adding") : t("admin.farmsPlots.addPlot.title")}
           </button>
         </div>
       </div>

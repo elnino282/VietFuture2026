@@ -70,6 +70,7 @@ export const portalConfig: Record<PortalType, PortalConfig> = {
         emoji: '🧑‍🌾',
         navigation: [
             { id: 'tasks', label: 'Assigned Tasks', icon: ClipboardList },
+            { id: 'workspace', label: 'Season Workspace', icon: Calendar },
             { id: 'progress', label: 'Progress Reports', icon: Clock3 },
             { id: 'payroll', label: 'Payroll', icon: Wallet2 },
             { id: 'chat', label: 'Chat', icon: MessageSquare },

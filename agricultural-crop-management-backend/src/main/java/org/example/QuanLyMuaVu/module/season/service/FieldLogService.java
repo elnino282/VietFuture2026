@@ -11,6 +11,7 @@ import org.example.QuanLyMuaVu.Enums.SeasonStatus;
 import org.example.QuanLyMuaVu.Exception.AppException;
 import org.example.QuanLyMuaVu.Exception.ErrorCode;
 import org.example.QuanLyMuaVu.module.farm.port.FarmAccessPort;
+import org.example.QuanLyMuaVu.module.identity.entity.User;
 import org.example.QuanLyMuaVu.module.season.dto.request.CreateFieldLogRequest;
 import org.example.QuanLyMuaVu.module.season.dto.request.UpdateFieldLogRequest;
 import org.example.QuanLyMuaVu.module.season.dto.response.FieldLogResponse;
@@ -36,6 +37,7 @@ public class FieldLogService {
     FieldLogRepository fieldLogRepository;
     SeasonRepository seasonRepository;
     FarmAccessPort farmAccessService;
+    SeasonWorkspaceAccessService seasonWorkspaceAccessService;
 
     public PageResponse<FieldLogResponse> listFieldLogsForSeason(
             Integer seasonId,
@@ -46,7 +48,29 @@ public class FieldLogService {
             int page,
             int size) {
         Season season = getSeasonForCurrentFarmer(seasonId);
+        return listFieldLogsForResolvedSeason(season, from, to, type, searchQuery, page, size);
+    }
 
+    public PageResponse<FieldLogResponse> listFieldLogsForAssignedEmployeeSeason(
+            Integer seasonId,
+            LocalDate from,
+            LocalDate to,
+            String type,
+            String searchQuery,
+            int page,
+            int size) {
+        Season season = getSeasonForCurrentEmployee(seasonId);
+        return listFieldLogsForResolvedSeason(season, from, to, type, searchQuery, page, size);
+    }
+
+    private PageResponse<FieldLogResponse> listFieldLogsForResolvedSeason(
+            Season season,
+            LocalDate from,
+            LocalDate to,
+            String type,
+            String searchQuery,
+            int page,
+            int size) {
         List<FieldLog> all = fieldLogRepository.findAllBySeason_Id(season.getId());
 
         String typeFilter = type != null ? type.trim().toLowerCase() : null;
@@ -93,16 +117,28 @@ public class FieldLogService {
 
     public FieldLogResponse createFieldLog(Integer seasonId, CreateFieldLogRequest request) {
         Season season = getSeasonForCurrentFarmer(seasonId);
+        return createFieldLogForResolvedSeason(season, request);
+    }
+
+    public FieldLogResponse createFieldLogForAssignedEmployee(Integer seasonId, CreateFieldLogRequest request) {
+        Season season = getSeasonForCurrentEmployee(seasonId);
+        return createFieldLogForResolvedSeason(season, request);
+    }
+
+    private FieldLogResponse createFieldLogForResolvedSeason(Season season, CreateFieldLogRequest request) {
         ensureSeasonOpenForLogs(season, true);
 
         validateLogType(request.getLogType());
         validateLogDateWithinSeason(season, request.getLogDate());
+        User currentUser = seasonWorkspaceAccessService.getCurrentUser();
 
         FieldLog log = FieldLog.builder()
                 .season(season)
                 .logDate(request.getLogDate())
                 .logType(request.getLogType().toUpperCase().trim())
                 .notes(request.getNotes())
+                .createdByUserId(currentUser != null ? currentUser.getId() : null)
+                .createdBy(currentUser)
                 .build();
 
         FieldLog saved = fieldLogRepository.save(log);
@@ -114,8 +150,24 @@ public class FieldLogService {
         return toResponse(log);
     }
 
+    @Transactional(readOnly = true)
+    public FieldLogResponse getFieldLogForAssignedEmployee(Integer id) {
+        FieldLog log = getFieldLogForCurrentEmployee(id);
+        return toResponse(log);
+    }
+
     public FieldLogResponse updateFieldLog(Integer id, UpdateFieldLogRequest request) {
         FieldLog log = getFieldLogForCurrentFarmer(id);
+        return updateResolvedFieldLog(log, request);
+    }
+
+    public FieldLogResponse updateFieldLogForAssignedEmployee(Integer id, UpdateFieldLogRequest request) {
+        FieldLog log = getFieldLogForCurrentEmployee(id);
+        seasonWorkspaceAccessService.assertCurrentUserCanManageRecord(log.getSeason(), log.getCreatedByUserId());
+        return updateResolvedFieldLog(log, request);
+    }
+
+    private FieldLogResponse updateResolvedFieldLog(FieldLog log, UpdateFieldLogRequest request) {
         ensureSeasonOpenForLogs(log.getSeason(), false);
 
         validateLogType(request.getLogType());
@@ -131,6 +183,16 @@ public class FieldLogService {
 
     public void deleteFieldLog(Integer id) {
         FieldLog log = getFieldLogForCurrentFarmer(id);
+        deleteResolvedFieldLog(log);
+    }
+
+    public void deleteFieldLogForAssignedEmployee(Integer id) {
+        FieldLog log = getFieldLogForCurrentEmployee(id);
+        seasonWorkspaceAccessService.assertCurrentUserCanManageRecord(log.getSeason(), log.getCreatedByUserId());
+        deleteResolvedFieldLog(log);
+    }
+
+    private void deleteResolvedFieldLog(FieldLog log) {
         ensureSeasonOpenForLogs(log.getSeason(), false);
 
         fieldLogRepository.delete(log);
@@ -178,10 +240,35 @@ public class FieldLogService {
         return log;
     }
 
+    private FieldLog getFieldLogForCurrentEmployee(Integer id) {
+        FieldLog log = fieldLogRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.FIELD_LOG_NOT_FOUND));
+
+        Season season = log.getSeason();
+        if (season == null) {
+            throw new AppException(ErrorCode.SEASON_NOT_FOUND);
+        }
+        seasonWorkspaceAccessService.requireActiveEmployeeAssignment(season);
+        return log;
+    }
+
     private Season getSeasonForCurrentFarmer(Integer id) {
+        if (id == null) {
+            throw new AppException(ErrorCode.SEASON_NOT_FOUND);
+        }
         Season season = seasonRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
         farmAccessService.assertCurrentUserCanAccessSeason(season);
+        return season;
+    }
+
+    private Season getSeasonForCurrentEmployee(Integer id) {
+        if (id == null) {
+            throw new AppException(ErrorCode.SEASON_NOT_FOUND);
+        }
+        Season season = seasonRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
+        seasonWorkspaceAccessService.requireActiveEmployeeAssignment(season);
         return season;
     }
 
@@ -196,6 +283,14 @@ public class FieldLogService {
                 .map(season -> SeasonMinimalResponse.builder()
                         .seasonId(season.getId())
                         .seasonName(season.getSeasonName())
+                        .farmId(season.getPlot() != null && season.getPlot().getFarm() != null
+                                ? season.getPlot().getFarm().getId()
+                                : null)
+                        .farmName(season.getPlot() != null && season.getPlot().getFarm() != null
+                                ? season.getPlot().getFarm().getName()
+                                : null)
+                        .plotId(season.getPlot() != null ? season.getPlot().getId() : null)
+                        .plotName(season.getPlot() != null ? season.getPlot().getPlotName() : null)
                         .startDate(season.getStartDate())
                         .endDate(season.getEndDate())
                         .plannedHarvestDate(season.getPlannedHarvestDate())
@@ -211,6 +306,12 @@ public class FieldLogService {
                 .logDate(log.getLogDate())
                 .logType(log.getLogType())
                 .notes(log.getNotes())
+                .createdByUserId(log.getCreatedByUserId())
+                .createdByUsername(log.getCreatedBy() != null ? log.getCreatedBy().getUsername() : null)
+                .createdByDisplayName(seasonWorkspaceAccessService.resolveDisplayName(log.getCreatedBy()))
+                .createdByType(seasonWorkspaceAccessService.resolveActorType(log.getSeason(), log.getCreatedBy()))
+                .canEdit(seasonWorkspaceAccessService.canCurrentUserManageRecord(log.getSeason(), log.getCreatedByUserId()))
+                .canDelete(seasonWorkspaceAccessService.canCurrentUserManageRecord(log.getSeason(), log.getCreatedByUserId()))
                 .createdAt(log.getCreatedAt())
                 .build();
     }

@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useUpdateFarm as useUpdateFarmEntity, FarmUpdateRequestSchema, type FarmUpdateRequest, type Farm, type FarmDetailResponse } from '@/entities/farm';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type FarmFormInitialData = Pick<FarmDetailResponse, 'name' | 'provinceId' | 'wardId' | 'area' | 'active'> | Farm;
 
@@ -10,6 +11,7 @@ type FarmFormInitialData = Pick<FarmDetailResponse, 'name' | 'provinceId' | 'war
  * Feature hook for updating a farm with form validation and toast handling
  */
 export function useUpdateFarm(farmId: number, initialData?: FarmFormInitialData) {
+    const { t } = useTranslation();
     const form = useForm<FarmUpdateRequest>({
         resolver: zodResolver(FarmUpdateRequestSchema),
         defaultValues: {
@@ -35,10 +37,10 @@ export function useUpdateFarm(farmId: number, initialData?: FarmFormInitialData)
 
     const mutation = useUpdateFarmEntity({
         onSuccess: () => {
-            toast.success('Farm updated successfully');
+            toast.success(t('farms.toast.updateFarmSuccess'));
         },
         onError: (error: any) => {
-            const message = error?.response?.data?.message || error?.message || 'Failed to update farm';
+            const message = error?.response?.data?.message || error?.message || t('farms.toast.updateFarmError');
             toast.error(message);
         },
     });

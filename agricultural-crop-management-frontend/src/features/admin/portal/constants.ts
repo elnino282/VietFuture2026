@@ -1,35 +1,35 @@
 import type { AdminView, AdminViewConfig } from "./types";
 
 export const ADMIN_VIEW_CONFIG: Record<AdminView, AdminViewConfig> = {
-  dashboard: { title: "Admin Dashboard", breadcrumbLabel: "Dashboard" },
-  "marketplace-dashboard": { title: "Marketplace Dashboard", breadcrumbLabel: "Marketplace" },
-  "marketplace-products": { title: "Marketplace Products", breadcrumbLabel: "Marketplace Products" },
-  "marketplace-orders": { title: "Marketplace Orders", breadcrumbLabel: "Marketplace Orders" },
-  search: { title: "Search", breadcrumbLabel: "Search" },
-  inventory: { title: "Inventory", breadcrumbLabel: "Inventory" },
-  incidents: { title: "Incidents", breadcrumbLabel: "Incidents" },
-  alerts: { title: "Alerts Center", breadcrumbLabel: "Alerts" },
-  "audit-logs": { title: "Audit Logs", breadcrumbLabel: "Audit Logs" },
+  dashboard: { titleKey: "admin.portal.views.dashboard.title", breadcrumbLabelKey: "admin.portal.views.dashboard.breadcrumb" },
+  "marketplace-dashboard": { titleKey: "admin.portal.views.marketplaceDashboard.title", breadcrumbLabelKey: "admin.portal.views.marketplaceDashboard.breadcrumb" },
+  "marketplace-products": { titleKey: "admin.portal.views.marketplaceProducts.title", breadcrumbLabelKey: "admin.portal.views.marketplaceProducts.breadcrumb" },
+  "marketplace-orders": { titleKey: "admin.portal.views.marketplaceOrders.title", breadcrumbLabelKey: "admin.portal.views.marketplaceOrders.breadcrumb" },
+  search: { titleKey: "admin.portal.views.search.title", breadcrumbLabelKey: "admin.portal.views.search.breadcrumb" },
+  inventory: { titleKey: "admin.portal.views.inventory.title", breadcrumbLabelKey: "admin.portal.views.inventory.breadcrumb" },
+  incidents: { titleKey: "admin.portal.views.incidents.title", breadcrumbLabelKey: "admin.portal.views.incidents.breadcrumb" },
+  alerts: { titleKey: "admin.portal.views.alerts.title", breadcrumbLabelKey: "admin.portal.views.alerts.breadcrumb" },
+  "audit-logs": { titleKey: "admin.portal.views.auditLogs.title", breadcrumbLabelKey: "admin.portal.views.auditLogs.breadcrumb" },
   "users-roles": {
-    title: "Users & Roles / Người dùng & Phân quyền",
-    breadcrumbLabel: "Users & Roles",
+    titleKey: "admin.portal.views.usersRoles.title",
+    breadcrumbLabelKey: "admin.portal.views.usersRoles.breadcrumb",
   },
   "farms-plots": {
-    title: "Farms & Plots / Trang trại & Lô đất",
-    breadcrumbLabel: "Farms & Plots",
+    titleKey: "admin.portal.views.farmsPlots.title",
+    breadcrumbLabelKey: "admin.portal.views.farmsPlots.breadcrumb",
   },
   "crops-varieties": {
-    title: "Crops & Varieties / Cây trồng & Giống",
-    breadcrumbLabel: "Crops & Varieties",
+    titleKey: "admin.portal.views.cropsVarieties.title",
+    breadcrumbLabelKey: "admin.portal.views.cropsVarieties.breadcrumb",
   },
-  reports: { title: "Reports / Báo cáo", breadcrumbLabel: "Reports" },
-  documents: { title: "Documents / Tài liệu", breadcrumbLabel: "Documents" },
-  profile: { title: "Admin Profile", breadcrumbLabel: "Profile" },
-  settings: { title: "Preferences", breadcrumbLabel: "Preferences" },
+  reports: { titleKey: "admin.portal.views.reports.title", breadcrumbLabelKey: "admin.portal.views.reports.breadcrumb" },
+  documents: { titleKey: "admin.portal.views.documents.title", breadcrumbLabelKey: "admin.portal.views.documents.breadcrumb" },
+  profile: { titleKey: "admin.portal.views.profile.title", breadcrumbLabelKey: "admin.portal.views.profile.breadcrumb" },
+  settings: { titleKey: "admin.portal.views.settings.title", breadcrumbLabelKey: "admin.portal.views.settings.breadcrumb" },
 };
 
-export const getAdminViewTitle = (view: AdminView): string =>
-  ADMIN_VIEW_CONFIG[view]?.title ?? ADMIN_VIEW_CONFIG.dashboard.title;
+export const getAdminViewTitleKey = (view: AdminView): string =>
+  ADMIN_VIEW_CONFIG[view]?.titleKey ?? ADMIN_VIEW_CONFIG.dashboard.titleKey;
 
-export const getAdminBreadcrumbLabel = (view: AdminView): string | undefined =>
-  ADMIN_VIEW_CONFIG[view]?.breadcrumbLabel;
+export const getAdminBreadcrumbLabelKey = (view: AdminView): string | undefined =>
+  ADMIN_VIEW_CONFIG[view]?.breadcrumbLabelKey;

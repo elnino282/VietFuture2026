@@ -2,6 +2,7 @@ import { Star, ExternalLink, Clock, Eye } from "lucide-react";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
+import { useI18n } from "@/hooks/useI18n";
 import type { Document, DocumentType } from "../types";
 
 interface DocumentCardProps {
@@ -27,6 +28,8 @@ export function DocumentCard({
     onOpen,
     getDocumentIcon,
 }: DocumentCardProps) {
+    const { t, locale } = useI18n();
+
     const handleOpen = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (onOpen) {
@@ -43,7 +46,6 @@ export function DocumentCard({
             onMouseLeave={onMouseLeave}
             onClick={() => onPreview(document)}
         >
-            {/* Thumbnail */}
             <div
                 className="h-40 flex items-center justify-center text-6xl relative"
                 style={{
@@ -53,7 +55,6 @@ export function DocumentCard({
             >
                 {document.thumbnail}
 
-                {/* Hover Overlay with Open Button */}
                 {isHovered && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 animate-in fade-in duration-200">
                         <Button
@@ -62,7 +63,7 @@ export function DocumentCard({
                             onClick={handleOpen}
                         >
                             <ExternalLink className="w-5 h-5 mr-2" />
-                            Mở tab mới
+                            {t("documents.actions.openNewTab")}
                         </Button>
                         <Button
                             size="lg"
@@ -74,20 +75,24 @@ export function DocumentCard({
                             }}
                         >
                             <Eye className="w-5 h-5 mr-2" />
-                            Preview
+                            {t("documents.actions.preview")}
                         </Button>
                     </div>
                 )}
             </div>
 
             <CardContent className="pt-4">
-                {/* Type Icon and Favorite */}
                 <div className="flex items-start justify-between mb-2">
                     {getDocumentIcon(document.type)}
                     <Button
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 -mt-1 -mr-2"
+                        aria-label={
+                            document.isFavorite
+                                ? t("documents.actions.removeFavorite")
+                                : t("documents.actions.addFavorite")
+                        }
                         onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             onToggleFavorite(document.id);
@@ -102,12 +107,10 @@ export function DocumentCard({
                     </Button>
                 </div>
 
-                {/* Title */}
                 <h4 className="text-sm font-medium text-foreground mb-2 line-clamp-2 min-h-[40px]">
                     {document.title}
                 </h4>
 
-                {/* Tags (Crop/Stage/Topic) */}
                 <div className="flex flex-wrap gap-1 mb-3 min-h-[24px]">
                     {document.crop && (
                         <Badge
@@ -125,7 +128,7 @@ export function DocumentCard({
                             {document.stage}
                         </Badge>
                     )}
-                    {document.topic && document.topic !== "General" && (
+                    {document.topic && (
                         <Badge
                             variant="outline"
                             className="text-xs bg-accent/10 text-accent border-accent/20"
@@ -135,11 +138,10 @@ export function DocumentCard({
                     )}
                 </div>
 
-                {/* Metadata */}
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {new Date(document.updatedAt).toLocaleDateString()}
+                        {new Date(document.updatedAt).toLocaleDateString(locale)}
                     </div>
                     <Button
                         variant="ghost"
@@ -148,13 +150,10 @@ export function DocumentCard({
                         onClick={handleOpen}
                     >
                         <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                        Mở tab mới
+                        {t("documents.actions.openNewTab")}
                     </Button>
                 </div>
             </CardContent>
         </Card>
     );
 }
-
-
-

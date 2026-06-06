@@ -2,12 +2,6 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { useI18n } from '@/hooks/useI18n';
 import {
     Badge,
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
     Button,
     Separator,
     Tooltip,
@@ -24,14 +18,13 @@ import { GlobalSearchBar } from './SearchBar';
 /**
  * Header Component
  * 
- * Top navigation bar with branding, breadcrumbs, search, and user actions.
+ * Top navigation bar with branding, search, and user actions.
  * Integrates SearchBar and ProfileMenu sub-components.
  * 
  * Single Responsibility: Top navigation UI
  */
 export function Header({
     config,
-    breadcrumbs,
     sidebarCollapsed: _sidebarCollapsed,
     unreadCount,
     userName,
@@ -82,32 +75,6 @@ export function Header({
                     </div>
                 </button>
 
-                <Separator orientation="vertical" className="h-8 hidden lg:block bg-white/20" />
-
-                {/* Breadcrumbs */}
-                {breadcrumbs.length > 0 && (
-                    <Breadcrumb className="hidden lg:block">
-                        <BreadcrumbList>
-                            {breadcrumbs.slice(0, 4).map((crumb, index) => (
-                                <div key={index} className="flex items-center">
-                                    {index > 0 && <BreadcrumbSeparator className="text-white/60" />}
-                                    <BreadcrumbItem>
-                                        {index === breadcrumbs.length - 1 || !crumb.href ? (
-                                            <BreadcrumbPage className="text-white/90">{crumb.label}</BreadcrumbPage>
-                                        ) : (
-                                            <BreadcrumbLink
-                                                onClick={() => crumb.href && onViewChange(crumb.href)}
-                                                className="cursor-pointer text-white/70 hover:text-white"
-                                            >
-                                                {crumb.label}
-                                            </BreadcrumbLink>
-                                        )}
-                                    </BreadcrumbItem>
-                                </div>
-                            ))}
-                        </BreadcrumbList>
-                    </Breadcrumb>
-                )}
             </div>
 
             {/* Right Section */}

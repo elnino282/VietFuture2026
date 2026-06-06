@@ -3,7 +3,6 @@ import {
   Download,
   Edit,
   Eye,
-  Link as LinkIcon,
   MoreVertical,
   Printer,
   QrCode,
@@ -35,6 +34,7 @@ import {
 import { Checkbox } from "@/shared/ui/checkbox";
 import { usePreferences } from "@/shared/contexts";
 import { formatWeight, getWeightUnitLabel } from "@/shared/lib";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { HarvestBatch, HarvestGrade, HarvestStatus } from "../types";
 
 interface HarvestTableProps {
@@ -42,6 +42,7 @@ interface HarvestTableProps {
   totalBatches: number;
   selectedBatchIds: string[];
   onViewDetails: (batch: HarvestBatch) => void;
+  onEditBatch: (batch: HarvestBatch) => void;
   onDeleteBatch: (batch: HarvestBatch) => void;
   onDeleteSelected: (selectedBatches: HarvestBatch[]) => void;
   onToggleBatchSelection: (id: string, checked: boolean) => void;
@@ -58,6 +59,7 @@ export function HarvestTable({
   totalBatches,
   selectedBatchIds,
   onViewDetails,
+  onEditBatch,
   onDeleteBatch,
   onDeleteSelected,
   onToggleBatchSelection,
@@ -69,6 +71,7 @@ export function HarvestTable({
   disableMutations = false,
 }: HarvestTableProps) {
   const { preferences } = usePreferences();
+  const { t } = useI18n();
   const unitLabel = getWeightUnitLabel(preferences.weightUnit);
   const selectedVisibleIds = batches
     .map((batch) => batch.id)
@@ -84,10 +87,12 @@ export function HarvestTable({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-foreground">Harvest Batches</CardTitle>
+            <CardTitle className="text-foreground">{t("harvests.table.title")}</CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
-              Showing <span className="numeric">{batches.length}</span> of{" "}
-              <span className="numeric">{totalBatches}</span> batches
+              {t("harvests.table.showingCount", {
+                shown: batches.length,
+                total: totalBatches,
+              })}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -99,7 +104,7 @@ export function HarvestTable({
               disabled={disableMutations || selectedVisibleCount === 0}
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete Selected ({selectedVisibleCount})
+              {t("harvests.table.deleteSelected", { count: selectedVisibleCount })}
             </Button>
             <Button
               variant="outline"
@@ -108,7 +113,7 @@ export function HarvestTable({
               onClick={() => onExport(batches)}
             >
               <Download className="w-4 h-4 mr-2" />
-              Export CSV
+              {t("harvests.table.exportCsv")}
             </Button>
             <Button
               variant="outline"
@@ -117,7 +122,7 @@ export function HarvestTable({
               onClick={() => onPrint(batches)}
             >
               <Printer className="w-4 h-4 mr-2" />
-              Print Summary
+              {t("harvests.table.printSummary")}
             </Button>
           </div>
         </div>
@@ -136,29 +141,27 @@ export function HarvestTable({
                         batches.map((batch) => batch.id)
                       )
                     }
-                    aria-label="Select all batches"
+                    aria-label={t("harvests.table.selectAllBatches")}
                   />
                 </TableHead>
-                <TableHead className="text-foreground">Date</TableHead>
-                <TableHead className="text-foreground">Batch ID</TableHead>
+                <TableHead className="text-foreground">{t("harvests.table.columns.date")}</TableHead>
+                <TableHead className="text-foreground">{t("harvests.table.columns.batchId")}</TableHead>
                 <TableHead className="text-foreground text-right">
-                  Quantity ({unitLabel})
+                  {t("harvests.table.columns.quantity", { unit: unitLabel })}
                 </TableHead>
-                <TableHead className="text-foreground">Grade</TableHead>
-                <TableHead className="text-foreground text-right">Moisture %</TableHead>
-                <TableHead className="text-foreground">Linked Sale</TableHead>
-                <TableHead className="text-foreground">Status</TableHead>
-                <TableHead className="text-foreground">Created At</TableHead>
-                <TableHead className="text-foreground">Actions</TableHead>
+                <TableHead className="text-foreground">{t("harvests.table.columns.grade")}</TableHead>
+                <TableHead className="text-foreground">{t("harvests.table.columns.status")}</TableHead>
+                <TableHead className="text-foreground">{t("harvests.table.columns.createdAt")}</TableHead>
+                <TableHead className="text-foreground">{t("harvests.table.columns.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {batches.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                     <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                    <p>No harvest batches found</p>
-                    <p className="text-sm mt-1">Try adjusting your filters</p>
+                    <p>{t("harvests.table.emptyTitle")}</p>
+                    <p className="text-sm mt-1">{t("harvests.table.emptyDescription")}</p>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -177,11 +180,11 @@ export function HarvestTable({
                         onCheckedChange={(checked) =>
                           onToggleBatchSelection(batch.id, checked === true)
                         }
-                        aria-label={`Select batch ${batch.batchId}`}
+                        aria-label={t("harvests.table.selectBatch", { batchId: batch.batchId })}
                       />
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(batch.date).toLocaleDateString("en-US", {
+                      {new Date(batch.date).toLocaleDateString(preferences.locale, {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
@@ -194,29 +197,14 @@ export function HarvestTable({
                       {formatWeight(batch.quantity, preferences.weightUnit, preferences.locale)}
                     </TableCell>
                     <TableCell>{getGradeBadge(batch.grade)}</TableCell>
-                    <TableCell className="text-right numeric text-foreground">
-                      {typeof batch.moisture === "number"
-                        ? `${batch.moisture.toFixed(1)}%`
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
-                      {batch.linkedSale ? (
-                        <div className="flex items-center gap-1 text-xs text-secondary">
-                          <LinkIcon className="w-3 h-3" />
-                          {batch.linkedSale}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
                     <TableCell>
                       {getStatusBadge(batch.status) ?? (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-xs text-muted-foreground">{t("common.notAvailable", "—")}</span>
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {batch.createdAt
-                        ? new Date(batch.createdAt).toLocaleString("en-US")
+                        ? new Date(batch.createdAt).toLocaleString(preferences.locale)
                         : "-"}
                     </TableCell>
                     <TableCell onClick={(event) => event.stopPropagation()}>
@@ -226,6 +214,10 @@ export function HarvestTable({
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 hover:bg-muted"
+                            aria-label={t("harvests.table.actions.openMenu", {
+                              batchId: batch.batchId,
+                              defaultValue: `Open actions for batch ${batch.batchId}`,
+                            })}
                           >
                             <MoreVertical className="w-4 h-4 text-muted-foreground" />
                           </Button>
@@ -233,19 +225,22 @@ export function HarvestTable({
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem onClick={() => onViewDetails(batch)}>
                             <Eye className="w-4 h-4 mr-2" />
-                            View Details
+                            {t("harvests.table.actions.viewDetails")}
                           </DropdownMenuItem>
-                          <DropdownMenuItem disabled={disableMutations}>
+                          <DropdownMenuItem
+                            onClick={() => !disableMutations && onEditBatch(batch)}
+                            disabled={disableMutations}
+                          >
                             <Edit className="w-4 h-4 mr-2" />
-                            Edit Batch
+                            {t("harvests.table.actions.editBatch")}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <QrCode className="w-4 h-4 mr-2" />
-                            Generate QR
+                            {t("harvests.table.actions.generateQr")}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <Printer className="w-4 h-4 mr-2" />
-                            Print Handover
+                            {t("harvests.table.actions.printHandover")}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -254,7 +249,7 @@ export function HarvestTable({
                             disabled={disableMutations}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
+                            {t("common.delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

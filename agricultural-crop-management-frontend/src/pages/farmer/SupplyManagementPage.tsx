@@ -51,6 +51,7 @@ import {
   normalizeWeightUnit,
 } from "@/shared/lib";
 import {
+  BackButton,
   Button,
   Card,
   CardContent,
@@ -1273,6 +1274,22 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
   const supplierErrorId = useId();
   const itemErrorId = useId();
   const quantityErrorId = useId();
+  const isDirty =
+    warehouseId !== (defaultWarehouseId || null) ||
+    locationId !== null ||
+    supplierId !== null ||
+    supplyItemId !== null ||
+    confirmRestricted ||
+    batchCode.trim().length > 0 ||
+    expiryDate.length > 0 ||
+    quantity !== "" ||
+    note.trim().length > 0 ||
+    confirmExpiry;
+  const closeWithConfirm = () => {
+    if (isPending) return;
+    if (isDirty && !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))) return;
+    onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1318,9 +1335,10 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
   };
 
   return (
-    <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+    <Dialog open onOpenChange={(open) => !open && closeWithConfirm()}>
       <DialogContent className="sm:max-w-[600px]" closeDisabled={isPending}>
         <DialogHeader>
+          <BackButton onClick={closeWithConfirm} className="w-fit" />
           <DialogTitle>{t("suppliers.stockIn.title")}</DialogTitle>
           <DialogDescription>{t("suppliers.stockIn.description")}</DialogDescription>
         </DialogHeader>
@@ -1492,7 +1510,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+            <Button type="button" variant="outline" onClick={closeWithConfirm} disabled={isPending}>
               {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={isPending}>
@@ -1531,11 +1549,18 @@ function StockOutModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; 
       await onSubmit({ movementType: "OUT", supplyLotId: row.supplyLotId, warehouseId: row.warehouseId, locationId: row.locationId, quantity: quantityToSend, seasonId, note: note || undefined });
     } catch (e) { setError(e instanceof Error ? e.message : t("inventory.validation.movementFailed")); }
   };
+  const isDirty = seasonId !== null || quantity !== 0 || note.trim().length > 0;
+  const closeWithConfirm = () => {
+    if (isPending) return;
+    if (isDirty && !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))) return;
+    onClose();
+  };
 
   return (
-    <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+    <Dialog open onOpenChange={(open) => !open && closeWithConfirm()}>
       <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
         <DialogHeader>
+          <BackButton onClick={closeWithConfirm} className="w-fit" />
           <DialogTitle>{t("inventory.stockOut")}</DialogTitle>
           <DialogDescription>
             {row.supplyItemName} ({row.batchCode}) - {t("inventory.currentOnHand")}: {display.formatted}{unitSuffix}
@@ -1593,7 +1618,7 @@ function StockOutModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; 
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+            <Button type="button" variant="outline" onClick={closeWithConfirm} disabled={isPending}>
               {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={isPending}>
@@ -1632,11 +1657,18 @@ function AdjustModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; on
       await onSubmit({ movementType: "ADJUST", supplyLotId: row.supplyLotId, warehouseId: row.warehouseId, locationId: row.locationId, quantity: quantityToSend, note });
     } catch (e) { setError(e instanceof Error ? e.message : t("inventory.validation.adjustFailed")); }
   };
+  const isDirty = adjustQuantity !== 0 || note.trim().length > 0;
+  const closeWithConfirm = () => {
+    if (isPending) return;
+    if (isDirty && !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))) return;
+    onClose();
+  };
 
   return (
-    <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+    <Dialog open onOpenChange={(open) => !open && closeWithConfirm()}>
       <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
         <DialogHeader>
+          <BackButton onClick={closeWithConfirm} className="w-fit" />
           <DialogTitle>{t("inventory.adjustStock")}</DialogTitle>
           <DialogDescription>
             {row.supplyItemName} ({row.batchCode}) - {t("inventory.currentOnHand")}: {display.formatted}{unitSuffix}
@@ -1721,10 +1753,17 @@ interface WarehouseFormModalProps {
 
 function WarehouseFormModal({ mode, name, farmId, farms, onNameChange, onFarmIdChange, onClose, onSubmit, isPending, error }: WarehouseFormModalProps) {
   const { t } = useSupplyManagementI18n();
+  const isDirty = name.trim().length > 0 || farmId !== undefined;
+  const closeWithConfirm = () => {
+    if (isPending) return;
+    if (isDirty && !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))) return;
+    onClose();
+  };
   return (
-    <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+    <Dialog open onOpenChange={(open) => !open && closeWithConfirm()}>
       <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
         <DialogHeader>
+          <BackButton onClick={closeWithConfirm} className="w-fit" />
           <DialogTitle>
             {mode === "create" ? t("inventory.dialog.addWarehouseTitle") : t("inventory.dialog.editWarehouseTitle")}
           </DialogTitle>
@@ -1784,7 +1823,7 @@ function WarehouseFormModal({ mode, name, farmId, farms, onNameChange, onFarmIdC
             </Select>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+            <Button type="button" variant="outline" onClick={closeWithConfirm} disabled={isPending}>
               {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={isPending}>
@@ -1853,10 +1892,28 @@ function SupplierFormDialog({ open, onOpenChange, supplier, onSubmit, isPending 
   };
 
   if (open && name === "" && supplier) resetForm();
+  const isDirty =
+    name !== (supplier?.name || "") ||
+    licenseNo !== (supplier?.licenseNo || "") ||
+    contactEmail !== (supplier?.contactEmail || "") ||
+    contactPhone !== (supplier?.contactPhone || "");
+  const closeWithConfirm = () => {
+    if (isPending) return;
+    if (isDirty && !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))) return;
+    setName("");
+    setLicenseNo("");
+    setContactEmail("");
+    setContactPhone("");
+    setError("");
+    onOpenChange(false);
+  };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (isPending && !newOpen) return;
-    if (!newOpen) { setName(""); setLicenseNo(""); setContactEmail(""); setContactPhone(""); setError(""); }
+    if (!newOpen) {
+      closeWithConfirm();
+      return;
+    }
     else if (supplier) resetForm();
     onOpenChange(newOpen);
   };
@@ -1865,7 +1922,12 @@ function SupplierFormDialog({ open, onOpenChange, supplier, onSubmit, isPending 
     if (!name.trim()) { setError(t("suppliers.errors.nameRequired")); return; }
     try {
       await onSubmit({ name: name.trim(), licenseNo: licenseNo.trim() || null, contactEmail: contactEmail.trim() || null, contactPhone: contactPhone.trim() || null });
-      handleOpenChange(false);
+      setName("");
+      setLicenseNo("");
+      setContactEmail("");
+      setContactPhone("");
+      setError("");
+      onOpenChange(false);
     } catch (e) { setError(e instanceof Error ? e.message : t("suppliers.errors.saveFailed")); }
   };
 
@@ -1873,6 +1935,7 @@ function SupplierFormDialog({ open, onOpenChange, supplier, onSubmit, isPending 
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
         <DialogHeader>
+          <BackButton onClick={closeWithConfirm} className="w-fit" />
           <DialogTitle>{supplier ? t("suppliers.form.editTitle") : t("suppliers.form.addTitle")}</DialogTitle>
           <DialogDescription>{supplier ? t("suppliers.form.editDescription") : t("suppliers.form.addDescription")}</DialogDescription>
         </DialogHeader>
@@ -1895,7 +1958,7 @@ function SupplierFormDialog({ open, onOpenChange, supplier, onSubmit, isPending 
             <Input id="supplier-email" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder={t("suppliers.form.emailPlaceholder")} disabled={isPending} />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>{t("common.cancel")}</Button>
+            <Button type="button" variant="outline" onClick={closeWithConfirm} disabled={isPending}>{t("common.cancel")}</Button>
             <Button type="submit" disabled={isPending}>{isPending ? t("common.saving") : supplier ? t("common.saveChanges") : t("suppliers.form.addButton")}</Button>
           </DialogFooter>
         </form>
@@ -1968,15 +2031,27 @@ function SupplyItemFormDialog({ open, onOpenChange, item, onSubmit, isPending }:
   };
 
   if (open && name === "" && item) resetForm();
+  const isDirty =
+    name !== (item?.name || "") ||
+    activeIngredient !== (item?.activeIngredient || "") ||
+    unit !== (item?.unit || "") ||
+    restrictedFlag !== Boolean(item?.restrictedFlag);
+  const closeWithConfirm = () => {
+    if (isPending) return;
+    if (isDirty && !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))) return;
+    setName("");
+    setActiveIngredient("");
+    setUnit("");
+    setRestrictedFlag(false);
+    setError("");
+    onOpenChange(false);
+  };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (isPending && !newOpen) return;
     if (!newOpen) {
-      setName("");
-      setActiveIngredient("");
-      setUnit("");
-      setRestrictedFlag(false);
-      setError("");
+      closeWithConfirm();
+      return;
     } else if (item) {
       resetForm();
     }
@@ -1999,7 +2074,12 @@ function SupplyItemFormDialog({ open, onOpenChange, item, onSubmit, isPending }:
         unit: unit.trim(),
         restrictedFlag,
       });
-      handleOpenChange(false);
+      setName("");
+      setActiveIngredient("");
+      setUnit("");
+      setRestrictedFlag(false);
+      setError("");
+      onOpenChange(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : t("suppliers.errors.itemSaveFailed"));
     }
@@ -2009,6 +2089,7 @@ function SupplyItemFormDialog({ open, onOpenChange, item, onSubmit, isPending }:
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px]" closeDisabled={isPending}>
         <DialogHeader>
+          <BackButton onClick={closeWithConfirm} className="w-fit" />
           <DialogTitle>{item ? t("suppliers.itemForm.editTitle") : t("suppliers.itemForm.addTitle")}</DialogTitle>
           <DialogDescription>{item ? t("suppliers.itemForm.editDescription") : t("suppliers.itemForm.addDescription")}</DialogDescription>
         </DialogHeader>
@@ -2033,7 +2114,7 @@ function SupplyItemFormDialog({ open, onOpenChange, item, onSubmit, isPending }:
             </label>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>{t("common.cancel")}</Button>
+            <Button type="button" variant="outline" onClick={closeWithConfirm} disabled={isPending}>{t("common.cancel")}</Button>
             <Button type="submit" disabled={isPending}>{isPending ? t("common.saving") : item ? t("common.saveChanges") : t("suppliers.itemForm.addButton")}</Button>
           </DialogFooter>
         </form>

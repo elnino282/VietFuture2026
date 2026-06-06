@@ -3,6 +3,7 @@ import { Bot, MapPin, MessageCircle, Minus, Package, Plus, ShieldCheck, Shopping
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/features/auth";
 import { useBuyerAiAssistant } from "@/features/marketplace/ai/BuyerAiAssistantContext";
+import { BackButton } from "@/shared/ui/back-button";
 import {
   useMarketplaceAddToCart,
   useMarketplaceProductDetail,
@@ -106,6 +107,7 @@ export function ProductDetailPage() {
     return (
       <div className="pdp__state-box">
         <div className="pdp__state-card pdp__state-card--error">
+          <BackButton to="/marketplace/products" variant="outline" />
           <p>Sản phẩm không tồn tại hoặc chưa được công khai.</p>
           <Link to="/marketplace/products">
             Quay lại danh sách sản phẩm
@@ -120,6 +122,8 @@ export function ProductDetailPage() {
   return (
     <div className="pdp">
       <div className="pdp__container">
+        <BackButton to="/marketplace/products" className="mb-4" />
+
         {/* ── Breadcrumb ───────────────────────────────────────── */}
         <nav className="pdp__breadcrumb">
           <Link to="/marketplace">Trang chủ</Link>

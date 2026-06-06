@@ -1,6 +1,7 @@
 import { MapPin, List, Plus, MapIcon } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
+import { useTranslation } from "react-i18next";
 import type { ViewMode } from "../types";
 
 interface PlotHeaderProps {
@@ -15,6 +16,8 @@ interface PlotHeaderProps {
  * Displays the header section with title, description, view toggle, and add plot button.
  */
 export function PlotHeader({ viewMode, setViewMode, onAddPlot }: PlotHeaderProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="border border-border rounded-xl shadow-sm">
       <CardContent className="px-6 py-4">
@@ -22,10 +25,10 @@ export function PlotHeader({ viewMode, setViewMode, onAddPlot }: PlotHeaderProps
           <div className="flex-shrink-0">
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
               <MapPin className="w-6 h-6 text-primary" />
-              My Plots
+              {t("plots.myPlots")}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Manage your agricultural plots and land parcels
+              {t("plots.pageSubtitle")}
             </p>
           </div>
 
@@ -43,7 +46,7 @@ export function PlotHeader({ viewMode, setViewMode, onAddPlot }: PlotHeaderProps
                 }`}
               >
                 <List className="w-4 h-4 mr-2" />
-                List
+                {t("plots.viewMode.list")}
               </Button>
               <Button
                 variant={viewMode === "map" ? "default" : "ghost"}
@@ -56,7 +59,7 @@ export function PlotHeader({ viewMode, setViewMode, onAddPlot }: PlotHeaderProps
                 }`}
               >
                 <MapIcon className="w-4 h-4 mr-2" />
-                Map
+                {t("plots.viewMode.map")}
               </Button>
             </div>
 
@@ -65,7 +68,7 @@ export function PlotHeader({ viewMode, setViewMode, onAddPlot }: PlotHeaderProps
               className="bg-primary hover:bg-primary/90 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Plot
+              {t("plots.addPlot")}
             </Button>
           </div>
         </div>

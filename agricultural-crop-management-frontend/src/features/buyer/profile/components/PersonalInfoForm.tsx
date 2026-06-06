@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Button, Input, Label, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui';
+import { useEffect, useState } from 'react';
+import { BackButton, Button, Input, Label, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui';
 import { Loader2 } from 'lucide-react';
 
 interface PersonalInfoFormProps {
@@ -9,9 +9,10 @@ interface PersonalInfoFormProps {
   };
   onSave: (data: { name: string; phone: string }) => Promise<void>;
   onCancel: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-export function PersonalInfoForm({ initialData, onSave, onCancel }: PersonalInfoFormProps) {
+export function PersonalInfoForm({ initialData, onSave, onCancel, onDirtyChange }: PersonalInfoFormProps) {
   const [name, setName] = useState(initialData.name);
   const [phone, setPhone] = useState(initialData.phone);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,10 +53,16 @@ export function PersonalInfoForm({ initialData, onSave, onCancel }: PersonalInfo
       setIsSubmitting(false);
     }
   };
+  const isDirty = name !== initialData.name || phone !== initialData.phone;
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   return (
     <DialogContent>
       <DialogHeader>
+        <BackButton onClick={onCancel} className="w-fit" />
         <DialogTitle>Chỉnh sửa thông tin cá nhân</DialogTitle>
       </DialogHeader>
 

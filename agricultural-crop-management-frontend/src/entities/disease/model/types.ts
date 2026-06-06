@@ -1,6 +1,7 @@
 export type {
   DiseaseSeverity,
   DiseaseStatus,
+  DiseaseActorType,
   TreatmentEffectiveness,
   DiseaseRecordListParams,
   DiseaseRecord,

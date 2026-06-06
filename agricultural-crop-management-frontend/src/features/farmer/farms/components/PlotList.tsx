@@ -15,6 +15,13 @@ interface PlotListProps {
 
 export function PlotList({ farm, plots, onCreatePlot, isLoading }: PlotListProps) {
     const { t } = useI18n();
+    const getPlotStatusLabel = (status: string) => {
+        const knownStatuses = ['IN_USE', 'IDLE', 'AVAILABLE', 'FALLOW', 'MAINTENANCE'];
+
+        return knownStatuses.includes(status)
+            ? t(`farms.plotStatuses.${status}`)
+            : status;
+    };
 
     if (!farm) {
         return (
@@ -74,7 +81,7 @@ export function PlotList({ farm, plots, onCreatePlot, isLoading }: PlotListProps
                                             plot.status === 'IN_USE' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                                             plot.status === 'IDLE' ? 'bg-gray-100 text-gray-700' : ''
                                         }>
-                                            {plot.status.replace('_', ' ')}
+                                            {getPlotStatusLabel(plot.status)}
                                         </Badge>
                                     </TableCell>
                                 </TableRow>

@@ -16,6 +16,7 @@ import {
 import type { ChartDataPoint } from "../types";
 import { usePreferences } from "@/shared/contexts";
 import { convertWeight, getWeightUnitLabel } from "@/shared/lib";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface HarvestChartsProps {
     dailyTrend: ChartDataPoint[];
@@ -27,6 +28,7 @@ export function HarvestCharts({
     gradeDistribution,
 }: HarvestChartsProps) {
     const { preferences } = usePreferences();
+    const { t } = useI18n();
     const unitLabel = getWeightUnitLabel(preferences.weightUnit);
 
     const displayTrend = useMemo(() => {
@@ -40,12 +42,11 @@ export function HarvestCharts({
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Daily Harvest Trend */}
             <Card className="border-border rounded-2xl shadow-sm">
                 <CardHeader>
                     <CardTitle className="text-base text-foreground flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-primary" />
-                        Daily Harvest Trend
+                        {t("harvests.charts.dailyTrend")}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -65,12 +66,11 @@ export function HarvestCharts({
                 </CardContent>
             </Card>
 
-            {/* Grade Distribution */}
             <Card className="border-border rounded-2xl shadow-sm">
                 <CardHeader>
                     <CardTitle className="text-base text-foreground flex items-center gap-2">
                         <PieChartIcon className="w-5 h-5 text-secondary" />
-                        Grade Distribution
+                        {t("harvests.charts.gradeDistribution")}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -107,7 +107,9 @@ export function HarvestCharts({
                                     <span className="text-muted-foreground">{item.name}</span>
                                 </div>
                                 <span className="numeric text-foreground">
-                                    {item.value} {item.value === 1 ? "batch" : "batches"}
+                                    {t("harvests.charts.batchCount", {
+                                        count: item.value ?? 0,
+                                    })}
                                 </span>
                             </div>
                         ))}

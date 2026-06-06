@@ -20,6 +20,7 @@ import { usePlotsByFarm } from "@/entities/plot";
 import { useSeasons } from "@/entities/season";
 import { useDebounce } from "@/shared/lib";
 import {
+  BackButton,
   Badge,
   Button,
   Card,
@@ -250,6 +251,47 @@ export function ProductWarehousePage() {
     setWarehouseNameInput("");
     setWarehouseFarmIdInput(undefined);
     setWarehouseFormError("");
+  };
+  const closeWarehouseDialogWithConfirm = () => {
+    if (createWarehouseMutation.isPending || updateWarehouseMutation.isPending) return;
+    const isDirty = warehouseDialogMode === "create"
+      ? warehouseNameInput.trim().length > 0 || warehouseFarmIdInput !== undefined
+      : warehouseNameInput !== (selectedWarehouse?.name ?? "");
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+    closeWarehouseDialog();
+  };
+  const closeAdjustDialog = () => {
+    if (adjustMutation.isPending) return;
+    const isDirty = adjustQuantityInput.trim().length > 0 || adjustNoteInput.trim().length > 0;
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+    setAdjustingLot(null);
+    setAdjustDialogError("");
+  };
+  const closeStockOutDialog = () => {
+    if (stockOutMutation.isPending) return;
+    const isDirty = stockOutQuantityInput.trim().length > 0 || stockOutNoteInput.trim().length > 0;
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+    setStockingOutLot(null);
+    setStockOutDialogError("");
+  };
+  const closeTraceabilityDetail = () => {
+    setSelectedTraceLotId(undefined);
+    setActiveTab("on-hand");
   };
 
   const submitWarehouseDialog = async () => {
@@ -981,9 +1023,12 @@ export function ProductWarehousePage() {
               {selectedTraceLotId && traceabilityData && (
                 <div className="traceability-panel">
                   <div className="traceability-header">
-                    <h3>
-                      {traceabilityData.productName} - {traceabilityData.lotCode}
-                    </h3>
+                    <div>
+                      <BackButton onClick={closeTraceabilityDetail} className="mb-2 w-fit" />
+                      <h3>
+                        {traceabilityData.productName} - {traceabilityData.lotCode}
+                      </h3>
+                    </div>
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div className="traceability-grid">
@@ -1072,10 +1117,11 @@ export function ProductWarehousePage() {
 
       <Dialog
         open={warehouseDialogMode !== null}
-        onOpenChange={(open) => !open && !isWarehouseSubmitting && closeWarehouseDialog()}
+        onOpenChange={(open) => !open && closeWarehouseDialogWithConfirm()}
       >
         <DialogContent className="sm:max-w-[500px]" closeDisabled={isWarehouseSubmitting}>
           <DialogHeader>
+            <BackButton onClick={closeWarehouseDialogWithConfirm} className="w-fit" />
             <DialogTitle>
               {warehouseDialogMode === "create"
                 ? t("productWarehouse.dialog.addWarehouseTitle")
@@ -1145,7 +1191,7 @@ export function ProductWarehousePage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={closeWarehouseDialog}
+                onClick={closeWarehouseDialogWithConfirm}
                 disabled={isWarehouseSubmitting}
               >
                 {t("common.cancel")}
@@ -1198,14 +1244,12 @@ export function ProductWarehousePage() {
       <Dialog
         open={!!adjustingLot}
         onOpenChange={(open) => {
-          if (!open && !adjustMutation.isPending) {
-            setAdjustingLot(null);
-            setAdjustDialogError("");
-          }
+          if (!open) closeAdjustDialog();
         }}
       >
         <DialogContent className="sm:max-w-[500px]" closeDisabled={adjustMutation.isPending}>
           <DialogHeader>
+            <BackButton onClick={closeAdjustDialog} className="w-fit" />
             <DialogTitle>{t("productWarehouse.dialog.adjustTitle")}</DialogTitle>
             <DialogDescription>
               {adjustingLot?.lotCode} - {adjustingLot?.productName}
@@ -1256,10 +1300,7 @@ export function ProductWarehousePage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setAdjustingLot(null);
-                  setAdjustDialogError("");
-                }}
+                onClick={closeAdjustDialog}
                 disabled={adjustMutation.isPending}
               >
                 {t("common.cancel")}
@@ -1277,14 +1318,12 @@ export function ProductWarehousePage() {
       <Dialog
         open={!!stockingOutLot}
         onOpenChange={(open) => {
-          if (!open && !stockOutMutation.isPending) {
-            setStockingOutLot(null);
-            setStockOutDialogError("");
-          }
+          if (!open) closeStockOutDialog();
         }}
       >
         <DialogContent className="sm:max-w-[500px]" closeDisabled={stockOutMutation.isPending}>
           <DialogHeader>
+            <BackButton onClick={closeStockOutDialog} className="w-fit" />
             <DialogTitle>{t("productWarehouse.dialog.stockOutTitle")}</DialogTitle>
             <DialogDescription>
               {stockingOutLot?.lotCode} - {stockingOutLot?.productName}
@@ -1334,10 +1373,7 @@ export function ProductWarehousePage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setStockingOutLot(null);
-                  setStockOutDialogError("");
-                }}
+                onClick={closeStockOutDialog}
                 disabled={stockOutMutation.isPending}
               >
                 {t("common.cancel")}

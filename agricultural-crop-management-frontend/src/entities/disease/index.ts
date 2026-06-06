@@ -1,6 +1,7 @@
 export type {
   DiseaseSeverity,
   DiseaseStatus,
+  DiseaseActorType,
   TreatmentEffectiveness,
   DiseaseRecordListParams,
   DiseaseRecord,
@@ -18,6 +19,7 @@ export type {
 export {
   DiseaseSeverityEnum,
   DiseaseStatusEnum,
+  DiseaseActorTypeEnum,
   TreatmentEffectivenessEnum,
   DiseaseRecordListParamsSchema,
   DiseaseRecordSchema,

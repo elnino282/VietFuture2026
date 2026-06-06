@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface BuyerPaginationProps {
     currentPage: number;
@@ -18,6 +19,7 @@ export function BuyerPagination({
     onPageChange,
     onItemsPerPageChange,
 }: BuyerPaginationProps) {
+    const { t } = useI18n();
     const startIndex = (currentPage - 1) * itemsPerPage + 1;
     const endIndex = Math.min(currentPage * itemsPerPage, totalResults);
 
@@ -38,7 +40,7 @@ export function BuyerPagination({
         <div className="flex items-center justify-between p-4 border-t">
             <div className="flex items-center gap-4">
                 <span className="text-sm text-muted-foreground">
-                    Showing {startIndex} to {endIndex} of {totalResults} results
+                    {t('pagination.showing')} {startIndex} {t('pagination.to')} {endIndex} {t('pagination.of')} {totalResults} {t('pagination.results')}
                 </span>
                 <Select
                     value={String(itemsPerPage)}
@@ -51,10 +53,10 @@ export function BuyerPagination({
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="10">10 / page</SelectItem>
-                        <SelectItem value="25">25 / page</SelectItem>
-                        <SelectItem value="50">50 / page</SelectItem>
-                        <SelectItem value="100">100 / page</SelectItem>
+                        <SelectItem value="10">{t('admin.buyerManagement.pagination.perPage', { count: 10 })}</SelectItem>
+                        <SelectItem value="25">{t('admin.buyerManagement.pagination.perPage', { count: 25 })}</SelectItem>
+                        <SelectItem value="50">{t('admin.buyerManagement.pagination.perPage', { count: 50 })}</SelectItem>
+                        <SelectItem value="100">{t('admin.buyerManagement.pagination.perPage', { count: 100 })}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -65,7 +67,7 @@ export function BuyerPagination({
                     disabled={currentPage === 1}
                     onClick={() => onPageChange(currentPage - 1)}
                 >
-                    Previous
+                    {t('pagination.previousPage')}
                 </Button>
                 {pageNumbers.map((page, index, arr) => {
                     const prevPage = arr[index - 1];
@@ -89,7 +91,7 @@ export function BuyerPagination({
                     disabled={currentPage === totalPages}
                     onClick={() => onPageChange(currentPage + 1)}
                 >
-                    Next
+                    {t('pagination.nextPage')}
                 </Button>
             </div>
         </div>

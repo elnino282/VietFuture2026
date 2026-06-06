@@ -1,4 +1,5 @@
 import { Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/shared/ui';
+import { useTranslation } from 'react-i18next';
 
 interface FarmFiltersProps {
     keyword: string;
@@ -16,6 +17,8 @@ export function FarmFilters({
     activeFilter,
     onActiveFilterChange,
 }: FarmFiltersProps) {
+    const { t } = useTranslation();
+
     const handleFilterChange = (value: string) => {
         if (value === 'all') {
             onActiveFilterChange(null);
@@ -34,19 +37,19 @@ export function FarmFilters({
             <div className="w-[320px]">
                 <Input
                     type="text"
-                    placeholder="Search farms by name..."
+                    placeholder={t('farmManagement.searchPlaceholder')}
                     value={keyword}
                     onChange={(e) => onKeywordChange(e.target.value)}
                 />
             </div>
             <Select value={currentFilterValue} onValueChange={handleFilterChange}>
                 <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by status" />
+                    <SelectValue placeholder={t('farmManagement.filters.allStatuses')} />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="all">All Farms</SelectItem>
-                    <SelectItem value="active">Active Only</SelectItem>
-                    <SelectItem value="inactive">Inactive Only</SelectItem>
+                    <SelectItem value="all">{t('farmManagement.filters.allFarms')}</SelectItem>
+                    <SelectItem value="active">{t('farmManagement.filters.activeOnly')}</SelectItem>
+                    <SelectItem value="inactive">{t('farmManagement.filters.inactiveOnly')}</SelectItem>
                 </SelectContent>
             </Select>
         </div>

@@ -1,8 +1,11 @@
 import { useState, useMemo, useCallback } from "react";
 import { useCrops } from "@/entities/crop";
-import { useSoilTypes } from "@/entities/soil-type";
 import { usePlotStatuses } from "@/entities/plot-status";
+import { useTranslation } from "react-i18next";
 import type { Plot } from "../types";
+import { mapStatusToPlotStatus } from "../utils";
+import { getPlotStatusLabel } from "../components/PlotStatusChip";
+import { normalizeSoilTypeCode, SOIL_TYPE_OPTIONS } from "@/features/farmer/shared/plotOptions";
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -46,12 +49,12 @@ export interface UsePlotFiltersReturn {
  * Separates filter concerns from the main usePlotManagement hook
  */
 export const usePlotFilters = (): UsePlotFiltersReturn => {
+    const { t } = useTranslation();
     // ─────────────────────────────────────────────────────────────
     // API HOOKS - FILTER OPTIONS
     // ─────────────────────────────────────────────────────────────
 
     const { data: cropsData, isLoading: isLoadingCrops } = useCrops();
-    const { data: soilTypesData, isLoading: isLoadingSoilTypes } = useSoilTypes();
     const { data: plotStatusesData, isLoading: isLoadingStatuses } = usePlotStatuses();
 
     // ─────────────────────────────────────────────────────────────
@@ -68,7 +71,7 @@ export const usePlotFilters = (): UsePlotFiltersReturn => {
     // ─────────────────────────────────────────────────────────────
 
     const cropOptions = useMemo<FilterOption[]>(() => {
-        const options: FilterOption[] = [{ value: "all", label: "All Plots" }];
+        const options: FilterOption[] = [{ value: "all", label: t("plots.filters.allPlots") }];
         if (cropsData && cropsData.length > 0) {
             cropsData.forEach((crop) => {
                 options.push({
@@ -78,35 +81,37 @@ export const usePlotFilters = (): UsePlotFiltersReturn => {
             });
         }
         return options;
-    }, [cropsData]);
+    }, [cropsData, t]);
 
     const soilTypeOptions = useMemo<FilterOption[]>(() => {
-        const options: FilterOption[] = [{ value: "all", label: "All Soil Types" }];
-        if (soilTypesData && soilTypesData.length > 0) {
-            soilTypesData.forEach((soilType) => {
-                options.push({
-                    value: soilType.soilName,
-                    label: soilType.soilName,
-                });
+        const options: FilterOption[] = [{ value: "all", label: t("plots.filters.allSoilTypes") }];
+        SOIL_TYPE_OPTIONS.forEach((soilType) => {
+            options.push({
+                value: soilType.value,
+                label: t(soilType.labelKey),
             });
-        }
+        });
         return options;
-    }, [soilTypesData]);
+    }, [t]);
 
     const statusOptions = useMemo<FilterOption[]>(() => {
-        const options: FilterOption[] = [{ value: "all", label: "All Status" }];
+        const options: FilterOption[] = [{ value: "all", label: t("plots.filters.allStatuses") }];
+        const seen = new Set<string>(["all"]);
         if (plotStatusesData && plotStatusesData.length > 0) {
             plotStatusesData.forEach((status) => {
+                const featureStatus = mapStatusToPlotStatus(status.statusName);
+                if (seen.has(featureStatus)) return;
+                seen.add(featureStatus);
                 options.push({
-                    value: status.statusName,
-                    label: status.statusName,
+                    value: featureStatus,
+                    label: getPlotStatusLabel(featureStatus, t),
                 });
             });
         }
         return options;
-    }, [plotStatusesData]);
+    }, [plotStatusesData, t]);
 
-    const isLoadingFilterOptions = isLoadingCrops || isLoadingSoilTypes || isLoadingStatuses;
+    const isLoadingFilterOptions = isLoadingCrops || isLoadingStatuses;
 
     // ─────────────────────────────────────────────────────────────
     // HANDLERS
@@ -141,6 +146,7 @@ export const usePlotFilters = (): UsePlotFiltersReturn => {
             // Soil type filter - compare with plot.soilType
             const matchesSoilType =
                 filterSoilType === "all" ||
+                normalizeSoilTypeCode(plot.soilType) === normalizeSoilTypeCode(filterSoilType) ||
                 (plot.soilType && plot.soilType.toLowerCase() === filterSoilType.toLowerCase());
 
             return matchesSearch && matchesCrop && matchesStatus && matchesSoilType;

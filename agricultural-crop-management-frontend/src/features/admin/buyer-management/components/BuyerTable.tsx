@@ -32,6 +32,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Buyer, BuyerRole, KYCStatus, AccountStatus } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface BuyerTableProps {
     buyers: Buyer[];
@@ -68,6 +69,8 @@ export function BuyerTable({
     getKYCBadge,
     getStatusBadge,
 }: BuyerTableProps) {
+    const { t } = useI18n();
+
     return (
         <Card>
             <CardContent className="p-0">
@@ -86,21 +89,21 @@ export function BuyerTable({
                                     onClick={() => onSort('companyName')}
                                 >
                                     <div className="flex items-center gap-2">
-                                        Company Name
+                                        {t('admin.buyerManagement.fields.companyName')}
                                         <ChevronDown
                                             className={`w-4 h-4 transition-transform ${sortColumn === 'companyName' && sortDirection === 'asc' ? 'rotate-180' : ''
                                                 }`}
                                         />
                                     </div>
                                 </TableHead>
-                                <TableHead>Tax/VAT ID</TableHead>
-                                <TableHead>Primary Contact</TableHead>
+                                <TableHead>{t('admin.buyerManagement.fields.taxId')}</TableHead>
+                                <TableHead>{t('admin.buyerManagement.table.primaryContact')}</TableHead>
                                 <TableHead
                                     className="cursor-pointer hover:bg-muted/50"
                                     onClick={() => onSort('role')}
                                 >
                                     <div className="flex items-center gap-2">
-                                        Role
+                                        {t('admin.buyerManagement.fields.role')}
                                         <ChevronDown
                                             className={`w-4 h-4 transition-transform ${sortColumn === 'role' && sortDirection === 'asc' ? 'rotate-180' : ''
                                                 }`}
@@ -112,7 +115,7 @@ export function BuyerTable({
                                     onClick={() => onSort('kycStatus')}
                                 >
                                     <div className="flex items-center gap-2">
-                                        KYC Status
+                                        {t('admin.buyerManagement.fields.kycStatus')}
                                         <ChevronDown
                                             className={`w-4 h-4 transition-transform ${sortColumn === 'kycStatus' && sortDirection === 'asc' ? 'rotate-180' : ''
                                                 }`}
@@ -124,7 +127,7 @@ export function BuyerTable({
                                     onClick={() => onSort('accountStatus')}
                                 >
                                     <div className="flex items-center gap-2">
-                                        Account Status
+                                        {t('admin.buyerManagement.fields.accountStatus')}
                                         <ChevronDown
                                             className={`w-4 h-4 transition-transform ${sortColumn === 'accountStatus' && sortDirection === 'asc' ? 'rotate-180' : ''
                                                 }`}
@@ -136,14 +139,14 @@ export function BuyerTable({
                                     onClick={() => onSort('createdAt')}
                                 >
                                     <div className="flex items-center gap-2">
-                                        Created Date
+                                        {t('admin.buyerManagement.table.createdDate')}
                                         <ChevronDown
                                             className={`w-4 h-4 transition-transform ${sortColumn === 'createdAt' && sortDirection === 'asc' ? 'rotate-180' : ''
                                                 }`}
                                         />
                                     </div>
                                 </TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead className="text-right">{t('common.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -186,17 +189,17 @@ export function BuyerTable({
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="secondary" className={getRoleBadge(buyer.role)}>
-                                            {buyer.role}
+                                            {t(`admin.buyerManagement.roles.${buyer.role}`, buyer.role)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="secondary" className={getKYCBadge(buyer.kycStatus)}>
-                                            {buyer.kycStatus}
+                                            {t(`admin.buyerManagement.kyc.${buyer.kycStatus}`, buyer.kycStatus)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="secondary" className={getStatusBadge(buyer.accountStatus)}>
-                                            {buyer.accountStatus}
+                                            {t(`admin.buyerManagement.status.${buyer.accountStatus}`, buyer.accountStatus)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
@@ -208,22 +211,28 @@ export function BuyerTable({
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={t('admin.buyerManagement.table.actionsFor', { name: buyer.companyName })}
+                                                >
                                                     <MoreVertical className="w-4 h-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem onClick={() => onViewEdit(buyer)}>
                                                     <Eye className="w-4 h-4 mr-2" />
-                                                    View/Edit
+                                                    {t('admin.buyerManagement.actions.viewEdit')}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => onToggleSuspend(buyer.id)}>
                                                     <Ban className="w-4 h-4 mr-2" />
-                                                    {buyer.accountStatus === 'suspended' ? 'Activate' : 'Suspend'}
+                                                    {buyer.accountStatus === 'suspended'
+                                                        ? t('admin.buyerManagement.actions.activate')
+                                                        : t('admin.buyerManagement.actions.suspend')}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => onResetPassword(buyer.id)}>
                                                     <Key className="w-4 h-4 mr-2" />
-                                                    Reset Password
+                                                    {t('admin.buyerManagement.actions.resetPassword')}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem
@@ -231,7 +240,7 @@ export function BuyerTable({
                                                     onClick={() => onDelete(buyer.id)}
                                                 >
                                                     <Trash2 className="w-4 h-4 mr-2" />
-                                                    Delete
+                                                    {t('common.delete')}
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>

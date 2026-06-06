@@ -1,6 +1,3 @@
-import { Button } from "@/shared/ui/button";
-import { Download, Save } from "lucide-react";
-import { toast } from "sonner";
 import type { Activity, Season, SeasonStatus } from "../types";
 import { ActivityFeed } from "./ActivityFeed";
 import { SeasonHeader } from "./SeasonHeader";
@@ -65,36 +62,8 @@ export function SeasonDetailView({
           activities={activities}
         />
         <ActivityFeed activities={activities} />
-
-        <div className="bg-card border border-border rounded-lg px-6 py-4 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button
-              variant="outline"
-              onClick={onBack}
-              className="acm-rounded-sm w-full sm:w-auto"
-            >
-              Cancel
-            </Button>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Button
-                variant="outline"
-                onClick={handleExportCSV}
-                className="acm-rounded-sm border-border w-full sm:w-auto"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export Report
-              </Button>
-              <Button
-                className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm w-full sm:w-auto"
-                onClick={() => toast.success("Changes saved successfully")}
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
-              </Button>
-            </div>
-          </div>
-        </div>
       </div>
     </>
   );
 }
+

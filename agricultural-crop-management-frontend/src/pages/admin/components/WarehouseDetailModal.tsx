@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, Warehouse, MapPin, ArrowUpDown, RefreshCw, AlertCircle } from 'lucide-react';
+import { Warehouse, MapPin, ArrowUpDown, RefreshCw, AlertCircle } from 'lucide-react';
 import { adminWarehouseApi } from '@/services/api.admin';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
+import { BackButton } from '@/shared/ui/back-button';
 
 // ═══════════════════════════════════════════════════════════════
 // INTERFACES
@@ -61,6 +63,7 @@ const MOVEMENT_TYPE_COLORS: Record<string, string> = {
 // ═══════════════════════════════════════════════════════════════
 
 export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDetailModalProps) {
+    const { t, locale } = useI18n();
     const [activeTab, setActiveTab] = useState<'info' | 'locations' | 'movements'>('info');
     const [locations, setLocations] = useState<StockLocation[]>([]);
     const [movements, setMovements] = useState<StockMovement[]>([]);
@@ -103,7 +106,7 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
             }
         } catch (err) {
             console.error('Failed to fetch locations:', err);
-            setError('Failed to load locations');
+            setError(t('admin.warehouseDetail.error.loadLocations'));
         } finally {
             setLocationsLoading(false);
         }
@@ -132,23 +135,23 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-muted/30 rounded-lg">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Name</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{t('common.name')}</div>
                     <div className="text-sm font-medium">{warehouse.name}</div>
                 </div>
                 <div className="p-4 bg-muted/30 rounded-lg">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Type</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{t('common.type')}</div>
                     <div className="text-sm font-medium">
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/10 text-primary">
-                            {warehouse.type || 'General'}
+                            {warehouse.type || t('admin.warehouseDetail.generalType')}
                         </span>
                     </div>
                 </div>
                 <div className="p-4 bg-muted/30 rounded-lg">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Farm</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{t('admin.farmsPlots.table.farm')}</div>
                     <div className="text-sm font-medium">{warehouse.farmName || '-'}</div>
                 </div>
                 <div className="p-4 bg-muted/30 rounded-lg">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Address</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{t('chat.identity.address')}</div>
                     <div className="text-sm font-medium">
                         {warehouse.wardName || warehouse.provinceName
                             ? `${warehouse.wardName || ''} ${warehouse.provinceName || ''}`.trim()
@@ -161,11 +164,11 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
             <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 border border-border rounded-lg text-center">
                     <div className="text-3xl font-bold text-primary">{warehouse.locationCount || 0}</div>
-                    <div className="text-sm text-muted-foreground">Stock Locations</div>
+                    <div className="text-sm text-muted-foreground">{t('admin.warehouseDetail.stockLocations')}</div>
                 </div>
                 <div className="p-4 border border-border rounded-lg text-center">
                     <div className="text-3xl font-bold text-primary">{movements.length}</div>
-                    <div className="text-sm text-muted-foreground">Recent Movements</div>
+                    <div className="text-sm text-muted-foreground">{t('admin.warehouseDetail.recentMovements')}</div>
                 </div>
             </div>
         </div>
@@ -184,17 +187,17 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
             ) : locations.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                     <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No stock locations defined</p>
+                    <p>{t('admin.warehouseDetail.noLocations')}</p>
                 </div>
             ) : (
                 <div className="bg-card border border-border rounded-lg overflow-hidden">
                     <table className="w-full">
                         <thead className="bg-muted/50 border-b border-border">
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Zone</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Aisle</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Shelf</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Bin</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.warehouseDetail.table.zone')}</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.warehouseDetail.table.aisle')}</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.warehouseDetail.table.shelf')}</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.warehouseDetail.table.bin')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -225,7 +228,7 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
                     className="inline-flex items-center gap-2 px-3 py-1.5 border border-border rounded text-sm hover:bg-muted/50"
                 >
                     <RefreshCw className={`h-4 w-4 ${movementsLoading ? 'animate-spin' : ''}`} />
-                    Refresh
+                    {t('common.refresh')}
                 </button>
             </div>
 
@@ -236,7 +239,7 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
             ) : movements.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                     <ArrowUpDown className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No movements recorded</p>
+                    <p>{t('admin.inventoryRisks.detail.noMovements')}</p>
                 </div>
             ) : (
                 <>
@@ -244,23 +247,23 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
                         <table className="w-full">
                             <thead className="bg-muted/50 border-b border-border">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Type</th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Item</th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Qty</th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Note</th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('common.date')}</th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('common.type')}</th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.inventoryRisks.table.itemLot')}</th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.inventoryRisks.detail.qty')}</th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.inventoryRisks.detail.note')}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {movements.map((m) => (
                                     <tr key={m.id} className="border-b border-border hover:bg-muted/30">
                                         <td className="px-4 py-3 text-sm">
-                                            {new Date(m.movementDate).toLocaleDateString()}
+                                            {new Date(m.movementDate).toLocaleDateString(locale)}
                                         </td>
                                         <td className="px-4 py-3 text-sm">
                                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${MOVEMENT_TYPE_COLORS[m.movementType] || 'bg-gray-100'
                                                 }`}>
-                                                {m.movementType}
+                                                {t(`admin.recordMovement.types.${m.movementType}`, m.movementType)}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-sm">{m.supplyItemName || '-'}</td>
@@ -286,17 +289,17 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
                                 disabled={movementsPage === 0}
                                 className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
                             >
-                                Previous
+                                {t('pagination.previousPage')}
                             </button>
                             <span className="text-sm text-muted-foreground">
-                                Page {movementsPage + 1} of {movementsTotalPages}
+                                {t('pagination.page')} {movementsPage + 1} {t('pagination.of')} {movementsTotalPages}
                             </span>
                             <button
                                 onClick={() => setMovementsPage(movementsPage + 1)}
                                 disabled={movementsPage >= movementsTotalPages - 1}
                                 className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
                             >
-                                Next
+                                {t('pagination.nextPage')}
                             </button>
                         </div>
                     )}
@@ -324,9 +327,7 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
                         <Warehouse className="h-5 w-5" />
                         {warehouse.name}
                     </h2>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-                        <X className="h-5 w-5" />
-                    </button>
+                    <BackButton onClick={onClose} />
                 </div>
 
                 {/* Tab Navigation */}
@@ -338,7 +339,7 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
                             : 'border-transparent text-muted-foreground hover:text-foreground'
                             }`}
                     >
-                        Info
+                        {t('admin.warehouseDetail.tabs.info')}
                     </button>
                     <button
                         onClick={() => setActiveTab('locations')}
@@ -347,7 +348,7 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
                             : 'border-transparent text-muted-foreground hover:text-foreground'
                             }`}
                     >
-                        Locations ({locations.length})
+                        {t('admin.warehouseDetail.tabs.locations', { count: locations.length })}
                     </button>
                     <button
                         onClick={() => setActiveTab('movements')}
@@ -356,7 +357,7 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
                             : 'border-transparent text-muted-foreground hover:text-foreground'
                             }`}
                     >
-                        Movements
+                        {t('admin.warehouseDetail.tabs.movements')}
                     </button>
                 </div>
 
@@ -376,12 +377,7 @@ export function WarehouseDetailModal({ warehouse, open, onClose }: WarehouseDeta
 
                 {/* Footer */}
                 <div className="flex items-center justify-end px-6 py-4 border-t border-border bg-muted/30">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-muted/50"
-                    >
-                        Close
-                    </button>
+                    <BackButton onClick={onClose} variant="outline" />
                 </div>
             </div>
         </div>

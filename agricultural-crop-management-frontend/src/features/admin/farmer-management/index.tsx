@@ -10,8 +10,10 @@ import { FarmerFormDrawer } from './components/FarmerFormDrawer';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { AuditHistoryDrawer } from './components/AuditHistoryDrawer';
 import { ImportCSVWizard } from './components/ImportCSVWizard';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 export function FarmerManagement() {
+    const { t } = useI18n();
     const [resetTargetFarmerId, setResetTargetFarmerId] = useState<string | null>(null);
 
     const {
@@ -84,19 +86,19 @@ export function FarmerManagement() {
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="mb-1">Farmer Management</h1>
+                    <h1 className="mb-1">{t('admin.farmerManagement.title')}</h1>
                     <p className="text-sm text-muted-foreground">
-                        Manage farmer accounts, roles, and permissions
+                        {t('admin.farmerManagement.subtitle')}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Button variant="outline" onClick={() => setImportWizardOpen(true)}>
                         <Upload className="w-4 h-4 mr-2" />
-                        Import CSV
+                        {t('admin.farmerManagement.actions.importCsv')}
                     </Button>
                     <Button onClick={handleCreate}>
                         <Plus className="w-4 h-4 mr-2" />
-                        Add Farmer
+                        {t('admin.farmerManagement.actions.addFarmer')}
                     </Button>
                 </div>
             </div>
@@ -125,7 +127,7 @@ export function FarmerManagement() {
             {/* Farmer Table */}
             {isLoading && (
                 <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                    Loading farmers...
+                    {t('admin.farmerManagement.loading')}
                 </div>
             )}
             {error && (
@@ -201,7 +203,7 @@ export function FarmerManagement() {
                 onFileUpload={handleCSVUpload}
                 onImportConfirm={handleImportConfirm}
                 canImport={false}
-                importUnsupportedMessage="Farmer import API is not available yet."
+                importUnsupportedMessage={t('admin.farmerManagement.import.unsupported')}
             />
         </div>
     );

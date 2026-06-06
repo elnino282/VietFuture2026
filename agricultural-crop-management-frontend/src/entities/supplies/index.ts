@@ -40,6 +40,8 @@ export { suppliesApi } from "./api/client";
 export {
   useAllSuppliers,
   useAllSupplyItems,
+  useEmployeeSeasonSupplyItems,
+  useEmployeeSeasonSupplyLots,
   useCreateSupplyItem,
   useCreateSupplier,
   useDeleteSupplyItem,

@@ -44,6 +44,10 @@ public class DiseaseTreatmentResponse {
 
     Long createdByUserId;
     String createdByUsername;
+    String createdByDisplayName;
+    String createdByType;
+    Boolean canEdit;
+    Boolean canDelete;
 
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

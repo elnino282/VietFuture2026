@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, CreditCard, FileCheck, MapPin, Phone, Upload } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { CreditCard, FileCheck, MapPin, Phone, Upload } from "lucide-react";
+import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input } from "@/shared/ui";
+import { BackButton } from "@/shared/ui/back-button";
 import {
   useMarketplaceCancelOrderMutation,
   useMarketplaceCreateReviewMutation,
@@ -102,9 +103,7 @@ export function OrderDetailPage() {
       <div className="max-w-6xl mx-auto px-6 pt-6">
         <div className="space-y-3 rounded-xl border border-dashed border-destructive/30 bg-card p-8 text-center text-sm text-destructive">
           <p>{t("marketplaceBuyer.orderDetail.errorOrder")}</p>
-          <Link to="/marketplace/orders" className="text-primary hover:underline">
-            {t("marketplaceBuyer.orderDetail.backToOrders")}
-          </Link>
+          <BackButton to="/marketplace/orders" variant="outline" />
         </div>
       </div>
     );
@@ -112,12 +111,7 @@ export function OrderDetailPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-12">
-      <Link
-        to="/marketplace/orders"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-primary hover:underline font-medium transition-colors"
-      >
-        <ArrowLeft size={15} /> {t("marketplaceBuyer.orderDetail.backToOrders")}
-      </Link>
+      <BackButton to="/marketplace/orders" className="mb-6" />
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3 border-b border-border/40 pb-6">
         <div>

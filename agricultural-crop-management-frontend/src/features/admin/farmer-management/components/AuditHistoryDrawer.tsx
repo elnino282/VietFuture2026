@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Download, Filter, History, Info } from 'lucide-react';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface AuditHistoryDrawerProps {
     open: boolean;
@@ -11,16 +12,18 @@ export function AuditHistoryDrawer({
     open,
     onOpenChange,
 }: AuditHistoryDrawerProps) {
+    const { t } = useI18n();
+
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent className="w-full sm:w-[600px]">
                 <SheetHeader>
                     <SheetTitle className="flex items-center gap-2">
                         <History className="w-5 h-5" />
-                        Account Change History
+                        {t('admin.farmerManagement.auditHistory.title')}
                     </SheetTitle>
                     <SheetDescription>
-                        View all changes and activities for this account
+                        {t('admin.farmerManagement.auditHistory.description')}
                     </SheetDescription>
                 </SheetHeader>
 
@@ -28,21 +31,21 @@ export function AuditHistoryDrawer({
                     <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" className="flex-1">
                             <Filter className="w-4 h-4 mr-2" />
-                            Filter by Type
+                            {t('admin.farmerManagement.auditHistory.filterByType')}
                         </Button>
                         <Button variant="outline" size="sm" className="flex-1">
                             <Download className="w-4 h-4 mr-2" />
-                            Export CSV
+                            {t('admin.farmerManagement.actions.exportCsv')}
                         </Button>
                     </div>
 
                     <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-2 text-foreground mb-2">
                             <Info className="w-4 h-4" />
-                            Audit history endpoint is not available yet.
+                            {t('admin.farmerManagement.auditHistory.unavailableTitle')}
                         </div>
                         <p>
-                            Account activity cannot be loaded in this drawer until backend audit-log API for farmer management is wired.
+                            {t('admin.farmerManagement.auditHistory.unavailableDescription')}
                         </p>
                     </div>
                 </div>

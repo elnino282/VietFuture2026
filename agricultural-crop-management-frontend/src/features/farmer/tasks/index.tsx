@@ -12,6 +12,7 @@ import { CreateTaskDialog } from './components/CreateTaskDialog';
 import { ReassignDialog } from './components/ReassignDialog';
 import { BulkActionToolbar } from './components/BulkActionToolbar';
 import { DueDateDialog } from './components/DueDateDialog';
+import { TaskProgressReportsPanel } from './components/TaskProgressReportsPanel';
 import { PageContainer } from '@/shared/ui';
 
 export function TaskWorkspace() {
@@ -114,6 +115,7 @@ export function TaskWorkspace() {
               onDateChange={setCurrentDate}
             />
           )}
+          {seasonFilter && <TaskProgressReportsPanel seasonId={seasonFilter} />}
         </div>
 
         {selectedTasks.length > 0 && !isSeasonWriteLocked && (

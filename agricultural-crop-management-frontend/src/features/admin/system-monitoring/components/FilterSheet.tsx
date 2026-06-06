@@ -12,6 +12,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { LogLevel } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface FilterSheetProps {
     filterOpen: boolean;
@@ -36,56 +37,58 @@ export function FilterSheet({
     setUserFilter,
     clearFilters,
 }: FilterSheetProps) {
+    const { t } = useI18n();
+
     return (
         <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
             <SheetContent>
                 <SheetHeader>
-                    <SheetTitle>Filter Logs</SheetTitle>
+                    <SheetTitle>{t('admin.systemMonitoring.filters.title')}</SheetTitle>
                     <SheetDescription>
-                        Apply filters to refine log results
+                        {t('admin.systemMonitoring.filters.description')}
                     </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-6">
                     <div className="space-y-2">
-                        <Label>Service</Label>
+                        <Label>{t('admin.systemMonitoring.filters.service')}</Label>
                         <Select value={serviceFilter} onValueChange={setServiceFilter}>
                             <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Services</SelectItem>
-                                <SelectItem value="database">Database</SelectItem>
-                                <SelectItem value="api-gateway">API Gateway</SelectItem>
-                                <SelectItem value="auth-service">Auth Service</SelectItem>
-                                <SelectItem value="file-storage">File Storage</SelectItem>
-                                <SelectItem value="notification">Notification</SelectItem>
+                                <SelectItem value="all">{t('admin.systemMonitoring.filters.allServices')}</SelectItem>
+                                <SelectItem value="database">{t('admin.systemMonitoring.services.database')}</SelectItem>
+                                <SelectItem value="api-gateway">{t('admin.systemMonitoring.services.apiGateway')}</SelectItem>
+                                <SelectItem value="auth-service">{t('admin.systemMonitoring.services.authService')}</SelectItem>
+                                <SelectItem value="file-storage">{t('admin.systemMonitoring.services.fileStorage')}</SelectItem>
+                                <SelectItem value="notification">{t('admin.systemMonitoring.services.notification')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <Label>Log Level</Label>
+                        <Label>{t('admin.systemMonitoring.filters.logLevel')}</Label>
                         <Select value={logLevelFilter} onValueChange={(v: string) => setLogLevelFilter(v as LogLevel)}>
                             <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Levels</SelectItem>
-                                <SelectItem value="info">Info</SelectItem>
-                                <SelectItem value="warning">Warning</SelectItem>
-                                <SelectItem value="error">Error</SelectItem>
-                                <SelectItem value="security">Security</SelectItem>
+                                <SelectItem value="all">{t('admin.systemMonitoring.filters.allLevels')}</SelectItem>
+                                <SelectItem value="info">{t('admin.systemMonitoring.logLevel.info')}</SelectItem>
+                                <SelectItem value="warning">{t('admin.systemMonitoring.logLevel.warning')}</SelectItem>
+                                <SelectItem value="error">{t('admin.systemMonitoring.logLevel.error')}</SelectItem>
+                                <SelectItem value="security">{t('admin.systemMonitoring.logLevel.security')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <Label>User</Label>
+                        <Label>{t('admin.systemMonitoring.filters.user')}</Label>
                         <Select value={userFilter} onValueChange={setUserFilter}>
                             <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Users</SelectItem>
-                                <SelectItem value="system">System</SelectItem>
+                                <SelectItem value="all">{t('admin.systemMonitoring.filters.allUsers')}</SelectItem>
+                                <SelectItem value="system">{t('admin.systemMonitoring.users.system')}</SelectItem>
                                 <SelectItem value="john.doe@farm.com">john.doe@farm.com</SelectItem>
                                 <SelectItem value="sarah.miller@farm.com">sarah.miller@farm.com</SelectItem>
                             </SelectContent>
@@ -98,10 +101,10 @@ export function FilterSheet({
                             className="flex-1"
                             onClick={clearFilters}
                         >
-                            Clear All
+                            {t('common.clearAll')}
                         </Button>
                         <Button className="flex-1" onClick={() => setFilterOpen(false)}>
-                            Apply Filters
+                            {t('admin.systemMonitoring.filters.apply')}
                         </Button>
                     </div>
                 </div>

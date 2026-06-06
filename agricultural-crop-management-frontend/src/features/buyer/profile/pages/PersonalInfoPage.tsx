@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '@/features/auth';
 import { useProfileMe, useProfileUpdate } from '@/entities/user';
-import { Button, Card, CardContent, CardHeader, Dialog, Input, Label } from '@/shared/ui';
+import { BackButton, Button, Card, CardContent, CardHeader, Dialog, Input, Label } from '@/shared/ui';
+import { useI18n } from '@/hooks/useI18n';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { PersonalInfoForm } from '../components/PersonalInfoForm';
@@ -27,10 +28,12 @@ function getErrorMessage(error: unknown): string {
 }
 
 export function PersonalInfoPage() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const profileQuery = useProfileMe();
   const updateProfile = useProfileUpdate();
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditDirty, setIsEditDirty] = useState(false);
 
   const userData = {
     name: profileQuery.data?.fullName || user?.profile?.fullName || user?.username || '',
@@ -46,6 +49,7 @@ export function PersonalInfoPage() {
       });
 
       toast.success('Cập nhật thông tin thành công');
+      setIsEditDirty(false);
       setIsEditing(false);
     } catch (error) {
       const message = getErrorMessage(error);
@@ -53,9 +57,21 @@ export function PersonalInfoPage() {
       throw new Error(message);
     }
   };
+  const closeEditDialog = () => {
+    if (
+      isEditDirty &&
+      !window.confirm(t('common.unsavedChangesConfirm', 'You have unsaved changes. Leave this page?'))
+    ) {
+      return;
+    }
+
+    setIsEditing(false);
+    setIsEditDirty(false);
+  };
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl space-y-4">
+      <BackButton to="/marketplace" className="w-fit" />
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <h2 className="text-xl font-bold">Thông tin cá nhân</h2>
@@ -88,11 +104,21 @@ export function PersonalInfoPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+      <Dialog
+        open={isEditing}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen) {
+            setIsEditing(true);
+          } else {
+            closeEditDialog();
+          }
+        }}
+      >
         <PersonalInfoForm
           initialData={{ name: userData.name, phone: userData.phone }}
           onSave={handleSave}
-          onCancel={() => setIsEditing(false)}
+          onCancel={closeEditDialog}
+          onDirtyChange={setIsEditDirty}
         />
       </Dialog>
     </div>

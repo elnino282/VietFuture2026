@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Role, Permission } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface RolesPermissionsProps {
     roles: Role[];
@@ -20,35 +21,39 @@ export function RolesPermissionsSection({
     onPermissionUpdate,
     onAddRole,
 }: RolesPermissionsProps) {
+    const { t } = useI18n();
+
     return (
         <Card>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>Role & Permission Matrix</CardTitle>
-                        <CardDescription>Manage user roles and module permissions</CardDescription>
+                        <CardTitle>{t('admin.systemSettings.roles.title')}</CardTitle>
+                        <CardDescription>{t('admin.systemSettings.roles.description')}</CardDescription>
                     </div>
                     <Button onClick={onAddRole}>
                         <Plus className="w-4 h-4 mr-2" />
-                        Add Role
+                        {t('admin.systemSettings.roles.addRole')}
                     </Button>
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* Current Roles */}
                 <div>
-                    <h4 className="mb-3">Current Roles</h4>
+                    <h4 className="mb-3">{t('admin.systemSettings.roles.currentRoles')}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {roles.map((role) => (
                             <Card key={role.id} className="border-2">
                                 <CardContent className="p-4">
                                     <div className="flex items-start justify-between mb-2">
                                         <h4>{role.name}</h4>
-                                        <Badge variant="secondary">{role.userCount} users</Badge>
+                                        <Badge variant="secondary">
+                                            {t('admin.systemSettings.roles.usersCount', { count: role.userCount })}
+                                        </Badge>
                                     </div>
                                     <p className="text-xs text-muted-foreground mb-3">{role.description}</p>
                                     <Button variant="outline" size="sm" className="w-full">
-                                        Edit Permissions
+                                        {t('admin.systemSettings.roles.editPermissions')}
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -60,22 +65,24 @@ export function RolesPermissionsSection({
 
                 {/* Permission Matrix */}
                 <div>
-                    <h4 className="mb-3">Admin Role Permissions</h4>
+                    <h4 className="mb-3">{t('admin.systemSettings.roles.adminPermissions')}</h4>
                     <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Module</TableHead>
-                                    <TableHead className="text-center">View</TableHead>
-                                    <TableHead className="text-center">Create</TableHead>
-                                    <TableHead className="text-center">Edit</TableHead>
-                                    <TableHead className="text-center">Delete</TableHead>
+                                    <TableHead>{t('admin.systemSettings.roles.table.module')}</TableHead>
+                                    <TableHead className="text-center">{t('common.view')}</TableHead>
+                                    <TableHead className="text-center">{t('common.create')}</TableHead>
+                                    <TableHead className="text-center">{t('common.edit')}</TableHead>
+                                    <TableHead className="text-center">{t('common.delete')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {Object.entries(permissions).map(([key, perm]) => (
                                     <TableRow key={key}>
-                                        <TableCell className="font-medium">{perm.module}</TableCell>
+                                        <TableCell className="font-medium">
+                                            {t(`admin.systemSettings.roles.modules.${key}`, perm.module)}
+                                        </TableCell>
                                         <TableCell className="text-center">
                                             <Checkbox
                                                 checked={perm.view}
@@ -110,7 +117,7 @@ export function RolesPermissionsSection({
                 <div className="flex gap-2">
                     <Button>
                         <Save className="w-4 h-4 mr-2" />
-                        Save Permissions
+                        {t('admin.systemSettings.roles.savePermissions')}
                     </Button>
                 </div>
             </CardContent>

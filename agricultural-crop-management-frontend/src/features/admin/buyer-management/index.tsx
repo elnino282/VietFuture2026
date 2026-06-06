@@ -9,8 +9,10 @@ import { BuyerPagination } from './components/BuyerPagination';
 import { BuyerDetailDrawer } from './components/BuyerDetailDrawer';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { ImportCSVWizard } from './components/ImportCSVWizard';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 export default function BuyerManagement() {
+    const { t } = useI18n();
     const {
         // State
         searchQuery,
@@ -80,19 +82,19 @@ export default function BuyerManagement() {
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="mb-1">Buyer Management</h1>
+                    <h1 className="mb-1">{t('admin.buyerManagement.title')}</h1>
                     <p className="text-sm text-muted-foreground">
-                        Manage buyer accounts, KYC verification, and permissions
+                        {t('admin.buyerManagement.subtitle')}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Button variant="outline" onClick={() => setImportWizardOpen(true)}>
                         <Upload className="w-4 h-4 mr-2" />
-                        Import CSV
+                        {t('admin.buyerManagement.actions.importCsv')}
                     </Button>
                     <Button onClick={handleAddBuyer}>
                         <Plus className="w-4 h-4 mr-2" />
-                        Add Buyer
+                        {t('admin.buyerManagement.actions.addBuyer')}
                     </Button>
                 </div>
             </div>
@@ -128,7 +130,7 @@ export default function BuyerManagement() {
             <div className="space-y-0">
                 {isLoading && (
                     <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                        Loading buyers...
+                        {t('admin.buyerManagement.loading')}
                     </div>
                 )}
                 {error && (
@@ -196,7 +198,7 @@ export default function BuyerManagement() {
                 onConfirm={handleImportConfirm}
                 getRoleBadge={getRoleBadge}
                 canImport={false}
-                importUnsupportedMessage="Buyer import API is not available yet."
+                importUnsupportedMessage={t('admin.buyerManagement.import.unsupported')}
             />
         </div>
     );

@@ -131,6 +131,12 @@ export const FARMER_VIEW_CONFIG: Record<FarmerView, FarmerViewTextConfig> = {
     titleKey: "farmerPortal.views.incidents.title",
     breadcrumbKey: "farmerPortal.views.incidents.breadcrumb",
   },
+  notifications: {
+    title: "Notifications",
+    breadcrumbLabel: "Notifications",
+    titleKey: "farmerPortal.views.notifications.title",
+    breadcrumbKey: "farmerPortal.views.notifications.breadcrumb",
+  },
   "ai-assistant": {
     title: "AI Assistant",
     breadcrumbLabel: "AI Assistant",

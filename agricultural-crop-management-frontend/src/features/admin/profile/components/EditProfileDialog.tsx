@@ -7,6 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  BackButton,
   Button,
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ import {
   type AdminProfileData,
   type EditProfileFormData,
 } from "../types";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -56,6 +58,7 @@ export function EditProfileDialog({
   onOpenChange,
   profileData,
 }: EditProfileDialogProps) {
+  const { t } = useI18n();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const wasOpenRef = useRef(false);
@@ -113,19 +116,40 @@ export function EditProfileDialog({
         : error instanceof Error
           ? error.message
           : undefined;
-      setSubmitError(message || "Failed to update profile. Please try again.");
+      setSubmitError(message || t('profile.editDialog.updateFailed'));
       console.error("Error updating profile:", error);
     }
+  };
+  const handleClose = () => {
+    if (isSaving) return;
+    if (
+      form.formState.isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+
+    onOpenChange(false);
   };
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen) {
+            onOpenChange(true);
+          } else {
+            handleClose();
+          }
+        }}
+      >
         <DialogContent className="w-[92vw] max-w-[520px] max-h-[85vh] overflow-y-auto space-y-4">
           <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
+            <BackButton onClick={handleClose} className="w-fit" />
+            <DialogTitle>{t('profile.editProfile')}</DialogTitle>
             <DialogDescription>
-              Update your details and save changes.
+              {t('profile.editDialog.description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -143,9 +167,9 @@ export function EditProfileDialog({
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>{t('auth.signUp.fullName')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your full name" {...field} />
+                        <Input placeholder={t('profile.editDialog.fullNamePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -157,9 +181,9 @@ export function EditProfileDialog({
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone</FormLabel>
+                      <FormLabel>{t('profile.contactInfo.phone')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="(+84) 909 123 456" {...field} />
+                        <Input placeholder={t('profile.editDialog.phonePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -188,12 +212,12 @@ export function EditProfileDialog({
                         const nextProvinceId = address.provinceId ?? undefined;
                         const nextWardId = address.wardId ?? undefined;
                         provinceField.onChange(nextProvinceId);
-                        form.setValue("wardId", nextWardId);
+                        form.setValue("wardId", nextWardId, { shouldDirty: true });
                       }}
                       error={combinedError}
                       disabled={isSaving}
-                      label="Location"
-                      description="Select your province/city and ward."
+                      label={t('profile.editDialog.location')}
+                      description={t('profile.editDialog.locationDescription')}
                     />
                   );
                 }}
@@ -203,10 +227,10 @@ export function EditProfileDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => onOpenChange(false)}
+                  onClick={handleClose}
                   disabled={isSaving}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -216,7 +240,7 @@ export function EditProfileDialog({
                   {isSaving && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Save Changes
+                  {t('common.saveChanges')}
                 </Button>
               </DialogFooter>
             </form>
@@ -232,10 +256,9 @@ export function EditProfileDialog({
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                 <CheckCircle2 className="h-6 w-6 text-green-600" />
               </div>
-              <AlertDialogTitle>Profile Updated Successfully!</AlertDialogTitle>
+              <AlertDialogTitle>{t('profile.editDialog.successTitle')}</AlertDialogTitle>
               <AlertDialogDescription>
-                Your profile information has been updated. Click OK to refresh
-                and see the changes.
+                {t('profile.editDialog.successDescription')}
               </AlertDialogDescription>
             </div>
           </AlertDialogHeader>
@@ -247,7 +270,7 @@ export function EditProfileDialog({
               }}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              OK
+              {t('common.ok')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

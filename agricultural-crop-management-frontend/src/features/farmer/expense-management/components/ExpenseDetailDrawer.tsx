@@ -1,4 +1,5 @@
 import { Button } from "@/shared/ui/button";
+import { BackButton } from "@/shared/ui/back-button";
 import {
   Select,
   SelectContent,
@@ -15,6 +16,7 @@ import {
 import { Textarea } from "@/shared/ui/textarea";
 import { usePreferences } from "@/shared/contexts";
 import { convertToDisplayCurrency, formatMoney } from "@/shared/lib";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { ExternalLink, FileText, Link as LinkIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Expense, ExpenseStatus } from "../types";
@@ -36,6 +38,7 @@ export function ExpenseDetailDialog({
   onQuickUpdate,
 }: ExpenseDetailDialogProps) {
   const { preferences } = usePreferences();
+  const { t } = useI18n();
   const [status, setStatus] = useState<ExpenseStatus>("PENDING");
   const [notes, setNotes] = useState("");
 
@@ -49,28 +52,46 @@ export function ExpenseDetailDialog({
     return null;
   }
 
+  const isDirty = status !== expense.status || notes !== (expense.notes ?? "");
+  const handleClose = () => {
+    if (isDirty && !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))) {
+      return;
+    }
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          handleClose();
+          return;
+        }
+        onOpenChange(true);
+      }}
+    >
       <DialogContent className="w-full sm:max-w-lg sm:max-h-[85vh] overflow-y-auto">
         <DialogHeader>
+          <BackButton onClick={handleClose} className="w-fit" />
           <DialogTitle className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-primary" />
-            Expense Details
+            {t("expenseDetail.title", "Expense Details")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="mt-6 space-y-4 text-sm">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-muted-foreground">Date</p>
+              <p className="text-xs text-muted-foreground">{t("expenseDetail.date", "Date")}</p>
               <p className="text-foreground">{expense.date}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Category</p>
+              <p className="text-xs text-muted-foreground">{t("expenseDetail.category", "Category")}</p>
               <p className="text-foreground">{expense.category}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Amount</p>
+              <p className="text-xs text-muted-foreground">{t("expenseDetail.amount", "Amount")}</p>
               <p className="text-foreground">
                 {formatMoney(
                   convertToDisplayCurrency(
@@ -83,7 +104,7 @@ export function ExpenseDetailDialog({
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Status</p>
+              <p className="text-xs text-muted-foreground">{t("expenseDetail.status", "Status")}</p>
               <Select
                 value={status}
                 onValueChange={(value: ExpenseStatus) => setStatus(value)}
@@ -92,21 +113,21 @@ export function ExpenseDetailDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PAID">Paid</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="UNPAID">Unpaid</SelectItem>
+                  <SelectItem value="PAID">{t("expenseDetail.statusPaid", "Paid")}</SelectItem>
+                  <SelectItem value="PENDING">{t("expenseDetail.statusPending", "Pending")}</SelectItem>
+                  <SelectItem value="UNPAID">{t("expenseDetail.statusUnpaid", "Unpaid")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div>
-            <p className="text-xs text-muted-foreground">Description</p>
+            <p className="text-xs text-muted-foreground">{t("expenseDetail.description", "Description")}</p>
             <p className="text-foreground">{expense.description}</p>
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Linked To</p>
+            <p className="text-xs text-muted-foreground">{t("expenseDetail.linkedTo", "Linked To")}</p>
             <div className="space-y-1">
               {expense.linkedSeason && (
                 <div className="flex items-center gap-2 text-foreground">
@@ -125,28 +146,28 @@ export function ExpenseDetailDialog({
 
           {expense.vendor && (
             <div>
-              <p className="text-xs text-muted-foreground">Vendor</p>
+              <p className="text-xs text-muted-foreground">{t("expenseDetail.vendor", "Vendor")}</p>
               <p className="text-foreground">{expense.vendor}</p>
             </div>
           )}
 
           {expense.attachmentUrl && (
             <div>
-              <p className="text-xs text-muted-foreground">Attachment</p>
+              <p className="text-xs text-muted-foreground">{t("expenseDetail.attachment", "Attachment")}</p>
               <Button
                 variant="outline"
                 className="mt-1 h-8 px-2 text-xs"
                 onClick={() => window.open(expense.attachmentUrl, "_blank", "noopener,noreferrer")}
               >
-                {expense.attachmentName ?? "Xem biên lai"}
+                {expense.attachmentName ?? t("expenseDetail.viewReceipt", "View receipt")}
                 <ExternalLink className="w-3.5 h-3.5 ml-1" />
-                Mở tab mới
+                {t("expenseDetail.openNewTab", "Open in new tab")}
               </Button>
             </div>
           )}
 
           <div>
-            <p className="text-xs text-muted-foreground">Notes</p>
+            <p className="text-xs text-muted-foreground">{t("expenseDetail.notes", "Notes")}</p>
             <Textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
@@ -158,7 +179,7 @@ export function ExpenseDetailDialog({
             className="w-full"
             onClick={() => onQuickUpdate(expense, { status, notes })}
           >
-            Save Changes
+            {t("expenseDetail.saveChanges", "Save Changes")}
           </Button>
         </div>
       </DialogContent>

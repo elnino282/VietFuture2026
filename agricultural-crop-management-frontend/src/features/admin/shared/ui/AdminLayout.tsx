@@ -1,6 +1,8 @@
 import * as React from "react";
 import { Card, CardContent } from "@/shared/ui/card";
 import { cn } from "@/shared/lib";
+import { BackButton } from "@/shared/ui/back-button";
+import { useLocation } from "react-router-dom";
 
 export const adminCardClass =
   "rounded-[18px] border border-border bg-card shadow-sm";
@@ -62,6 +64,7 @@ type AdminHeaderCardProps = {
   metadata?: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
+  backConfirmOnLeave?: boolean;
 };
 
 export function AdminHeaderCard({
@@ -70,32 +73,47 @@ export function AdminHeaderCard({
   metadata,
   actions,
   className,
+  backConfirmOnLeave = false,
 }: AdminHeaderCardProps) {
+  const location = useLocation();
+  const normalizedPath = location.pathname.replace(/\/+$/, "");
+  const showAdminBackButton =
+    normalizedPath.startsWith("/admin/") && normalizedPath !== "/admin/dashboard";
+
   return (
-    <AdminCard className={className}>
-      <CardContent className="p-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="min-w-0 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="truncate text-2xl font-bold text-foreground">
-                {title}
-              </h1>
-              {metadata}
+    <>
+      {showAdminBackButton ? (
+        <BackButton
+          to="/admin/dashboard"
+          confirmOnLeave={backConfirmOnLeave}
+          className="w-fit"
+        />
+      ) : null}
+      <AdminCard className={className}>
+        <CardContent className="p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="truncate text-2xl font-bold text-foreground">
+                  {title}
+                </h1>
+                {metadata}
+              </div>
+              {description ? (
+                <p className="text-sm text-muted-foreground sm:text-base">
+                  {description}
+                </p>
+              ) : null}
             </div>
-            {description ? (
-              <p className="text-sm text-muted-foreground sm:text-base">
-                {description}
-              </p>
+            {actions ? (
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                {actions}
+              </div>
             ) : null}
           </div>
-          {actions ? (
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-              {actions}
-            </div>
-          ) : null}
-        </div>
-      </CardContent>
-    </AdminCard>
+        </CardContent>
+      </AdminCard>
+    </>
   );
 }
 

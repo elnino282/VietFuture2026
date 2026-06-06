@@ -114,7 +114,7 @@ export function AdminDashboard() {
           <Button
             className="w-full rounded-[14px] sm:w-auto"
             disabled
-            disabledHint="Dashboard export is not implemented yet"
+            disabledHint={t('admin.dashboard.exportNotImplemented')}
           >
             <BarChart3 className="w-4 h-4 mr-2" />
             {t('admin.dashboard.exportReport')}
@@ -142,13 +142,13 @@ export function AdminDashboard() {
         {/* User Roles Distribution */}
         <AdminContentCard>
           <CardHeader>
-            <CardTitle className="text-lg">User Distribution by Role</CardTitle>
-            <CardDescription>Breakdown of users by their assigned roles</CardDescription>
+            <CardTitle className="text-lg">{t('admin.dashboard.charts.userRoles.title')}</CardTitle>
+            <CardDescription>{t('admin.dashboard.charts.userRoles.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             {charts.userRoles.length === 0 ? (
               <div className="flex items-center justify-center h-[200px] text-muted-foreground">
-                No user data available
+                {t('admin.dashboard.charts.userRoles.empty')}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={200}>
@@ -177,13 +177,13 @@ export function AdminDashboard() {
         {/* Season Status Distribution */}
         <AdminContentCard>
           <CardHeader>
-            <CardTitle className="text-lg">Season Status Distribution</CardTitle>
-            <CardDescription>Current status of all seasons</CardDescription>
+            <CardTitle className="text-lg">{t('admin.dashboard.charts.seasonStatus.title')}</CardTitle>
+            <CardDescription>{t('admin.dashboard.charts.seasonStatus.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             {charts.seasonStatus.length === 0 ? (
               <div className="flex items-center justify-center h-[200px] text-muted-foreground">
-                No season data available
+                {t('admin.dashboard.charts.seasonStatus.empty')}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={200}>
@@ -210,7 +210,7 @@ export function AdminDashboard() {
         </AdminContentCard>
       </div>
 
-      {/* Risky Seasons & Inventory Health */}
+      {/* Operational review panels */}
       <PendingApprovals
         items={pendingApprovals}
         isLoading={pendingApprovalsLoading}
@@ -218,16 +218,15 @@ export function AdminDashboard() {
         onRetry={() => void refetch()}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RiskySeasonsTable
-          seasons={risks}
-          isLoading={isLoading}
-          error={isError ? (error as Error) : null}
-          riskDataLimited={riskDataLimited}
-          dataCoverage={riskDataCoverage}
-        />
-        <InventoryHealthCards />
-      </div>
+      <InventoryHealthCards />
+
+      <RiskySeasonsTable
+        seasons={risks}
+        isLoading={isLoading}
+        error={isError ? (error as Error) : null}
+        riskDataLimited={riskDataLimited}
+        dataCoverage={riskDataCoverage}
+      />
     </AdminPageContainer>
   );
 }

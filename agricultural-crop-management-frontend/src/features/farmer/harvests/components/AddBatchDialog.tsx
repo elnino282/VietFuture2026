@@ -1,4 +1,4 @@
-import { AlertTriangle, ClipboardCheck, Loader2, Plus, Save, X } from "lucide-react";
+import { AlertTriangle, ClipboardCheck, Edit, Loader2, Plus, Save, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
+import { BackButton } from "@/shared/ui/back-button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import {
@@ -33,11 +34,12 @@ import { useMyWarehouses, useLocations } from "@/entities/inventory";
 import { useHarvestStockContext } from "@/entities/harvest";
 import { useProductWarehouseLots } from "@/entities/product-warehouse";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface AddBatchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  mode?: "create" | "edit";
   formData: HarvestFormData;
   onFormChange: (data: HarvestFormData) => void;
   onSubmit: () => void;
@@ -107,6 +109,7 @@ const toSafeTime = (value?: string | null): number | null => {
 export function AddBatchDialog({
   open,
   onOpenChange,
+  mode = "create",
   formData,
   onFormChange,
   onSubmit,
@@ -121,6 +124,8 @@ export function AddBatchDialog({
 }: AddBatchDialogProps) {
   const { t } = useI18n();
   const [advancedSectionValue, setAdvancedSectionValue] = useState<string>("");
+  const initialFormRef = useRef<string | null>(null);
+  const isEditing = mode === "edit";
 
   const { data: seasonsData } = useSeasons({ page: 0, size: 200 });
   const { data: warehousesData } = useMyWarehouses("OUTPUT");
@@ -143,10 +148,16 @@ export function AddBatchDialog({
   useEffect(() => {
     if (!open) {
       setAdvancedSectionValue("");
+      initialFormRef.current = null;
       return;
     }
 
-    if (!selectedSeason) return;
+    if (!selectedSeason) {
+      if (!initialFormRef.current) {
+        initialFormRef.current = JSON.stringify(formData);
+      }
+      return;
+    }
 
     const nextPlot = selectedSeason.plotId && selectedSeason.plotId > 0
       ? String(selectedSeason.plotId)
@@ -171,7 +182,16 @@ export function AddBatchDialog({
     }
 
     if (hasChanges) {
+      const currentSerialized = JSON.stringify(formData);
+      if (!initialFormRef.current || initialFormRef.current === currentSerialized) {
+        initialFormRef.current = JSON.stringify(nextData);
+      }
       onFormChange(nextData);
+      return;
+    }
+
+    if (!initialFormRef.current) {
+      initialFormRef.current = JSON.stringify(formData);
     }
   }, [formData, onFormChange, open, selectedSeason]);
 
@@ -216,9 +236,11 @@ export function AddBatchDialog({
     () =>
       (locationsData ?? []).map((location) => ({
         value: String(location.id),
-        label: location.label ?? `Location #${location.id}`,
+        label: location.label ?? t("harvests.addBatch.locationFallback", {
+          id: location.id,
+        }),
       })),
-    [locationsData],
+    [locationsData, t],
   );
 
   const productOptions = useMemo(() => {
@@ -278,13 +300,10 @@ export function AddBatchDialog({
   const hasRequiredQuickEntry =
     !!formData.date
     && Number(formData.quantity) > 0
-    && !!formData.productName.trim()
-    && !!formData.warehouseId;
+    && (isEditing || (!!formData.productName.trim() && !!formData.warehouseId));
   const canSubmit =
     !isFormDisabled
-    && hasOutputWarehouse
-    && hasValidSeason
-    && hasPlotLink
+    && (isEditing || (hasOutputWarehouse && hasValidSeason && hasPlotLink))
     && hasRequiredQuickEntry;
 
   const previousLegumeSeason = useMemo(() => {
@@ -337,28 +356,64 @@ export function AddBatchDialog({
     ],
     [t],
   );
+  const gradeLabels: Record<HarvestGrade, string> = useMemo(
+    () => ({
+      Premium: t("harvests.grades.premium", "Premium"),
+      A: t("harvests.grades.a", "Grade A"),
+      B: t("harvests.grades.b", "Grade B"),
+      C: t("harvests.grades.c", "Grade C"),
+    }),
+    [t],
+  );
 
   const batchIdPreview = formData.batchId.trim() || buildBatchPreview(formData.date);
+  const isDirty = open && !!initialFormRef.current && initialFormRef.current !== JSON.stringify(formData);
+  const closeWithConfirm = () => {
+    if (isSubmitting) return;
+    if (
+      isDirty &&
+      !window.confirm(t("common.unsavedChangesConfirm", "You have unsaved changes. Leave this page?"))
+    ) {
+      return;
+    }
+    onCancel();
+  };
 
   return (
     <Dialog
       open={open}
       onOpenChange={(nextOpen) => {
         if (!nextOpen && isSubmitting) return;
-        onOpenChange(nextOpen);
+        if (!nextOpen) {
+          closeWithConfirm();
+          return;
+        }
+        onOpenChange(true);
       }}
     >
       <DialogContent className="sm:max-w-[720px]" closeDisabled={isSubmitting}>
         <DialogHeader>
+          <BackButton onClick={closeWithConfirm} className="w-fit" />
           <DialogTitle className="flex items-center gap-2 text-foreground text-xl">
-            <Plus className="w-5 h-5 text-primary" />
-            {t("harvests.addBatch.title", "Add Harvest Batch")}
+            {isEditing ? (
+              <Edit className="w-5 h-5 text-primary" />
+            ) : (
+              <Plus className="w-5 h-5 text-primary" />
+            )}
+            {isEditing
+              ? t("harvests.addBatch.editTitle", "Edit Harvest Batch")
+              : t("harvests.addBatch.title", "Add Harvest Batch")}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            {t(
-              "harvests.addBatch.description",
-              "Quickly record harvest output and keep inventory links in sync.",
-            )}
+            {isEditing
+              ? t(
+                  "harvests.addBatch.editDescription",
+                  "Update harvest date, quantity, grade, notes, and quality metadata.",
+                )
+              : t(
+                  "harvests.addBatch.description",
+                  "Quickly record harvest output and keep inventory links in sync.",
+                )}
           </DialogDescription>
         </DialogHeader>
 
@@ -368,7 +423,7 @@ export function AddBatchDialog({
               {writeLockReason || t("harvests.addBatch.alerts.seasonLocked", "This season is locked. Harvest write actions are disabled.")}
             </div>
           )}
-          {!hasOutputWarehouse && (
+          {!isEditing && !hasOutputWarehouse && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {t(
                 "harvests.addBatch.alerts.noOutputWarehouse",
@@ -376,7 +431,7 @@ export function AddBatchDialog({
               )}
             </div>
           )}
-          {!hasValidSeason && (
+          {!isEditing && !hasValidSeason && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {t(
                 "harvests.addBatch.alerts.invalidSeason",
@@ -417,7 +472,7 @@ export function AddBatchDialog({
                 <Label htmlFor="season" className="text-foreground">
                   {t("harvests.addBatch.fields.season", "Season")}
                 </Label>
-                {isSeasonLocked ? (
+                {isSeasonLocked || isEditing ? (
                   <div className="rounded-xl border border-border px-3 py-2 text-sm bg-muted/30">
                     {lockedSeasonLabel || selectedSeason?.seasonName || t("harvests.addBatch.currentSeason", "Current season")}
                   </div>
@@ -476,6 +531,7 @@ export function AddBatchDialog({
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              {!isEditing && (
               <div className="space-y-2 md:col-span-2 xl:col-span-1">
                 <Label htmlFor="productName" className="text-foreground">
                   {t("harvests.addBatch.fields.cropProduct", "Crop / Product")} <span className="text-destructive">*</span>
@@ -510,6 +566,7 @@ export function AddBatchDialog({
                   ))}
                 </datalist>
               </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="quantity" className="text-foreground">
@@ -528,6 +585,7 @@ export function AddBatchDialog({
                 />
               </div>
 
+              {!isEditing && (
               <div className="space-y-2">
                 <Label htmlFor="warehouse" className="text-foreground">
                   {t("harvests.addBatch.fields.warehouse", "Warehouse")} <span className="text-destructive">*</span>
@@ -551,6 +609,7 @@ export function AddBatchDialog({
                   </SelectContent>
                 </Select>
               </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="grade" className="text-foreground">
@@ -567,7 +626,7 @@ export function AddBatchDialog({
                   <SelectContent>
                     {GRADE_OPTIONS.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                        {gradeLabels[option.value as HarvestGrade]}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -575,25 +634,7 @@ export function AddBatchDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="moisture" className="text-foreground">
-                  {t("harvests.addBatch.fields.moisture", "Moisture %")}
-                </Label>
-                <Input
-                  id="moisture"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  placeholder={t("harvests.addBatch.placeholders.optionalPercent", "Optional")}
-                  value={formData.moisture}
-                  onChange={(event) => onFormChange({ ...formData, moisture: event.target.value })}
-                  className="rounded-xl border-border focus:border-primary"
-                  disabled={isFormDisabled}
-                />
-              </div>
-
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="notes" className="text-foreground">
                   {t("harvests.addBatch.fields.notes", "Notes")}
@@ -633,6 +674,7 @@ export function AddBatchDialog({
               </AccordionTrigger>
 
               <AccordionContent className="space-y-4">
+                {!isEditing && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="batchIdPreview" className="text-foreground">
@@ -686,7 +728,9 @@ export function AddBatchDialog({
                     />
                   </div>
                 </div>
+                )}
 
+                {!isEditing && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="location" className="text-foreground">
@@ -735,8 +779,27 @@ export function AddBatchDialog({
                     />
                   </div>
                 </div>
+                )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="moisture" className="text-foreground">
+                      {t("harvests.addBatch.fields.moisture", "Moisture %")}
+                    </Label>
+                    <Input
+                      id="moisture"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      placeholder={t("harvests.addBatch.placeholders.optionalPercent", "Optional")}
+                      value={formData.moisture}
+                      onChange={(event) => onFormChange({ ...formData, moisture: event.target.value })}
+                      className="rounded-xl border-border focus:border-primary"
+                      disabled={isFormDisabled}
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="harvestLoss" className="text-foreground">
                       {t("harvests.addBatch.fields.harvestLoss", "Harvest Loss %")}
@@ -844,6 +907,7 @@ export function AddBatchDialog({
                   </div>
                 </div>
 
+                {!isEditing && (
                 <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
                   <p className="text-sm font-medium text-foreground">
                     {t("harvests.addBatch.fields.currentLotStockContext", "Current lot stock context")}
@@ -882,11 +946,12 @@ export function AddBatchDialog({
                     </p>
                   )}
                 </div>
+                )}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
 
-          {!hasPlotLink && hasValidSeason && (
+          {!isEditing && !hasPlotLink && hasValidSeason && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 mt-0.5" />
               <span>
@@ -902,7 +967,7 @@ export function AddBatchDialog({
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={onCancel}
+            onClick={closeWithConfirm}
             disabled={isSubmitting}
             disabledHint={t("harvests.addBatch.savingHint", "Harvest batch is being saved")}
           >
@@ -921,7 +986,9 @@ export function AddBatchDialog({
             )}
             {isSubmitting
               ? t("harvests.addBatch.saving", "Saving...")
-              : t("harvests.addBatch.saveButton", "Save Batch")}
+              : isEditing
+                ? t("harvests.addBatch.updateButton", "Update Batch")
+                : t("harvests.addBatch.saveButton", "Save Batch")}
           </Button>
         </DialogFooter>
       </DialogContent>

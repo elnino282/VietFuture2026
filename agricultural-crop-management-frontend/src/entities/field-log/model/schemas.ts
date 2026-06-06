@@ -25,6 +25,9 @@ export const LogTypeSchema = z.enum([
 
 export type LogType = z.infer<typeof LogTypeSchema>;
 
+export const ActorTypeSchema = z.enum(['FARMER', 'EMPLOYEE', 'UNKNOWN']);
+export type ActorType = z.infer<typeof ActorTypeSchema>;
+
 // ═══════════════════════════════════════════════════════════════
 // SEASON MINIMAL (for dropdown)
 // ═══════════════════════════════════════════════════════════════
@@ -32,9 +35,14 @@ export type LogType = z.infer<typeof LogTypeSchema>;
 export const SeasonMinimalSchema = z.object({
     seasonId: z.number().int().positive(),
     seasonName: z.string(),
+    farmId: z.number().int().positive().nullable().optional(),
+    farmName: z.string().nullable().optional(),
+    plotId: z.number().int().positive().nullable().optional(),
+    plotName: z.string().nullable().optional(),
     startDate: DateSchema.nullable().optional(),
     endDate: DateSchema.nullable().optional(),
     plannedHarvestDate: DateSchema.nullable().optional(),
+    status: z.string().nullable().optional(),
 });
 
 export type SeasonMinimal = z.infer<typeof SeasonMinimalSchema>;
@@ -65,6 +73,12 @@ export const FieldLogSchema = z.object({
     logDate: DateSchema,
     logType: z.string().max(100),
     notes: z.string().max(4000).nullable().optional(),
+    createdByUserId: z.number().int().nullable().optional(),
+    createdByUsername: z.string().nullable().optional(),
+    createdByDisplayName: z.string().nullable().optional(),
+    createdByType: ActorTypeSchema.nullable().optional(),
+    canEdit: z.boolean().nullable().optional(),
+    canDelete: z.boolean().nullable().optional(),
     createdAt: z.string().nullable().optional(),
 });
 

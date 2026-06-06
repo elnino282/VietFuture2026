@@ -2,6 +2,7 @@ import { AlertCircle, Clock } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { SystemAlert } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface RecentAlertsCardProps {
     systemAlerts: SystemAlert[];
@@ -14,14 +15,16 @@ export const RecentAlertsCard: React.FC<RecentAlertsCardProps> = ({
     getAlertIcon,
     getAlertBadge,
 }) => {
+    const { t } = useI18n();
+
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <AlertCircle className="w-5 h-5" />
-                    Recent Alerts
+                    {t('admin.reportsAnalytics.alerts.title')}
                 </CardTitle>
-                <CardDescription>System notifications and warnings</CardDescription>
+                <CardDescription>{t('admin.reportsAnalytics.alerts.description')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
                 {systemAlerts.map((alert) => (
@@ -36,7 +39,7 @@ export const RecentAlertsCard: React.FC<RecentAlertsCardProps> = ({
                             <div className="flex items-start justify-between gap-2 mb-1">
                                 <p className="text-sm font-medium">{alert.message}</p>
                                 <Badge variant="secondary" className={getAlertBadge(alert.severity)}>
-                                    {alert.severity}
+                                    {t(`admin.reportsAnalytics.alerts.severity.${alert.severity}`, alert.severity)}
                                 </Badge>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">

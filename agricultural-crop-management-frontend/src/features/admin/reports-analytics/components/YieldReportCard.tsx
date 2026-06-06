@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { usePreferences } from '@/shared/contexts';
 import { convertWeight, getWeightUnitLabel } from '@/shared/lib';
 import type { YieldReport } from '@/services/api.admin';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface YieldReportCardProps {
     data: YieldReport[];
@@ -13,6 +14,7 @@ interface YieldReportCardProps {
 }
 
 export const YieldReportCard: React.FC<YieldReportCardProps> = ({ data, isLoading }) => {
+    const { t } = useI18n();
     const { preferences } = usePreferences();
     const unitLabel = getWeightUnitLabel(preferences.weightUnit);
     const formatNumber = (value: number) => new Intl.NumberFormat(preferences.locale).format(value);
@@ -29,7 +31,7 @@ export const YieldReportCard: React.FC<YieldReportCardProps> = ({ data, isLoadin
     };
 
     const getVarianceBadge = (variance: number | null) => {
-        if (variance === null) return <Badge variant="secondary">N/A</Badge>;
+        if (variance === null) return <Badge variant="secondary">{t('common.notAvailable')}</Badge>;
         const value = `${variance > 0 ? '+' : ''}${variance.toFixed(1)}%`;
         if (variance > 5) return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{value}</Badge>;
         if (variance < -5) return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{value}</Badge>;
@@ -40,7 +42,7 @@ export const YieldReportCard: React.FC<YieldReportCardProps> = ({ data, isLoadin
         return (
             <Card className="col-span-full">
                 <CardHeader>
-                    <CardTitle>Yield Performance</CardTitle>
+                    <CardTitle>{t('admin.reportsAnalytics.yield.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-3">
@@ -57,11 +59,11 @@ export const YieldReportCard: React.FC<YieldReportCardProps> = ({ data, isLoadin
         return (
             <Card className="col-span-full">
                 <CardHeader>
-                    <CardTitle>Yield Performance</CardTitle>
+                    <CardTitle>{t('admin.reportsAnalytics.yield.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="text-center py-8 text-muted-foreground">
-                        <p>No yield data available for the selected year.</p>
+                        <p>{t('admin.reportsAnalytics.yield.empty')}</p>
                     </div>
                 </CardContent>
             </Card>
@@ -72,26 +74,28 @@ export const YieldReportCard: React.FC<YieldReportCardProps> = ({ data, isLoadin
         <Card className="col-span-full">
             <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                    <span>Yield Performance</span>
-                    <Badge variant="outline">{data.length} seasons</Badge>
+                    <span>{t('admin.reportsAnalytics.yield.title')}</span>
+                    <Badge variant="outline">{t('admin.reportsAnalytics.yield.seasonsCount', { count: data.length })}</Badge>
                 </CardTitle>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Season</TableHead>
-                            <TableHead>Crop</TableHead>
-                            <TableHead>Plot</TableHead>
-                            <TableHead className="text-right">Expected ({unitLabel})</TableHead>
-                            <TableHead className="text-right">Actual ({unitLabel})</TableHead>
-                            <TableHead className="text-right">Variance</TableHead>
+                            <TableHead>{t('admin.reportsAnalytics.table.season')}</TableHead>
+                            <TableHead>{t('admin.reportsAnalytics.table.crop')}</TableHead>
+                            <TableHead>{t('admin.reportsAnalytics.table.plot')}</TableHead>
+                            <TableHead className="text-right">{t('admin.reportsAnalytics.yield.expectedWithUnit', { unit: unitLabel })}</TableHead>
+                            <TableHead className="text-right">{t('admin.reportsAnalytics.yield.actualWithUnit', { unit: unitLabel })}</TableHead>
+                            <TableHead className="text-right">{t('admin.reportsAnalytics.table.variance')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {data.map((item) => (
                             <TableRow key={item.seasonId}>
-                                <TableCell className="font-medium">{item.seasonName || `Season ${item.seasonId}`}</TableCell>
+                                <TableCell className="font-medium">
+                                    {item.seasonName || t('admin.reportsAnalytics.fallback.season', { id: item.seasonId })}
+                                </TableCell>
                                 <TableCell>{item.cropName || '-'}</TableCell>
                                 <TableCell>
                                     <div className="text-sm">

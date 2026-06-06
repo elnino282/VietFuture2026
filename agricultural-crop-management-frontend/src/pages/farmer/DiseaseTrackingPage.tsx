@@ -18,8 +18,14 @@ import {
   type DiseaseTreatmentCreateRequest,
   type DiseaseTreatmentUpdateRequest,
 } from "@/entities/disease";
+import { useEmployeeAssignedSeasons } from "@/entities/field-log";
 import { useSeasonById } from "@/entities/season";
-import { useAllSupplyItems, useSupplyLots } from "@/entities/supplies";
+import {
+  useAllSupplyItems,
+  useEmployeeSeasonSupplyItems,
+  useEmployeeSeasonSupplyLots,
+  useSupplyLots,
+} from "@/entities/supplies";
 import { useI18n } from "@/hooks/useI18n";
 import { useOptionalSeason } from "@/shared/contexts";
 import {
@@ -71,7 +77,7 @@ import {
 } from "lucide-react";
 import { isAxiosError } from "axios";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 interface LocalizedOption {
@@ -353,10 +359,19 @@ const resolveOptionLabel = (
   return value ?? "-";
 };
 
+const getActorBadgeClass = (actorType?: string | null) => {
+  if (actorType === "EMPLOYEE") return "bg-sky-100 text-sky-800 border-sky-200";
+  if (actorType === "FARMER") return "bg-emerald-100 text-emerald-800 border-emerald-200";
+  return "bg-slate-100 text-slate-700 border-slate-200";
+};
+
 export function DiseaseTrackingPage() {
   const { t, locale } = useI18n();
   const seasonContext = useOptionalSeason();
+  const location = useLocation();
   const { seasonId: seasonIdParam } = useParams();
+  const workspaceScope = location.pathname.startsWith("/employee") ? "employee" : "farmer";
+  const isEmployeeWorkspace = workspaceScope === "employee";
 
   const workspaceSeasonId = Number(seasonIdParam);
   const hasValidSeasonId = Number.isFinite(workspaceSeasonId) && workspaceSeasonId > 0;
@@ -395,10 +410,15 @@ export function DiseaseTrackingPage() {
   }, [hasValidSeasonId, seasonContext, selectedSeasonId]);
 
   const { data: seasonDetail } = useSeasonById(selectedSeasonId, {
-    enabled: hasValidSeasonId,
+    enabled: hasValidSeasonId && !isEmployeeWorkspace,
   });
+  const { data: employeeSeasons } = useEmployeeAssignedSeasons({
+    enabled: hasValidSeasonId && isEmployeeWorkspace,
+  });
+  const employeeSeason = employeeSeasons?.find((season) => season.seasonId === selectedSeasonId);
   const selectedSeasonStatus =
-    seasonDetail?.status
+    employeeSeason?.status
+    ?? seasonDetail?.status
     ?? seasonContext?.seasons.find((season) => season.id === selectedSeasonId)?.status
     ?? null;
 
@@ -428,6 +448,7 @@ export function DiseaseTrackingPage() {
       size: 100,
     },
     { enabled: hasValidSeasonId },
+    workspaceScope,
   );
 
   const detailRecordId = expandedRecordId ?? 0;
@@ -437,7 +458,7 @@ export function DiseaseTrackingPage() {
     error: detailError,
   } = useDiseaseRecordDetail(detailRecordId, {
     enabled: detailRecordId > 0,
-  });
+  }, workspaceScope);
 
   const {
     data: treatmentListData,
@@ -445,7 +466,7 @@ export function DiseaseTrackingPage() {
     error: treatmentListError,
   } = useDiseaseTreatments(detailRecordId, { page: 0, size: 100 }, {
     enabled: detailRecordId > 0,
-  });
+  }, workspaceScope);
 
   useEffect(() => {
     setAiSuggestion(null);
@@ -454,15 +475,34 @@ export function DiseaseTrackingPage() {
     setAiIncludeInventory(true);
   }, [detailRecordId]);
 
-  const { data: supplyItems = [] } = useAllSupplyItems();
+  const { data: farmerSupplyItems = [] } = useAllSupplyItems({
+    enabled: !isEmployeeWorkspace,
+  });
+  const { data: employeeSupplyItemsData } = useEmployeeSeasonSupplyItems(
+    selectedSeasonId,
+    { page: 0, size: 1000 },
+    { enabled: isEmployeeWorkspace && hasValidSeasonId },
+  );
+  const supplyItems = isEmployeeWorkspace
+    ? employeeSupplyItemsData?.items ?? []
+    : farmerSupplyItems;
 
   const selectedSupplyItemId = parseOptionalSelectId(treatmentForm.supplyItemId);
-  const { data: supplyLotsData } = useSupplyLots(
+  const supplyLotParams = selectedSupplyItemId
+    ? { itemId: selectedSupplyItemId, page: 0, size: 100 }
+    : undefined;
+  const { data: farmerSupplyLotsData } = useSupplyLots(
+    supplyLotParams,
+    { enabled: !isEmployeeWorkspace && Boolean(selectedSupplyItemId) },
+  );
+  const { data: employeeSupplyLotsData } = useEmployeeSeasonSupplyLots(
+    selectedSeasonId,
     selectedSupplyItemId
       ? { itemId: selectedSupplyItemId, page: 0, size: 100 }
       : undefined,
+    { enabled: isEmployeeWorkspace && hasValidSeasonId && Boolean(selectedSupplyItemId) },
   );
-  const supplyLots = supplyLotsData?.items ?? [];
+  const supplyLots = (isEmployeeWorkspace ? employeeSupplyLotsData : farmerSupplyLotsData)?.items ?? [];
 
   const createRecordMutation = useCreateDiseaseRecord({
     onSuccess: () => {
@@ -474,7 +514,7 @@ export function DiseaseTrackingPage() {
         toReadableError(error, t, "diseaseTracking.errors.createRecordFail", "Unable to create disease record."),
       );
     },
-  });
+  }, workspaceScope);
 
   const updateRecordMutation = useUpdateDiseaseRecord({
     onSuccess: () => {
@@ -486,7 +526,7 @@ export function DiseaseTrackingPage() {
         toReadableError(error, t, "diseaseTracking.errors.updateRecordFail", "Unable to update disease record."),
       );
     },
-  });
+  }, workspaceScope);
 
   const deleteRecordMutation = useDeleteDiseaseRecord({
     onSuccess: () => {
@@ -501,7 +541,7 @@ export function DiseaseTrackingPage() {
         toReadableError(error, t, "diseaseTracking.errors.deleteRecordFail", "Unable to delete disease record."),
       );
     },
-  });
+  }, workspaceScope);
 
   const createTreatmentMutation = useCreateDiseaseTreatment({
     onSuccess: () => {
@@ -518,7 +558,7 @@ export function DiseaseTrackingPage() {
         ),
       );
     },
-  });
+  }, workspaceScope);
 
   const updateTreatmentMutation = useUpdateDiseaseTreatment({
     onSuccess: () => {
@@ -535,7 +575,7 @@ export function DiseaseTrackingPage() {
         ),
       );
     },
-  });
+  }, workspaceScope);
 
   const deleteTreatmentMutation = useDeleteDiseaseTreatment({
     onSuccess: () => {
@@ -552,7 +592,7 @@ export function DiseaseTrackingPage() {
         ),
       );
     },
-  });
+  }, workspaceScope);
 
   const aiSuggestionMutation = useDiseaseAiSuggestion({
     onSuccess: (result) => {
@@ -570,7 +610,7 @@ export function DiseaseTrackingPage() {
       setAiSuggestionError(message);
       toast.error(message);
     },
-  });
+  }, workspaceScope);
 
   const records = recordsData?.items ?? [];
   const treatmentTimeline = treatmentListData?.items ?? [];
@@ -648,6 +688,16 @@ export function DiseaseTrackingPage() {
     return false;
   };
 
+  const noPermissionMessage = t(
+    "diseaseTracking.validation.noPermission",
+  );
+
+  const getActorLabel = (actorType?: string | null) => {
+    if (actorType === "EMPLOYEE") return t("employee.actor.EMPLOYEE");
+    if (actorType === "FARMER") return t("employee.actor.FARMER");
+    return t("employee.actor.UNKNOWN");
+  };
+
   const openCreateRecordDialog = () => {
     if (!ensureWritable()) return;
     setEditingRecord(null);
@@ -657,6 +707,10 @@ export function DiseaseTrackingPage() {
 
   const openEditRecordDialog = (record: DiseaseRecord) => {
     if (!ensureWritable()) return;
+    if (record.canEdit === false) {
+      toast.error(noPermissionMessage);
+      return;
+    }
     setEditingRecord(record);
     setRecordForm({
       diseaseName: record.diseaseName ?? "",
@@ -743,6 +797,12 @@ export function DiseaseTrackingPage() {
       return;
     }
     if (!deleteRecordId) return;
+    const target = records.find((record) => record.id === deleteRecordId);
+    if (target?.canDelete === false) {
+      toast.error(noPermissionMessage);
+      setDeleteRecordId(null);
+      return;
+    }
     deleteRecordMutation.mutate({
       seasonId: selectedSeasonId,
       id: deleteRecordId,
@@ -783,6 +843,10 @@ export function DiseaseTrackingPage() {
 
   const openEditTreatmentDialog = (recordId: number, treatment: DiseaseTreatment) => {
     if (!ensureWritable()) return;
+    if (treatment.canEdit === false) {
+      toast.error(noPermissionMessage);
+      return;
+    }
     setActiveTreatmentRecordId(recordId);
     setEditingTreatment(treatment);
     setTreatmentForm({
@@ -881,6 +945,14 @@ export function DiseaseTrackingPage() {
       return;
     }
     if (!deleteTreatmentTarget) return;
+    const targetTreatment = treatmentTimeline.find(
+      (treatment) => treatment.id === deleteTreatmentTarget.treatmentId,
+    );
+    if (targetTreatment?.canDelete === false) {
+      toast.error(noPermissionMessage);
+      setDeleteTreatmentTarget(null);
+      return;
+    }
     deleteTreatmentMutation.mutate({
       diseaseRecordId: deleteTreatmentTarget.diseaseRecordId,
       id: deleteTreatmentTarget.treatmentId,
@@ -926,7 +998,9 @@ export function DiseaseTrackingPage() {
         <CardContent className="px-6 py-4 space-y-4">
           <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
             {t("diseaseTracking.season.label")}{" "}
-            <span className="font-medium">{seasonDetail?.seasonName ?? `#${selectedSeasonId}`}</span>
+            <span className="font-medium">
+              {employeeSeason?.seasonName ?? seasonDetail?.seasonName ?? `#${selectedSeasonId}`}
+            </span>
           </div>
 
           {isSeasonWriteLocked && (
@@ -1044,6 +1118,17 @@ export function DiseaseTrackingPage() {
                         <p className="text-sm text-muted-foreground">
                           {t("diseaseTracking.recordCard.detectedAt")}: {formatDateTime(recordToRender.detectedAt, locale)}
                         </p>
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                          <span>
+                            {t("diseaseTracking.recordCard.reportedBy", "Người ghi")}:{" "}
+                            <span className="font-medium text-foreground">
+                              {recordToRender.reportedByDisplayName ?? recordToRender.reportedByUsername ?? "-"}
+                            </span>
+                          </span>
+                          <Badge className={getActorBadgeClass(recordToRender.reportedByType)}>
+                            {getActorLabel(recordToRender.reportedByType)}
+                          </Badge>
+                        </div>
                         {recordToRender.symptomSummary && (
                           <p className="text-sm text-foreground">{recordToRender.symptomSummary}</p>
                         )}
@@ -1078,8 +1163,12 @@ export function DiseaseTrackingPage() {
                         <Button
                           variant="outline"
                           onClick={() => openEditRecordDialog(record)}
-                          disabled={isSeasonWriteLocked}
-                          title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
+                          disabled={isSeasonWriteLocked || record.canEdit === false}
+                          title={isSeasonWriteLocked
+                            ? seasonWriteLockReason
+                            : record.canEdit === false
+                              ? noPermissionMessage
+                              : undefined}
                         >
                           <Pencil className="w-4 h-4 mr-2" />
                           {t("diseaseTracking.actions.edit")}
@@ -1088,8 +1177,12 @@ export function DiseaseTrackingPage() {
                           variant="outline"
                           className="text-destructive"
                           onClick={() => setDeleteRecordId(record.id)}
-                          disabled={isSeasonWriteLocked}
-                          title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
+                          disabled={isSeasonWriteLocked || record.canDelete === false}
+                          title={isSeasonWriteLocked
+                            ? seasonWriteLockReason
+                            : record.canDelete === false
+                              ? noPermissionMessage
+                              : undefined}
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
                           {t("diseaseTracking.actions.delete")}
@@ -1130,8 +1223,11 @@ export function DiseaseTrackingPage() {
                               <div className="rounded-lg border border-border bg-card p-3">
                                 <p className="text-xs text-muted-foreground">{t("diseaseTracking.detail.reporter")}</p>
                                 <p className="text-sm font-medium">
-                                  {recordToRender.reportedByUsername ?? "-"}
+                                  {recordToRender.reportedByDisplayName ?? recordToRender.reportedByUsername ?? "-"}
                                 </p>
+                                <Badge className={getActorBadgeClass(recordToRender.reportedByType)}>
+                                  {getActorLabel(recordToRender.reportedByType)}
+                                </Badge>
                               </div>
                               <div className="rounded-lg border border-border bg-card p-3">
                                 <p className="text-xs text-muted-foreground">
@@ -1303,14 +1399,27 @@ export function DiseaseTrackingPage() {
                                               ? formatCurrencyVnd(treatment.costAmount, locale)
                                               : "-"}
                                           </p>
+                                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                            <span>
+                                              {t("diseaseTracking.detail.timeline.createdBy", "Người ghi")}:{" "}
+                                              {treatment.createdByDisplayName ?? treatment.createdByUsername ?? "-"}
+                                            </span>
+                                            <Badge className={getActorBadgeClass(treatment.createdByType)}>
+                                              {getActorLabel(treatment.createdByType)}
+                                            </Badge>
+                                          </div>
                                         </div>
                                         <div className="flex gap-2">
                                           <Button
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => openEditTreatmentDialog(record.id, treatment)}
-                                            disabled={isSeasonWriteLocked}
-                                            title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
+                                            disabled={isSeasonWriteLocked || treatment.canEdit === false}
+                                            title={isSeasonWriteLocked
+                                              ? seasonWriteLockReason
+                                              : treatment.canEdit === false
+                                                ? noPermissionMessage
+                                                : undefined}
                                           >
                                             <Pencil className="w-4 h-4" />
                                           </Button>
@@ -1322,8 +1431,12 @@ export function DiseaseTrackingPage() {
                                               diseaseRecordId: record.id,
                                               treatmentId: treatment.id,
                                             })}
-                                            disabled={isSeasonWriteLocked}
-                                            title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
+                                            disabled={isSeasonWriteLocked || treatment.canDelete === false}
+                                            title={isSeasonWriteLocked
+                                              ? seasonWriteLockReason
+                                              : treatment.canDelete === false
+                                                ? noPermissionMessage
+                                                : undefined}
                                           >
                                             <Trash2 className="w-4 h-4" />
                                           </Button>

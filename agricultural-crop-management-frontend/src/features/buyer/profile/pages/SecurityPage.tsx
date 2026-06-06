@@ -1,6 +1,7 @@
 import { type ChangePasswordPayload, useProfileChangePassword } from '@/entities/user';
-import { Card, CardContent, CardHeader } from '@/shared/ui';
+import { BackButton, Card, CardContent, CardHeader } from '@/shared/ui';
 import axios from 'axios';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { PasswordChangeForm } from '../components/PasswordChangeForm';
 
@@ -21,6 +22,7 @@ function getErrorMessage(error: unknown): string {
 
 export function SecurityPage() {
   const changePassword = useProfileChangePassword();
+  const [isPasswordFormDirty, setIsPasswordFormDirty] = useState(false);
 
   const handlePasswordChange = async (data: ChangePasswordPayload) => {
     try {
@@ -37,14 +39,22 @@ export function SecurityPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl space-y-4">
+      <BackButton
+        to="/marketplace"
+        confirmOnLeave={isPasswordFormDirty}
+        className="w-fit"
+      />
       <Card>
         <CardHeader>
           <h2 className="text-xl font-bold">Đổi mật khẩu</h2>
         </CardHeader>
 
         <CardContent>
-          <PasswordChangeForm onSave={handlePasswordChange} />
+          <PasswordChangeForm
+            onSave={handlePasswordChange}
+            onDirtyChange={setIsPasswordFormDirty}
+          />
         </CardContent>
       </Card>
     </div>

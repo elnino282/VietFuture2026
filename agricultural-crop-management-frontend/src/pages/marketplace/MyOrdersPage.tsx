@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Ban, ChevronRight, CreditCard, Package, ShieldCheck, Truck } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/shared/ui";
+import { BackButton, Button } from "@/shared/ui";
 import {
   type MarketplaceOrder,
   type MarketplaceOrderItem,
@@ -314,7 +314,10 @@ function OrderCard({ order, t }: { order: MarketplaceOrder; t: Translator }) {
 function OrdersPageShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-gray-50">
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</div>
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <BackButton to="/marketplace" className="mb-4 w-fit" />
+        {children}
+      </div>
     </div>
   );
 }

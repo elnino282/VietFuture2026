@@ -39,6 +39,7 @@ import type { Expense } from "../types";
 import { CATEGORY_COLORS } from "../constants";
 import { usePreferences } from "@/shared/contexts";
 import { formatMoney, convertToDisplayCurrency } from "@/shared/lib";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface ExpenseTableProps {
     filteredExpenses: Expense[];
@@ -58,27 +59,28 @@ export function ExpenseTable({
     onAddExpense,
 }: ExpenseTableProps) {
     const { preferences } = usePreferences();
+    const { t } = useI18n();
     const getStatusBadge = (status: string) => {
         switch (status) {
             case "PAID":
                 return (
                     <Badge className="bg-primary/10 text-primary border-primary/20">
                         <CheckCircle2 className="w-3 h-3 mr-1" />
-                        Paid
+                        {t("expenses.status.paid")}
                     </Badge>
                 );
             case "UNPAID":
                 return (
                     <Badge className="bg-destructive/10 text-destructive border-destructive/20">
                         <AlertCircle className="w-3 h-3 mr-1" />
-                        Unpaid
+                        {t("expenses.status.unpaid")}
                     </Badge>
                 );
             case "PENDING":
                 return (
                     <Badge className="bg-accent/10 text-foreground border-accent/20">
                         <Clock className="w-3 h-3 mr-1" />
-                        Pending
+                        {t("expenses.status.pending")}
                     </Badge>
                 );
             default:
@@ -94,19 +96,26 @@ export function ExpenseTable({
         (sum, exp) => sum + exp.amount,
         0
     );
+    const displayTotalAmount = formatMoney(
+        convertToDisplayCurrency(totalAmount, preferences.currency),
+        preferences.currency,
+        preferences.locale
+    );
 
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <p className="text-sm text-muted-foreground">
-                        Showing <span className="numeric">{filteredExpenses.length}</span>{" "}
-                        of <span className="numeric">{totalExpenses}</span> expenses
+                        {t("expenses.table.showingCount", {
+                            shown: filteredExpenses.length,
+                            total: totalExpenses,
+                        })}
                     </p>
                 </div>
                 <Badge className="bg-muted text-foreground border-border">
                     <span className="numeric">
-                        Total: {formatMoney(convertToDisplayCurrency(totalAmount, preferences.currency), preferences.currency, preferences.locale)}
+                        {t("expenses.table.totalAmount", { amount: displayTotalAmount })}
                     </span>
                 </Badge>
             </div>
@@ -115,14 +124,14 @@ export function ExpenseTable({
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-muted hover:bg-muted">
-                            <TableHead className="text-foreground">Date</TableHead>
-                            <TableHead className="text-foreground">Category</TableHead>
-                            <TableHead className="text-foreground">Description</TableHead>
-                            <TableHead className="text-foreground">Linked To</TableHead>
-                            <TableHead className="text-foreground text-right">Amount</TableHead>
-                            <TableHead className="text-foreground">Status</TableHead>
-                            <TableHead className="text-foreground text-center">Receipt</TableHead>
-                            <TableHead className="text-foreground">Actions</TableHead>
+                            <TableHead className="text-foreground">{t("expenses.table.columns.date")}</TableHead>
+                            <TableHead className="text-foreground">{t("expenses.table.columns.category")}</TableHead>
+                            <TableHead className="text-foreground">{t("expenses.table.columns.description")}</TableHead>
+                            <TableHead className="text-foreground">{t("expenses.table.columns.linkedTo")}</TableHead>
+                            <TableHead className="text-foreground text-right">{t("expenses.table.columns.amount")}</TableHead>
+                            <TableHead className="text-foreground">{t("expenses.table.columns.status")}</TableHead>
+                            <TableHead className="text-foreground text-center">{t("expenses.table.columns.receipt")}</TableHead>
+                            <TableHead className="text-foreground">{t("expenses.table.columns.actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -133,12 +142,12 @@ export function ExpenseTable({
                                     className="text-center py-12 text-muted-foreground"
                                 >
                                     <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                                    <p>No expenses found</p>
-                                    <p className="text-sm mt-1">Try adjusting your filters</p>
+                                    <p>{t("expenses.table.emptyTitle")}</p>
+                                    <p className="text-sm mt-1">{t("expenses.table.emptyDescription")}</p>
                                     {onAddExpense && (
                                         <div className="mt-4">
                                             <Button variant="outline" onClick={onAddExpense}>
-                                                Add Expense
+                                                {t("expenses.createButton")}
                                             </Button>
                                         </div>
                                     )}
@@ -148,7 +157,7 @@ export function ExpenseTable({
                             filteredExpenses.map((expense) => (
                                 <TableRow key={expense.id} className="hover:bg-muted/50">
                                     <TableCell className="text-sm text-muted-foreground">
-                                        {new Date(expense.date).toLocaleDateString("en-US", {
+                                        {new Date(expense.date).toLocaleDateString(preferences.locale, {
                                             month: "short",
                                             day: "numeric",
                                             year: "numeric",
@@ -212,12 +221,14 @@ export function ExpenseTable({
                                                         >
                                                             <Paperclip className="w-3.5 h-3.5 mr-1 text-primary" />
                                                             <ExternalLink className="w-3.5 h-3.5 mr-1 text-primary" />
-                                                            Mở tab mới
+                                                            {t("expenses.table.openNewTab")}
                                                         </Button>
                                                     </TooltipTrigger>
                                                     <TooltipContent>
                                                         <p className="text-xs">
-                                                            {expense.attachmentName ?? "Receipt"} - Mở tab mới
+                                                            {t("expenses.table.receiptTooltip", {
+                                                                name: expense.attachmentName ?? t("expenses.table.receiptFallback"),
+                                                            })}
                                                         </p>
                                                     </TooltipContent>
                                                 </Tooltip>
@@ -242,13 +253,13 @@ export function ExpenseTable({
                                                     onClick={() => handleEditExpense(expense)}
                                                 >
                                                     <Edit className="w-4 h-4 mr-2" />
-                                                    Edit
+                                                    {t("common.edit")}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     onClick={() => handleViewExpense(expense)}
                                                 >
                                                     <Eye className="w-4 h-4 mr-2" />
-                                                    View Details
+                                                    {t("expenses.table.viewDetails")}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     disabled={!expense.attachmentUrl}
@@ -260,7 +271,7 @@ export function ExpenseTable({
                                                 >
                                                     <Receipt className="w-4 h-4 mr-2" />
                                                     <ExternalLink className="w-3.5 h-3.5 mr-2" />
-                                                    Tải biên lai (Mở tab mới)
+                                                    {t("expenses.table.downloadReceipt")}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem
@@ -268,7 +279,7 @@ export function ExpenseTable({
                                                     className="text-destructive"
                                                 >
                                                     <Trash2 className="w-4 h-4 mr-2" />
-                                                    Delete
+                                                    {t("common.delete")}
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>

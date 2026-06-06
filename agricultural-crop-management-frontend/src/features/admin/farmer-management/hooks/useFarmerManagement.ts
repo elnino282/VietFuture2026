@@ -11,6 +11,7 @@ import {
     type AdminUserUpdateRequest,
 } from '@/services/api.admin';
 import { toast } from 'sonner';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import type {
     CSVPreviewRow,
     Farmer,
@@ -113,6 +114,7 @@ const mapAdminUserToFarmer = (user: AdminUser): Farmer => {
 
 export function useFarmerManagement() {
     const queryClient = useQueryClient();
+    const { t } = useI18n();
 
     // State Management
     const [searchQuery, setSearchQuery] = useState('');
@@ -281,10 +283,10 @@ export function useFarmerManagement() {
                             status: payloadStatus,
                         },
                     });
-                    toast.success('Farmer account updated successfully.');
+                    toast.success(t('admin.farmerManagement.toast.updated'));
                 } catch (error) {
                     console.error(error);
-                    toast.error('Failed to update farmer account.');
+                    toast.error(t('admin.farmerManagement.toast.updateFailed'));
                     return;
                 }
             } else {
@@ -306,12 +308,12 @@ export function useFarmerManagement() {
                     }
 
                     if (formData.sendEmail) {
-                        toast.warning('Welcome email flow is not available in backend. Credentials were created only.');
+                        toast.warning(t('admin.farmerManagement.toast.welcomeEmailUnavailable'));
                     }
-                    toast.success('Farmer account created successfully.');
+                    toast.success(t('admin.farmerManagement.toast.created'));
                 } catch (error) {
                     console.error(error);
-                    toast.error('Failed to create farmer account.');
+                    toast.error(t('admin.farmerManagement.toast.createFailed'));
                     return;
                 }
             }
@@ -324,13 +326,15 @@ export function useFarmerManagement() {
         const farmer = farmers.find((item) => item.id === id);
         try {
             await deleteFarmerMutation.mutateAsync(Number(id));
-            toast.success('Farmer account deleted.', {
-                description: farmer ? `${farmer.name} has been removed.` : undefined,
+            toast.success(t('admin.farmerManagement.toast.deleted'), {
+                description: farmer
+                    ? t('admin.farmerManagement.toast.deletedDescription', { name: farmer.name })
+                    : undefined,
             });
             setSelectedFarmers((prev) => prev.filter((farmerId) => farmerId !== id));
         } catch (error) {
             console.error(error);
-            toast.error('Failed to delete farmer account.');
+            toast.error(t('admin.farmerManagement.toast.deleteFailed'));
         }
     };
 
@@ -344,17 +348,21 @@ export function useFarmerManagement() {
                 id: Number(id),
                 payload: { status: FARMER_STATUS_MAP[nextStatus] },
             });
-            toast.success(nextStatus === 'active' ? 'Account unlocked.' : 'Account locked.');
+            toast.success(
+                nextStatus === 'active'
+                    ? t('admin.farmerManagement.toast.unlocked')
+                    : t('admin.farmerManagement.toast.locked')
+            );
         } catch (error) {
             console.error(error);
-            toast.error('Failed to update farmer status.');
+            toast.error(t('admin.farmerManagement.toast.statusUpdateFailed'));
         }
     };
 
     const handleBulkAction = async (action: string) => {
         if (selectedFarmers.length === 0) {
-            toast.error('No farmers selected', {
-                description: 'Please select at least one farmer to perform bulk action.',
+            toast.error(t('admin.farmerManagement.toast.noSelection'), {
+                description: t('admin.farmerManagement.toast.noSelectionDescription'),
             });
             return;
         }
@@ -372,8 +380,8 @@ export function useFarmerManagement() {
                 );
                 toast.success(
                     action === 'activate'
-                        ? `${selectedFarmers.length} farmers activated.`
-                        : `${selectedFarmers.length} farmers locked.`
+                        ? t('admin.farmerManagement.toast.bulkActivated', { count: selectedFarmers.length })
+                        : t('admin.farmerManagement.toast.bulkLocked', { count: selectedFarmers.length })
                 );
             }
 
@@ -381,12 +389,12 @@ export function useFarmerManagement() {
                 await Promise.all(
                     selectedFarmers.map((farmerId) => deleteFarmerMutation.mutateAsync(Number(farmerId)))
                 );
-                toast.success(`${selectedFarmers.length} farmers deleted.`);
+                toast.success(t('admin.farmerManagement.toast.bulkDeleted', { count: selectedFarmers.length }));
             }
             setSelectedFarmers([]);
         } catch (error) {
             console.error(error);
-            toast.error('Bulk action failed. Please retry.');
+            toast.error(t('admin.farmerManagement.toast.bulkFailed'));
         }
     };
 
@@ -402,14 +410,14 @@ export function useFarmerManagement() {
             .filter((row) => row.length > 0);
 
         if (rows.length < 2) {
-            toast.error('CSV file does not contain data rows.');
+            toast.error(t('admin.farmerManagement.toast.csvNoRows'));
             return;
         }
 
         const headers = parseCsvLine(rows[0]).map((header) => header.toLowerCase().trim());
         const hasRequiredColumns = CSV_REQUIRED_COLUMNS.every((column) => headers.includes(column));
         if (!hasRequiredColumns) {
-            toast.error('CSV format is invalid. Required columns: name, email, phone, role, status.');
+            toast.error(t('admin.farmerManagement.toast.csvInvalidFormat'));
             return;
         }
 
@@ -427,22 +435,34 @@ export function useFarmerManagement() {
             const normalizedStatus = row.status?.toLowerCase();
 
             if (!row.name) {
-                errors.push({ row: index + 1, field: 'name', message: 'Name is required.' });
+                errors.push({
+                    row: index + 1,
+                    field: 'name',
+                    message: t('admin.farmerManagement.validation.nameRequired'),
+                });
             }
 
             if (!row.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
-                errors.push({ row: index + 1, field: 'email', message: 'Invalid email format.' });
+                errors.push({
+                    row: index + 1,
+                    field: 'email',
+                    message: t('admin.farmerManagement.validation.invalidEmail'),
+                });
             }
 
             if (!row.phone) {
-                errors.push({ row: index + 1, field: 'phone', message: 'Phone number is required.' });
+                errors.push({
+                    row: index + 1,
+                    field: 'phone',
+                    message: t('admin.farmerManagement.validation.phoneRequired'),
+                });
             }
 
             if (!['farmer', 'manager', 'owner'].includes(normalizedRole)) {
                 errors.push({
                     row: index + 1,
                     field: 'role',
-                    message: `Unsupported role "${row.role}".`,
+                    message: t('admin.farmerManagement.validation.unsupportedRole', { role: row.role }),
                 });
             }
 
@@ -450,7 +470,7 @@ export function useFarmerManagement() {
                 errors.push({
                     row: index + 1,
                     field: 'status',
-                    message: `Unsupported status "${row.status}".`,
+                    message: t('admin.farmerManagement.validation.unsupportedStatus', { status: row.status }),
                 });
             }
 
@@ -468,18 +488,18 @@ export function useFarmerManagement() {
         setImportStep(2);
 
         if (errors.length > 0) {
-            toast.warning(`${errors.length} validation issue(s) found in CSV preview.`);
+            toast.warning(t('admin.farmerManagement.toast.csvValidationIssues', { count: errors.length }));
         }
     };
 
     const handleImportConfirm = () => {
-        toast.error('Farmer CSV import endpoint is not available yet.');
+        toast.error(t('admin.farmerManagement.toast.importUnavailable'));
     };
 
     const handleResetPassword = (id: string, method: 'email' | 'temp') => {
         void (async () => {
             if (method === 'email') {
-                toast.error('Email reset flow is not available. Use temporary password reset.');
+                toast.error(t('admin.farmerManagement.toast.emailResetUnavailable'));
                 return;
             }
 
@@ -492,13 +512,13 @@ export function useFarmerManagement() {
                 if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
                     await navigator.clipboard.writeText(temporaryPassword);
                 }
-                toast.success('Temporary password generated and applied.', {
-                    description: 'Password copied to clipboard.',
+                toast.success(t('admin.farmerManagement.toast.tempPasswordApplied'), {
+                    description: t('admin.farmerManagement.toast.passwordCopied'),
                 });
                 setResetPasswordOpen(false);
             } catch (error) {
                 console.error(error);
-                toast.error('Failed to reset password.');
+                toast.error(t('admin.farmerManagement.toast.resetPasswordFailed'));
             }
         })();
     };

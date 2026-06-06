@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
 import { Badge } from "@/shared/ui/badge";
+import { BackButton } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
@@ -217,19 +218,19 @@ export function SeasonNutrientInputsWorkspace() {
 
   if (!hasValidSeasonId) {
     return (
-      <Card className="border border-destructive/20 bg-destructive/5">
-        <CardContent className="p-6 space-y-3">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
-            <div className="space-y-2">
-              <p className="text-sm text-foreground">{t("seasonWorkspace.invalidSeason")}</p>
-              <Button variant="outline" onClick={() => navigate("/farmer/seasons")}>
-                {t("seasonWorkspace.backToSeasons")}
-              </Button>
+      <div className="space-y-4">
+        <BackButton to="/farmer/seasons" variant="outline" />
+        <Card className="border border-destructive/20 bg-destructive/5">
+          <CardContent className="p-6 space-y-3">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+              <div className="space-y-2">
+                <p className="text-sm text-foreground">{t("seasonWorkspace.invalidSeason")}</p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 

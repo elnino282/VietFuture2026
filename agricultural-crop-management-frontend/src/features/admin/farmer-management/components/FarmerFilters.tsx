@@ -14,6 +14,7 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { FarmerRole, FarmerStatus } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface FarmerFiltersProps {
     searchQuery: string;
@@ -38,6 +39,7 @@ export function FarmerFilters({
     onStatusFilterChange,
     onClearFilters,
 }: FarmerFiltersProps) {
+    const { t } = useI18n();
     const activeFiltersCount =
         (roleFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0);
 
@@ -48,7 +50,7 @@ export function FarmerFilters({
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search by name, email, or phone..."
+                            placeholder={t('admin.farmerManagement.filters.searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
                             className="pl-9"
@@ -61,7 +63,7 @@ export function FarmerFilters({
                             className="w-full md:w-auto"
                         >
                             <Filter className="w-4 h-4 mr-2" />
-                            Filters
+                            {t('common.filter')}
                             {activeFiltersCount > 0 && (
                                 <Badge variant="secondary" className="ml-2">
                                     {activeFiltersCount}
@@ -70,37 +72,37 @@ export function FarmerFilters({
                         </Button>
                         <SheetContent>
                             <SheetHeader>
-                                <SheetTitle>Filter Farmers</SheetTitle>
+                                <SheetTitle>{t('admin.farmerManagement.filters.title')}</SheetTitle>
                                 <SheetDescription>
-                                    Apply filters to refine your farmer list
+                                    {t('admin.farmerManagement.filters.description')}
                                 </SheetDescription>
                             </SheetHeader>
                             <div className="mt-6 space-y-6">
                                 <div className="space-y-2">
-                                    <Label>Role</Label>
+                                    <Label>{t('admin.farmerManagement.fields.role')}</Label>
                                     <Select value={roleFilter} onValueChange={(v) => onRoleFilterChange(v as FarmerRole | 'all')}>
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">All Roles</SelectItem>
-                                            <SelectItem value="owner">Owner</SelectItem>
-                                            <SelectItem value="manager">Manager</SelectItem>
-                                            <SelectItem value="farmer">Farmer</SelectItem>
+                                            <SelectItem value="all">{t('admin.farmerManagement.filters.allRoles')}</SelectItem>
+                                            <SelectItem value="owner">{t('admin.farmerManagement.roles.owner')}</SelectItem>
+                                            <SelectItem value="manager">{t('admin.farmerManagement.roles.manager')}</SelectItem>
+                                            <SelectItem value="farmer">{t('admin.farmerManagement.roles.farmer')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Status</Label>
+                                    <Label>{t('common.status')}</Label>
                                     <Select value={statusFilter} onValueChange={(v) => onStatusFilterChange(v as FarmerStatus | 'all')}>
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">All Statuses</SelectItem>
-                                            <SelectItem value="active">Active</SelectItem>
-                                            <SelectItem value="locked">Locked</SelectItem>
-                                            <SelectItem value="inactive">Inactive</SelectItem>
+                                            <SelectItem value="all">{t('admin.farmerManagement.filters.allStatuses')}</SelectItem>
+                                            <SelectItem value="active">{t('admin.farmerManagement.status.active')}</SelectItem>
+                                            <SelectItem value="locked">{t('admin.farmerManagement.status.locked')}</SelectItem>
+                                            <SelectItem value="inactive">{t('admin.farmerManagement.status.inactive')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -111,10 +113,10 @@ export function FarmerFilters({
                                         className="flex-1"
                                         onClick={onClearFilters}
                                     >
-                                        Clear All
+                                        {t('common.clearAll')}
                                     </Button>
                                     <Button className="flex-1" onClick={() => onFilterOpenChange(false)}>
-                                        Apply
+                                        {t('admin.farmerManagement.filters.apply')}
                                     </Button>
                                 </div>
                             </div>

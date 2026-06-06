@@ -119,6 +119,67 @@ vi.mock("@/hooks/useI18n", () => ({
     }),
 }));
 
+vi.mock("@/shared/lib/hooks/useI18n", () => ({
+    useI18n: () => ({
+        t: (key: string, optionsOrDefault?: Record<string, unknown> | string) => {
+            if (typeof optionsOrDefault === "string") return optionsOrDefault;
+            const dictionary: Record<string, string> = {
+                "expenses.pageTitle": "Expense Management",
+                "expenses.subtitle": "Track and optimize your farm spending",
+                "expenses.tabs.list": "List",
+                "expenses.tabs.analytics": "Analytics",
+                "expenses.reminders": "Reminders",
+                "expenses.export": "Export",
+                "expenses.createButton": "Add Expense",
+                "expenses.status.paid": "Paid",
+                "expenses.status.pending": "Pending",
+                "expenses.status.unpaid": "Unpaid",
+                "expenses.table.showingCount": `Showing ${optionsOrDefault?.shown ?? 0} of ${optionsOrDefault?.total ?? 0} expenses`,
+                "expenses.table.totalAmount": `Total: ${optionsOrDefault?.amount ?? ""}`,
+                "expenses.table.columns.date": "Date",
+                "expenses.table.columns.category": "Category",
+                "expenses.table.columns.description": "Description",
+                "expenses.table.columns.linkedTo": "Linked To",
+                "expenses.table.columns.amount": "Amount",
+                "expenses.table.columns.status": "Status",
+                "expenses.table.columns.receipt": "Receipt",
+                "expenses.table.columns.actions": "Actions",
+                "expenses.table.emptyTitle": "No expenses found",
+                "expenses.table.emptyDescription": "Try adjusting your filters",
+                "expenses.table.openNewTab": "Open tab",
+                "expenses.table.receiptFallback": "Receipt",
+                "expenses.table.viewDetails": "View Details",
+                "expenses.table.downloadReceipt": "Download receipt (open tab)",
+                "common.edit": "Edit",
+                "common.delete": "Delete",
+            };
+            return dictionary[key] ?? key;
+        },
+    }),
+}));
+
+vi.mock("react-i18next", () => ({
+    useTranslation: () => ({
+        t: (key: string) => {
+            const dictionary: Record<string, string> = {
+                "expenses.overview.budgetTracker": "Budget Tracker",
+                "expenses.overview.budgetNotSet": "No budget has been set for this season.",
+                "expenses.overview.setBudget": "Set Budget",
+                "expenses.overview.budgetUsage": "Budget Usage",
+                "expenses.overview.used": "Used",
+                "expenses.overview.remaining": "Remaining",
+                "expenses.overview.total": "Total",
+                "expenses.overview.paid": "Paid",
+                "expenses.overview.unpaid": "Unpaid",
+                "expenses.overview.pendingExpenses": "Pending Expenses",
+                "expenses.overview.awaitingPayment": "awaiting payment",
+                "expenses.overview.noPending": "No pending expenses.",
+            };
+            return dictionary[key] ?? key;
+        },
+    }),
+}));
+
 vi.mock("@/features/farmer/expense-management/hooks/useExpenseManagement", () => ({
     useExpenseManagement: () => mockUseExpenseManagement(),
 }));

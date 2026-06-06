@@ -18,7 +18,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateFieldLogRequest {
 
-    @NotNull(message = "Season ID is required")
     Integer seasonId;
 
     @NotNull(message = "Log date is required")

@@ -1,12 +1,15 @@
 import { ShoppingCart, CheckCircle, Clock, Ban } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { BuyerStats } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface BuyerStatCardsProps {
     stats: BuyerStats;
 }
 
 export function BuyerStatCards({ stats }: BuyerStatCardsProps) {
+    const { t } = useI18n();
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
@@ -17,7 +20,7 @@ export function BuyerStatCards({ stats }: BuyerStatCardsProps) {
                         </div>
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground mb-1">Total Buyers</p>
+                        <p className="text-sm text-muted-foreground mb-1">{t('admin.buyerManagement.stats.totalBuyers')}</p>
                         <h2 className="font-numeric">{stats.total}</h2>
                     </div>
                 </CardContent>
@@ -31,7 +34,7 @@ export function BuyerStatCards({ stats }: BuyerStatCardsProps) {
                         </div>
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground mb-1">Active</p>
+                        <p className="text-sm text-muted-foreground mb-1">{t('admin.buyerManagement.status.active')}</p>
                         <h2 className="font-numeric">{stats.active}</h2>
                     </div>
                 </CardContent>
@@ -45,7 +48,7 @@ export function BuyerStatCards({ stats }: BuyerStatCardsProps) {
                         </div>
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground mb-1">Pending KYC</p>
+                        <p className="text-sm text-muted-foreground mb-1">{t('admin.buyerManagement.stats.pendingKyc')}</p>
                         <h2 className="font-numeric">{stats.pendingKYC}</h2>
                     </div>
                 </CardContent>
@@ -59,7 +62,7 @@ export function BuyerStatCards({ stats }: BuyerStatCardsProps) {
                         </div>
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground mb-1">Suspended/Closed</p>
+                        <p className="text-sm text-muted-foreground mb-1">{t('admin.buyerManagement.stats.suspendedClosed')}</p>
                         <h2 className="font-numeric">{stats.locked}</h2>
                     </div>
                 </CardContent>

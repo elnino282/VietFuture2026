@@ -1,12 +1,13 @@
 /**
  * FarmsCardView Component
- * 
+ *
  * Mobile-optimized card layout for farm list
  */
 
 import type { Farm } from '@/entities/farm';
 import { AddressDisplay, Badge, Checkbox } from '@/shared/ui';
 import { MapPin, Maximize2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { FarmActionsMenu } from './FarmActionsMenu';
 import { FarmBulkActionBar } from './FarmBulkActionBar';
 
@@ -25,7 +26,7 @@ interface FarmsCardViewProps {
 
 /**
  * FarmsCardView Component
- * 
+ *
  * Card-based layout optimized for mobile and tablet devices with:
  * - Touch-friendly card design
  * - Inline selection checkboxes
@@ -44,15 +45,17 @@ export function FarmsCardView({
     onBulkStatusChange,
     onClearSelection,
 }: FarmsCardViewProps) {
+    const { t } = useTranslation();
+
     // Selection state
     const isAllSelected = farms.length > 0 && selectedFarms.length === farms.length;
     const isSomeSelected = selectedFarms.length > 0 && selectedFarms.length < farms.length;
 
     // Format area value
     const formatArea = (area: string | number | null | undefined): string => {
-        if (!area) return '—';
+        if (!area) return '-';
         const numArea = typeof area === 'string' ? parseFloat(area) : area;
-        return isNaN(numArea) ? '—' : `${numArea.toFixed(2)} ha`;
+        return isNaN(numArea) ? '-' : `${numArea.toFixed(2)} ha`;
     };
 
     return (
@@ -66,11 +69,13 @@ export function FarmsCardView({
                         className="border-muted-foreground"
                     />
                     <span className="text-sm font-medium text-foreground">
-                        {isSomeSelected ? `${selectedFarms.length} selected` : 'Select all'}
+                        {isSomeSelected
+                            ? t('farmManagement.selectedCount', { count: selectedFarms.length })
+                            : t('farmManagement.selectAll')}
                     </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                    {farms.length} farm{farms.length !== 1 ? 's' : ''}
+                    {t('farmManagement.farmCount', { count: farms.length })}
                 </p>
             </div>
 
@@ -99,7 +104,7 @@ export function FarmsCardView({
                                         className="border-muted-foreground"
                                     />
                                     <Badge variant={farm.active ? 'default' : 'secondary'}>
-                                        {farm.active ? 'Active' : 'Inactive'}
+                                        {farm.active ? t('common.active') : t('common.inactive')}
                                     </Badge>
                                 </div>
                                 <FarmActionsMenu
@@ -127,7 +132,9 @@ export function FarmsCardView({
                                         <div className="flex items-start gap-2">
                                             <Maximize2 className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                                             <div>
-                                                <p className="text-xs text-muted-foreground uppercase tracking-wide">Area</p>
+                                                <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                                                    {t('farms.form.area')}
+                                                </p>
                                                 <p className="text-sm font-mono text-foreground">
                                                     {formatArea(farm.area)}
                                                 </p>
@@ -140,7 +147,9 @@ export function FarmsCardView({
                                         <div className="flex items-start gap-2">
                                             <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                                             <div>
-                                                <p className="text-xs text-muted-foreground uppercase tracking-wide">Location</p>
+                                                <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                                                    {t('farms.form.location')}
+                                                </p>
                                                 <p className="text-sm text-foreground">
                                                     <AddressDisplay
                                                         wardCode={farm.wardId}
@@ -154,7 +163,7 @@ export function FarmsCardView({
                                     {/* Farm ID */}
                                     <div className="pt-2 border-t border-border">
                                         <p className="text-xs text-muted-foreground">
-                                            ID: #{farm.id}
+                                            {t('farmDetail.meta.id', { id: farm.id })}
                                         </p>
                                     </div>
                                 </div>
@@ -167,10 +176,10 @@ export function FarmsCardView({
             {/* Footer */}
             <div className="mt-6 px-4 py-3 bg-muted rounded-lg border border-border">
                 <p className="text-sm text-center text-muted-foreground">
-                    Showing <span className="font-semibold text-foreground">{farms.length}</span> farm{farms.length !== 1 ? 's' : ''}
+                    {t('farmManagement.showingFarms', { count: farms.length })}
                     {selectedFarms.length > 0 && (
-                        <span className="ml-2">
-                            • <span className="font-semibold text-blue-600">{selectedFarms.length}</span> selected
+                        <span className="ml-2 font-semibold text-blue-600">
+                            {t('farmManagement.selectedCountInline', { count: selectedFarms.length })}
                         </span>
                     )}
                 </p>
@@ -186,10 +195,3 @@ export function FarmsCardView({
         </>
     );
 }
-
-
-
-
-
-
-

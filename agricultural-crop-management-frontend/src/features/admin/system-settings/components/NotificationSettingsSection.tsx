@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { NotificationSetting } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface NotificationSettingsProps {
     settings: NotificationSetting[];
@@ -16,28 +17,32 @@ export function NotificationSettingsSection({
     onSettingUpdate,
     onTestNotification,
 }: NotificationSettingsProps) {
+    const { t } = useI18n();
+
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Notification Settings</CardTitle>
-                <CardDescription>Configure notification channels and preferences</CardDescription>
+                <CardTitle>{t('admin.systemSettings.notifications.title')}</CardTitle>
+                <CardDescription>{t('admin.systemSettings.notifications.description')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Topic</TableHead>
-                                <TableHead className="text-center">Email</TableHead>
-                                <TableHead className="text-center">In-App</TableHead>
-                                <TableHead className="text-center">SMS</TableHead>
-                                <TableHead className="text-center">Action</TableHead>
+                                <TableHead>{t('admin.systemSettings.notifications.table.topic')}</TableHead>
+                                <TableHead className="text-center">{t('admin.systemSettings.notifications.channels.email')}</TableHead>
+                                <TableHead className="text-center">{t('admin.systemSettings.notifications.channels.inApp')}</TableHead>
+                                <TableHead className="text-center">{t('admin.systemSettings.notifications.channels.sms')}</TableHead>
+                                <TableHead className="text-center">{t('common.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {settings.map((setting) => (
                                 <TableRow key={setting.id}>
-                                    <TableCell className="font-medium">{setting.topic}</TableCell>
+                                    <TableCell className="font-medium">
+                                        {t(`admin.systemSettings.notifications.topics.${setting.id}`, setting.topic)}
+                                    </TableCell>
                                     <TableCell className="text-center">
                                         <Switch
                                             checked={setting.email}
@@ -59,7 +64,7 @@ export function NotificationSettingsSection({
                                     <TableCell className="text-center">
                                         <Button variant="outline" size="sm" onClick={() => onTestNotification(setting.topic)}>
                                             <TestTube2 className="w-4 h-4 mr-2" />
-                                            Test
+                                            {t('admin.systemSettings.notifications.test')}
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -70,7 +75,7 @@ export function NotificationSettingsSection({
                 <div className="flex gap-2 mt-6">
                     <Button>
                         <Save className="w-4 h-4 mr-2" />
-                        Save Notification Settings
+                        {t('admin.systemSettings.notifications.save')}
                     </Button>
                 </div>
             </CardContent>

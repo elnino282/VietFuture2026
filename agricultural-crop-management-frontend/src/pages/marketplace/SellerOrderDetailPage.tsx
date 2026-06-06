@@ -1,8 +1,9 @@
 import { useMemo } from "react";
-import { ArrowLeft, CreditCard, MapPin, Phone, Truck } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { CreditCard, MapPin, Phone, Truck } from "lucide-react";
+import { useParams } from "react-router-dom";
 import type { MarketplaceOrderStatus } from "@/shared/api";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
+import { BackButton } from "@/shared/ui/back-button";
 import { useI18n } from "@/hooks/useI18n";
 import {
   useMarketplaceFarmerOrderDetail,
@@ -128,8 +129,9 @@ export function SellerOrderDetailPage() {
       <div className="max-w-[1800px] mx-auto px-6 pt-6 space-y-6">
         <SellerMarketplaceTabs />
         <Card className="border-destructive/30">
-          <CardContent className="p-8 text-sm text-destructive">
-            {t("marketplaceSeller.orderDetail.error", "Failed to load seller order detail.")}
+          <CardContent className="space-y-4 p-8 text-sm text-destructive">
+            <p>{t("marketplaceSeller.orderDetail.error", "Failed to load seller order detail.")}</p>
+            <BackButton to="/farmer/marketplace-orders" variant="outline" />
           </CardContent>
         </Card>
       </div>
@@ -144,13 +146,7 @@ export function SellerOrderDetailPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Link
-            to="/farmer/marketplace-orders"
-            className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label={t("marketplaceSeller.orderDetail.backToOrders", "Back to orders")}
-          >
-            <ArrowLeft size={18} />
-          </Link>
+          <BackButton to="/farmer/marketplace-orders" />
           <div>
             <p className="text-sm font-medium text-primary">
               {t("marketplaceSeller.common.brand", "Seller Portal")}

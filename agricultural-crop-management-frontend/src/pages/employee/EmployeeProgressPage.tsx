@@ -1,5 +1,6 @@
 ﻿import { useEmployeeProgressLogs } from "@/entities/labor";
 import {
+  BackButton,
   Card,
   CardContent,
   CardHeader,
@@ -11,18 +12,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui";
+import { useI18n } from "@/hooks/useI18n";
 import { useMemo } from "react";
 
-const formatDate = (value?: string | null) => {
+const formatDate = (value: string | null | undefined, locale: string) => {
   if (!value) return "-";
   try {
-    return new Date(value).toLocaleString("vi-VN");
+    return new Date(value).toLocaleString(locale);
   } catch {
     return value;
   }
 };
 
 export function EmployeeProgressPage() {
+  const { t, locale } = useI18n();
   const { data, isLoading } = useEmployeeProgressLogs({ page: 0, size: 200 });
   const logs = data?.items ?? [];
 
@@ -30,7 +33,7 @@ export function EmployeeProgressPage() {
     const grouped = new Map<string, { seasonName: string; logs: typeof logs }>();
     logs.forEach((log) => {
       const key = log.seasonId ? String(log.seasonId) : "no-season";
-      const seasonName = log.seasonName || "Unassigned Season";
+      const seasonName = log.seasonName || t("employee.common.unassignedSeason");
       const existing = grouped.get(key);
       if (existing) {
         existing.logs.push(log);
@@ -39,19 +42,20 @@ export function EmployeeProgressPage() {
       }
     });
     return Array.from(grouped.values()).sort((a, b) => a.seasonName.localeCompare(b.seasonName));
-  }, [logs]);
+  }, [logs, t]);
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto">
+    <div className="p-4 sm:p-6 max-w-[1500px] mx-auto space-y-4">
+      <BackButton to="/employee/tasks" className="w-fit" />
       <Card className="rounded-2xl border border-border">
         <CardHeader>
-          <CardTitle>Lịch sử cập nhật tiến độ</CardTitle>
+          <CardTitle>{t("employee.progress.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Đang tải dữ liệu tiến độ...</p>
+            <p className="text-sm text-muted-foreground">{t("employee.progress.loading")}</p>
           ) : logs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Bạn chưa gửi cập nhật tiến độ nào.</p>
+            <p className="text-sm text-muted-foreground">{t("employee.progress.empty")}</p>
           ) : (
             <div className="space-y-6">
               {logsBySeason.map((group) => (
@@ -60,19 +64,21 @@ export function EmployeeProgressPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Công việc</TableHead>
-                        <TableHead>Tiến độ</TableHead>
-                        <TableHead>Ghi chú</TableHead>
-                        <TableHead>Thời gian</TableHead>
+                        <TableHead>{t("employee.progress.table.task")}</TableHead>
+                        <TableHead>{t("employee.progress.table.progress")}</TableHead>
+                        <TableHead>{t("employee.progress.table.note")}</TableHead>
+                        <TableHead>{t("employee.progress.table.loggedAt")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {group.logs.map((log) => (
                         <TableRow key={log.id}>
-                          <TableCell>{log.taskTitle || `Task #${log.taskId}`}</TableCell>
+                          <TableCell>
+                            {log.taskTitle || t("employee.common.taskFallback", { id: log.taskId })}
+                          </TableCell>
                           <TableCell>{log.progressPercent}%</TableCell>
                           <TableCell className="max-w-[240px] sm:max-w-[360px] truncate">{log.note || "-"}</TableCell>
-                          <TableCell>{formatDate(log.loggedAt)}</TableCell>
+                          <TableCell>{formatDate(log.loggedAt, locale)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

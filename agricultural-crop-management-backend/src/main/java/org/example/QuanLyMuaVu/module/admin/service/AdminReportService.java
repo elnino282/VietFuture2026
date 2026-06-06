@@ -24,6 +24,7 @@ import org.example.QuanLyMuaVu.module.admin.dto.response.AdminReportResponse;
 import org.example.QuanLyMuaVu.module.admin.repository.AdminReportReadRepository;
 import org.example.QuanLyMuaVu.module.admin.repository.AdminReportReadRepository.SeasonFinancialRow;
 import org.example.QuanLyMuaVu.module.financial.port.ExpenseQueryPort;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -142,14 +143,24 @@ public class AdminReportService {
         BigDecimal marginPercent = calculatePercentage(grossProfit, revenue);
         BigDecimal costPerTon = calculateCostPerKg(totalCost, actualYield);
 
+        boolean vietnameseLocale = isVietnameseLocale();
         List<String> warnings = new ArrayList<>();
         if (rows.isEmpty()) {
-            warnings.add("No seasons found for current filters");
+            warnings.add(localize(
+                    vietnameseLocale,
+                    "No seasons found for current filters",
+                    "Không tìm thấy mùa vụ nào theo bộ lọc hiện tại"));
         }
         if (actualYield.compareTo(BigDecimal.ZERO) == 0 && totalCost.compareTo(BigDecimal.ZERO) > 0) {
-            warnings.add("No harvested yield in selected range while expenses exist");
+            warnings.add(localize(
+                    vietnameseLocale,
+                    "No harvested yield in selected range while expenses exist",
+                    "Có chi phí trong khoảng đã chọn nhưng chưa có sản lượng thu hoạch"));
         }
-        warnings.add("Marketplace revenue is excluded until marketplace report contract is finalized.");
+        warnings.add(localize(
+                vietnameseLocale,
+                "Marketplace revenue is excluded until marketplace report contract is finalized.",
+                "Doanh thu marketplace chưa được tính cho đến khi hoàn tất contract báo cáo marketplace."));
 
         AdminReportResponse.AppliedFilters appliedFilters = AdminReportResponse.AppliedFilters.builder()
                 .dateFrom(filter.getEffectiveFromDate() != null ? filter.getEffectiveFromDate().toString() : null)
@@ -238,8 +249,9 @@ public class AdminReportService {
                 .filter(expense -> isWithinRange(expense.getExpenseDate(), from, to))
                 .collect(Collectors.toList());
 
+        boolean vietnameseLocale = isVietnameseLocale();
         Map<String, List<org.example.QuanLyMuaVu.module.financial.entity.Expense>> byCategory = filteredExpenses.stream()
-                .collect(Collectors.groupingBy(expense -> normalizeCategory(expense.getCategory())));
+                .collect(Collectors.groupingBy(expense -> normalizeCategory(expense.getCategory(), vietnameseLocale)));
 
         List<AdminReportResponse.CostCategoryRow> tableRows = byCategory.entrySet().stream()
                 .map(entry -> AdminReportResponse.CostCategoryRow.builder()
@@ -259,7 +271,7 @@ public class AdminReportService {
         List<AdminReportResponse.CostVendorRow> vendorRows = filteredExpenses.stream()
                 .collect(Collectors.groupingBy(expense -> {
                     String value = expense.getItemName();
-                    return (value == null || value.trim().isEmpty()) ? "Unassigned" : value.trim();
+                    return (value == null || value.trim().isEmpty()) ? unassignedLabel(vietnameseLocale) : value.trim();
                 }))
                 .entrySet().stream()
                 .map(entry -> AdminReportResponse.CostVendorRow.builder()
@@ -417,8 +429,8 @@ public class AdminReportService {
         return true;
     }
 
-    private String normalizeCategory(String category) {
-        return (category == null || category.trim().isEmpty()) ? "Uncategorized" : category.trim();
+    private String normalizeCategory(String category, boolean vietnameseLocale) {
+        return (category == null || category.trim().isEmpty()) ? uncategorizedLabel(vietnameseLocale) : category.trim();
     }
 
     private BigDecimal sumExpense(List<org.example.QuanLyMuaVu.module.financial.entity.Expense> expenses) {
@@ -469,8 +481,52 @@ public class AdminReportService {
         return periodStart.getYear() + "-" + String.format("%02d", periodStart.getMonthValue());
     }
 
+    private String uncategorizedLabel(boolean vietnameseLocale) {
+        return localize(vietnameseLocale, "Uncategorized", "Chưa phân loại");
+    }
+
+    private String unassignedLabel(boolean vietnameseLocale) {
+        return localize(vietnameseLocale, "Unassigned", "Chưa gán");
+    }
+
+    private String yieldCsvHeader() {
+        return localize(
+                "farm_name,plot_name,crop_name,variety_name,actual_yield_kg,harvest_count\n",
+                "Tên nông trại,Tên thửa,Tên cây trồng,Tên giống,Sản lượng thực tế (kg),Số lần thu hoạch\n");
+    }
+
+    private String costCsvHeader() {
+        return localize(
+                "section,key,total_cost,expense_count,period_start\n",
+                "Phân nhóm,Khóa,Tổng chi phí,Số chi phí,Kỳ bắt đầu\n");
+    }
+
+    private String revenueCsvHeader() {
+        return localize(
+                "crop_name,plot_name,total_quantity_kg,total_revenue,marketplace_revenue,marketplace_revenue_status,avg_price\n",
+                "Tên cây trồng,Tên thửa,Tổng sản lượng (kg),Tổng doanh thu,Doanh thu marketplace,Trạng thái doanh thu marketplace,Giá trung bình\n");
+    }
+
+    private String profitCsvHeader() {
+        return localize(
+                "crop_name,plot_name,total_revenue,marketplace_revenue,marketplace_revenue_status,total_cost,gross_profit,margin_percent\n",
+                "Tên cây trồng,Tên thửa,Tổng doanh thu,Doanh thu marketplace,Trạng thái doanh thu marketplace,Tổng chi phí,Lợi nhuận gộp,Tỷ suất lợi nhuận\n");
+    }
+
+    private String costCategorySection() {
+        return localize("category", "Danh mục");
+    }
+
+    private String costVendorSection() {
+        return localize("vendor", "Nhà cung cấp");
+    }
+
+    private String costTimeSection() {
+        return localize("time", "Thời gian");
+    }
+
     private String buildYieldCsv(AdminReportResponse.YieldAnalyticsResponse response) {
-        StringBuilder b = new StringBuilder("farm_name,plot_name,crop_name,variety_name,actual_yield_kg,harvest_count\n");
+        StringBuilder b = new StringBuilder(yieldCsvHeader());
         for (AdminReportResponse.YieldAnalyticsRow row : response.getTableRows()) {
             b.append(csv(row.getFarmName())).append(',')
                     .append(csv(row.getPlotName())).append(',')
@@ -483,21 +539,21 @@ public class AdminReportService {
     }
 
     private String buildCostCsv(AdminReportResponse.CostAnalyticsResponse response) {
-        StringBuilder b = new StringBuilder("section,key,total_cost,expense_count,period_start\n");
+        StringBuilder b = new StringBuilder(costCsvHeader());
         for (AdminReportResponse.CostCategoryRow row : response.getTableRows()) {
-            b.append("category,").append(csv(row.getCategory())).append(',')
+            b.append(costCategorySection()).append(',').append(csv(row.getCategory())).append(',')
                     .append(csvNumber(row.getTotalCost())).append(',')
                     .append(csvLong(row.getExpenseCount())).append(',')
                     .append('\n');
         }
         for (AdminReportResponse.CostVendorRow row : response.getVendorRows()) {
-            b.append("vendor,").append(csv(row.getVendorName())).append(',')
+            b.append(costVendorSection()).append(',').append(csv(row.getVendorName())).append(',')
                     .append(csvNumber(row.getTotalCost())).append(',')
                     .append(csvLong(row.getExpenseCount())).append(',')
                     .append('\n');
         }
         for (AdminReportResponse.CostTimeRow row : response.getTimeSeries()) {
-            b.append("time,").append(csv(row.getLabel())).append(',')
+            b.append(costTimeSection()).append(',').append(csv(row.getLabel())).append(',')
                     .append(csvNumber(row.getTotalCost())).append(',')
                     .append(',')
                     .append(csv(row.getPeriodStart())).append('\n');
@@ -506,8 +562,7 @@ public class AdminReportService {
     }
 
     private String buildRevenueCsv(AdminReportResponse.RevenueAnalyticsResponse response) {
-        StringBuilder b = new StringBuilder(
-                "crop_name,plot_name,total_quantity_kg,total_revenue,marketplace_revenue,marketplace_revenue_status,avg_price\n");
+        StringBuilder b = new StringBuilder(revenueCsvHeader());
         for (AdminReportResponse.RevenueRow row : response.getTableRows()) {
             b.append(csv(row.getCropName())).append(',')
                     .append(csv(row.getPlotName())).append(',')
@@ -521,8 +576,7 @@ public class AdminReportService {
     }
 
     private String buildProfitCsv(AdminReportResponse.ProfitAnalyticsResponse response) {
-        StringBuilder b = new StringBuilder(
-                "crop_name,plot_name,total_revenue,marketplace_revenue,marketplace_revenue_status,total_cost,gross_profit,margin_percent\n");
+        StringBuilder b = new StringBuilder(profitCsvHeader());
         for (AdminReportResponse.ProfitRow row : response.getTableRows()) {
             b.append(csv(row.getCropName())).append(',')
                     .append(csv(row.getPlotName())).append(',')
@@ -581,5 +635,18 @@ public class AdminReportService {
             return null;
         }
         return numerator.multiply(BigDecimal.valueOf(100)).divide(denominator, 2, RoundingMode.HALF_UP);
+    }
+
+    private boolean isVietnameseLocale() {
+        Locale locale = LocaleContextHolder.getLocale();
+        return locale != null && "vi".equalsIgnoreCase(locale.getLanguage());
+    }
+
+    private String localize(String english, String vietnamese) {
+        return localize(isVietnameseLocale(), english, vietnamese);
+    }
+
+    private String localize(boolean vietnameseLocale, String english, String vietnamese) {
+        return vietnameseLocale ? vietnamese : english;
     }
 }

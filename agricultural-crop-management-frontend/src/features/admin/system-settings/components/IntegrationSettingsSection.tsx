@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { Integration } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface IntegrationSettingsProps {
     integrations: Record<string, Integration>;
@@ -24,23 +25,24 @@ export function IntegrationSettingsSection({
     onTestConnection,
     getStatusBadge,
 }: IntegrationSettingsProps) {
+    const { t } = useI18n();
     const integrationConfigs = [
-        { key: 'weather', icon: Cloud, label: 'Weather API' },
-        { key: 'market', icon: DollarSign, label: 'Market Price API' },
-        { key: 'payment', icon: DollarSign, label: 'Payment Gateway' },
-        { key: 'iot', icon: Cpu, label: 'IoT Device Platform' },
-        { key: 'ai', icon: Zap, label: 'AI Assistant Service' },
+        { key: 'weather', icon: Cloud, labelKey: 'admin.systemSettings.integrations.services.weather' },
+        { key: 'market', icon: DollarSign, labelKey: 'admin.systemSettings.integrations.services.market' },
+        { key: 'payment', icon: DollarSign, labelKey: 'admin.systemSettings.integrations.services.payment' },
+        { key: 'iot', icon: Cpu, labelKey: 'admin.systemSettings.integrations.services.iot' },
+        { key: 'ai', icon: Zap, labelKey: 'admin.systemSettings.integrations.services.ai' },
     ];
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>External Integrations</CardTitle>
-                <CardDescription>Manage third-party API connections and services</CardDescription>
+                <CardTitle>{t('admin.systemSettings.integrations.title')}</CardTitle>
+                <CardDescription>{t('admin.systemSettings.integrations.description')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Accordion type="single" collapsible className="w-full">
-                    {integrationConfigs.map(({ key, icon: Icon, label }) => {
+                    {integrationConfigs.map(({ key, icon: Icon, labelKey }) => {
                         const integration = integrations[key];
                         if (!integration) return null;
 
@@ -49,45 +51,52 @@ export function IntegrationSettingsSection({
                                 <AccordionTrigger>
                                     <div className="flex items-center gap-3">
                                         <Icon className="w-5 h-5" />
-                                        <span>{label}</span>
+                                        <span>{t(labelKey)}</span>
                                         <Badge variant="secondary" className={getStatusBadge(integration.status)}>
-                                            {integration.status}
+                                            {t(`admin.systemSettings.integrations.status.${integration.status}`, integration.status)}
                                         </Badge>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="space-y-4 pt-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor={`${key}ApiKey`}>API Key</Label>
+                                        <Label htmlFor={`${key}ApiKey`}>{t('admin.systemSettings.integrations.apiKey')}</Label>
                                         <div className="flex gap-2">
                                             <Input
                                                 id={`${key}ApiKey`}
                                                 type={showApiKey[key] ? 'text' : 'password'}
                                                 value={integration.apiKey}
-                                                placeholder={key === 'payment' ? 'Enter payment gateway API key' : undefined}
+                                                placeholder={key === 'payment' ? t('admin.systemSettings.integrations.paymentApiKeyPlaceholder') : undefined}
                                                 onChange={(e) => onApiKeyUpdate(key, e.target.value)}
                                             />
                                             <Button
                                                 variant="outline"
                                                 size="icon"
+                                                aria-label={showApiKey[key]
+                                                    ? t('admin.systemSettings.integrations.hideApiKey')
+                                                    : t('admin.systemSettings.integrations.showApiKey')}
                                                 onClick={() => onToggleApiKeyVisibility(key)}
                                             >
                                                 {showApiKey[key] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                             </Button>
                                             {key !== 'payment' && (
-                                                <Button variant="outline" size="icon">
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    aria-label={t('admin.systemSettings.integrations.copyApiKey')}
+                                                >
                                                     <Copy className="w-4 h-4" />
                                                 </Button>
                                             )}
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <Button variant="outline" onClick={() => onTestConnection(label)}>
+                                        <Button variant="outline" onClick={() => onTestConnection(key)}>
                                             <TestTube2 className="w-4 h-4 mr-2" />
-                                            Test Connection
+                                            {t('admin.systemSettings.integrations.testConnection')}
                                         </Button>
                                         <Button>
                                             <Save className="w-4 h-4 mr-2" />
-                                            Save
+                                            {t('common.save')}
                                         </Button>
                                     </div>
                                 </AccordionContent>

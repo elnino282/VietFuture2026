@@ -2,9 +2,11 @@ import { useState, useMemo } from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown, Sprout } from "lucide-react";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Button } from "@/shared/ui/button";
+import { useTranslation } from "react-i18next";
 import { PlotStatusChip } from "./PlotStatusChip";
 import { PlotActionsMenu } from "./PlotActionsMenu";
 import { PlotBulkActionBar } from "./PlotBulkActionBar";
+import { getSoilTypeLabel } from "@/features/farmer/shared/plotOptions";
 import type { Plot, PlotStatus } from "../types";
 
 type SortColumn = "name" | "area" | "pH" | "status" | null;
@@ -45,6 +47,7 @@ export function PlotListView({
     onClearSelection,
     onClearFilters,
 }: PlotListViewProps) {
+    const { t } = useTranslation();
     const [sortColumn, setSortColumn] = useState<SortColumn>(null);
     const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
@@ -147,7 +150,7 @@ export function PlotListView({
                                         onClick={() => handleSort("name")}
                                         className="group flex items-center text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors uppercase tracking-wider"
                                     >
-                                        Plot Name
+                                        {t("plots.table.plotName")}
                                         {renderSortIcon("name")}
                                     </button>
                                 </th>
@@ -158,7 +161,7 @@ export function PlotListView({
                                         onClick={() => handleSort("area")}
                                         className="group flex items-center justify-end text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors ml-auto uppercase tracking-wider"
                                     >
-                                        Area (ha)
+                                        {t("plots.table.areaHa")}
                                         {renderSortIcon("area")}
                                     </button>
                                 </th>
@@ -169,14 +172,16 @@ export function PlotListView({
                                         onClick={() => handleSort("pH")}
                                         className="group flex items-center justify-center text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors mx-auto uppercase tracking-wider"
                                     >
-                                        pH
+                                        {t("plots.table.ph")}
                                         {renderSortIcon("pH")}
                                     </button>
                                 </th>
 
                                 {/* Soil Type */}
                                 <th className="px-4 py-3 text-left">
-                                    <span className="text-xs font-medium text-slate-600 uppercase tracking-wider">Soil Type</span>
+                                    <span className="text-xs font-medium text-slate-600 uppercase tracking-wider">
+                                        {t("plots.table.soilType")}
+                                    </span>
                                 </th>
 
                                 {/* Status - Sortable */}
@@ -185,14 +190,14 @@ export function PlotListView({
                                         onClick={() => handleSort("status")}
                                         className="group flex items-center text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors uppercase tracking-wider"
                                     >
-                                        Status
+                                        {t("plots.table.status")}
                                         {renderSortIcon("status")}
                                     </button>
                                 </th>
 
                                 {/* Actions */}
                                 <th className="px-4 py-3">
-                                    <span className="sr-only">Actions</span>
+                                    <span className="sr-only">{t("common.actions")}</span>
                                 </th>
                             </tr>
                         </thead>
@@ -257,7 +262,7 @@ export function PlotListView({
                                         {/* Soil Type */}
                                         <td className="px-4 py-3.5">
                                             <span className="text-sm text-slate-600 truncate block">
-                                                {plot.soilType}
+                                                {getSoilTypeLabel(plot.soilType, t)}
                                             </span>
                                         </td>
 
@@ -286,10 +291,10 @@ export function PlotListView({
                 {/* Footer with row count */}
                 <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
                     <p className="text-sm text-slate-600">
-                        Showing <span className="font-semibold text-slate-900">{sortedPlots.length}</span> plot{sortedPlots.length !== 1 ? 's' : ''}
+                        {t("plots.table.showingCount", { count: sortedPlots.length })}
                         {selectedPlots.length > 0 && (
                             <span className="ml-2">
-                                • <span className="font-semibold text-blue-600">{selectedPlots.length}</span> selected
+                                - <span className="font-semibold text-blue-600">{selectedPlots.length}</span> {t("plots.selected")}
                             </span>
                         )}
                     </p>

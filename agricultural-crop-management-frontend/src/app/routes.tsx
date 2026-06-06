@@ -261,6 +261,16 @@ const EmployeePayrollPage = lazy(() =>
     default: m.EmployeePayrollPage,
   }))
 );
+const EmployeeWorkspacePage = lazy(() =>
+  import('@/pages/employee/EmployeeWorkspacePage').then((m) => ({
+    default: m.EmployeeWorkspacePage,
+  }))
+);
+const EmployeeSeasonWorkspaceLayout = lazy(() =>
+  import('@/pages/employee/EmployeeSeasonWorkspaceLayout').then((m) => ({
+    default: m.EmployeeSeasonWorkspaceLayout,
+  }))
+);
 const EmployeeProfilePage = lazy(() =>
   import('@/pages/employee/EmployeeProfilePage').then((m) => ({
     default: m.EmployeeProfilePage,
@@ -529,6 +539,12 @@ export function AppRoutes() {
           <Route path="tasks" element={<EmployeeTasksPage />} />
           <Route path="progress" element={<EmployeeProgressPage />} />
           <Route path="payroll" element={<EmployeePayrollPage />} />
+          <Route path="workspace" element={<EmployeeWorkspacePage />} />
+          <Route path="seasons/:seasonId/workspace" element={<EmployeeSeasonWorkspaceLayout />}>
+            <Route index element={<Navigate to="field-logs" replace />} />
+            <Route path="field-logs" element={<FieldLogsPage />} />
+            <Route path="disease" element={<DiseaseTrackingPage />} />
+          </Route>
           <Route path="profile" element={<EmployeeProfilePage />} />
           <Route path="settings" element={<EmployeeSettingsPage />} />
         </Route>

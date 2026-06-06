@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { AuditLog } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface AuditLogProps {
     logs: AuditLog[];
@@ -9,22 +10,24 @@ interface AuditLogProps {
 }
 
 export function AuditLogSection({ logs, getStatusBadge }: AuditLogProps) {
+    const { t } = useI18n();
+
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Audit Log</CardTitle>
-                <CardDescription>Track all administrative actions and system changes</CardDescription>
+                <CardTitle>{t('admin.systemSettings.audit.title')}</CardTitle>
+                <CardDescription>{t('admin.systemSettings.audit.description')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Time</TableHead>
-                                <TableHead>Admin</TableHead>
-                                <TableHead>Action</TableHead>
-                                <TableHead>Module</TableHead>
-                                <TableHead>Result</TableHead>
+                                <TableHead>{t('admin.systemSettings.audit.table.time')}</TableHead>
+                                <TableHead>{t('admin.systemSettings.audit.table.admin')}</TableHead>
+                                <TableHead>{t('admin.systemSettings.audit.table.action')}</TableHead>
+                                <TableHead>{t('admin.systemSettings.audit.table.module')}</TableHead>
+                                <TableHead>{t('admin.systemSettings.audit.table.result')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -38,7 +41,7 @@ export function AuditLogSection({ logs, getStatusBadge }: AuditLogProps) {
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="secondary" className={getStatusBadge(log.result)}>
-                                            {log.result}
+                                            {t(`admin.systemSettings.status.${log.result}`, log.result)}
                                         </Badge>
                                     </TableCell>
                                 </TableRow>

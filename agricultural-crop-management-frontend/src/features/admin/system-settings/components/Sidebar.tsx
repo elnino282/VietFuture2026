@@ -2,6 +2,7 @@ import { Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { SettingsSection } from '../types';
 import { SECTION_NAV } from '../constants';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface SidebarProps {
     activeSection: SettingsSection;
@@ -9,12 +10,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
+    const { t } = useI18n();
+
     return (
         <Card className="lg:col-span-1 h-fit">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Settings className="w-5 h-5" />
-                    Settings
+                    {t('admin.systemSettings.sidebar.title')}
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -32,7 +35,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
                                     }`}
                             >
                                 <Icon className="w-4 h-4" />
-                                <span>{section.label}</span>
+                                <span>{t(section.labelKey)}</span>
                             </button>
                         );
                     })}

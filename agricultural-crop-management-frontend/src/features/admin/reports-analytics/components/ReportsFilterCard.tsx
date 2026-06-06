@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/shared/ui";
 import { AdminFilterCard } from "@/features/admin/shared/ui";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 export interface ReportFilters {
   dateFrom: string;
@@ -51,6 +52,8 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
   isVarietyDisabled = false,
   hasPendingChanges = false,
 }) => {
+  const { t } = useI18n();
+
   const handleChange = (key: keyof ReportFilters, value: string) => {
     onFiltersChange({ ...filters, [key]: value });
   };
@@ -80,7 +83,7 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
               onChange={(e) => handleChange("dateFrom", e.target.value)}
               className="h-7 border-0 bg-transparent text-sm p-0 focus-visible:ring-0 w-[42%] sm:w-[110px] text-foreground"
             />
-            <span className="text-muted-foreground text-sm">to</span>
+            <span className="text-muted-foreground text-sm">{t('pagination.to')}</span>
             <Input
               type="date"
               value={filters.dateTo}
@@ -96,10 +99,10 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
               onValueChange={(value) => handleChange("farmId", value)}
             >
               <SelectTrigger className="h-9 w-full rounded-[14px] border-border bg-card text-foreground text-sm">
-                <SelectValue placeholder="All farms" />
+                <SelectValue placeholder={t('admin.reportsAnalytics.filters.allFarms')} />
               </SelectTrigger>
               <SelectContent className="rounded-[14px]">
-                <SelectItem value="all">All farms</SelectItem>
+                <SelectItem value="all">{t('admin.reportsAnalytics.filters.allFarms')}</SelectItem>
                 {farms.map((farm) => (
                   <SelectItem key={farm.value} value={farm.value}>
                     {farm.label}
@@ -119,10 +122,10 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
               <SelectTrigger
                 className={`h-9 w-full rounded-[14px] border-border bg-card text-foreground text-sm ${isPlotDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                <SelectValue placeholder="All plots" />
+                <SelectValue placeholder={t('admin.reportsAnalytics.filters.allPlots')} />
               </SelectTrigger>
               <SelectContent className="rounded-[14px]">
-                <SelectItem value="all">All plots</SelectItem>
+                <SelectItem value="all">{t('admin.reportsAnalytics.filters.allPlots')}</SelectItem>
                 {plots.map((plot) => (
                   <SelectItem key={plot.value} value={plot.value}>
                     {plot.label}
@@ -139,10 +142,10 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
               onValueChange={(value) => handleChange("cropId", value)}
             >
               <SelectTrigger className="h-9 w-full rounded-[14px] border-border bg-card text-foreground text-sm">
-                <SelectValue placeholder="All crops" />
+                <SelectValue placeholder={t('admin.reportsAnalytics.filters.allCrops')} />
               </SelectTrigger>
               <SelectContent className="rounded-[14px]">
-                <SelectItem value="all">All crops</SelectItem>
+                <SelectItem value="all">{t('admin.reportsAnalytics.filters.allCrops')}</SelectItem>
                 {crops.map((crop) => (
                   <SelectItem key={crop.value} value={crop.value}>
                     {crop.label}
@@ -162,10 +165,10 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
               <SelectTrigger
                 className={`h-9 w-full rounded-[14px] border-border bg-card text-foreground text-sm ${isVarietyDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                <SelectValue placeholder="All varieties" />
+                <SelectValue placeholder={t('admin.reportsAnalytics.filters.allVarieties')} />
               </SelectTrigger>
               <SelectContent className="rounded-[14px]">
-                <SelectItem value="all">All varieties</SelectItem>
+                <SelectItem value="all">{t('admin.reportsAnalytics.filters.allVarieties')}</SelectItem>
                 {varieties.map((variety) => (
                   <SelectItem key={variety.value} value={variety.value}>
                     {variety.label}
@@ -179,21 +182,21 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto">
             {hasPendingChanges && (
               <span className="text-xs text-warning bg-warning/10 border border-warning/30 px-2 py-0.5 rounded-full">
-                Unsaved changes
+                {t('admin.reportsAnalytics.filters.unsavedChanges')}
               </span>
             )}
             <button
               onClick={onReset}
               className="text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors"
             >
-              Reset
+              {t('common.reset')}
             </button>
             <Button
               size="sm"
               onClick={onApply}
               className="h-9 px-4 rounded-[14px] bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm"
             >
-              Apply
+              {t('admin.reportsAnalytics.filters.apply')}
             </Button>
           </div>
         </div>

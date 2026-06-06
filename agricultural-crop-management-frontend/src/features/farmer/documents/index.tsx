@@ -1,10 +1,10 @@
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Clock, FileText, Star } from "lucide-react";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { useI18n } from "@/hooks/useI18n";
 import { PageContainer, PageHeader } from "@/shared/ui";
-import { FileText } from "lucide-react";
-import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import { DocumentFilterBar } from "./components/DocumentFilterBar";
 import { DocumentGrid } from "./components/DocumentGrid";
 import { DocumentPreview } from "./components/DocumentPreview";
@@ -15,7 +15,6 @@ import { useDocuments } from "./hooks/useDocuments";
 export function Documents() {
   const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
-  // URL-based filter management
   const {
     filters,
     setFilter,
@@ -25,7 +24,6 @@ export function Documents() {
     apiParams,
   } = useDocumentFilters();
 
-  // Document data and handlers
   const {
     selectedDoc,
     isPreviewOpen,
@@ -50,7 +48,6 @@ export function Documents() {
     : null;
 
   const handlePreviewOpenChange = (open: boolean) => {
-    // If preview was opened via deep-link (?documentId=...), clear it so closing stays closed.
     if (!open && searchParams.get("documentId")) {
       const next = new URLSearchParams(searchParams);
       next.delete("documentId");
@@ -81,19 +78,17 @@ export function Documents() {
   return (
     <PageContainer variant="default">
       <div>
-        {/* Page Header */}
         <Card variant="page-header" className="mb-6">
           <CardContent className="px-6 py-4">
             <PageHeader
               className="mb-0"
               icon={<FileText className="w-8 h-8" />}
-              title={t('documents.title')}
-              subtitle={t('documents.subtitle')}
+              title={t("documents.title")}
+              subtitle={t("documents.subtitle")}
             />
           </CardContent>
         </Card>
 
-        {/* Compact Filter Bar */}
         <div className="mb-6">
           <DocumentFilterBar
             filters={filters}
@@ -103,7 +98,6 @@ export function Documents() {
           />
         </div>
 
-        {/* Tabs and Content */}
         <Card variant="content" className="rounded-2xl">
           <CardContent className="px-6 py-4">
             <Tabs
@@ -117,26 +111,28 @@ export function Documents() {
                   value="all"
                   className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary"
                 >
-                  All Documents
+                  {t("documents.tabs.all")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="favorites"
                   className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary"
                 >
-                  ⭐ Favorites
+                  <Star className="w-4 h-4 mr-2 text-accent" />
+                  {t("documents.tabs.favorites")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="recent"
                   className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary"
                 >
-                  🕐 Recent
+                  <Clock className="w-4 h-4 mr-2 text-muted-foreground" />
+                  {t("documents.tabs.recent")}
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value={filters.tab} className="mt-0">
                 {isLoading ? (
                   <div className="p-6 text-sm text-muted-foreground">
-                    Loading documents...
+                    {t("documents.states.loading")}
                   </div>
                 ) : isEmpty || filteredDocuments.length === 0 ? (
                   <EmptyState
@@ -162,7 +158,6 @@ export function Documents() {
         </Card>
       </div>
 
-      {/* Preview Drawer */}
       <DocumentPreview
         document={selectedDoc}
         isOpen={isPreviewOpen}
@@ -175,4 +170,3 @@ export function Documents() {
     </PageContainer>
   );
 }
-

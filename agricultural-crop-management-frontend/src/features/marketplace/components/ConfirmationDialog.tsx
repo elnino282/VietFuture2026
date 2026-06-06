@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 type ConfirmationDialogProps = {
   isOpen: boolean;
@@ -25,10 +26,13 @@ export function ConfirmationDialog({
   onConfirm,
   title,
   description,
-  confirmButtonText = "Confirm",
+  confirmButtonText,
   confirmButtonVariant = "default",
   isLoading = false,
 }: ConfirmationDialogProps) {
+  const { t } = useI18n();
+  const resolvedConfirmButtonText = confirmButtonText ?? t("common.confirm");
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
@@ -38,7 +42,7 @@ export function ConfirmationDialog({
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             type="button"
@@ -46,7 +50,7 @@ export function ConfirmationDialog({
             onClick={onConfirm}
             disabled={isLoading}
           >
-            {confirmButtonText}
+            {resolvedConfirmButtonText}
           </Button>
         </DialogFooter>
       </DialogContent>

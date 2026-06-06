@@ -81,6 +81,6 @@ export interface SecuritySettings {
 
 export interface SectionNavItem {
     id: SettingsSection;
-    label: string;
+    labelKey: string;
     icon: React.ComponentType<{ className?: string }>;
 }

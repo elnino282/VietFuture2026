@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Building2, MapPin, Search, RefreshCw, MoreVertical } from 'lucide-react';
 import {
   AsyncState,
+  BackButton,
   CardContent,
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ import {
   adminTabsListClass,
 } from '@/features/admin/shared/ui';
 import { cn } from '@/shared/lib';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useAdminFarms,
@@ -38,6 +40,7 @@ import {
 // Types re-exported from hooks/useFarmsPlots.ts
 
 export function FarmsPlotsPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   // UI state (tabs, drawers, search, pagination, filters)
@@ -93,8 +96,8 @@ export function FarmsPlotsPage() {
   // Derived loading/error for active tab
   const loading = activeTab === 'farms' ? farmsQuery.isLoading : plotsQuery.isLoading;
   const error = activeTab === 'farms'
-    ? (farmsQuery.isError ? 'Failed to load farms' : null)
-    : (plotsQuery.isError ? 'Failed to load plots' : null);
+    ? (farmsQuery.isError ? t('admin.farmsPlots.farms.loadError') : null)
+    : (plotsQuery.isError ? t('admin.farmsPlots.plots.loadError') : null);
   const totalPages = activeTab === 'farms' ? farmsTotalPages : plotsTotalPages;
   const detailLoading = showFarmDetail ? farmPlotsQuery.isLoading : plotSeasonsQuery.isLoading;
 
@@ -227,7 +230,7 @@ export function FarmsPlotsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search farms..."
+                  placeholder={t('admin.farmsPlots.farms.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -239,7 +242,7 @@ export function FarmsPlotsPage() {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
               >
                 <Search className="h-4 w-4" />
-                Search
+                {t('common.search')}
               </button>
             </div>
             <button
@@ -247,7 +250,7 @@ export function FarmsPlotsPage() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
+              {t('common.refresh')}
             </button>
           </div>
         </CardContent>
@@ -258,22 +261,22 @@ export function FarmsPlotsPage() {
         isEmpty={!loading && !error && farms.length === 0}
         error={error ? new Error(error) : null}
         onRetry={handleRefresh}
-        loadingText="Loading farms..."
+        loadingText={t('admin.farmsPlots.farms.loading')}
         emptyIcon={<Building2 className="h-6 w-6 text-muted-foreground" />}
-        emptyTitle="No farms found"
-        emptyDescription="There are no farms matching your current search criteria."
+        emptyTitle={t('admin.farmsPlots.farms.emptyTitle')}
+        emptyDescription={t('admin.farmsPlots.farms.emptyDescription')}
       >
         <AdminContentCard>
           <div className="overflow-x-auto">
           <table className="w-full min-w-[860px]">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Owner</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Area (ha)</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Location</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('common.name')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.farmsPlots.table.owner')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.farmsPlots.table.areaHa')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('common.status')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.farmsPlots.table.location')}</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -287,7 +290,7 @@ export function FarmsPlotsPage() {
                       ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                       : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                       }`}>
-                      {farm.active ? 'Active' : 'Inactive'}
+                      {farm.active ? t('common.active') : t('common.inactive')}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">
@@ -299,14 +302,14 @@ export function FarmsPlotsPage() {
                         <button
                           type="button"
                           className="inline-flex h-8 w-8 items-center justify-center rounded-[14px] border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          aria-label={`Actions for ${farm.name}`}
+                          aria-label={t('admin.farmsPlots.actionsFor', { name: farm.name })}
                         >
                           <MoreVertical className="h-4 w-4" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
                         <DropdownMenuItem onSelect={() => handleViewFarm(farm)}>
-                          View details
+                          {t('admin.farmsPlots.actions.viewDetails')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -326,17 +329,17 @@ export function FarmsPlotsPage() {
             disabled={page === 0}
             className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
           >
-            Previous
+            {t('pagination.previousPage')}
           </button>
           <span className="text-sm text-muted-foreground">
-            Page {page + 1} of {totalPages}
+            {t('pagination.page')} {page + 1} {t('pagination.of')} {totalPages}
           </span>
           <button
             onClick={() => setPage(page + 1)}
             disabled={page >= totalPages - 1}
             className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
           >
-            Next
+            {t('pagination.nextPage')}
           </button>
         </div>
       )}
@@ -353,7 +356,7 @@ export function FarmsPlotsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search plots..."
+                  placeholder={t('admin.farmsPlots.plots.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -365,7 +368,7 @@ export function FarmsPlotsPage() {
                 onChange={(e) => { setFarmFilter(e.target.value ? Number(e.target.value) : null); setPage(0); }}
                 className="w-full sm:w-auto px-3 py-2 border border-border rounded-[14px] bg-card text-sm"
               >
-                <option value="">All Farms</option>
+                <option value="">{t('admin.farmsPlots.farms.all')}</option>
                 {(filterFarms ?? []).map(f => (
                   <option key={f.id} value={f.id}>{f.name}</option>
                 ))}
@@ -376,7 +379,7 @@ export function FarmsPlotsPage() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
+              {t('common.refresh')}
             </button>
           </div>
         </CardContent>
@@ -387,21 +390,21 @@ export function FarmsPlotsPage() {
         isEmpty={!loading && !error && plots.length === 0}
         error={error ? new Error(error) : null}
         onRetry={handleRefresh}
-        loadingText="Loading plots..."
+        loadingText={t('admin.farmsPlots.plots.loading')}
         emptyIcon={<MapPin className="h-6 w-6 text-muted-foreground" />}
-        emptyTitle="No plots found"
-        emptyDescription="There are no plots matching your current search criteria."
+        emptyTitle={t('admin.farmsPlots.plots.emptyTitle')}
+        emptyDescription={t('admin.farmsPlots.plots.emptyDescription')}
       >
         <AdminContentCard>
           <div className="overflow-x-auto">
           <table className="w-full min-w-[760px]">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Farm</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Area (ha)</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Soil Type</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('common.name')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.farmsPlots.table.farm')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.farmsPlots.table.areaHa')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('admin.farmsPlots.table.soilType')}</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -417,14 +420,14 @@ export function FarmsPlotsPage() {
                         <button
                           type="button"
                           className="inline-flex h-8 w-8 items-center justify-center rounded-[14px] border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          aria-label={`Actions for ${plot.plotName || 'plot'}`}
+                          aria-label={t('admin.farmsPlots.actionsFor', { name: plot.plotName || t('admin.farmsPlots.plotFallback') })}
                         >
                           <MoreVertical className="h-4 w-4" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
                         <DropdownMenuItem onSelect={() => handleViewPlot(plot)}>
-                          View seasons
+                          {t('admin.farmsPlots.actions.viewSeasons')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -444,17 +447,17 @@ export function FarmsPlotsPage() {
             disabled={page === 0}
             className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
           >
-            Previous
+            {t('pagination.previousPage')}
           </button>
           <span className="text-sm text-muted-foreground">
-            Page {page + 1} of {totalPages}
+            {t('pagination.page')} {page + 1} {t('pagination.of')} {totalPages}
           </span>
           <button
             onClick={() => setPage(page + 1)}
             disabled={page >= totalPages - 1}
             className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
           >
-            Next
+            {t('pagination.nextPage')}
           </button>
         </div>
       )}
@@ -464,8 +467,8 @@ export function FarmsPlotsPage() {
   return (
     <AdminPageContainer>
       <AdminHeaderCard
-        title="Farms & Plots"
-        description="System-wide overview of all farms and plots"
+        title={t('admin.farmsPlots.title')}
+        description={t('admin.farmsPlots.subtitle')}
       />
 
       {/* Tab Navigation */}
@@ -481,7 +484,7 @@ export function FarmsPlotsPage() {
           )}
         >
           <Building2 className="inline-block h-4 w-4 mr-2" />
-          Farms
+          {t('admin.farmsPlots.tabs.farms')}
         </button>
         <button
           onClick={() => { setActiveTab('plots'); setPage(0); setSearchTerm(''); }}
@@ -493,7 +496,7 @@ export function FarmsPlotsPage() {
           )}
         >
           <MapPin className="inline-block h-4 w-4 mr-2" />
-          Plots
+          {t('admin.farmsPlots.tabs.plots')}
         </button>
         </div>
       </div>
@@ -506,45 +509,46 @@ export function FarmsPlotsPage() {
       <Dialog open={showFarmDetail} onOpenChange={(open) => !open && closeFarmDetail()}>
         <DialogContent className="sm:max-w-[500px] sm:max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Farm Details</DialogTitle>
+            <BackButton onClick={closeFarmDetail} className="w-fit" />
+            <DialogTitle>{t('admin.farmsPlots.farmDetails.title')}</DialogTitle>
           </DialogHeader>
           {selectedFarm && (
             <div className="space-y-6 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Name</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('common.name')}</label>
                   <p className="text-base font-medium">{selectedFarm.name}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Owner</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin.farmsPlots.table.owner')}</label>
                   <p className="text-base font-medium">{selectedFarm.ownerUsername || '-'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Area</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin.farmsPlots.table.area')}</label>
                   <p className="text-base font-medium">{selectedFarm.area?.toFixed(2) || '-'} ha</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('common.status')}</label>
                   <div className="mt-1">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${selectedFarm.active
                       ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                       : 'bg-gray-100 text-gray-800'
                       }`}>
-                      {selectedFarm.active ? 'Active' : 'Inactive'}
+                      {selectedFarm.active ? t('common.active') : t('common.inactive')}
                     </span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-base font-medium mb-3">Plots ({farmPlots.length})</h3>
+                <h3 className="text-base font-medium mb-3">{t('admin.farmsPlots.farmDetails.plotsCount', { count: farmPlots.length })}</h3>
                 {detailLoading ? (
                   <div className="flex items-center gap-2 text-muted-foreground text-sm">
                     <RefreshCw className="h-4 w-4 animate-spin" />
-                    Loading plots...
+                    {t('admin.farmsPlots.plots.loading')}
                   </div>
                 ) : farmPlots.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No plots found for this farm</p>
+                  <p className="text-sm text-muted-foreground">{t('admin.farmsPlots.farmDetails.noPlots')}</p>
                 ) : (
                   <div className="space-y-2">
                     {farmPlots.map(plot => (
@@ -552,7 +556,7 @@ export function FarmsPlotsPage() {
                         <div>
                           <p className="font-medium text-sm">{plot.plotName || '-'}</p>
                           <p className="text-xs text-muted-foreground">
-                            {plot.area?.toFixed(2) || '-'} ha • {plot.soilType || 'No soil type'}
+                            {plot.area?.toFixed(2) || '-'} ha • {plot.soilType || t('admin.farmsPlots.noSoilType')}
                           </p>
                         </div>
                         <button
@@ -562,7 +566,7 @@ export function FarmsPlotsPage() {
                           }}
                           className="text-xs text-primary font-medium hover:underline p-2 -mr-2 min-h-[44px] sm:min-h-0"
                         >
-                          View Seasons
+                          {t('admin.farmsPlots.actions.viewSeasons')}
                         </button>
                       </div>
                     ))}
@@ -578,38 +582,39 @@ export function FarmsPlotsPage() {
       <Dialog open={showPlotDetail} onOpenChange={(open) => !open && closePlotDetail()}>
         <DialogContent className="sm:max-w-[600px] sm:max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Plot Details</DialogTitle>
+            <BackButton onClick={closePlotDetail} className="w-fit" />
+            <DialogTitle>{t('admin.farmsPlots.plotDetails.title')}</DialogTitle>
           </DialogHeader>
           {selectedPlot && (
             <div className="space-y-6 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Name</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('common.name')}</label>
                   <p className="text-base font-medium">{selectedPlot.plotName || '-'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Farm</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin.farmsPlots.table.farm')}</label>
                   <p className="text-base font-medium">{selectedPlot.farmName || '-'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Area</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin.farmsPlots.table.area')}</label>
                   <p className="text-base font-medium">{selectedPlot.area?.toFixed(2) || '-'} ha</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Soil Type</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin.farmsPlots.table.soilType')}</label>
                   <p className="text-base font-medium">{selectedPlot.soilType || '-'}</p>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-base font-medium mb-3">Seasons ({plotSeasons.length})</h3>
+                <h3 className="text-base font-medium mb-3">{t('admin.farmsPlots.plotDetails.seasonsCount', { count: plotSeasons.length })}</h3>
                 {detailLoading ? (
                   <div className="flex items-center gap-2 text-muted-foreground text-sm">
                     <RefreshCw className="h-4 w-4 animate-spin" />
-                    Loading seasons...
+                    {t('admin.farmsPlots.plotDetails.loadingSeasons')}
                   </div>
                 ) : plotSeasons.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No seasons found for this plot</p>
+                  <p className="text-sm text-muted-foreground">{t('admin.farmsPlots.plotDetails.noSeasons')}</p>
                 ) : (
                   <div className="space-y-2">
                     {plotSeasons.map(season => (
@@ -622,7 +627,7 @@ export function FarmsPlotsPage() {
                         </div>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[season.status] || 'bg-gray-100 text-gray-800'
                           }`}>
-                          {season.status}
+                          {t(`admin.farmsPlots.seasonStatus.${season.status}`, season.status)}
                         </span>
                       </div>
                     ))}

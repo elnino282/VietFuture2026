@@ -22,11 +22,11 @@ import {
   TableRow,
 } from '@/shared/ui';
 import type {
-  RiskBasis,
   RiskDataCoverage,
   TransformedRiskySeason,
   RiskLevel,
 } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface RiskySeasonsTableProps {
   seasons: TransformedRiskySeason[];
@@ -47,48 +47,29 @@ const getRiskBadgeVariant = (level: RiskLevel): 'destructive' | 'default' | 'sec
   }
 };
 
-const getRiskLabel = (level: RiskLevel) => {
-  switch (level) {
-    case 'high':
-      return 'High';
-    case 'medium':
-      return 'Medium';
-    case 'low':
-      return 'Low';
-  }
-};
-
-const getRiskBasisLabel = (riskBasis: RiskBasis) => {
-  switch (riskBasis) {
-    case 'OPEN_INCIDENTS':
-      return 'Open incidents';
-    case 'OVERDUE_TASKS':
-      return 'Overdue tasks';
-    case 'HIGH_FDN_RISK':
-      return 'High FDN risk';
-    case 'INVENTORY_RISK':
-      return 'Inventory risk';
-  }
-};
-
-const buildCoverageMessage = (dataCoverage?: RiskDataCoverage) => {
+const buildCoverageMessage = (
+  dataCoverage: RiskDataCoverage | undefined,
+  t: (key: string, optionsOrDefault?: Record<string, unknown> | string) => string,
+) => {
   if (!dataCoverage) {
-    return 'Some risk sources are unavailable.';
+    return t('admin.dashboard.riskySeasons.coverage.someUnavailable');
   }
 
   const missingSources: string[] = [];
   if (!dataCoverage.incidentDataAvailable) {
-    missingSources.push('incident data');
+    missingSources.push(t('admin.dashboard.riskySeasons.coverage.incidentData'));
   }
   if (!dataCoverage.taskDataAvailable) {
-    missingSources.push('task data');
+    missingSources.push(t('admin.dashboard.riskySeasons.coverage.taskData'));
   }
 
   if (missingSources.length === 0) {
-    return 'Some risk sources are unavailable.';
+    return t('admin.dashboard.riskySeasons.coverage.someUnavailable');
   }
 
-  return `Missing ${missingSources.join(' and ')}.`;
+  return t('admin.dashboard.riskySeasons.coverage.missing', {
+    sources: missingSources.join(` ${t('common.and')} `),
+  });
 };
 
 export function RiskySeasonsTable({
@@ -99,36 +80,37 @@ export function RiskySeasonsTable({
   dataCoverage,
 }: RiskySeasonsTableProps) {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const handleRowClick = (seasonId: number) => {
     navigate(`/admin/seasons/${seasonId}`);
   };
 
-  const coverageMessage = buildCoverageMessage(dataCoverage);
+  const coverageMessage = buildCoverageMessage(dataCoverage, t);
 
   return (
     <AdminContentCard>
       <CardHeader>
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-amber-500" />
-          <CardTitle className="text-lg">Risky Seasons</CardTitle>
+          <CardTitle className="text-lg">{t('admin.dashboard.riskySeasons.title')}</CardTitle>
         </div>
         <CardDescription>
-          Seasons with incidents, overdue tasks, or operational risks requiring attention
+          {t('admin.dashboard.riskySeasons.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className="flex items-center justify-center py-8 text-muted-foreground">
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Loading risky seasons...
+            {t('admin.dashboard.riskySeasons.loading')}
           </div>
         ) : error ? (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Risk data unavailable</AlertTitle>
+            <AlertTitle>{t('admin.dashboard.riskySeasons.errorTitle')}</AlertTitle>
             <AlertDescription>
-              {error.message || 'Unable to load risky season data right now.'}
+              {error.message || t('admin.dashboard.riskySeasons.errorDescription')}
             </AlertDescription>
           </Alert>
         ) : seasons.length === 0 ? (
@@ -137,10 +119,12 @@ export function RiskySeasonsTable({
               <AlertTriangle className={`h-6 w-6 ${riskDataLimited ? 'text-amber-600' : 'text-emerald-500'}`} />
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              {riskDataLimited ? 'Risk data limited' : 'No risky seasons detected'}
+              {riskDataLimited
+                ? t('admin.dashboard.riskySeasons.limited')
+                : t('admin.dashboard.riskySeasons.emptyTitle')}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              {riskDataLimited ? coverageMessage : 'All seasons are running smoothly'}
+              {riskDataLimited ? coverageMessage : t('admin.dashboard.riskySeasons.emptyDescription')}
             </p>
           </div>
         ) : (
@@ -148,19 +132,19 @@ export function RiskySeasonsTable({
             {riskDataLimited && (
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Risk data limited</AlertTitle>
+                <AlertTitle>{t('admin.dashboard.riskySeasons.limited')}</AlertTitle>
                 <AlertDescription>{coverageMessage}</AlertDescription>
               </Alert>
             )}
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Season</TableHead>
-                  <TableHead>Farm / Plot</TableHead>
-                  <TableHead className="text-center">Incidents</TableHead>
-                  <TableHead className="text-center">Overdue</TableHead>
-                  <TableHead>Risk Basis</TableHead>
-                  <TableHead className="text-center">Risk</TableHead>
+                  <TableHead>{t('admin.dashboard.riskySeasons.table.season')}</TableHead>
+                  <TableHead>{t('admin.dashboard.riskySeasons.table.farmPlot')}</TableHead>
+                  <TableHead className="text-center">{t('admin.dashboard.riskySeasons.table.incidents')}</TableHead>
+                  <TableHead className="text-center">{t('admin.dashboard.riskySeasons.table.overdue')}</TableHead>
+                  <TableHead>{t('admin.dashboard.riskySeasons.table.riskBasis')}</TableHead>
+                  <TableHead className="text-center">{t('admin.dashboard.riskySeasons.table.risk')}</TableHead>
                   <TableHead className="w-8"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -191,14 +175,14 @@ export function RiskySeasonsTable({
                       <div className="flex flex-wrap gap-1">
                         {season.riskBasis.map((basis) => (
                           <Badge key={`${season.seasonId}-${basis}`} variant="outline">
-                            {getRiskBasisLabel(basis)}
+                            {t(`admin.dashboard.riskySeasons.riskBasis.${basis}`)}
                           </Badge>
                         ))}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant={getRiskBadgeVariant(season.riskLevel)}>
-                        {getRiskLabel(season.riskLevel)}
+                        {t(`admin.dashboard.riskySeasons.riskLevel.${season.riskLevel}`)}
                       </Badge>
                     </TableCell>
                     <TableCell>

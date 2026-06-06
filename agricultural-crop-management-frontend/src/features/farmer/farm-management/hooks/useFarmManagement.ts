@@ -5,6 +5,7 @@ import { useFarmsList } from './useFarmsList';
 import { useDeleteFarm } from './useDeleteFarm';
 import { useUpdateFarm as useUpdateFarmEntity } from '@/entities/farm';
 import type { Farm } from '@/entities/farm';
+import { useTranslation } from 'react-i18next';
 
 type SortColumn = "name" | "area" | "status" | null;
 type SortDirection = "asc" | "desc";
@@ -87,6 +88,7 @@ export interface UseFarmManagementReturn {
  */
 export function useFarmManagement(): UseFarmManagementReturn {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     // ═══════════════════════════════════════════════════════════════
     // COMPOSED HOOKS
@@ -116,11 +118,11 @@ export function useFarmManagement(): UseFarmManagementReturn {
 
     const updateMutation = useUpdateFarmEntity({
         onSuccess: () => {
-            toast.success("Farm status updated successfully");
+            toast.success(t('farms.toast.farmStatusUpdated'));
         },
         onError: (err: any) => {
-            toast.error("Failed to update farm status", {
-                description: err?.message || "Please try again",
+            toast.error(t('farms.toast.farmStatusUpdateError'), {
+                description: err?.message || t('common.tryAgain'),
             });
         },
     });
@@ -156,8 +158,8 @@ export function useFarmManagement(): UseFarmManagementReturn {
     const handleClearFilters = useCallback(() => {
         setKeyword('');
         setActiveFilter(null);
-        toast.info("Filters cleared");
-    }, [setKeyword, setActiveFilter]);
+        toast.info(t('farmManagement.toast.filtersCleared'));
+    }, [setKeyword, setActiveFilter, t]);
 
     // ═══════════════════════════════════════════════════════════════
     // HANDLERS - NAVIGATION
@@ -218,7 +220,7 @@ export function useFarmManagement(): UseFarmManagementReturn {
 
     const handleBulkDelete = useCallback(() => {
         if (selectedFarms.length === 0) {
-            toast.error("No farms selected");
+            toast.error(t('farmManagement.toast.noFarmsSelected'));
             return;
         }
 
@@ -229,14 +231,14 @@ export function useFarmManagement(): UseFarmManagementReturn {
                 handleDeleteRequest(firstFarm.id, firstFarm.name);
             } else {
                 // For multiple, show count
-                handleDeleteRequest(firstFarm.id, `${selectedFarms.length} farms`);
+                handleDeleteRequest(firstFarm.id, t('farmManagement.farmCount', { count: selectedFarms.length }));
             }
         }
-    }, [selectedFarms, farms, handleDeleteRequest]);
+    }, [selectedFarms, farms, handleDeleteRequest, t]);
 
     const handleBulkStatusChange = useCallback((status: boolean) => {
         if (selectedFarms.length === 0) {
-            toast.error("No farms selected");
+            toast.error(t('farmManagement.toast.noFarmsSelected'));
             return;
         }
 
@@ -254,15 +256,18 @@ export function useFarmManagement(): UseFarmManagementReturn {
 
         Promise.all(updatePromises)
             .then(() => {
-                toast.success(`${selectedFarms.length} farm(s) updated to ${status ? 'Active' : 'Inactive'}`);
+                toast.success(t('farmManagement.toast.bulkStatusUpdated', {
+                    count: selectedFarms.length,
+                    status: status ? t('common.active') : t('common.inactive'),
+                }));
                 setSelectedFarms([]);
             })
             .catch((err) => {
-                toast.error("Some farms failed to update", {
-                    description: err?.message || "Please try again",
+                toast.error(t('farmManagement.toast.someFarmsFailedUpdate'), {
+                    description: err?.message || t('common.tryAgain'),
                 });
             });
-    }, [selectedFarms, farms, updateMutation]);
+    }, [selectedFarms, farms, updateMutation, t]);
 
     // ═══════════════════════════════════════════════════════════════
     // RETURN

@@ -18,6 +18,7 @@ import {
     type AdminUserUpdateRequest,
 } from '@/services/api.admin';
 import { toast } from 'sonner';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import {
     DEFAULT_ITEMS_PER_PAGE,
     KYC_BADGE_COLORS,
@@ -132,6 +133,7 @@ const mapAdminUserToBuyer = (user: AdminUser): Buyer => {
 
 export function useBuyerManagement() {
     const queryClient = useQueryClient();
+    const { t } = useI18n();
 
     // State Management
     const [searchQuery, setSearchQuery] = useState('');
@@ -351,7 +353,7 @@ export function useBuyerManagement() {
             formData.address.trim().length > 0 ||
             formData.paymentTerms.trim().length > 0
         ) {
-            toast.error('Tax ID, address, and payment terms are not supported by the current backend user API.');
+            toast.error(t('admin.buyerManagement.toast.unsupportedBackendFields'));
             return;
         }
 
@@ -377,10 +379,10 @@ export function useBuyerManagement() {
                         status: payloadStatus,
                     },
                 });
-                toast.success('Buyer account updated successfully.');
+                toast.success(t('admin.buyerManagement.toast.updated'));
             } catch (error) {
                 console.error(error);
-                toast.error('Failed to update buyer account.');
+                toast.error(t('admin.buyerManagement.toast.updateFailed'));
                 return;
             }
         } else {
@@ -407,10 +409,10 @@ export function useBuyerManagement() {
                         });
                     }
                 }
-                toast.success('Buyer account created successfully.');
+                toast.success(t('admin.buyerManagement.toast.created'));
             } catch (error) {
                 console.error(error);
-                toast.error('Failed to create buyer account.');
+                toast.error(t('admin.buyerManagement.toast.createFailed'));
                 return;
             }
         }
@@ -422,13 +424,15 @@ export function useBuyerManagement() {
         const buyer = buyers.find((b) => b.id === id);
         try {
             await deleteBuyerMutation.mutateAsync(Number(id));
-            toast.success('Buyer account deleted.', {
-                description: buyer ? `${buyer.companyName} has been removed.` : undefined,
+            toast.success(t('admin.buyerManagement.toast.deleted'), {
+                description: buyer
+                    ? t('admin.buyerManagement.toast.deletedDescription', { name: buyer.companyName })
+                    : undefined,
             });
             setSelectedBuyers((prev) => prev.filter((buyerId) => buyerId !== id));
         } catch (error) {
             console.error(error);
-            toast.error('Failed to delete buyer account.');
+            toast.error(t('admin.buyerManagement.toast.deleteFailed'));
         }
     };
 
@@ -442,21 +446,25 @@ export function useBuyerManagement() {
                 id: Number(id),
                 payload: { status: BUYER_STATUS_MAP[nextStatus] },
             });
-            toast.success(nextStatus === 'active' ? 'Buyer account activated.' : 'Buyer account suspended.');
+            toast.success(
+                nextStatus === 'active'
+                    ? t('admin.buyerManagement.toast.activated')
+                    : t('admin.buyerManagement.toast.suspended')
+            );
         } catch (error) {
             console.error(error);
-            toast.error('Failed to update buyer status.');
+            toast.error(t('admin.buyerManagement.toast.statusUpdateFailed'));
         }
     };
 
     const handleKYCAction = (_action: 'verify' | 'reject') => {
-        toast.error('KYC verification API is not available yet.');
+        toast.error(t('admin.buyerManagement.toast.kycUnavailable'));
     };
 
     const handleBulkAction = async (action: string) => {
         if (selectedBuyers.length === 0) {
-            toast.error('No buyers selected', {
-                description: 'Please select at least one buyer to perform bulk action.',
+            toast.error(t('admin.buyerManagement.toast.noSelection'), {
+                description: t('admin.buyerManagement.toast.noSelectionDescription'),
             });
             return;
         }
@@ -474,8 +482,8 @@ export function useBuyerManagement() {
                 );
                 toast.success(
                     action === 'activate'
-                        ? `${selectedBuyers.length} buyers activated.`
-                        : `${selectedBuyers.length} buyers suspended.`
+                        ? t('admin.buyerManagement.toast.bulkActivated', { count: selectedBuyers.length })
+                        : t('admin.buyerManagement.toast.bulkSuspended', { count: selectedBuyers.length })
                 );
             }
 
@@ -483,12 +491,12 @@ export function useBuyerManagement() {
                 await Promise.all(
                     selectedBuyers.map((buyerId) => deleteBuyerMutation.mutateAsync(Number(buyerId)))
                 );
-                toast.success(`${selectedBuyers.length} buyers deleted.`);
+                toast.success(t('admin.buyerManagement.toast.bulkDeleted', { count: selectedBuyers.length }));
             }
             setSelectedBuyers([]);
         } catch (error) {
             console.error(error);
-            toast.error('Bulk action failed. Please retry.');
+            toast.error(t('admin.buyerManagement.toast.bulkFailed'));
         }
     };
 
@@ -504,14 +512,14 @@ export function useBuyerManagement() {
             .filter((row) => row.length > 0);
 
         if (rows.length < 2) {
-            toast.error('CSV file does not contain data rows.');
+            toast.error(t('admin.buyerManagement.toast.csvNoRows'));
             return;
         }
 
         const headers = parseCsvLine(rows[0]).map((header) => header.toLowerCase().replace(/\s+/g, ''));
         const hasRequiredColumns = CSV_REQUIRED_COLUMNS.every((column) => headers.includes(column));
         if (!hasRequiredColumns) {
-            toast.error('CSV format is invalid. Required columns: companyName, taxId, contactName, email, phone, role.');
+            toast.error(t('admin.buyerManagement.toast.csvInvalidFormat'));
             return;
         }
 
@@ -527,12 +535,18 @@ export function useBuyerManagement() {
 
             const roleValue = rowObject.role?.toLowerCase();
             if (!roleValue || !['buyer', 'enterprise', 'distributor'].includes(roleValue)) {
-                parseErrors.push({ row: index + 1, error: `Invalid role "${rowObject.role}"` });
+                parseErrors.push({
+                    row: index + 1,
+                    error: t('admin.buyerManagement.validation.invalidRole', { role: rowObject.role }),
+                });
                 continue;
             }
 
             if (!rowObject.companyname || !rowObject.contactname) {
-                parseErrors.push({ row: index + 1, error: 'companyName and contactName are required' });
+                parseErrors.push({
+                    row: index + 1,
+                    error: t('admin.buyerManagement.validation.companyAndContactRequired'),
+                });
                 continue;
             }
 
@@ -550,15 +564,15 @@ export function useBuyerManagement() {
         setCsvPreview(previewRows);
         setImportStep(2);
         if (parseErrors.length > 0) {
-            toast.warning(`Skipped ${parseErrors.length} invalid row(s).`);
+            toast.warning(t('admin.buyerManagement.toast.skippedInvalidRows', { count: parseErrors.length }));
         }
         if (previewRows.length === 0) {
-            toast.error('No valid rows found in CSV file.');
+            toast.error(t('admin.buyerManagement.toast.noValidRows'));
         }
     };
 
     const handleImportConfirm = () => {
-        toast.error('Buyer CSV import endpoint is not available yet.');
+        toast.error(t('admin.buyerManagement.toast.importUnavailable'));
     };
 
     const handleResetPassword = (id: string) => {
@@ -577,7 +591,7 @@ export function useBuyerManagement() {
         if (!resetPasswordTargetId) return;
 
         if (method === 'email') {
-            toast.error('Email reset flow is not available. Use temporary password reset.');
+            toast.error(t('admin.buyerManagement.toast.emailResetUnavailable'));
             return;
         }
 
@@ -590,14 +604,14 @@ export function useBuyerManagement() {
             if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
                 await navigator.clipboard.writeText(temporaryPassword);
             }
-            toast.success('Temporary password generated and applied.', {
-                description: 'Password copied to clipboard.',
+            toast.success(t('admin.buyerManagement.toast.tempPasswordApplied'), {
+                description: t('admin.buyerManagement.toast.passwordCopied'),
             });
             setResetPasswordOpen(false);
             setResetPasswordTargetId(null);
         } catch (error) {
             console.error(error);
-            toast.error('Failed to reset password.');
+            toast.error(t('admin.buyerManagement.toast.resetPasswordFailed'));
         }
     };
 

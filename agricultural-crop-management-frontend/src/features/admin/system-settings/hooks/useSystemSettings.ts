@@ -1,6 +1,7 @@
 import { Laptop, Monitor, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import {
     PLACEHOLDER_AUDIT_LOGS,
     PLACEHOLDER_BACKUP_POINTS,
@@ -24,6 +25,7 @@ import type {
 } from '../types';
 
 export function useSystemSettings() {
+    const { t } = useI18n();
     const [activeSection, setActiveSection] = useState<SettingsSection>('system');
     const [addRoleModalOpen, setAddRoleModalOpen] = useState(false);
     const [restoreModalOpen, setRestoreModalOpen] = useState(false);
@@ -60,78 +62,80 @@ export function useSystemSettings() {
 
     // Handlers
     const handleSaveAll = (): void => {
-        toast.success('Settings saved', {
-            description: 'All settings have been saved successfully.',
+        toast.success(t('admin.systemSettings.toast.settingsSaved'), {
+            description: t('admin.systemSettings.toast.settingsSavedDescription'),
         });
     };
 
     const handleResetToDefault = (): void => {
-        toast.success('Settings reset', {
-            description: 'All settings have been reset to default values.',
+        toast.success(t('admin.systemSettings.toast.settingsReset'), {
+            description: t('admin.systemSettings.toast.settingsResetDescription'),
         });
     };
 
     const handleSaveSystemPrefs = (): void => {
-        toast.success('System preferences saved', {
-            description: 'Your changes have been applied.',
+        toast.success(t('admin.systemSettings.toast.systemPrefsSaved'), {
+            description: t('admin.systemSettings.toast.changesApplied'),
         });
     };
 
     const handleApplyToAll = (): void => {
-        toast.success('Applied to all users', {
-            description: 'System preferences have been applied to all users.',
+        toast.success(t('admin.systemSettings.toast.appliedToAll'), {
+            description: t('admin.systemSettings.toast.appliedToAllDescription'),
         });
     };
 
     const handleTestConnection = (service: string): void => {
-        toast.success(`Testing ${service} connection`, {
-            description: 'Connection test initiated.',
+        toast.success(t('admin.systemSettings.toast.testingConnection', {
+            service: t(`admin.systemSettings.integrations.services.${service}`, service),
+        }), {
+            description: t('admin.systemSettings.toast.connectionTestInitiated'),
         });
     };
 
     const handleTestNotification = (topic: string): void => {
-        toast.success('Test notification sent', {
-            description: `Test notification for "${topic}" has been sent.`,
+        toast.success(t('admin.systemSettings.toast.testNotificationSent'), {
+            description: t('admin.systemSettings.toast.testNotificationSentDescription', { topic }),
         });
     };
 
     const handleSignOutDevice = (_deviceId: string): void => {
-        toast.success('Device signed out', {
-            description: 'The selected device has been signed out.',
+        toast.success(t('admin.systemSettings.toast.deviceSignedOut'), {
+            description: t('admin.systemSettings.toast.deviceSignedOutDescription'),
         });
     };
 
     const handleSignOutAll = (): void => {
-        toast.success('All devices signed out', {
-            description: 'All devices except current have been signed out.',
+        toast.success(t('admin.systemSettings.toast.allDevicesSignedOut'), {
+            description: t('admin.systemSettings.toast.allDevicesSignedOutDescription'),
         });
     };
 
     const handleManualBackup = (): void => {
-        toast.success('Backup started', {
-            description: 'Manual backup has been initiated.',
+        toast.success(t('admin.systemSettings.toast.backupStarted'), {
+            description: t('admin.systemSettings.toast.backupStartedDescription'),
         });
     };
 
     const handleExportConfig = (): void => {
-        toast.success('Configuration exported', {
-            description: 'System configuration file has been downloaded.',
+        toast.success(t('admin.systemSettings.toast.configExported'), {
+            description: t('admin.systemSettings.toast.configExportedDescription'),
         });
     };
 
     const handleImportConfig = (): void => {
-        toast.success('Configuration imported', {
-            description: 'System configuration has been imported successfully.',
+        toast.success(t('admin.systemSettings.toast.configImported'), {
+            description: t('admin.systemSettings.toast.configImportedDescription'),
         });
     };
 
     const handleCreateRole = (): void => {
-        toast.success('Role created');
+        toast.success(t('admin.systemSettings.toast.roleCreated'));
         setAddRoleModalOpen(false);
     };
 
     const handleConfirmRestore = (): void => {
-        toast.success('Restore initiated');
+        toast.success(t('admin.systemSettings.toast.restoreInitiated'));
         setRestoreModalOpen(false);
     };
 

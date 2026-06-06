@@ -10,23 +10,26 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import type { MetricData } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface MetricsTableProps {
     metricsData: MetricData[];
 }
 
 export const MetricsTable: React.FC<MetricsTableProps> = ({ metricsData }) => {
+    const { t } = useI18n();
+
     return (
         <Card>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>Detailed Metrics</CardTitle>
-                        <CardDescription>Module-wise performance indicators</CardDescription>
+                        <CardTitle>{t('admin.reportsAnalytics.metrics.title')}</CardTitle>
+                        <CardDescription>{t('admin.reportsAnalytics.metrics.description')}</CardDescription>
                     </div>
                     <Button variant="outline" size="sm">
                         <Download className="w-4 h-4 mr-2" />
-                        Export Table
+                        {t('admin.reportsAnalytics.metrics.exportTable')}
                     </Button>
                 </div>
             </CardHeader>
@@ -35,11 +38,11 @@ export const MetricsTable: React.FC<MetricsTableProps> = ({ metricsData }) => {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Module</TableHead>
-                                <TableHead>Metric</TableHead>
-                                <TableHead>Value</TableHead>
-                                <TableHead>Change</TableHead>
-                                <TableHead>Last Updated</TableHead>
+                                <TableHead>{t('admin.reportsAnalytics.metrics.table.module')}</TableHead>
+                                <TableHead>{t('admin.reportsAnalytics.metrics.table.metric')}</TableHead>
+                                <TableHead>{t('admin.reportsAnalytics.metrics.table.value')}</TableHead>
+                                <TableHead>{t('admin.reportsAnalytics.metrics.table.change')}</TableHead>
+                                <TableHead>{t('admin.reportsAnalytics.metrics.table.lastUpdated')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

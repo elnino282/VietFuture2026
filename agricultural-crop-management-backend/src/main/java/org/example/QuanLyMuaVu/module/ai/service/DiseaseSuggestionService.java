@@ -27,6 +27,7 @@ import org.example.QuanLyMuaVu.module.season.entity.Season;
 import org.example.QuanLyMuaVu.module.season.repository.DiseaseRecordRepository;
 import org.example.QuanLyMuaVu.module.season.repository.DiseaseTreatmentRepository;
 import org.example.QuanLyMuaVu.module.season.repository.FieldLogRepository;
+import org.example.QuanLyMuaVu.module.season.service.SeasonWorkspaceAccessService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -54,6 +55,7 @@ public class DiseaseSuggestionService {
     IncidentRepository incidentRepository;
     InventoryBalanceRepository inventoryBalanceRepository;
     FarmAccessPort farmAccessService;
+    SeasonWorkspaceAccessService seasonWorkspaceAccessService;
     AuditLogService auditLogService;
 
     public DiseaseSuggestionResponse generateSuggestion(Integer diseaseRecordId, DiseaseSuggestionRequest request) {
@@ -67,7 +69,7 @@ public class DiseaseSuggestionService {
         if (season == null) {
             throw new AppException(ErrorCode.SEASON_NOT_FOUND);
         }
-        farmAccessService.assertCurrentUserCanAccessSeason(season);
+        seasonWorkspaceAccessService.assertCurrentUserCanAccessSeason(season);
 
         boolean includeInventory = request == null
                 || request.getIncludeInventory() == null
@@ -103,7 +105,7 @@ public class DiseaseSuggestionService {
             linkedIncident = incidentRepository.findById(diseaseRecord.getIncidentId()).orElse(null);
         }
 
-        List<InventoryBalance> inventoryRows = loadInventoryRows(includeInventory);
+        List<InventoryBalance> inventoryRows = loadInventoryRows(includeInventory, season);
         String structuredContext = buildStructuredContext(
                 diseaseRecord,
                 season,
@@ -141,12 +143,15 @@ public class DiseaseSuggestionService {
                 .build();
     }
 
-    private List<InventoryBalance> loadInventoryRows(boolean includeInventory) {
+    private List<InventoryBalance> loadInventoryRows(boolean includeInventory, Season season) {
         if (!includeInventory) {
             return List.of();
         }
 
-        List<Integer> accessibleFarmIds = farmAccessService.getAccessibleFarmIdsForCurrentUser();
+        Integer seasonFarmId = seasonWorkspaceAccessService.resolveSeasonFarmId(season);
+        List<Integer> accessibleFarmIds = seasonFarmId != null
+                ? List.of(seasonFarmId)
+                : farmAccessService.getAccessibleFarmIdsForCurrentUser();
         if (accessibleFarmIds.isEmpty()) {
             return List.of();
         }

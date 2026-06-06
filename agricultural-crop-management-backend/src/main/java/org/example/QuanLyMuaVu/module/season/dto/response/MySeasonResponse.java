@@ -23,6 +23,10 @@ public class MySeasonResponse {
 
     Integer seasonId;
     String seasonName;
+    Integer farmId;
+    String farmName;
+    Integer plotId;
+    String plotName;
     LocalDate startDate;
     LocalDate endDate;
     LocalDate plannedHarvestDate;

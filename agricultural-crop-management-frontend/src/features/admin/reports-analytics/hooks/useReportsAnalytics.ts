@@ -19,8 +19,11 @@ import {
     type InventoryOnHandReport,
     type IncidentStatisticsReport,
 } from '@/services/api.admin';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 export const useReportsAnalytics = () => {
+    const { t } = useI18n();
+
     // State management
     const [dateRange, setDateRange] = useState<DateRange>('month');
     const [filterOpen, setFilterOpen] = useState(false);
@@ -130,22 +133,22 @@ export const useReportsAnalytics = () => {
         });
 
         return [
-            { name: 'Above Target', value: positive, color: '#10B981' },
-            { name: 'On Target', value: onTarget, color: '#6B7280' },
-            { name: 'Below Target', value: negative, color: '#EF4444' },
+            { name: t('admin.reportsAnalytics.seasonStatus.aboveTarget'), value: positive, color: '#10B981' },
+            { name: t('admin.reportsAnalytics.seasonStatus.onTarget'), value: onTarget, color: '#6B7280' },
+            { name: t('admin.reportsAnalytics.seasonStatus.belowTarget'), value: negative, color: '#EF4444' },
         ].filter(item => item.value > 0);
-    }, [yieldReport]);
+    }, [yieldReport, t]);
 
     // Expenses data for bar chart - from cost report
     const expensesData = useMemo(() => {
         if (!costReport) return [];
 
         return costReport.map(item => ({
-            season: item.seasonName || `Season ${item.seasonId}`,
+            season: item.seasonName || t('admin.reportsAnalytics.fallback.season', { id: item.seasonId }),
             expenses: item.totalExpense ?? 0,
             yield: item.totalYieldKg ?? 0,
         }));
-    }, [costReport]);
+    }, [costReport, t]);
 
     // Metrics data for the table
     const metricsData = useMemo(() => {
@@ -153,17 +156,17 @@ export const useReportsAnalytics = () => {
 
         if (taskPerformance) {
             metrics.push(
-                { id: '1', module: 'Task Management', metric: 'Total Tasks', value: String(taskPerformance.totalTasks), change: 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
-                { id: '2', module: 'Task Management', metric: 'Completion Rate', value: `${taskPerformance.completionRate ?? 0}%`, change: Number(taskPerformance.completionRate) ?? 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
-                { id: '3', module: 'Task Management', metric: 'Overdue Rate', value: `${taskPerformance.overdueRate ?? 0}%`, change: -(Number(taskPerformance.overdueRate) ?? 0), lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                { id: '1', module: t('admin.reportsAnalytics.metrics.modules.taskManagement'), metric: t('admin.reportsAnalytics.metrics.names.totalTasks'), value: String(taskPerformance.totalTasks), change: 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                { id: '2', module: t('admin.reportsAnalytics.metrics.modules.taskManagement'), metric: t('admin.reportsAnalytics.metrics.names.completionRate'), value: `${taskPerformance.completionRate ?? 0}%`, change: Number(taskPerformance.completionRate) ?? 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                { id: '3', module: t('admin.reportsAnalytics.metrics.modules.taskManagement'), metric: t('admin.reportsAnalytics.metrics.names.overdueRate'), value: `${taskPerformance.overdueRate ?? 0}%`, change: -(Number(taskPerformance.overdueRate) ?? 0), lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
             );
         }
 
         if (incidentStatistics) {
             metrics.push(
-                { id: '4', module: 'Incident Management', metric: 'Total Incidents', value: String(incidentStatistics.totalCount), change: 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
-                { id: '5', module: 'Incident Management', metric: 'Open Incidents', value: String(incidentStatistics.openCount), change: 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
-                { id: '6', module: 'Incident Management', metric: 'Avg Resolution (days)', value: String(incidentStatistics.averageResolutionDays ?? 'N/A'), change: 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                { id: '4', module: t('admin.reportsAnalytics.metrics.modules.incidentManagement'), metric: t('admin.reportsAnalytics.metrics.names.totalIncidents'), value: String(incidentStatistics.totalCount), change: 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                { id: '5', module: t('admin.reportsAnalytics.metrics.modules.incidentManagement'), metric: t('admin.reportsAnalytics.metrics.names.openIncidents'), value: String(incidentStatistics.openCount), change: 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                { id: '6', module: t('admin.reportsAnalytics.metrics.modules.incidentManagement'), metric: t('admin.reportsAnalytics.metrics.names.avgResolutionDays'), value: String(incidentStatistics.averageResolutionDays ?? t('common.notAvailable')), change: 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
             );
         }
 
@@ -171,13 +174,13 @@ export const useReportsAnalytics = () => {
             const totalQuantity = inventoryOnHand.reduce((sum, i) => sum + (Number(i.totalQuantityOnHand) || 0), 0);
             const expiredCount = inventoryOnHand.reduce((sum, i) => sum + i.expiredLots, 0);
             metrics.push(
-                { id: '7', module: 'Inventory', metric: 'Total On-Hand Qty', value: totalQuantity.toLocaleString(), change: 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
-                { id: '8', module: 'Inventory', metric: 'Expired Lots', value: String(expiredCount), change: -expiredCount, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                { id: '7', module: t('admin.reportsAnalytics.metrics.modules.inventory'), metric: t('admin.reportsAnalytics.metrics.names.totalOnHandQty'), value: totalQuantity.toLocaleString(), change: 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                { id: '8', module: t('admin.reportsAnalytics.metrics.modules.inventory'), metric: t('admin.reportsAnalytics.metrics.names.expiredLots'), value: String(expiredCount), change: -expiredCount, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
             );
         }
 
         return metrics;
-    }, [taskPerformance, incidentStatistics, inventoryOnHand]);
+    }, [taskPerformance, incidentStatistics, inventoryOnHand, t]);
 
     // ═══════════════════════════════════════════════════════════════
     // COMPUTED KPI DATA - Transform API data to KPI card format
@@ -205,7 +208,7 @@ export const useReportsAnalytics = () => {
 
         return [
             {
-                title: 'Active Users',
+                title: t('admin.reportsAnalytics.kpi.activeUsers'),
                 value: dashboardStats?.summary?.totalUsers?.toLocaleString() ?? '0',
                 change: 12.5,
                 trend: 'up' as const,
@@ -213,11 +216,11 @@ export const useReportsAnalytics = () => {
                 color: '#3BA55D',
                 bgColor: 'bg-emerald-50',
                 textColor: 'text-emerald-600',
-                subtitle: 'DAU/WAU',
+                subtitle: t('admin.reportsAnalytics.kpi.dauWau'),
                 trendData: [65, 72, 68, 75, 82, 78, 85],
             },
             {
-                title: 'Active Seasons',
+                title: t('admin.reportsAnalytics.kpi.activeSeasons'),
                 value: activeSeasons.toLocaleString(),
                 change: 8.2,
                 trend: 'up' as const,
@@ -225,11 +228,11 @@ export const useReportsAnalytics = () => {
                 color: '#10B981',
                 bgColor: 'bg-emerald-50',
                 textColor: 'text-emerald-600',
-                subtitle: 'Open vs Closed',
+                subtitle: t('admin.reportsAnalytics.kpi.openVsClosed'),
                 trendData: [120, 125, 135, 142, 148, 152, activeSeasons || 156],
             },
             {
-                title: 'Total Expenses',
+                title: t('admin.reportsAnalytics.kpi.totalExpenses'),
                 value: `$${expenseFormatted}`,
                 change: -3.1,
                 trend: 'down' as const,
@@ -237,11 +240,11 @@ export const useReportsAnalytics = () => {
                 color: '#F59E0B',
                 bgColor: 'bg-amber-50',
                 textColor: 'text-amber-600',
-                subtitle: 'This month',
+                subtitle: t('admin.reportsAnalytics.kpi.thisMonth'),
                 trendData: [140, 138, 135, 132, 128, 126, 124],
             },
             {
-                title: 'Documents',
+                title: t('admin.reportsAnalytics.kpi.documents'),
                 value: documentCount.toLocaleString(),
                 change: 18.7,
                 trend: 'up' as const,
@@ -249,11 +252,11 @@ export const useReportsAnalytics = () => {
                 color: '#8B5CF6',
                 bgColor: 'bg-purple-50',
                 textColor: 'text-purple-600',
-                subtitle: 'Uploaded',
+                subtitle: t('admin.reportsAnalytics.kpi.uploaded'),
                 trendData: [980, 1020, 1080, 1120, 1180, 1210, documentCount || 1234],
             },
             {
-                title: 'Error Alerts',
+                title: t('admin.reportsAnalytics.kpi.errorAlerts'),
                 value: String(errorAlerts),
                 change: errorAlerts > 0 ? 15.3 : -15.3,
                 trend: errorAlerts > 0 ? 'up' as const : 'down' as const,
@@ -261,11 +264,11 @@ export const useReportsAnalytics = () => {
                 color: '#EF4444',
                 bgColor: 'bg-red-50',
                 textColor: 'text-red-600',
-                subtitle: 'Last 24h',
+                subtitle: t('admin.reportsAnalytics.kpi.last24h'),
                 trendData: [35, 32, 30, 28, 26, 25, errorAlerts || 23],
             },
         ];
-    }, [dashboardStats, costReport, inventoryOnHand, incidentStatistics]);
+    }, [dashboardStats, costReport, inventoryOnHand, incidentStatistics, t]);
 
     // Loading states
     const isLoading = taskLoading || incidentLoading || dashboardLoading;
@@ -279,8 +282,8 @@ export const useReportsAnalytics = () => {
     // ═══════════════════════════════════════════════════════════════
 
     const handleExport = (format: string) => {
-        toast.success(`Exporting report as ${format.toUpperCase()}`, {
-            description: 'Your report will be downloaded shortly.',
+        toast.success(t('admin.reportsAnalytics.toast.exportingFormat', { format: format.toUpperCase() }), {
+            description: t('admin.reportsAnalytics.toast.exportingDescription'),
         });
     };
 
@@ -295,8 +298,8 @@ export const useReportsAnalytics = () => {
     };
 
     const handleSettingsSave = () => {
-        toast.success('Settings saved', {
-            description: 'Report settings have been updated successfully.',
+        toast.success(t('admin.reportsAnalytics.toast.settingsSaved'), {
+            description: t('admin.reportsAnalytics.toast.settingsSavedDescription'),
         });
         setSettingsOpen(false);
     };

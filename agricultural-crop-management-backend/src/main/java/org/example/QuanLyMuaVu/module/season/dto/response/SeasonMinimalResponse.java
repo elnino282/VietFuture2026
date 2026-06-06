@@ -18,6 +18,10 @@ import lombok.experimental.FieldDefaults;
 public class SeasonMinimalResponse {
     Integer seasonId;
     String seasonName;
+    Integer farmId;
+    String farmName;
+    Integer plotId;
+    String plotName;
     LocalDate startDate;
     LocalDate endDate;
     LocalDate plannedHarvestDate;

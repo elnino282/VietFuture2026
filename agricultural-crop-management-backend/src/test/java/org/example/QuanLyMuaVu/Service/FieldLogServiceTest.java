@@ -2,6 +2,7 @@ package org.example.QuanLyMuaVu.Service;
 
 import org.example.QuanLyMuaVu.module.farm.entity.Farm;
 import org.example.QuanLyMuaVu.module.farm.service.FarmAccessService;
+import org.example.QuanLyMuaVu.module.identity.entity.User;
 import org.example.QuanLyMuaVu.module.season.dto.request.CreateFieldLogRequest;
 import org.example.QuanLyMuaVu.module.season.dto.request.UpdateFieldLogRequest;
 import org.example.QuanLyMuaVu.module.season.dto.response.FieldLogResponse;
@@ -14,6 +15,7 @@ import org.example.QuanLyMuaVu.Exception.ErrorCode;
 import org.example.QuanLyMuaVu.module.season.repository.FieldLogRepository;
 import org.example.QuanLyMuaVu.module.season.repository.SeasonRepository;
 import org.example.QuanLyMuaVu.module.season.service.FieldLogService;
+import org.example.QuanLyMuaVu.module.season.service.SeasonWorkspaceAccessService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +47,9 @@ public class FieldLogServiceTest {
 
         @Mock
         private FarmAccessService farmAccessService;
+
+        @Mock
+        private SeasonWorkspaceAccessService seasonWorkspaceAccessService;
 
         @InjectMocks
         private FieldLogService fieldLogService;
@@ -90,6 +95,15 @@ public class FieldLogServiceTest {
 
                 when(seasonRepository.findById(1)).thenReturn(Optional.of(testSeason));
                 doNothing().when(farmAccessService).assertCurrentUserCanAccessSeason(testSeason);
+                User currentUser = User.builder()
+                                .id(10L)
+                                .username("farmer")
+                                .fullName("Farmer Owner")
+                                .build();
+                when(seasonWorkspaceAccessService.getCurrentUser()).thenReturn(currentUser);
+                when(seasonWorkspaceAccessService.resolveDisplayName(currentUser)).thenReturn("Farmer Owner");
+                when(seasonWorkspaceAccessService.resolveActorType(testSeason, currentUser)).thenReturn("FARMER");
+                when(seasonWorkspaceAccessService.canCurrentUserManageRecord(eq(testSeason), anyLong())).thenReturn(true);
                 when(fieldLogRepository.save(any())).thenAnswer(i -> {
                         FieldLog log = i.getArgument(0);
                         log.setId(1);

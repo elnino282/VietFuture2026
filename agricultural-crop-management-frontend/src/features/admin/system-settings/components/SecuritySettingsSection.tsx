@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import type { SecuritySettings as SecuritySettingsType, Device } from '../types';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface SecuritySettingsProps {
     settings: SecuritySettingsType;
@@ -24,20 +25,22 @@ export function SecuritySettingsSection({
     onSignOutAll,
     getDeviceIcon,
 }: SecuritySettingsProps) {
+    const { t } = useI18n();
+
     return (
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Security Settings</CardTitle>
-                    <CardDescription>Manage authentication and access policies</CardDescription>
+                    <CardTitle>{t('admin.systemSettings.security.title')}</CardTitle>
+                    <CardDescription>{t('admin.systemSettings.security.description')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
                         <div className="flex-1">
                             <Label htmlFor="enable2FA" className="cursor-pointer">
-                                Enable Two-Factor Authentication
+                                {t('admin.systemSettings.security.enable2FA')}
                             </Label>
-                            <p className="text-xs text-muted-foreground mt-1">Require 2FA for all admin users</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t('admin.systemSettings.security.enable2FADescription')}</p>
                         </div>
                         <Switch
                             id="enable2FA"
@@ -49,9 +52,9 @@ export function SecuritySettingsSection({
                     <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
                         <div className="flex-1">
                             <Label htmlFor="sessionTimeout" className="cursor-pointer">
-                                Automatic Session Timeout
+                                {t('admin.systemSettings.security.sessionTimeout')}
                             </Label>
-                            <p className="text-xs text-muted-foreground mt-1">Sign out inactive users after 30 minutes</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t('admin.systemSettings.security.sessionTimeoutDescription')}</p>
                         </div>
                         <Switch
                             id="sessionTimeout"
@@ -63,10 +66,10 @@ export function SecuritySettingsSection({
                     <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
                         <div className="flex-1">
                             <Label htmlFor="passwordPolicy" className="cursor-pointer">
-                                Strict Password Policy
+                                {t('admin.systemSettings.security.passwordPolicy')}
                             </Label>
                             <p className="text-xs text-muted-foreground mt-1">
-                                Require 12+ chars, uppercase, numbers, and symbols
+                                {t('admin.systemSettings.security.passwordPolicyDescription')}
                             </p>
                         </div>
                         <Switch
@@ -80,10 +83,10 @@ export function SecuritySettingsSection({
 
                     <div>
                         <div className="flex items-center justify-between mb-4">
-                            <h4>Active Devices</h4>
+                            <h4>{t('admin.systemSettings.security.activeDevices')}</h4>
                             <Button variant="outline" size="sm" onClick={onSignOutAll}>
                                 <LogOut className="w-4 h-4 mr-2" />
-                                Sign Out All Devices
+                                {t('admin.systemSettings.security.signOutAllDevices')}
                             </Button>
                         </div>
                         <div className="space-y-3">
@@ -99,7 +102,7 @@ export function SecuritySettingsSection({
                                                 <p className="text-sm font-medium">{device.browser}</p>
                                                 {device.current && (
                                                     <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
-                                                        Current
+                                                        {t('admin.systemSettings.security.currentDevice')}
                                                     </Badge>
                                                 )}
                                             </div>
@@ -107,7 +110,12 @@ export function SecuritySettingsSection({
                                             <p className="text-xs text-muted-foreground">{device.lastActive}</p>
                                         </div>
                                         {!device.current && (
-                                            <Button variant="ghost" size="sm" onClick={() => onSignOutDevice(device.id)}>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                aria-label={t('admin.systemSettings.security.signOutDevice')}
+                                                onClick={() => onSignOutDevice(device.id)}
+                                            >
                                                 <LogOut className="w-4 h-4" />
                                             </Button>
                                         )}
@@ -120,7 +128,7 @@ export function SecuritySettingsSection({
                     <div className="flex gap-2">
                         <Button>
                             <Save className="w-4 h-4 mr-2" />
-                            Save Security Settings
+                            {t('admin.systemSettings.security.save')}
                         </Button>
                     </div>
                 </CardContent>

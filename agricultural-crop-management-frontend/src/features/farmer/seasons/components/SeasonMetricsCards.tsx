@@ -1,6 +1,7 @@
 import { TrendingUp, Calendar, Package, BarChart3 } from 'lucide-react';
 import { usePreferences } from '@/shared/contexts';
 import { formatWeight } from '@/shared/lib';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import type { Season } from '../types';
 
 interface SeasonMetricsCardsProps {
@@ -9,6 +10,7 @@ interface SeasonMetricsCardsProps {
 
 export function SeasonMetricsCards({ seasons }: SeasonMetricsCardsProps) {
   const { preferences } = usePreferences();
+  const { t } = useI18n();
 
   // Calculate metrics
   const totalSeasons = seasons.length;
@@ -31,33 +33,37 @@ export function SeasonMetricsCards({ seasons }: SeasonMetricsCardsProps) {
 
   const metrics = [
     {
-      title: 'Total Seasons',
+      title: t('seasonMetrics.totalSeasons'),
       value: totalSeasons,
-      subtitle: `${seasons.filter(s => s.status === 'COMPLETED').length} completed`,
+      subtitle: t('seasonMetrics.completedCount', {
+        count: seasons.filter(s => s.status === 'COMPLETED').length,
+      }),
       icon: Package,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
     },
     {
-      title: 'Active Seasons',
+      title: t('seasonMetrics.activeSeasons'),
       value: activeSeasons,
-      subtitle: `${((activeSeasons/totalSeasons || 0) * 100).toFixed(0)}% of total`,
+      subtitle: t('seasonMetrics.percentOfTotal', {
+        percent: ((activeSeasons / totalSeasons || 0) * 100).toFixed(0),
+      }),
       icon: TrendingUp,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
     },
     {
-      title: 'Harvest Due',
+      title: t('seasonMetrics.harvestDue'),
       value: harvestDue,
-      subtitle: 'Next 30 days',
+      subtitle: t('seasonMetrics.next30Days'),
       icon: Calendar,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
     },
     {
-      title: 'Expected Yield',
+      title: t('seasonMetrics.expectedYield'),
       value: expectedYieldLabel,
-      subtitle: 'Active seasons',
+      subtitle: t('seasonMetrics.activeSeasonsLabel'),
       icon: BarChart3,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',

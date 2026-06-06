@@ -33,6 +33,10 @@ public class DiseaseRecordResponse {
 
     Long reportedByUserId;
     String reportedByUsername;
+    String reportedByDisplayName;
+    String reportedByType;
+    Boolean canEdit;
+    Boolean canDelete;
 
     Integer incidentId;
 

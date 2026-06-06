@@ -13,6 +13,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Label } from "@/shared/ui/label";
 import { Separator } from "@/shared/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/shared/ui/sheet";
+import { useI18n } from "@/hooks/useI18n";
 import type { Document, DocumentType } from "../types";
 
 interface DocumentPreviewProps {
@@ -34,7 +35,14 @@ export function DocumentPreview({
     getRelatedDocuments,
     onSelectRelated,
 }: DocumentPreviewProps) {
+    const { t, locale } = useI18n();
+
     if (!document) return null;
+
+    const getDocumentTypeLabel = (type: DocumentType) =>
+        t(`documents.types.${type}`, type);
+
+    const relatedDocuments = getRelatedDocuments(document);
 
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -50,7 +58,6 @@ export function DocumentPreview({
                 </SheetHeader>
 
                 <div className="mt-6 space-y-6">
-                    {/* Preview Area */}
                     <Card className="border-border rounded-2xl overflow-hidden">
                         <div
                             className="h-96 flex items-center justify-center"
@@ -62,7 +69,9 @@ export function DocumentPreview({
                             <div className="text-center">
                                 <div className="text-8xl mb-4">{document.thumbnail}</div>
                                 <p className="text-sm text-muted-foreground mb-4">
-                                    {document.type.toUpperCase()} Preview
+                                    {t("documents.preview.previewLabel", {
+                                        type: getDocumentTypeLabel(document.type),
+                                    })}
                                 </p>
                                 <div className="flex gap-2 justify-center">
                                     <Button
@@ -71,7 +80,7 @@ export function DocumentPreview({
                                         className="rounded-xl border-border"
                                     >
                                         <ZoomIn className="w-4 h-4 mr-2" />
-                                        Zoom In
+                                        {t("documents.actions.zoomIn")}
                                     </Button>
                                     <Button
                                         variant="outline"
@@ -79,52 +88,54 @@ export function DocumentPreview({
                                         className="rounded-xl border-border"
                                     >
                                         <ZoomOut className="w-4 h-4 mr-2" />
-                                        Zoom Out
+                                        {t("documents.actions.zoomOut")}
                                     </Button>
                                 </div>
                             </div>
                         </div>
                     </Card>
 
-                    {/* Action Buttons */}
                     <div className="flex gap-3">
                         <Button
                             className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl"
                             onClick={() => onDownload(document)}
                         >
                             <Download className="w-4 h-4 mr-2" />
-                            Tải tài liệu
+                            {t("documents.actions.downloadDocument")}
                             <ExternalLink className="w-4 h-4 ml-1" />
-                            <span className="text-xs">(Mở tab mới)</span>
+                            <span className="text-xs">
+                                {t("documents.actions.openNewTabHint")}
+                            </span>
                         </Button>
                         <Button
                             variant="outline"
                             className="rounded-xl border-border"
                         >
                             <Share2 className="w-4 h-4 mr-2" />
-                            Share
+                            {t("documents.actions.share")}
                         </Button>
                         <Button
                             variant="outline"
                             className="rounded-xl border-border"
                         >
                             <Printer className="w-4 h-4 mr-2" />
-                            Print
+                            {t("documents.actions.print")}
                         </Button>
                     </div>
 
-                    {/* Metadata */}
                     <Card className="border-border rounded-2xl">
                         <CardHeader>
                             <CardTitle className="text-base text-foreground">
-                                Document Information
+                                {t("documents.preview.information")}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div>
-                                <Label className="text-xs text-muted-foreground">Description</Label>
+                                <Label className="text-xs text-muted-foreground">
+                                    {t("documents.preview.description")}
+                                </Label>
                                 <p className="text-sm text-foreground mt-1">
-                                    {document.description}
+                                    {document.description || t("documents.preview.noDescription")}
                                 </p>
                             </div>
 
@@ -132,13 +143,17 @@ export function DocumentPreview({
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <Label className="text-xs text-muted-foreground">File Size</Label>
+                                    <Label className="text-xs text-muted-foreground">
+                                        {t("documents.preview.fileSize")}
+                                    </Label>
                                     <p className="text-sm text-foreground mt-1">
                                         {document.fileSize}
                                     </p>
                                 </div>
                                 <div>
-                                    <Label className="text-xs text-muted-foreground">Author</Label>
+                                    <Label className="text-xs text-muted-foreground">
+                                        {t("documents.preview.author")}
+                                    </Label>
                                     <p className="text-sm text-foreground mt-1">
                                         {document.author}
                                     </p>
@@ -150,14 +165,18 @@ export function DocumentPreview({
                                     <Separator className="bg-border" />
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <Label className="text-xs text-muted-foreground">Crop</Label>
+                                            <Label className="text-xs text-muted-foreground">
+                                                {t("documents.preview.crop")}
+                                            </Label>
                                             <p className="text-sm text-foreground mt-1">
                                                 {document.crop}
                                             </p>
                                         </div>
                                         {document.stage && (
                                             <div>
-                                                <Label className="text-xs text-muted-foreground">Stage</Label>
+                                                <Label className="text-xs text-muted-foreground">
+                                                    {t("documents.preview.stage")}
+                                                </Label>
                                                 <p className="text-sm text-foreground mt-1">
                                                     {document.stage}
                                                 </p>
@@ -170,25 +189,35 @@ export function DocumentPreview({
                             <Separator className="bg-border" />
 
                             <div>
-                                <Label className="text-xs text-muted-foreground">Tags</Label>
+                                <Label className="text-xs text-muted-foreground">
+                                    {t("documents.preview.tags")}
+                                </Label>
                                 <div className="flex flex-wrap gap-2 mt-2">
-                                    {document.tags.map((tag, index) => (
-                                        <Badge
-                                            key={index}
-                                            className="bg-primary/10 text-primary border-primary/20"
-                                        >
-                                            {tag}
-                                        </Badge>
-                                    ))}
+                                    {document.tags.length > 0 ? (
+                                        document.tags.map((tag, index) => (
+                                            <Badge
+                                                key={index}
+                                                className="bg-primary/10 text-primary border-primary/20"
+                                            >
+                                                {tag}
+                                            </Badge>
+                                        ))
+                                    ) : (
+                                        <span className="text-sm text-muted-foreground">
+                                            {t("common.notAvailable", "-")}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
                             <Separator className="bg-border" />
 
                             <div>
-                                <Label className="text-xs text-muted-foreground">Last Updated</Label>
+                                <Label className="text-xs text-muted-foreground">
+                                    {t("documents.preview.lastUpdated")}
+                                </Label>
                                 <p className="text-sm text-foreground mt-1">
-                                    {new Date(document.updatedAt).toLocaleDateString("en-US", {
+                                    {new Date(document.updatedAt).toLocaleDateString(locale, {
                                         year: "numeric",
                                         month: "long",
                                         day: "numeric",
@@ -198,17 +227,16 @@ export function DocumentPreview({
                         </CardContent>
                     </Card>
 
-                    {/* Related Documents */}
-                    {getRelatedDocuments(document).length > 0 && (
+                    {relatedDocuments.length > 0 && (
                         <Card className="border-border rounded-2xl">
                             <CardHeader>
                                 <CardTitle className="text-base text-foreground">
-                                    Related Documents
+                                    {t("documents.preview.relatedDocuments")}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-3">
-                                    {getRelatedDocuments(document).map((relatedDoc) => (
+                                    {relatedDocuments.map((relatedDoc) => (
                                         <div
                                             key={relatedDoc.id}
                                             className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted cursor-pointer transition-colors"
@@ -220,7 +248,7 @@ export function DocumentPreview({
                                                     {relatedDoc.title}
                                                 </p>
                                                 <p className="text-xs text-muted-foreground">
-                                                    {relatedDoc.type.toUpperCase()}
+                                                    {getDocumentTypeLabel(relatedDoc.type)}
                                                 </p>
                                             </div>
                                             <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -235,6 +263,3 @@ export function DocumentPreview({
         </Sheet>
     );
 }
-
-
-

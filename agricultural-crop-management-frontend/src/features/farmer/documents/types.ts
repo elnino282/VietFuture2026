@@ -20,13 +20,5 @@ export interface Document {
     relatedDocs?: string[];
 }
 
-export interface Filters {
-    crops: string[];
-    stages: string[];
-    topics: string[];
-    types: string[];
-    seasons: string[];
-}
-
 
 

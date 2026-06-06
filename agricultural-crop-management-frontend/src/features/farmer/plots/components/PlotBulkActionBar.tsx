@@ -7,6 +7,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/shared/ui/select";
+import { useTranslation } from "react-i18next";
 import type { PlotStatus } from "../types";
 
 interface PlotBulkActionBarProps {
@@ -30,6 +31,8 @@ export function PlotBulkActionBar({
     onBulkStatusChange,
     onBulkExport,
 }: PlotBulkActionBarProps) {
+    const { t } = useTranslation();
+
     if (selectedCount === 0) return null;
 
     return (
@@ -38,7 +41,7 @@ export function PlotBulkActionBar({
                 {/* Selected Count */}
                 <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-md">
                     <span className="text-sm font-medium text-foreground">
-                        {selectedCount} selected
+                        {t("plots.selectedCount", { count: selectedCount })}
                     </span>
                 </div>
 
@@ -48,12 +51,12 @@ export function PlotBulkActionBar({
                 {/* Change Status */}
                 <Select onValueChange={(value) => onBulkStatusChange(value as PlotStatus)}>
                     <SelectTrigger className="w-[160px] h-9">
-                        <SelectValue placeholder="Change Status" />
+                        <SelectValue placeholder={t("plots.bulk.changeStatus")} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="dormant">Dormant</SelectItem>
-                        <SelectItem value="planned">Planned</SelectItem>
+                        <SelectItem value="active">{t("plots.status.active")}</SelectItem>
+                        <SelectItem value="dormant">{t("plots.status.dormant")}</SelectItem>
+                        <SelectItem value="planned">{t("plots.status.planned")}</SelectItem>
                     </SelectContent>
                 </Select>
 
@@ -66,7 +69,7 @@ export function PlotBulkActionBar({
                         className="h-9"
                     >
                         <Download className="w-4 h-4 mr-2" />
-                        Export
+                        {t("common.export")}
                     </Button>
                 )}
 
@@ -78,7 +81,7 @@ export function PlotBulkActionBar({
                     className="h-9"
                 >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
+                    {t("common.delete")}
                 </Button>
 
                 {/* Divider */}
@@ -92,7 +95,7 @@ export function PlotBulkActionBar({
                     className="h-9 w-9 p-0"
                 >
                     <X className="w-4 h-4" />
-                    <span className="sr-only">Clear selection</span>
+                    <span className="sr-only">{t("plots.actions.clearSelection")}</span>
                 </Button>
             </div>
         </div>

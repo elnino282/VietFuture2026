@@ -1,15 +1,16 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Button, Input, Label } from '@/shared/ui';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import type { ChangePasswordPayload } from '@/entities/user';
 
 interface PasswordChangeFormProps {
   onSave: (data: ChangePasswordPayload) => Promise<void>;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 type PasswordErrors = Partial<Record<keyof ChangePasswordPayload | 'confirmPassword', string>>;
 
-export function PasswordChangeForm({ onSave }: PasswordChangeFormProps) {
+export function PasswordChangeForm({ onSave, onDirtyChange }: PasswordChangeFormProps) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,6 +19,14 @@ export function PasswordChangeForm({ onSave }: PasswordChangeFormProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<PasswordErrors>({});
+  const isDirty =
+    currentPassword.length > 0 ||
+    newPassword.length > 0 ||
+    confirmPassword.length > 0;
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const clearError = (field: keyof PasswordErrors) => {
     if (!errors[field]) return;

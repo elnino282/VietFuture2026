@@ -29,6 +29,7 @@ export const HarvestSchema = z.object({
     grade: z.string().nullable().optional(),
     revenue: z.number().nullable().optional(),
     note: z.string().nullable().optional(),
+    status: z.enum(['stored', 'sold', 'processing']).nullable().optional(),
     createdAt: z.string().nullable().optional(),
 });
 
@@ -45,6 +46,10 @@ export const HarvestSummarySchema = z.object({
     yieldVsPlanPercent: z.number().nullable(),
     expectedYieldKg: z.number().nullable(),
     actualYieldKg: z.number().nullable(),
+    totalStoredKg: z.number().nullable().optional(),
+    totalSoldKg: z.number().nullable().optional(),
+    totalProcessingKg: z.number().nullable().optional(),
+    premiumGradePercentage: z.number().nullable().optional(),
 });
 
 export type HarvestSummary = z.infer<typeof HarvestSummarySchema>;
@@ -74,7 +79,13 @@ export type HarvestCreateRequest = z.infer<typeof HarvestCreateRequestSchema>;
 // HARVEST UPDATE REQUEST
 // ═══════════════════════════════════════════════════════════════
 
-export const HarvestUpdateRequestSchema = HarvestCreateRequestSchema;
+export const HarvestUpdateRequestSchema = z.object({
+    harvestDate: DateSchema,
+    quantity: z.number().positive('Quantity must be positive'),
+    unit: z.number().positive('Unit/price must be positive'),
+    grade: z.string().optional(),
+    note: z.string().optional(),
+});
 
 export type HarvestUpdateRequest = z.infer<typeof HarvestUpdateRequestSchema>;
 

@@ -35,14 +35,14 @@ export const EditProfileFormSchema = z.object({
   fullName: z
     .string()
     .trim()
-    .min(1, "Full name is required")
-    .max(255, "Full name is too long"),
+    .min(1, "employee.profile.editDialog.validation.fullNameRequired")
+    .max(255, "employee.profile.editDialog.validation.fullNameTooLong"),
   phone: z
     .string()
     .trim()
-    .max(30, "Phone number is too long")
+    .max(30, "employee.profile.editDialog.validation.phoneTooLong")
     .refine((value) => value === "" || PHONE_REGEX.test(value), {
-      message: "Invalid phone number",
+      message: "employee.profile.editDialog.validation.invalidPhone",
     })
     .optional(),
   provinceId: z.number().optional(),

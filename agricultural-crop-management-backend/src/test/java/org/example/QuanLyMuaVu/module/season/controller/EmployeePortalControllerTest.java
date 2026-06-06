@@ -10,8 +10,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.example.QuanLyMuaVu.Exception.AppException;
 import org.example.QuanLyMuaVu.Exception.ErrorCode;
+import org.example.QuanLyMuaVu.module.ai.service.DiseaseSuggestionService;
+import org.example.QuanLyMuaVu.module.inventory.service.SuppliesService;
 import org.example.QuanLyMuaVu.module.season.dto.response.PayrollRecordResponse;
+import org.example.QuanLyMuaVu.module.season.service.DiseaseRecordService;
+import org.example.QuanLyMuaVu.module.season.service.FieldLogService;
 import org.example.QuanLyMuaVu.module.season.service.LaborManagementService;
+import org.example.QuanLyMuaVu.module.season.service.SeasonWorkspaceAccessService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -31,6 +36,21 @@ class EmployeePortalControllerTest {
 
     @MockBean
     private LaborManagementService laborManagementService;
+
+    @MockBean
+    private FieldLogService fieldLogService;
+
+    @MockBean
+    private DiseaseRecordService diseaseRecordService;
+
+    @MockBean
+    private DiseaseSuggestionService diseaseSuggestionService;
+
+    @MockBean
+    private SuppliesService suppliesService;
+
+    @MockBean
+    private SeasonWorkspaceAccessService seasonWorkspaceAccessService;
 
     @TestConfiguration
     @EnableMethodSecurity

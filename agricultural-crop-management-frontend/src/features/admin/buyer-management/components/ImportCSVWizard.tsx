@@ -19,6 +19,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface ImportCSVWizardProps {
     open: boolean;
@@ -45,8 +46,11 @@ export function ImportCSVWizard({
     onConfirm,
     getRoleBadge,
     canImport = false,
-    importUnsupportedMessage = 'Backend import API is not available yet.',
+    importUnsupportedMessage,
 }: ImportCSVWizardProps) {
+    const { t } = useI18n();
+    const unsupportedMessage = importUnsupportedMessage ?? t('admin.buyerManagement.import.unsupported');
+
     const handleBack = () => {
         if (step > 1) {
             onStepChange(step - 1);
@@ -62,10 +66,14 @@ export function ImportCSVWizard({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Upload className="w-5 h-5" />
-                        Import Buyers from CSV
+                        {t('admin.buyerManagement.import.title')}
                     </DialogTitle>
                     <DialogDescription>
-                        Step {step} of 2: {step === 1 ? 'Upload File' : 'Review & Confirm'}
+                        {t('admin.buyerManagement.import.stepLabel', {
+                            step,
+                            total: 2,
+                            label: t(`admin.buyerManagement.import.steps.${step}`),
+                        })}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -77,9 +85,9 @@ export function ImportCSVWizard({
                     <div className="space-y-4">
                         <div className="border-2 border-dashed rounded-lg p-8 text-center">
                             <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                            <h4 className="mb-2">Upload CSV File</h4>
+                            <h4 className="mb-2">{t('admin.buyerManagement.import.uploadTitle')}</h4>
                             <p className="text-sm text-muted-foreground mb-4">
-                                Drag and drop your CSV file here, or click to browse
+                                {t('admin.buyerManagement.import.uploadDescription')}
                             </p>
                             <input
                                 type="file"
@@ -90,7 +98,7 @@ export function ImportCSVWizard({
                             />
                             <label htmlFor="csv-upload-buyer">
                                 <Button variant="outline" asChild>
-                                    <span>Browse Files</span>
+                                    <span>{t('admin.buyerManagement.import.browseFiles')}</span>
                                 </Button>
                             </label>
                         </div>
@@ -98,10 +106,10 @@ export function ImportCSVWizard({
                             <div className="flex gap-3">
                                 <AlertCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                                 <div className="text-sm">
-                                    <p className="font-medium text-emerald-900 mb-1">CSV Format Requirements:</p>
+                                    <p className="font-medium text-emerald-900 mb-1">{t('admin.buyerManagement.import.requirementsTitle')}</p>
                                     <ul className="text-emerald-800 space-y-1 list-disc list-inside">
-                                        <li>Columns: companyName, taxId, contactName, email, phone, role</li>
-                                        <li>Role must be: buyer, enterprise, or distributor</li>
+                                        <li>{t('admin.buyerManagement.import.requirements.columns')}</li>
+                                        <li>{t('admin.buyerManagement.import.requirements.roles')}</li>
                                     </ul>
                                 </div>
                             </div>
@@ -113,7 +121,9 @@ export function ImportCSVWizard({
                     <div className="space-y-4">
                         {validationErrors.length > 0 && (
                             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-                                {validationErrors.length} invalid row(s) were skipped during preview parsing.
+                                {t('admin.buyerManagement.import.invalidRowsSkipped', {
+                                    count: validationErrors.length,
+                                })}
                             </div>
                         )}
                         <div className="border rounded-lg overflow-hidden">
@@ -121,11 +131,11 @@ export function ImportCSVWizard({
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead className="w-12">#</TableHead>
-                                        <TableHead>Company</TableHead>
-                                        <TableHead>Tax ID</TableHead>
-                                        <TableHead>Contact</TableHead>
-                                        <TableHead>Email</TableHead>
-                                        <TableHead>Role</TableHead>
+                                        <TableHead>{t('admin.buyerManagement.import.table.company')}</TableHead>
+                                        <TableHead>{t('admin.buyerManagement.fields.taxId')}</TableHead>
+                                        <TableHead>{t('admin.buyerManagement.table.primaryContact')}</TableHead>
+                                        <TableHead>{t('auth.signUp.email')}</TableHead>
+                                        <TableHead>{t('admin.buyerManagement.fields.role')}</TableHead>
                                         <TableHead className="w-12"></TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -139,7 +149,7 @@ export function ImportCSVWizard({
                                             <TableCell>{row.email}</TableCell>
                                             <TableCell>
                                                 <Badge variant="secondary" className={getRoleBadge(row.role)}>
-                                                    {row.role}
+                                                    {t(`admin.buyerManagement.roles.${row.role}`, row.role)}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
@@ -152,24 +162,24 @@ export function ImportCSVWizard({
                         </div>
 
                         <p className="text-sm text-muted-foreground">
-                            {csvPreview.length} valid entries will be imported.
+                            {t('admin.buyerManagement.import.validEntries', { count: csvPreview.length })}
                         </p>
                         {!canImport && (
-                            <p className="text-sm text-destructive">{importUnsupportedMessage}</p>
+                            <p className="text-sm text-destructive">{unsupportedMessage}</p>
                         )}
                     </div>
                 )}
 
                 <DialogFooter>
                     <Button variant="outline" onClick={handleBack}>
-                        {step === 1 ? 'Cancel' : 'Back'}
+                        {step === 1 ? t('common.cancel') : t('common.back')}
                     </Button>
                     {step === 2 && (
                         <Button
                             onClick={onConfirm}
                             disabled={!canImport || csvPreview.length === 0}
                         >
-                            Import {csvPreview.length} Buyer{csvPreview.length > 1 ? 's' : ''}
+                            {t('admin.buyerManagement.import.importCount', { count: csvPreview.length })}
                         </Button>
                     )}
                 </DialogFooter>
