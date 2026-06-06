@@ -1,4 +1,4 @@
-﻿import {
+import {
   useAddSeasonEmployee,
   useAssignTaskToEmployee,
   useBulkAssignSeasonEmployees,
@@ -39,9 +39,10 @@ import {
   TabsList,
   TabsTrigger,
   PageContainer,
+  PageHeader,
 } from "@/shared/ui";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
-import { Calendar, ExternalLink, RefreshCw, Trash2, UserPlus } from "lucide-react";
+import { Calendar, ExternalLink, RefreshCw, Trash2, UserPlus, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -344,7 +345,7 @@ export function LaborManagementPage() {
   if (!isWorkspaceScoped && isSeasonsLoading) {
     return (
       <PageContainer variant="wide">
-        <Card className="rounded-2xl border border-border">
+        <Card className="rounded-xl border border-border shadow-sm">
           <CardContent className="p-6 space-y-3">
             <div className="flex items-center gap-2 text-muted-foreground">
               <RefreshCw className="w-4 h-4 animate-spin" />
@@ -359,7 +360,7 @@ export function LaborManagementPage() {
   if (!isWorkspaceScoped && (!mySeasons || mySeasons.length === 0)) {
     return (
       <PageContainer variant="wide">
-        <Card className="rounded-2xl border border-border">
+        <Card className="rounded-xl border border-border shadow-sm">
           <CardContent className="p-6 space-y-3">
             <h2 className="text-lg text-foreground">{t("laborWorkspace.emptySeasonsTitle")}</h2>
             <p className="text-sm text-muted-foreground">
@@ -373,20 +374,26 @@ export function LaborManagementPage() {
 
   return (
     <PageContainer variant="wide" className="space-y-6">
-      <Card className="rounded-2xl border border-border">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <CardTitle>{t("laborWorkspace.title")}</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {selectedSeasonName
-                  ? t("laborWorkspace.currentSeasonLabel", { season: selectedSeasonName })
-                  : t("laborWorkspace.selectSeasonToStart")}
-              </p>
-            </div>
+      {/* Header Card — matches harvest tab's PageHeader pattern */}
+      <Card className="mb-6 border border-border rounded-xl shadow-sm">
+        <CardContent className="px-6 py-4">
+          <PageHeader
+            className="mb-0"
+            icon={<Users className="w-8 h-8" />}
+            title={t("laborWorkspace.title")}
+            subtitle={t("laborWorkspace.subtitle")}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Season Filter Card — matches harvest tab's filter card pattern */}
+      <Card className="mb-6 border border-border rounded-xl shadow-sm">
+        <CardContent className="px-6 py-4">
+          <div className="flex flex-wrap items-center justify-start gap-3 md:gap-4">
             {isWorkspaceScoped ? (
-              <div className="flex items-center gap-2">
+              <div className="rounded-xl border border-border px-3 py-2 text-sm bg-card flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
+                <span>{t("laborWorkspace.currentSeasonLabel", { season: "" })}</span>
                 <Badge className="bg-muted text-foreground border-border">
                   {selectedSeasonName ?? t("seasonWorkspace.fallbackSeasonName", { id: workspaceSeasonId })}
                 </Badge>
@@ -398,7 +405,7 @@ export function LaborManagementPage() {
                   value={selectedSeasonId?.toString() ?? ""}
                   onValueChange={(val) => setSelectedSeasonId(Number(val))}
                 >
-                  <SelectTrigger className="w-[260px]">
+                  <SelectTrigger className="rounded-xl border-border w-full sm:w-[280px]">
                     <SelectValue placeholder={t("laborWorkspace.selectSeasonPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -416,11 +423,11 @@ export function LaborManagementPage() {
               </div>
             )}
           </div>
-        </CardHeader>
+        </CardContent>
       </Card>
 
       {isSeasonLocked && (
-        <Card className="rounded-2xl border border-amber-300 bg-amber-50">
+        <Card className="rounded-xl border border-amber-300 bg-amber-50 shadow-sm">
           <CardContent className="p-4 text-sm text-amber-900">
             {t("laborWorkspace.lockedSeasonBanner")}
           </CardContent>
@@ -436,7 +443,7 @@ export function LaborManagementPage() {
         </TabsList>
 
         <TabsContent value="employees" className="space-y-4">
-          <Card className="rounded-2xl border border-border">
+          <Card className="rounded-xl border border-border shadow-sm">
             <CardHeader>
               <CardTitle className="text-base">{t("laborWorkspace.sections.addEmployees.title")}</CardTitle>
             </CardHeader>
@@ -573,7 +580,7 @@ export function LaborManagementPage() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl border border-border">
+          <Card className="rounded-xl border border-border shadow-sm">
             <CardHeader>
               <CardTitle className="text-base">{t("laborWorkspace.sections.seasonEmployees.title")}</CardTitle>
             </CardHeader>
@@ -633,7 +640,7 @@ export function LaborManagementPage() {
         </TabsContent>
 
         <TabsContent value="assignment" className="space-y-4">
-          <Card className="rounded-2xl border border-border">
+          <Card className="rounded-xl border border-border shadow-sm">
             <CardHeader>
               <CardTitle className="text-base">{t("laborWorkspace.sections.assignment.title")}</CardTitle>
             </CardHeader>
@@ -716,7 +723,7 @@ export function LaborManagementPage() {
         </TabsContent>
 
         <TabsContent value="progress" className="space-y-4">
-          <Card className="rounded-2xl border border-border">
+          <Card className="rounded-xl border border-border shadow-sm">
             <CardHeader>
               <CardTitle className="text-base">{t("laborWorkspace.sections.progress.title")}</CardTitle>
             </CardHeader>
@@ -770,7 +777,7 @@ export function LaborManagementPage() {
         </TabsContent>
 
         <TabsContent value="payroll" className="space-y-4">
-          <Card className="rounded-2xl border border-border">
+          <Card className="rounded-xl border border-border shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">{t("laborWorkspace.sections.payroll.title")}</CardTitle>
               <Button

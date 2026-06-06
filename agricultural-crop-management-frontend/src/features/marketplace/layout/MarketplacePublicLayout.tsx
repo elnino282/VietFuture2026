@@ -357,7 +357,7 @@ function MarketplaceFooter() {
         </div>
 
         <div className="mt-8 border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
-          <p>&copy; {new Date().getFullYear()} FarmTrace.</p>
+          <p>&copy; {new Date().getFullYear()} FarmACM.</p>
         </div>
       </div>
     </footer>

@@ -120,6 +120,7 @@
     "irrigationWaterAnalysis": "Tưới tiêu & Phân tích nước",
     "soilTests": "Xét nghiệm đất",
     "home": "Trang chủ",
+    "auditLogs": "Nhật ký hệ thống",
     "toggleSidebar": "Thu gọn/mở rộng điều hướng"
   },
   "breadcrumb": {
@@ -1197,6 +1198,7 @@
   },
   "laborWorkspace": {
     "title": "Quản lý Nhân công",
+    "subtitle": "Phân công nhân lực, theo dõi tiến độ và quản lý bảng lương trong mùa vụ",
     "currentSeasonLabel": "Mùa vụ hiện tại: {{season}}",
     "selectSeasonToStart": "Chọn mùa vụ để bắt đầu",
     "selectSeasonPlaceholder": "Chọn mùa vụ...",
@@ -5144,6 +5146,14 @@
     "endDate": "Ngày kết thúc",
     "totalTasks": "Tổng công việc",
     "incidents": "Sự cố"
+  },
+  "adminDashboard": {
+    "kpi": {
+      "totalUsers": "Tổng người dùng",
+      "totalFarms": "Tổng nông trại",
+      "totalPlots": "Tổng thửa đất",
+      "totalSeasons": "Tổng mùa vụ"
+    }
   },
   "expenseDetail": {
     "title": "Chi tiết chi phí",

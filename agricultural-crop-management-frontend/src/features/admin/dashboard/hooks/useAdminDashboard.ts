@@ -6,11 +6,14 @@ import {
   type AdminPendingApprovalItem,
   type DashboardStats,
 } from '@/features/admin/shared/api';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import {
   type RiskLevel,
   type RiskDataCoverage,
   type TransformedRiskySeason,
 } from '../types';
+
+type Translator = (key: string, defaultValue?: string) => string;
 
 /**
  * Calculate risk level based on riskScore
@@ -25,12 +28,12 @@ const getRiskLevel = (riskScore: number): RiskLevel => {
 /**
  * Transform raw API data to UI-friendly format
  */
-const transformDashboardData = (data: DashboardStats) => {
+const transformDashboardData = (data: DashboardStats, t: Translator) => {
   // Summary KPIs with icons and colors
   const kpiMetrics = [
     {
       key: 'totalUsers',
-      title: 'Total Users',
+      title: t('adminDashboard.kpi.totalUsers', 'Total Users'),
       value: data.summary.totalUsers.toLocaleString(),
       icon: Users,
       color: '#3BA55D',
@@ -39,7 +42,7 @@ const transformDashboardData = (data: DashboardStats) => {
     },
     {
       key: 'totalFarms',
-      title: 'Total Farms',
+      title: t('adminDashboard.kpi.totalFarms', 'Total Farms'),
       value: data.summary.totalFarms.toLocaleString(),
       icon: Boxes,
       color: '#2F8A4D',
@@ -48,7 +51,7 @@ const transformDashboardData = (data: DashboardStats) => {
     },
     {
       key: 'totalPlots',
-      title: 'Total Plots',
+      title: t('adminDashboard.kpi.totalPlots', 'Total Plots'),
       value: data.summary.totalPlots.toLocaleString(),
       icon: Map,
       color: '#64748B',
@@ -57,7 +60,7 @@ const transformDashboardData = (data: DashboardStats) => {
     },
     {
       key: 'totalSeasons',
-      title: 'Total Seasons',
+      title: t('adminDashboard.kpi.totalSeasons', 'Total Seasons'),
       value: data.summary.totalSeasons.toLocaleString(),
       icon: Sprout,
       color: '#10B981',
@@ -113,13 +116,15 @@ const transformDashboardData = (data: DashboardStats) => {
  * - Transforms API data to UI-friendly format via select
  */
 export const useAdminDashboard = () => {
+  const { t } = useI18n();
+
   const statsQuery = useQuery({
     queryKey: dashboardStatsKeys.stats(),
     queryFn: adminDashboardStatsApi.getStats,
     refetchInterval: 30_000, // Real-time: poll every 30s
     staleTime: 15_000, // Consider data fresh for 15s
     placeholderData: (previousData) => previousData, // Avoid flashing
-    select: transformDashboardData,
+    select: (data) => transformDashboardData(data, t),
   });
 
   const pendingApprovalsQuery = useQuery({

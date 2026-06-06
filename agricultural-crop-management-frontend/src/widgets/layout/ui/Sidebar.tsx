@@ -23,6 +23,8 @@ const navTranslationKeys: Record<string, string> = {
     'ai-assistant': 'nav.aiAssistant',
     'chat': 'nav.chat',
     'alerts': 'nav.alertsCenter',
+    'incidents': 'nav.incidents',
+    'audit-logs': 'nav.auditLogs',
     'users-roles': 'nav.usersRoles',
     'crops-varieties': 'nav.cropsVarieties',
     'reports': 'nav.reports',

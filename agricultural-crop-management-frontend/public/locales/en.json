@@ -121,6 +121,7 @@
     "irrigationWaterAnalysis": "Irrigation & Water Analysis",
     "soilTests": "Soil Tests",
     "home": "Home",
+    "auditLogs": "Audit Logs",
     "toggleSidebar": "Toggle navigation"
   },
   "breadcrumb": {
@@ -1233,6 +1234,7 @@
   },
   "laborWorkspace": {
     "title": "Labor Management",
+    "subtitle": "Assign workers, track progress, and manage payroll for your season",
     "currentSeasonLabel": "Current season: {{season}}",
     "selectSeasonToStart": "Select a season to begin",
     "selectSeasonPlaceholder": "Select season...",
@@ -6445,6 +6447,14 @@
     "endDate": "End Date",
     "totalTasks": "Total Tasks",
     "incidents": "Incidents"
+  },
+  "adminDashboard": {
+    "kpi": {
+      "totalUsers": "Total Users",
+      "totalFarms": "Total Farms",
+      "totalPlots": "Total Plots",
+      "totalSeasons": "Total Seasons"
+    }
   },
   "expenseDetail": {
     "title": "Expense Details",
