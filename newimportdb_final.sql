@@ -1,5 +1,6 @@
 -- =========================================================
 -- ACM FINAL SEED-ONLY DATA
+-- Includes merged FDN supplement storyline for farmer@acm.local
 -- Entity-first / Hibernate-owned schema
 -- Import after running the backend once with profile dev-reset
 -- Main login accounts are created by ApplicationInitConfig:
@@ -801,6 +802,263 @@ VALUES
      '{"order_code":"MPO-2026-0002","payment_verification_status":"SUBMITTED"}', 'Buyer gửi chứng từ thanh toán chờ admin xác minh.', '127.0.0.1'),
     ('PRODUCT_WAREHOUSE_LOT', @pwlot_soy_ags398_id, 'LOW_STOCK_REVIEW', 'farmer.binhminh@example.com', '2026-05-30 09:30:00',
      '{"lot_code":"PW-BINHMINH-SOY-AGS398-2026-001","on_hand_quantity":320}', 'Kiểm tra tồn kho thấp sau các đơn hàng.', '127.0.0.1');
+
+-- =========================================================
+-- 9A. FDN supplement data for farmer@acm.local
+-- Goal: add a clear FDN storyline under the existing farmer account:
+-- 2021-2023 high FDN -> 2024-2026 lower FDN after legume rotation.
+-- Merged from fdn_supplement_farmer_acm.sql so one import creates all demo data.
+-- =========================================================
+
+-- Reset user variables so rerunning in the same MySQL session stays deterministic.
+SET @farmer_id = NULL, @province_id = NULL, @ward_id = NULL, @farm_id = NULL, @old_fdn_plot_id = NULL, @fdn_plot_id = NULL;
+SET @crop_rice_id = NULL, @crop_corn_id = NULL, @crop_soy_id = NULL;
+SET @variety_rice_id = NULL, @variety_corn_id = NULL, @variety_soy_id = NULL;
+
+-- 1) Resolve main farmer account and master data
+SELECT @farmer_id := user_id
+FROM users
+WHERE email = 'farmer@acm.local'
+LIMIT 1;
+
+SELECT @province_id := COALESCE(province_id, 87),
+       @ward_id := COALESCE(ward_id, 87002)
+FROM users
+WHERE user_id = @farmer_id
+LIMIT 1;
+
+SELECT @crop_rice_id := crop_id FROM crops WHERE crop_name IN ('Lúa', 'Lua', 'Rice') ORDER BY crop_id LIMIT 1;
+SELECT @crop_corn_id := crop_id FROM crops WHERE crop_name IN ('Ngô', 'Ngo', 'Corn') ORDER BY crop_id LIMIT 1;
+SELECT @crop_soy_id  := crop_id FROM crops WHERE crop_name IN ('Đậu nành', 'Dau nanh', 'Soybean') ORDER BY crop_id LIMIT 1;
+
+SELECT @variety_rice_id := id FROM varieties WHERE crop_id = @crop_rice_id ORDER BY id LIMIT 1;
+SELECT @variety_corn_id := id FROM varieties WHERE crop_id = @crop_corn_id ORDER BY id LIMIT 1;
+SELECT @variety_soy_id  := id FROM varieties WHERE crop_id = @crop_soy_id  ORDER BY id LIMIT 1;
+
+-- 2) Attach the demo plot to the existing An Phú farm; create fallback only if not found.
+SELECT @farm_id := farm_id
+FROM farms
+WHERE user_id = @farmer_id
+  AND farm_name = 'Trang trại Lúa Hữu Cơ An Phú'
+LIMIT 1;
+
+INSERT INTO farms (user_id, farm_name, province_id, ward_id, area, latitude, longitude, average_rating, rating_count, active)
+SELECT @farmer_id, 'Trang trại Lúa Hữu Cơ An Phú', COALESCE(@province_id, 87), COALESCE(@ward_id, 87002),
+       18.50, 10.531200, 105.621500, 4.8, 6, TRUE
+WHERE @farm_id IS NULL;
+
+SET @farm_id = COALESCE(@farm_id, LAST_INSERT_ID());
+
+-- 3) Make the script idempotent: remove previous supplement data only.
+SELECT @old_fdn_plot_id := plot_id
+FROM plots
+WHERE farm_id = @farm_id
+  AND plot_name = 'Lô FDN Demo - Luân canh Lúa/Ngô/Đậu'
+LIMIT 1;
+
+DELETE nie
+FROM nutrient_input_events nie
+         JOIN seasons s ON s.season_id = nie.season_id
+WHERE s.plot_id = @old_fdn_plot_id;
+
+DELETE iwa
+FROM irrigation_water_analyses iwa
+         JOIN seasons s ON s.season_id = iwa.season_id
+WHERE s.plot_id = @old_fdn_plot_id;
+
+DELETE st
+FROM soil_tests st
+         JOIN seasons s ON s.season_id = st.season_id
+WHERE s.plot_id = @old_fdn_plot_id;
+
+DELETE FROM seasons WHERE plot_id = @old_fdn_plot_id;
+DELETE FROM plots WHERE plot_id = @old_fdn_plot_id;
+
+-- 4) Create one clear demo plot for FDN dashboard/testing.
+INSERT INTO plots (farm_id, plot_name, area, soil_type, boundary_geojson, status, created_by, created_at, updated_at)
+VALUES (
+           @farm_id,
+           'Lô FDN Demo - Luân canh Lúa/Ngô/Đậu',
+           2.50,
+           'Đất phù sa',
+           '{"type":"Polygon","coordinates":[[[105.6210,10.5310],[105.6225,10.5310],[105.6225,10.5323],[105.6210,10.5323],[105.6210,10.5310]]]}',
+           'IN_USE',
+           @farmer_id,
+           '2021-01-01 08:00:00',
+           NOW()
+       );
+SET @fdn_plot_id = LAST_INSERT_ID();
+
+-- 5) Seasons: high-FDN cereal baseline, then legume rotation improvement.
+INSERT INTO seasons
+(season_name, plot_id, crop_id, variety_id, start_date, planned_harvest_date, end_date, status,
+ initial_plant_count, current_plant_count, expected_yield_kg, actual_yield_kg, budget_amount, notes, created_at)
+VALUES
+    ('FDN Demo 2021 - Ngô Xuân (FDN cao)', @fdn_plot_id, @crop_corn_id, @variety_corn_id,
+     '2021-01-15', '2021-04-25', '2021-04-28', 'COMPLETED', 18000, 17500, 2500.00, 2450.00, 8500000.00,
+     'Baseline năm 1: ngô phụ thuộc chủ yếu vào phân đạm khoáng, chưa có cây họ đậu.', '2021-01-01 08:00:00'),
+
+    ('FDN Demo 2021 - Lúa Hè (FDN cao)', @fdn_plot_id, @crop_rice_id, @variety_rice_id,
+     '2021-05-15', '2021-08-20', '2021-08-25', 'COMPLETED', 220000, 215000, 3100.00, 3150.00, 16000000.00,
+     'Tiếp tục lúa sau ngô, thiếu nguồn cố định đạm sinh học nên FDN vẫn cao.', '2021-05-01 08:00:00'),
+
+    ('FDN Demo 2022 - Lúa Đông Xuân (FDN cao)', @fdn_plot_id, @crop_rice_id, @variety_rice_id,
+     '2022-01-10', '2022-04-20', '2022-04-25', 'COMPLETED', 225000, 219000, 3000.00, 3050.00, 16200000.00,
+     'Năm 2 vẫn chưa luân canh họ đậu, lượng đạm khoáng chiếm tỷ trọng lớn.', '2022-01-01 08:00:00'),
+
+    ('FDN Demo 2022 - Ngô Hè Thu (FDN cao)', @fdn_plot_id, @crop_corn_id, @variety_corn_id,
+     '2022-05-10', '2022-08-20', '2022-08-25', 'COMPLETED', 18800, 18100, 2700.00, 2700.00, 8800000.00,
+     'Ngô sau lúa không có nguồn N sinh học bổ sung, FDN vẫn ở vùng cảnh báo.', '2022-05-01 08:00:00'),
+
+    ('FDN Demo 2023 - Lúa Hè Baseline (FDN cao)', @fdn_plot_id, @crop_rice_id, @variety_rice_id,
+     '2023-05-15', '2023-08-20', '2023-08-25', 'COMPLETED', 230000, 224000, 3300.00, 3350.00, 17000000.00,
+     'Baseline so sánh: lúa hè phụ thuộc mạnh vào phân khoáng trước khi đổi chiến lược.', '2023-05-01 08:00:00'),
+
+    ('FDN Demo 2024 - Đậu nành Xuân (Bắt đầu giảm FDN)', @fdn_plot_id, @crop_soy_id, @variety_soy_id,
+     '2024-01-15', '2024-04-20', '2024-04-25', 'COMPLETED', 135000, 130000, 1100.00, 1150.00, 6500000.00,
+     'Lần đầu đưa cây họ đậu vào chu kỳ, bắt đầu tăng biological fixation và cải thiện đất.', '2024-01-01 08:00:00'),
+
+    ('FDN Demo 2024 - Lúa Hè Thu (Sau đậu nành)', @fdn_plot_id, @crop_rice_id, @variety_rice_id,
+     '2024-05-15', '2024-08-20', '2024-08-25', 'COMPLETED', 225000, 219000, 3200.00, 3280.00, 15800000.00,
+     'Lúa sau đậu nành bắt đầu hưởng soil legacy, giảm phân khoáng so với baseline.', '2024-05-01 08:00:00'),
+
+    ('FDN Demo 2025 - Đậu nành Hè (Tích lũy soil legacy)', @fdn_plot_id, @crop_soy_id, @variety_soy_id,
+     '2025-05-15', '2025-08-20', '2025-08-25', 'COMPLETED', 140000, 136000, 1150.00, 1180.00, 6500000.00,
+     'Đậu nành tiếp tục tạo nốt sần và tích lũy soil legacy cho vụ ngũ cốc sau.', '2025-05-01 08:00:00'),
+
+    ('FDN Demo 2025 - Ngô Thu (Sau hai vụ họ đậu)', @fdn_plot_id, @crop_corn_id, @variety_corn_id,
+     '2025-09-15', '2025-12-20', '2025-12-25', 'COMPLETED', 20000, 19500, 3050.00, 3100.00, 8200000.00,
+     'Ngô sau hai vụ họ đậu cần ít phân khoáng hơn, FDN giảm rõ so với 2021-2023.', '2025-09-01 08:00:00'),
+
+    ('FDN Demo 2026 - Đậu nành Xuân (Chốt cải tạo trước lúa)', @fdn_plot_id, @crop_soy_id, @variety_soy_id,
+     '2026-01-15', '2026-05-10', '2026-05-10', 'COMPLETED', 145000, 140000, 1200.00, 1250.00, 6800000.00,
+     'Vụ đậu nành ngay trước mùa lúa 2026, tạo nền soil legacy để kiểm tra FDN đầu vụ lúa.', '2026-01-01 08:00:00'),
+
+    ('FDN Demo 2026 - Lúa Hè 26/05 (FDN đã giảm)', @fdn_plot_id, @crop_rice_id, @variety_rice_id,
+     '2026-05-26', '2026-09-05', NULL, 'ACTIVE', 220000, 220000, 3350.00, NULL, 15500000.00,
+     'Happy path: ngày 26/05/2026 nhập đủ phân bón, nước tưới và chất lượng đất để chứng minh FDN giảm nhờ luân canh cây họ đậu.', '2026-05-26 08:00:00');
+
+-- 6) Aggregate nutrient inputs. Keep input_source values compatible with the current seed file.
+INSERT INTO nutrient_input_events
+(season_id, plot_id, input_source, n_kg, applied_date, measured, data_source, source_type, source_document,
+ note, created_by_user_id, created_at)
+VALUES
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2021 - Ngô Xuân (FDN cao)'), @fdn_plot_id, 'MINERAL_FERTILIZER', 145.0000, '2021-01-20', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2021-corn-mineral.pdf', '2021 ngô xuân: phân khoáng cao do chưa có cây họ đậu.', @farmer_id, '2021-01-20 08:00:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2021 - Ngô Xuân (FDN cao)'), @fdn_plot_id, 'ORGANIC_FERTILIZER', 15.0000, '2021-01-20', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2021-corn-organic.pdf', '2021 ngô xuân: bổ sung hữu cơ thấp, chưa đủ kéo FDN xuống.', @farmer_id, '2021-01-20 08:05:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2021 - Lúa Hè (FDN cao)'), @fdn_plot_id, 'MINERAL_FERTILIZER', 165.0000, '2021-05-25', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2021-rice-mineral.pdf', '2021 lúa hè: tiếp tục phụ thuộc phân khoáng.', @farmer_id, '2021-05-25 08:00:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2021 - Lúa Hè (FDN cao)'), @fdn_plot_id, 'ORGANIC_FERTILIZER', 18.0000, '2021-05-25', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2021-rice-organic.pdf', '2021 lúa hè: hữu cơ thấp, chưa có biological fixation.', @farmer_id, '2021-05-25 08:05:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2022 - Lúa Đông Xuân (FDN cao)'), @fdn_plot_id, 'MINERAL_FERTILIZER', 170.0000, '2022-01-20', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2022-rice-mineral.pdf', '2022 lúa đông xuân: vẫn chưa có nguồn N sinh học.', @farmer_id, '2022-01-20 08:00:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2022 - Lúa Đông Xuân (FDN cao)'), @fdn_plot_id, 'ORGANIC_FERTILIZER', 20.0000, '2022-01-20', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2022-rice-organic.pdf', '2022 lúa đông xuân: hữu cơ chưa đủ bù nền đất nghèo đạm.', @farmer_id, '2022-01-20 08:05:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2022 - Ngô Hè Thu (FDN cao)'), @fdn_plot_id, 'MINERAL_FERTILIZER', 155.0000, '2022-05-20', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2022-corn-mineral.pdf', '2022 ngô hè thu: FDN vẫn cao.', @farmer_id, '2022-05-20 08:00:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2022 - Ngô Hè Thu (FDN cao)'), @fdn_plot_id, 'ORGANIC_FERTILIZER', 15.0000, '2022-05-20', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2022-corn-organic.pdf', '2022 ngô hè thu: chưa có cây họ đậu trong chu kỳ.', @farmer_id, '2022-05-20 08:05:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2023 - Lúa Hè Baseline (FDN cao)'), @fdn_plot_id, 'MINERAL_FERTILIZER', 165.0000, '2023-05-25', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2023-rice-mineral.pdf', 'Baseline 2023: phân khoáng rất cao để so sánh với 2026.', @farmer_id, '2023-05-25 08:00:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2023 - Lúa Hè Baseline (FDN cao)'), @fdn_plot_id, 'ORGANIC_FERTILIZER', 18.0000, '2023-05-25', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2023-rice-organic.pdf', 'Baseline 2023: hữu cơ thấp, soil legacy thấp.', @farmer_id, '2023-05-25 08:05:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2023 - Lúa Hè Baseline (FDN cao)'), @fdn_plot_id, 'IRRIGATION_WATER', 14.9500, '2023-05-25', TRUE, 'water-analysis', 'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-2023-rice-water.pdf', 'Baseline 2023: N từ nước tưới nhỏ so với phân bón.', @farmer_id, '2023-05-25 11:10:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2024 - Đậu nành Xuân (Bắt đầu giảm FDN)'), @fdn_plot_id, 'MINERAL_FERTILIZER', 25.0000, '2024-01-22', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2024-soy-mineral.pdf', '2024 đậu nành: giảm mạnh phân khoáng.', @farmer_id, '2024-01-22 08:00:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2024 - Đậu nành Xuân (Bắt đầu giảm FDN)'), @fdn_plot_id, 'ORGANIC_FERTILIZER', 18.0000, '2024-01-22', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2024-soy-organic.pdf', '2024 đậu nành: bổ sung hữu cơ nền.', @farmer_id, '2024-01-22 08:05:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2024 - Đậu nành Xuân (Bắt đầu giảm FDN)'), @fdn_plot_id, 'BIOLOGICAL_FIXATION', 90.0000, '2024-01-22', TRUE, 'system-estimate', 'SYSTEM_ESTIMATED', '/seed-evidence/fdn/fdn-demo-2024-soy-fixation.pdf', '2024 đậu nành: bắt đầu có cố định đạm sinh học.', @farmer_id, '2024-01-22 08:10:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2024 - Lúa Hè Thu (Sau đậu nành)'), @fdn_plot_id, 'MINERAL_FERTILIZER', 90.0000, '2024-05-25', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2024-rice-mineral.pdf', '2024 lúa sau đậu nành: giảm phân khoáng nhờ soil legacy.', @farmer_id, '2024-05-25 08:00:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2024 - Lúa Hè Thu (Sau đậu nành)'), @fdn_plot_id, 'ORGANIC_FERTILIZER', 18.0000, '2024-05-25', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2024-rice-organic.pdf', '2024 lúa sau đậu nành: giữ hữu cơ ổn định.', @farmer_id, '2024-05-25 08:05:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2024 - Lúa Hè Thu (Sau đậu nành)'), @fdn_plot_id, 'IRRIGATION_WATER', 11.2500, '2024-05-25', TRUE, 'water-analysis', 'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-2024-rice-water.pdf', '2024 lúa sau đậu nành: có mẫu nước tưới đo thực tế.', @farmer_id, '2024-05-25 11:10:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2025 - Đậu nành Hè (Tích lũy soil legacy)'), @fdn_plot_id, 'MINERAL_FERTILIZER', 22.0000, '2025-05-20', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2025-soy-mineral.pdf', '2025 đậu nành: tiếp tục giảm phân khoáng.', @farmer_id, '2025-05-20 08:00:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2025 - Đậu nành Hè (Tích lũy soil legacy)'), @fdn_plot_id, 'ORGANIC_FERTILIZER', 18.0000, '2025-05-20', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2025-soy-organic.pdf', '2025 đậu nành: bổ sung hữu cơ vừa phải.', @farmer_id, '2025-05-20 08:05:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2025 - Đậu nành Hè (Tích lũy soil legacy)'), @fdn_plot_id, 'BIOLOGICAL_FIXATION', 105.0000, '2025-05-20', TRUE, 'system-estimate', 'SYSTEM_ESTIMATED', '/seed-evidence/fdn/fdn-demo-2025-soy-fixation.pdf', '2025 đậu nành: cố định đạm sinh học tăng.', @farmer_id, '2025-05-20 08:10:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2025 - Ngô Thu (Sau hai vụ họ đậu)'), @fdn_plot_id, 'MINERAL_FERTILIZER', 75.0000, '2025-09-20', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2025-corn-mineral.pdf', '2025 ngô sau hai vụ họ đậu: giảm phân khoáng rõ.', @farmer_id, '2025-09-20 08:00:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2025 - Ngô Thu (Sau hai vụ họ đậu)'), @fdn_plot_id, 'ORGANIC_FERTILIZER', 15.0000, '2025-09-20', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2025-corn-organic.pdf', '2025 ngô: soil legacy hỗ trợ giảm FDN.', @farmer_id, '2025-09-20 08:05:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2025 - Ngô Thu (Sau hai vụ họ đậu)'), @fdn_plot_id, 'IRRIGATION_WATER', 8.9700, '2025-09-20', TRUE, 'water-analysis', 'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-2025-corn-water.pdf', '2025 ngô: mẫu nước tưới hỗ trợ giải thích FDN giảm.', @farmer_id, '2025-09-20 11:10:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2026 - Đậu nành Xuân (Chốt cải tạo trước lúa)'), @fdn_plot_id, 'MINERAL_FERTILIZER', 20.0000, '2026-01-22', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2026-soy-mineral.pdf', '2026 đậu nành: chốt cải tạo trước lúa.', @farmer_id, '2026-01-22 08:00:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2026 - Đậu nành Xuân (Chốt cải tạo trước lúa)'), @fdn_plot_id, 'ORGANIC_FERTILIZER', 12.0000, '2026-01-22', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2026-soy-organic.pdf', '2026 đậu nành: hữu cơ nền trước lúa.', @farmer_id, '2026-01-22 08:05:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2026 - Đậu nành Xuân (Chốt cải tạo trước lúa)'), @fdn_plot_id, 'BIOLOGICAL_FIXATION', 110.0000, '2026-01-22', TRUE, 'system-estimate', 'SYSTEM_ESTIMATED', '/seed-evidence/fdn/fdn-demo-2026-soy-fixation.pdf', '2026 đậu nành: tạo nền soil legacy cho lúa hè.', @farmer_id, '2026-01-22 08:10:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2026 - Lúa Hè 26/05 (FDN đã giảm)'), @fdn_plot_id, 'MINERAL_FERTILIZER', 30.0000, '2026-05-26', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2026-rice-mineral.pdf', '2026 lúa hè 26/05: phân khoáng đã giảm mạnh so với baseline 2023.', @farmer_id, '2026-05-26 08:00:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2026 - Lúa Hè 26/05 (FDN đã giảm)'), @fdn_plot_id, 'ORGANIC_FERTILIZER', 10.0000, '2026-05-26', TRUE, 'fdn-demo', 'USER_ENTERED', '/seed-evidence/fdn/fdn-demo-2026-rice-organic.pdf', '2026 lúa hè 26/05: hữu cơ vừa phải.', @farmer_id, '2026-05-26 08:05:00'),
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2026 - Lúa Hè 26/05 (FDN đã giảm)'), @fdn_plot_id, 'IRRIGATION_WATER', 8.1250, '2026-05-26', TRUE, 'water-analysis', 'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-2026-rice-water.pdf', '2026 lúa hè 26/05: dữ liệu nước tưới đo thực tế.', @farmer_id, '2026-05-26 09:15:00');
+
+-- 7) Dedicated water analysis rows used by FDN calculation/explanation screens.
+INSERT INTO irrigation_water_analyses
+(season_id, plot_id, sample_date, nitrate_mg_per_l, ammonium_mg_per_l, total_n_mg_per_l, irrigation_volume_m3,
+ legacy_n_contribution_kg, legacy_event_id, legacy_derived, measured, source_type, source_document, lab_reference,
+ note, created_by_user_id, created_at)
+VALUES
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2023 - Lúa Hè Baseline (FDN cao)'), @fdn_plot_id,
+     '2023-05-25', 9.0000, 2.5000, 11.5000, 1300.0000, 14.9500, NULL, FALSE, TRUE,
+     'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-water-2023.pdf', 'LAB-FDN-DEMO-IRR-230525',
+     'Baseline 2023: mẫu nước tưới trước luân canh cây họ đậu.', @farmer_id, '2023-05-25 11:00:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2024 - Lúa Hè Thu (Sau đậu nành)'), @fdn_plot_id,
+     '2024-05-15', 7.0000, 2.0000, 9.0000, 1250.0000, 11.2500, NULL, FALSE, TRUE,
+     'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-water-2024.pdf', 'LAB-FDN-DEMO-IRR-240515',
+     'Sau vụ đậu nành đầu tiên: nước tưới được đo để tránh fallback estimation.', @farmer_id, '2024-05-15 11:00:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2025 - Ngô Thu (Sau hai vụ họ đậu)'), @fdn_plot_id,
+     '2025-09-15', 6.0000, 1.8000, 7.8000, 1150.0000, 8.9700, NULL, FALSE, TRUE,
+     'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-water-2025.pdf', 'LAB-FDN-DEMO-IRR-250915',
+     'Ngô sau hai vụ họ đậu: dữ liệu nước tưới hỗ trợ giải thích FDN giảm.', @farmer_id, '2025-09-15 11:00:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2026 - Lúa Hè 26/05 (FDN đã giảm)'), @fdn_plot_id,
+     '2026-05-26', 4.5000, 2.0000, 6.5000, 1250.0000, 8.1250, NULL, FALSE, TRUE,
+     'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-water-2026.pdf', 'LAB-FDN-DEMO-IRR-260526',
+     'Ngày bắt đầu vụ lúa 26/05/2026: nhập chỉ số nước tưới để tính N từ nước tưới bằng dữ liệu đo thực tế.', @farmer_id, '2026-05-26 09:15:00');
+
+-- 8) Dedicated soil tests: baseline soil poor -> improved after legume rotation.
+INSERT INTO soil_tests
+(season_id, plot_id, sample_date, soil_organic_matter_pct, mineral_n_kg_per_ha, nitrate_mg_per_kg,
+ ammonium_mg_per_kg, legacy_n_contribution_kg, legacy_event_id, legacy_derived, measured, source_type,
+ source_document, lab_reference, note, created_by_user_id, created_at)
+VALUES
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2023 - Lúa Hè Baseline (FDN cao)'), @fdn_plot_id,
+     '2023-05-25', 2.1000, 8.0000, 10.0000, 3.0000, 2.0000, NULL, FALSE, TRUE,
+     'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-soil-2023.pdf', 'LAB-FDN-DEMO-SOIL-230525',
+     'Baseline 2023: đất sau nhiều vụ lúa/ngô liên tục, hữu cơ và mineral N thấp nên FDN cao.', @farmer_id, '2023-05-25 14:00:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2024 - Lúa Hè Thu (Sau đậu nành)'), @fdn_plot_id,
+     '2024-05-15', 2.8000, 12.0000, 14.0000, 4.0000, 30.0000, NULL, FALSE, TRUE,
+     'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-soil-2024.pdf', 'LAB-FDN-DEMO-SOIL-240515',
+     'Sau vụ đậu nành đầu tiên: soil legacy tăng, bắt đầu giảm nhu cầu bón đạm khoáng cho lúa.', @farmer_id, '2024-05-15 14:00:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2025 - Ngô Thu (Sau hai vụ họ đậu)'), @fdn_plot_id,
+     '2025-09-15', 3.4000, 16.8000, 17.5000, 4.8000, 42.0000, NULL, FALSE, TRUE,
+     'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-soil-2025.pdf', 'LAB-FDN-DEMO-SOIL-250915',
+     'Sau hai vụ họ đậu năm 2025: soil legacy đủ rõ để ngô giảm phân khoáng.', @farmer_id, '2025-09-15 14:00:00'),
+
+    ((SELECT season_id FROM seasons WHERE plot_id=@fdn_plot_id AND season_name='FDN Demo 2026 - Lúa Hè 26/05 (FDN đã giảm)'), @fdn_plot_id,
+     '2026-05-26', 3.9000, 18.0000, 18.0000, 5.0000, 45.0000, NULL, FALSE, TRUE,
+     'LAB_MEASURED', '/seed-evidence/fdn/fdn-demo-soil-2026.pdf', 'LAB-FDN-DEMO-SOIL-260526',
+     'Ngày bắt đầu vụ lúa 26/05/2026: chất lượng đất đã cải thiện sau đậu nành xuân, soil legacy giúp giảm FDN đầu vụ.', @farmer_id, '2026-05-26 10:00:00');
+
+-- FDN supplement verification: should return demo seasons and counts for farmer@acm.local.
+SELECT
+    u.email,
+    f.farm_name,
+    p.plot_name,
+    s.season_name,
+    s.status,
+    s.start_date,
+    COUNT(DISTINCT nie.id) AS nutrient_event_count,
+    COUNT(DISTINCT st.id) AS soil_test_count,
+    COUNT(DISTINCT iwa.id) AS water_analysis_count,
+    ROUND(SUM(CASE WHEN nie.input_source IN ('MINERAL_FERTILIZER','ORGANIC_FERTILIZER') THEN nie.n_kg ELSE 0 END), 2) AS fertilizer_n_kg,
+    ROUND(SUM(COALESCE(nie.n_kg, 0)), 2) AS nutrient_event_n_kg
+FROM users u
+         JOIN farms f ON f.user_id = u.user_id
+         JOIN plots p ON p.farm_id = f.farm_id
+         JOIN seasons s ON s.plot_id = p.plot_id
+         LEFT JOIN nutrient_input_events nie ON nie.season_id = s.season_id
+         LEFT JOIN soil_tests st ON st.season_id = s.season_id
+         LEFT JOIN irrigation_water_analyses iwa ON iwa.season_id = s.season_id
+WHERE u.email = 'farmer@acm.local'
+  AND p.plot_name = 'Lô FDN Demo - Luân canh Lúa/Ngô/Đậu'
+GROUP BY u.email, f.farm_name, p.plot_name, s.season_id, s.season_name, s.status, s.start_date
+ORDER BY s.start_date;
 
 -- =========================================================
 -- 10. Verification queries
