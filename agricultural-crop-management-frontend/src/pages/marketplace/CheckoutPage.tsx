@@ -48,7 +48,7 @@ function emptyAddressForm(): AddressFormState {
     fullName: "",
     phone: "",
     province: "",
-    district: "",
+    district: "", // Backend requires district; auto-synced with ward
     ward: "",
     street: "",
     detail: "",
@@ -62,7 +62,7 @@ function toAddressForm(address: MarketplaceAddress): AddressFormState {
     fullName: address.fullName,
     phone: address.phone,
     province: address.province,
-    district: address.district,
+    district: address.district, // Backend requires district
     ward: address.ward,
     street: address.street,
     detail: address.detail ?? "",
@@ -74,7 +74,7 @@ function toAddressForm(address: MarketplaceAddress): AddressFormState {
 function formatAddressLabel(address: MarketplaceAddress): string {
   const detail = address.detail?.trim();
   const detailPart = detail ? `, ${detail}` : "";
-  return `${address.fullName} - ${address.phone} - ${address.street}${detailPart}, ${address.ward}, ${address.district}, ${address.province}`;
+  return `${address.fullName} - ${address.phone} - ${address.street}${detailPart}, ${address.ward}, ${address.province}`;
 }
 
 function resolveShippingAddressLine(address: MarketplaceAddress | null, manualAddressLine: string): string | undefined {
@@ -86,7 +86,7 @@ function resolveShippingAddressLine(address: MarketplaceAddress | null, manualAd
     return undefined;
   }
   const detail = address.detail?.trim();
-  return `${address.street}${detail ? `, ${detail}` : ""}, ${address.ward}, ${address.district}, ${address.province}`;
+  return `${address.street}${detail ? `, ${detail}` : ""}, ${address.ward}, ${address.province}`;
 }
 
 function resolveDraftShippingAddressLine(form: AddressFormState): string | undefined {
@@ -94,7 +94,7 @@ function resolveDraftShippingAddressLine(form: AddressFormState): string | undef
     return undefined;
   }
   const detail = form.detail?.trim();
-  return `${form.street}${detail ? `, ${detail}` : ""}, ${form.ward}, ${form.district}, ${form.province}`;
+  return `${form.street}${detail ? `, ${detail}` : ""}, ${form.ward}, ${form.province}`;
 }
 
 function isAddressFormValid(form: AddressFormState): boolean {
@@ -102,7 +102,6 @@ function isAddressFormValid(form: AddressFormState): boolean {
     form.fullName,
     form.phone,
     form.province,
-    form.district,
     form.ward,
     form.street,
   ].every((value) => value.trim().length > 0);
@@ -410,7 +409,7 @@ export function CheckoutPage() {
                                 <MapPin size={16} className="mt-0.5 shrink-0 text-primary" />
                                 <span className="leading-relaxed">
                                   {selectedAddress.street}
-                                  {selectedAddress.detail ? `, ${selectedAddress.detail}` : ""}, {selectedAddress.ward}, {selectedAddress.district}, {selectedAddress.province}
+                                  {selectedAddress.detail ? `, ${selectedAddress.detail}` : ""}, {selectedAddress.ward}, {selectedAddress.province}
                                 </span>
                               </div>
                             </div>
@@ -491,23 +490,14 @@ export function CheckoutPage() {
                         }
                       />
                     </div>
-                    <div>
-                      <label className="mb-1.5 block text-sm font-medium text-foreground">{t("marketplaceBuyer.checkout.addressForm.district")}</label>
-                      <Input
-                        className="border-border"
-                        value={addressForm.district}
-                        onChange={(event) =>
-                          setAddressForm((current) => ({ ...current, district: event.target.value }))
-                        }
-                      />
-                    </div>
+
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-foreground">{t("marketplaceBuyer.checkout.addressForm.ward")}</label>
                       <Input
                         className="border-border"
                         value={addressForm.ward}
                         onChange={(event) =>
-                          setAddressForm((current) => ({ ...current, ward: event.target.value }))
+                          setAddressForm((current) => ({ ...current, ward: event.target.value, district: event.target.value }))
                         }
                       />
                     </div>

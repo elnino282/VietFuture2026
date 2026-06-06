@@ -16,7 +16,6 @@ interface AddressFormData {
   name: string;
   phone: string;
   province: string;
-  district: string;
   ward: string;
   street: string;
   detail?: string;
@@ -29,7 +28,6 @@ interface AddressCardData {
   name: string;
   phone: string;
   province: string;
-  district: string;
   ward: string;
   street: string;
   detail?: string;
@@ -43,7 +41,6 @@ function toAddressCardData(address: MarketplaceAddress): AddressCardData {
     name: address.fullName,
     phone: address.phone,
     province: address.province,
-    district: address.district,
     ward: address.ward,
     street: address.street,
     detail: address.detail || undefined,
@@ -57,7 +54,7 @@ function toMarketplaceAddressUpsertRequest(address: MarketplaceAddress): Marketp
     fullName: address.fullName,
     phone: address.phone,
     province: address.province,
-    district: address.district,
+    district: address.ward, // Backend requires district; auto-fill with ward
     ward: address.ward,
     street: address.street,
     detail: address.detail || undefined,
@@ -83,7 +80,7 @@ export function AddressBookPage() {
         fullName: data.name,
         phone: data.phone,
         province: data.province,
-        district: data.district,
+        district: data.ward, // Backend requires district; auto-fill with ward
         ward: data.ward,
         street: data.street,
         detail: data.detail,

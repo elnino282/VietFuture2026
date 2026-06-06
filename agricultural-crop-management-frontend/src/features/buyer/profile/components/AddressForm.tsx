@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Button, Input, Label, RadioGroup, RadioGroupItem, Checkbox } from '@/shared/ui';
 import { useI18n } from '@/hooks/useI18n';
 import { ChevronLeft, Loader2 } from 'lucide-react';
+import { AddressAutocompleteInput } from './AddressAutocompleteInput';
+import { useAddressFormBackend } from '../hooks/useAddressFormBackend';
 
 interface AddressFormData {
   name: string;
   phone: string;
   province: string;
-  district: string;
   ward: string;
   street: string;
   detail?: string;
@@ -28,7 +29,6 @@ export function AddressForm({ mode, initialData, onSave, onCancel }: AddressForm
     name: initialData?.name || '',
     phone: initialData?.phone || '',
     province: initialData?.province || '',
-    district: initialData?.district || '',
     ward: initialData?.ward || '',
     street: initialData?.street || '',
     detail: initialData?.detail || '',
@@ -37,11 +37,25 @@ export function AddressForm({ mode, initialData, onSave, onCancel }: AddressForm
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Backend address autocomplete hook
+  const addressBackend = useAddressFormBackend({
+    initialProvince: initialData?.province || '',
+    initialWard: initialData?.ward || '',
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSave(formData as AddressFormData);
+      // Use the selected names from autocomplete, falling back to query text
+      const finalProvince = addressBackend.getSelectedProvinceName();
+      const finalWard = addressBackend.getSelectedWardName();
+
+      await onSave({
+        ...formData,
+        province: finalProvince,
+        ward: finalWard,
+      } as AddressFormData);
     } finally {
       setIsSubmitting(false);
     }
@@ -51,14 +65,20 @@ export function AddressForm({ mode, initialData, onSave, onCancel }: AddressForm
     name: initialData?.name || '',
     phone: initialData?.phone || '',
     province: initialData?.province || '',
-    district: initialData?.district || '',
     ward: initialData?.ward || '',
     street: initialData?.street || '',
     detail: initialData?.detail || '',
     label: initialData?.label || 'HOME',
     isDefault: initialData?.isDefault || false,
   });
-  const isDirty = JSON.stringify(formData) !== initialSnapshot;
+
+  const currentSnapshot = JSON.stringify({
+    ...formData,
+    province: addressBackend.provinceQuery,
+    ward: addressBackend.wardQuery,
+  });
+
+  const isDirty = currentSnapshot !== initialSnapshot;
 
   const handleCancel = () => {
     if (
@@ -119,50 +139,43 @@ export function AddressForm({ mode, initialData, onSave, onCancel }: AddressForm
             />
           </div>
 
-          <div>
-            <Label htmlFor="addr-province" className="text-sm font-medium text-gray-700">
-              Tỉnh/Thành phố <span className="text-red-400">*</span>
-            </Label>
-            <Input
-              id="addr-province"
-              value={formData.province}
-              onChange={(e) => setFormData({ ...formData, province: e.target.value })}
-              required
-              disabled={isSubmitting}
-              placeholder="Ví dụ: Hồ Chí Minh"
-              className={`mt-1.5 ${inputClass}`}
-            />
-          </div>
+          {/* Province - Autocomplete from backend */}
+          <AddressAutocompleteInput
+            id="addr-province"
+            label="Tỉnh/Thành phố"
+            required
+            value={addressBackend.provinceQuery}
+            onChange={addressBackend.setProvinceQuery}
+            items={addressBackend.provinces}
+            onSelect={addressBackend.handleProvinceSelect}
+            isLoading={addressBackend.isLoadingProvinces}
+            isOpen={addressBackend.isProvinceDropdownOpen}
+            onOpenChange={addressBackend.setIsProvinceDropdownOpen}
+            selectedItem={addressBackend.selectedProvince}
+            placeholder="Ví dụ: Hồ Chí Minh"
+            disabled={isSubmitting}
+          />
 
-          <div>
-            <Label htmlFor="addr-district" className="text-sm font-medium text-gray-700">
-              Quận/Huyện <span className="text-red-400">*</span>
-            </Label>
-            <Input
-              id="addr-district"
-              value={formData.district}
-              onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-              required
-              disabled={isSubmitting}
-              placeholder="Ví dụ: Quận 1"
-              className={`mt-1.5 ${inputClass}`}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="addr-ward" className="text-sm font-medium text-gray-700">
-              Phường/Xã <span className="text-red-400">*</span>
-            </Label>
-            <Input
-              id="addr-ward"
-              value={formData.ward}
-              onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
-              required
-              disabled={isSubmitting}
-              placeholder="Ví dụ: Phường Bến Nghé"
-              className={`mt-1.5 ${inputClass}`}
-            />
-          </div>
+          {/* Ward - Autocomplete from backend, requires province */}
+          <AddressAutocompleteInput
+            id="addr-ward"
+            label="Phường/Xã"
+            required
+            value={addressBackend.wardQuery}
+            onChange={addressBackend.setWardQuery}
+            items={addressBackend.wards}
+            onSelect={addressBackend.handleWardSelect}
+            isLoading={addressBackend.isLoadingWards}
+            isOpen={addressBackend.isWardDropdownOpen}
+            onOpenChange={addressBackend.setIsWardDropdownOpen}
+            selectedItem={addressBackend.selectedWard}
+            placeholder={
+              addressBackend.isWardDisabled
+                ? 'Chọn tỉnh/thành phố trước'
+                : 'Ví dụ: Phường Bến Nghé'
+            }
+            disabled={isSubmitting || addressBackend.isWardDisabled}
+          />
 
           <div>
             <Label htmlFor="addr-street" className="text-sm font-medium text-gray-700">

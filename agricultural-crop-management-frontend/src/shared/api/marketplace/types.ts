@@ -166,6 +166,7 @@ export type MarketplaceAddress = {
   fullName: string;
   phone: string;
   province: string;
+  /** @deprecated Backend requires this field but has no district data. Auto-filled with ward value. */
   district: string;
   ward: string;
   street: string;
@@ -335,6 +336,7 @@ export type MarketplaceAddressUpsertRequest = {
   fullName: string;
   phone: string;
   province: string;
+  /** @deprecated Backend requires this field but has no district data. Auto-filled with ward value. */
   district: string;
   ward: string;
   street: string;

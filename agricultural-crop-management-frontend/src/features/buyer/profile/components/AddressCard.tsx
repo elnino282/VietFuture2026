@@ -7,7 +7,6 @@ interface Address {
   name: string;
   phone: string;
   province: string;
-  district: string;
   ward: string;
   street: string;
   detail?: string;
@@ -31,7 +30,6 @@ export function AddressCard({ address, onEdit, onDelete, onSetDefault }: Address
   const fullAddress = [
     address.street,
     address.ward,
-    address.district,
     address.province,
   ]
     .filter(Boolean)

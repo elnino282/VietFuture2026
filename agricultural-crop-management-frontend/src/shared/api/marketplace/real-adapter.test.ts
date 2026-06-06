@@ -38,7 +38,7 @@ describe("createMarketplaceRealAdapter", () => {
       fullName: "Tran Thi B",
       phone: "0912345678",
       province: "TP.HCM",
-      district: "Quan 5",
+      district: "Phuong 1",
       ward: "Phuong 1",
       street: "12 Nguyen Trai",
       isDefault: true,
