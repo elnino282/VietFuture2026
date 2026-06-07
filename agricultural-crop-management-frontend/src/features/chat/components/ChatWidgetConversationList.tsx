@@ -63,7 +63,7 @@ export function ChatWidgetConversationList({
           <input
             type="search"
             value={searchQuery}
-            placeholder="Tim hoi thoai..."
+            placeholder="Tìm hội thoại..."
             onChange={(event) => onSearchChange(event.target.value)}
           />
         </label>
@@ -94,10 +94,10 @@ export function ChatWidgetConversationList({
       ) : null}
 
       <div className="chat-widget-sidebar__list">
-        {isLoading ? <p className="chat-widget-muted">Dang tai hoi thoai...</p> : null}
+        {isLoading ? <p className="chat-widget-muted">Đang tải hội thoại...</p> : null}
         {error ? <p className="chat-widget-error">{error}</p> : null}
         {!isLoading && !error && conversations.length === 0 ? (
-          <p className="chat-widget-muted">Khong co hoi thoai phu hop.</p>
+          <p className="chat-widget-muted">Không có hội thoại phù hợp.</p>
         ) : null}
         {conversations.map((conversation) => {
           const isSelected = selectedConversationId === conversation.id;
@@ -145,7 +145,7 @@ export function ChatWidgetConversationList({
                 {subtitle ? (
                   <span className="chat-widget-conversation__subtitle">{subtitle}</span>
                 ) : null}
-                <p>{conversation.lastMessageText || "Chua co tin nhan nao."}</p>
+                <p>{conversation.lastMessageText || "Chưa có tin nhắn nào."}</p>
               </div>
               {conversation.unreadCount > 0 ? (
                 <span className="chat-widget-unread" aria-label={`${unreadLabel} unread`}>

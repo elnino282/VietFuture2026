@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { readFileSync } from "node:fs";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
@@ -173,6 +174,25 @@ beforeEach(() => {
 });
 
 describe("Floating chat widget", () => {
+  it("uses friendly Vietnamese copy in the widget controls", async () => {
+    render(
+      <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+        <ChatWidget isOpen onMinimize={vi.fn()} onClose={vi.fn()} onExpand={vi.fn()} />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByPlaceholderText("Tìm hội thoại...")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Tất cả" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Chưa đọc" })).toBeInTheDocument();
+  });
+
+  it("anchors the popup close to the bottom-right viewport edge on desktop", () => {
+    const css = readFileSync("src/features/chat/components/ChatWidget.css", "utf8");
+
+    expect(css).toContain("right: max(8px, env(safe-area-inset-right));");
+    expect(css).toContain("bottom: max(8px, env(safe-area-inset-bottom));");
+  });
+
   it("shows unread badge on the floating button and opens the popup", async () => {
     const user = userEvent.setup();
     renderFloatingButton();

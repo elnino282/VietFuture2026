@@ -163,7 +163,7 @@ export function ChatContactSearch({
             }
           }}
           placeholder={t("chat.search.placeholder", {
-            defaultValue: "Search by farm, name, address, or ID...",
+            defaultValue: "Tìm theo nông trại, tên, địa chỉ hoặc ID...",
           })}
           aria-label={t("chat.search.ariaLabel", {
             defaultValue: "Search chat contacts",

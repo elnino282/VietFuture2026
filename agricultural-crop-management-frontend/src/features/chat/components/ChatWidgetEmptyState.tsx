@@ -4,14 +4,12 @@ export function ChatWidgetEmptyState() {
   return (
     <div className="chat-widget-empty">
       <div className="chat-widget-empty__illustration" aria-hidden="true">
-        {/* Laptop body */}
         <div className="chat-widget-empty__laptop">
           <div className="chat-widget-empty__laptop-screen">
             <Monitor className="h-6 w-6" />
           </div>
         </div>
 
-        {/* Floating chat bubbles */}
         <div className="chat-widget-empty__bubble chat-widget-empty__bubble--1">
           <MessageCircle className="h-3.5 w-3.5" />
         </div>

@@ -27,8 +27,8 @@
 
   /* Positioning — fixed bottom-right, above any scroll bar */
   position: fixed;
-  bottom: max(16px, env(safe-area-inset-bottom));
-  right: max(16px, env(safe-area-inset-right));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  right: max(8px, env(safe-area-inset-right));
   z-index: 9999;
 }
 
@@ -234,8 +234,8 @@
    ────────────────────────────────────────────────────────────── */
 @media (max-width: 639px) {
   .floating-chat-btn-wrapper {
-    bottom: max(16px, env(safe-area-inset-bottom));
-    right: max(16px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    right: max(12px, env(safe-area-inset-right));
     --fcb-size: 48px;
     --fcb-icon-size: 22px;
   }
