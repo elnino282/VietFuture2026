@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, MessageSquare } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "./ChatPage.css";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { useChatBootstrap } from "@/features/chat/model/useChatBootstrap";
 
 export function ChatPage() {
   const { t } = useTranslation();
+  const location = useLocation();
   const bootstrap = useChatBootstrap();
 
   const currentUid = bootstrap.status === "ready" ? bootstrap.appUid : null;
@@ -42,6 +44,12 @@ export function ChatPage() {
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [showMobileThread, setShowMobileThread] = useState(false);
+  const autoStartedPeerUserIdRef = useRef<number | null>(null);
+  const requestedPeerUserId = useMemo(() => {
+    const value = new URLSearchParams(location.search).get("peerUserId");
+    const parsed = value ? Number(value) : NaN;
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  }, [location.search]);
 
   const selectedConversation = useMemo(
     () => conversations.find((item) => item.id === selectedConversationId) ?? null,
@@ -125,6 +133,27 @@ export function ChatPage() {
     setSelectedConversationId(conversationId);
     setShowMobileThread(true);
   };
+
+  useEffect(() => {
+    if (!requestedPeerUserId || !currentUid) {
+      return;
+    }
+
+    if (autoStartedPeerUserIdRef.current === requestedPeerUserId) {
+      return;
+    }
+
+    autoStartedPeerUserIdRef.current = requestedPeerUserId;
+    void startDirectConversation(requestedPeerUserId)
+      .then((conversationId) => {
+        realtimeState.clearTypingState();
+        setSelectedConversationId(conversationId);
+        setShowMobileThread(true);
+      })
+      .catch(() => {
+        autoStartedPeerUserIdRef.current = null;
+      });
+  }, [currentUid, realtimeState, requestedPeerUserId, startDirectConversation]);
 
   const handleSendMessage = async (text: string) => {
     realtimeState.clearTypingState();

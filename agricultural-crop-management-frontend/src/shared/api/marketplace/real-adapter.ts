@@ -157,6 +157,14 @@ export function createMarketplaceRealAdapter(): MarketplaceApiAdapter {
       );
     },
 
+    listFarmReviews(farmId: number, query?: MarketplaceReviewQuery) {
+      return requestEnvelope<MarketplaceReviewPage>(() =>
+        httpClient.get(`${MARKETPLACE_API_PREFIX}/farms/${farmId}/reviews`, {
+          params: query,
+        }),
+      );
+    },
+
     listFarms(query?: MarketplaceFarmQuery) {
       return requestEnvelope<MarketplaceFarmPage>(() =>
         httpClient.get(`${MARKETPLACE_API_PREFIX}/farms`, { params: query }),

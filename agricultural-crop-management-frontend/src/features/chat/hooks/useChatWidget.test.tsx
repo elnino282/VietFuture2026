@@ -1,195 +1,230 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useChatWidget } from "./useChatWidget";
-import type {
-  ChatWidgetConversation,
-  ChatWidgetMessage,
-  ChatWidgetService,
-} from "../model/widgetTypes";
+import type { ChatConversation, ChatMessage } from "../model/types";
 
-function createConversation(overrides: Partial<ChatWidgetConversation> = {}): ChatWidgetConversation {
+const hookMocks = vi.hoisted(() => ({
+  useChatBootstrap: vi.fn(),
+  useConversations: vi.fn(),
+  useMessages: vi.fn(),
+  useSendMessage: vi.fn(),
+  useMarkConversationRead: vi.fn(),
+  useChatRealtimeState: vi.fn(),
+}));
+
+vi.mock("../model/useChatBootstrap", () => ({
+  useChatBootstrap: hookMocks.useChatBootstrap,
+}));
+
+vi.mock("./useConversations", () => ({
+  useConversations: hookMocks.useConversations,
+}));
+
+vi.mock("./useMessages", () => ({
+  useMessages: hookMocks.useMessages,
+}));
+
+vi.mock("./useSendMessage", () => ({
+  useSendMessage: hookMocks.useSendMessage,
+}));
+
+vi.mock("./useMarkConversationRead", () => ({
+  useMarkConversationRead: hookMocks.useMarkConversationRead,
+}));
+
+vi.mock("./useChatRealtimeState", () => ({
+  useChatRealtimeState: hookMocks.useChatRealtimeState,
+}));
+
+function createConversation(overrides: Partial<ChatConversation> = {}): ChatConversation {
   return {
-    id: "conv-an-phu",
-    farmName: "Nong trai An Phu",
-    sellerName: "Nguyen An",
-    avatarUrl: null,
-    region: "Da Lat",
-    lastMessage: "Don hang #FT12345 da san sang.",
-    lastMessageAt: new Date("2026-05-25T08:00:00.000Z"),
-    unreadCount: 2,
-    status: "online",
-    context: {
-      title: "Don hang #FT12345",
-      subtitle: "Rau huu co theo lo thu hoach 05/2026",
-      imageUrl: null,
-      traceCode: "FT-ANPHU-0526",
-      transactionStatus: "delivered",
+    id: "u_24__u_31",
+    type: "direct",
+    participantIds: ["u_24", "u_31"],
+    peerUid: "u_31",
+    peerUserId: 31,
+    peerProfile: {
+      userId: 31,
+      firebaseUid: "u_31",
+      displayName: "Nong trai An Phu",
+      representativeName: "Nguyen An",
+      farmName: "Nong trai An Phu",
+      address: "Da Lat",
+      role: "FARMER",
+      avatarUrl: null,
     },
+    lastMessageText: "Don hang da san sang.",
+    lastMessageAt: new Date("2026-05-25T08:00:00.000Z"),
+    lastMessageSenderUid: "u_31",
+    lastSeq: 5,
+    lastReadSeq: 3,
+    unreadCount: 2,
     ...overrides,
   };
 }
 
-function createMessage(overrides: Partial<ChatWidgetMessage> = {}): ChatWidgetMessage {
+function createMessage(overrides: Partial<ChatMessage> = {}): ChatMessage {
   return {
     id: "msg-1",
-    conversationId: "conv-an-phu",
-    sender: "seller",
-    content: "Don hang #FT12345 da san sang.",
-    sentAt: new Date("2026-05-25T08:00:00.000Z"),
+    seq: 5,
+    senderUid: "u_31",
+    text: "Don hang da san sang.",
+    createdAt: new Date("2026-05-25T08:00:00.000Z"),
     status: "sent",
     ...overrides,
   };
 }
 
-function createService(): ChatWidgetService {
-  let conversations = [
-    createConversation(),
-    createConversation({
-      id: "conv-greenfarm",
-      farmName: "GreenFarm Organic",
-      sellerName: "Tran Binh",
-      region: "Can Tho",
-      lastMessage: "Cam on ban da dat mua!",
-      lastMessageAt: new Date("2026-05-24T08:00:00.000Z"),
-      unreadCount: 1,
-      status: "offline",
-    }),
-  ];
-  const messagesByConversation: Record<string, ChatWidgetMessage[]> = {
-    "conv-an-phu": [createMessage()],
-    "conv-greenfarm": [
-      createMessage({
-        id: "msg-greenfarm-1",
-        conversationId: "conv-greenfarm",
-        content: "Cam on ban da dat mua!",
-      }),
-    ],
-  };
-
-  return {
-    async getConversations() {
-      return conversations;
-    },
-    async getConversationMessages(conversationId) {
-      return messagesByConversation[conversationId] ?? [];
-    },
-    async sendMessage(conversationId, content) {
-      const message = createMessage({
-        id: `msg-local-${messagesByConversation[conversationId]?.length ?? 0}`,
-        conversationId,
-        sender: "buyer",
-        content,
-        sentAt: new Date("2026-05-25T09:30:00.000Z"),
-      });
-      messagesByConversation[conversationId] = [
-        ...(messagesByConversation[conversationId] ?? []),
-        message,
-      ];
-      conversations = conversations.map((conversation) =>
-        conversation.id === conversationId
-          ? {
-              ...conversation,
-              lastMessage: content,
-              lastMessageAt: message.sentAt,
-              unreadCount: 0,
-            }
-          : conversation,
-      );
-      return message;
-    },
-    async markConversationAsRead(conversationId) {
-      conversations = conversations.map((conversation) =>
-        conversation.id === conversationId
-          ? { ...conversation, unreadCount: 0 }
-          : conversation,
-      );
-    },
-  };
-}
-
 describe("useChatWidget", () => {
-  it("loads conversations and exposes total unread count", async () => {
-    const service = createService();
-    const { result } = renderHook(() => useChatWidget({ service }));
+  const markRead = vi.fn().mockResolvedValue(undefined);
+  const sendMessage = vi.fn().mockResolvedValue({ conversationId: "u_24__u_31", seq: 6 });
+  const startDirectConversation = vi.fn().mockResolvedValue("u_24__u_31");
+  const clearTypingState = vi.fn();
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    hookMocks.useChatBootstrap.mockReturnValue({
+      status: "ready",
+      user: { uid: "u_24" },
+      appUid: "u_24",
+      role: "BUYER",
+      error: null,
     });
 
+    hookMocks.useConversations.mockReturnValue({
+      conversations: [
+        createConversation(),
+        createConversation({
+          id: "u_24__u_40",
+          peerUid: "u_40",
+          peerUserId: 40,
+          peerProfile: {
+            userId: 40,
+            firebaseUid: "u_40",
+            displayName: "GreenFarm Organic",
+            representativeName: "Tran Binh",
+            farmName: "GreenFarm Organic",
+            address: "Can Tho",
+            role: "FARMER",
+            avatarUrl: null,
+          },
+          lastMessageText: "Cam on ban da dat mua.",
+          lastMessageAt: new Date("2026-05-24T08:00:00.000Z"),
+          unreadCount: 0,
+        }),
+      ],
+      isLoading: false,
+      hasLoadedConversations: true,
+      error: null,
+      isStartingConversation: false,
+      startDirectConversation,
+    });
+
+    hookMocks.useMessages.mockReturnValue({
+      messages: [createMessage()],
+      isLoading: false,
+      error: null,
+    });
+
+    hookMocks.useSendMessage.mockReturnValue({
+      isSending: false,
+      error: null,
+      sendMessage,
+    });
+
+    hookMocks.useMarkConversationRead.mockReturnValue({
+      isMarkingRead: false,
+      error: null,
+      markRead,
+    });
+
+    hookMocks.useChatRealtimeState.mockReturnValue({
+      peerState: null,
+      isPeerTyping: false,
+      peerLastReadSeq: 0,
+      publishTypingState: vi.fn(),
+      clearTypingState,
+    });
+  });
+
+  it("uses Firebase conversations and exposes total unread count without a mock service", async () => {
+    const { result } = renderHook(() => useChatWidget());
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(hookMocks.useConversations).toHaveBeenCalledWith("u_24", "BUYER");
     expect(result.current.conversations).toHaveLength(2);
-    expect(result.current.totalUnreadCount).toBe(3);
-    expect(result.current.selectedConversation).toBeNull();
-  });
-
-  it("filters conversations by search query and unread filter", async () => {
-    const service = createService();
-    const { result } = renderHook(() => useChatWidget({ service }));
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    act(() => result.current.setSearchQuery("green"));
+    expect(result.current.totalUnreadCount).toBe(2);
     expect(result.current.filteredConversations.map((item) => item.id)).toEqual([
-      "conv-greenfarm",
-    ]);
-
-    act(() => {
-      result.current.setSearchQuery("");
-      result.current.setFilter("unread");
-    });
-    expect(result.current.filteredConversations.map((item) => item.id)).toEqual([
-      "conv-an-phu",
-      "conv-greenfarm",
+      "u_24__u_31",
+      "u_24__u_40",
     ]);
   });
 
-  it("selects a conversation, loads messages, and clears unread count", async () => {
-    const service = createService();
-    const { result } = renderHook(() => useChatWidget({ service }));
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+  it("selects a Firebase conversation and marks the latest sequence as read", async () => {
+    const { result } = renderHook(() => useChatWidget());
 
     await act(async () => {
-      await result.current.selectConversation("conv-an-phu");
+      await result.current.selectConversation("u_24__u_31");
     });
 
-    expect(result.current.selectedConversation?.id).toBe("conv-an-phu");
-    expect(result.current.messages).toHaveLength(1);
-    expect(result.current.selectedConversation?.unreadCount).toBe(0);
-    expect(result.current.totalUnreadCount).toBe(1);
+    expect(result.current.selectedConversation?.id).toBe("u_24__u_31");
+    expect(markRead).toHaveBeenCalledWith({
+      conversationId: "u_24__u_31",
+      lastReadSeq: 5,
+    });
+    expect(hookMocks.useMessages).toHaveBeenLastCalledWith("u_24", "u_24__u_31");
   });
 
-  it("trims and sends messages while keeping the active conversation read", async () => {
-    const service = createService();
-    const { result } = renderHook(() => useChatWidget({ service }));
+  it("sends trimmed text through the Firebase send hook", async () => {
+    const { result } = renderHook(() => useChatWidget());
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {
-      await result.current.selectConversation("conv-an-phu");
+      await result.current.selectConversation("u_24__u_31");
     });
 
     await act(async () => {
-      await result.current.sendMessage("  Xin giao hang trong hom nay.  ");
+      await result.current.sendMessage("  Giao giup minh sau 15h  ");
     });
 
-    expect(result.current.messages.at(-1)?.content).toBe("Xin giao hang trong hom nay.");
-    expect(result.current.selectedConversation?.lastMessage).toBe("Xin giao hang trong hom nay.");
-    expect(result.current.selectedConversation?.unreadCount).toBe(0);
-    expect(result.current.totalUnreadCount).toBe(1);
+    expect(sendMessage).toHaveBeenCalledWith({
+      conversationId: "u_24__u_31",
+      text: "Giao giup minh sau 15h",
+    });
   });
 
-  it("ignores whitespace-only messages", async () => {
-    const service = createService();
-    const { result } = renderHook(() => useChatWidget({ service }));
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await act(async () => {
-      await result.current.selectConversation("conv-an-phu");
-    });
+  it("starts real direct conversations from popup contact search", async () => {
+    const { result } = renderHook(() => useChatWidget());
 
     await act(async () => {
-      await result.current.sendMessage("   ");
+      await result.current.startConversation(40);
     });
 
-    expect(result.current.messages).toHaveLength(1);
+    expect(startDirectConversation).toHaveBeenCalledWith(40);
+    expect(result.current.selectedConversationId).toBe("u_24__u_31");
+  });
+
+  it("surfaces Firebase bootstrap errors instead of fake conversations", () => {
+    hookMocks.useChatBootstrap.mockReturnValue({
+      status: "disabled",
+      user: null,
+      appUid: null,
+      role: null,
+      error: "Firebase chat is disabled by environment flag.",
+    });
+    hookMocks.useConversations.mockReturnValue({
+      conversations: [],
+      isLoading: false,
+      hasLoadedConversations: false,
+      error: null,
+      isStartingConversation: false,
+      startDirectConversation,
+    });
+
+    const { result } = renderHook(() => useChatWidget());
+
+    expect(result.current.conversations).toEqual([]);
+    expect(result.current.error).toContain("Firebase chat is disabled");
   });
 });

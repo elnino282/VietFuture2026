@@ -6,5 +6,9 @@ public record MarketplaceFarmSummaryResponse(
         String region,
         String address,
         String coverImageUrl,
-        Long productCount) {
+        Long productCount,
+        Boolean active,
+        Double ratingAverage,
+        Integer ratingCount,
+        Boolean hasTraceableProducts) {
 }

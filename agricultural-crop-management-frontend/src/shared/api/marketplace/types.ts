@@ -82,6 +82,10 @@ export type MarketplaceFarmSummary = {
   address: string | null;
   coverImageUrl: string | null;
   productCount: number;
+  active: boolean;
+  ratingAverage: number;
+  ratingCount: number;
+  hasTraceableProducts: boolean;
 };
 
 export type MarketplaceFarmDetail = MarketplaceFarmSummary & {
@@ -243,6 +247,7 @@ export type MarketplaceCreateOrderResult = {
 export type MarketplaceProductQuery = {
   page?: number;
   size?: number;
+  farmId?: number;
   category?: string;
   q?: string;
   region?: string;

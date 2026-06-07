@@ -63,6 +63,11 @@ export interface MarketplaceApiAdapter {
     query?: MarketplaceReviewQuery,
   ): Promise<MarketplaceApiResponse<MarketplaceReviewPage>>;
 
+  listFarmReviews(
+    farmId: number,
+    query?: MarketplaceReviewQuery,
+  ): Promise<MarketplaceApiResponse<MarketplaceReviewPage>>;
+
   listFarms(
     query?: MarketplaceFarmQuery,
   ): Promise<MarketplaceApiResponse<MarketplaceFarmPage>>;

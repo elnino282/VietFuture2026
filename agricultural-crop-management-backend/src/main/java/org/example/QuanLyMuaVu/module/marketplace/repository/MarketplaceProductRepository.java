@@ -31,6 +31,7 @@ public interface MarketplaceProductRepository extends JpaRepository<MarketplaceP
               AND (:region IS NULL OR LOWER(COALESCE(province.name, '')) LIKE LOWER(CONCAT('%', :region, '%')))
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+              AND (:farmId IS NULL OR f.id = :farmId)
               AND (:q IS NULL
                    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(p.shortDescription, '')) LIKE LOWER(CONCAT('%', :q, '%'))
@@ -49,6 +50,7 @@ public interface MarketplaceProductRepository extends JpaRepository<MarketplaceP
               AND (:region IS NULL OR LOWER(COALESCE(province.name, '')) LIKE LOWER(CONCAT('%', :region, '%')))
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+              AND (:farmId IS NULL OR f.id = :farmId)
               AND (:q IS NULL
                    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
                    OR LOWER(COALESCE(p.shortDescription, '')) LIKE LOWER(CONCAT('%', :q, '%'))
@@ -62,6 +64,7 @@ public interface MarketplaceProductRepository extends JpaRepository<MarketplaceP
             @Param("region") String region,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
+            @Param("farmId") Integer farmId,
             Pageable pageable);
 
     @Query("""
@@ -142,6 +145,21 @@ public interface MarketplaceProductRepository extends JpaRepository<MarketplaceP
               AND lot.onHandQuantity > 0
             """)
     long countSellableByFarmIdAndStatusIn(
+            @Param("farmId") Integer farmId,
+            @Param("statuses") Collection<MarketplaceProductStatus> statuses);
+
+    @Query("""
+            SELECT COUNT(p) > 0
+            FROM MarketplaceProduct p
+            JOIN p.lot lot
+            WHERE p.farm.id = :farmId
+              AND p.status IN :statuses
+              AND p.traceable = true
+              AND p.stockQuantity > 0
+              AND lot.status = org.example.QuanLyMuaVu.Enums.ProductWarehouseLotStatus.IN_STOCK
+              AND lot.onHandQuantity > 0
+            """)
+    boolean existsSellableTraceableByFarmIdAndStatusIn(
             @Param("farmId") Integer farmId,
             @Param("statuses") Collection<MarketplaceProductStatus> statuses);
 

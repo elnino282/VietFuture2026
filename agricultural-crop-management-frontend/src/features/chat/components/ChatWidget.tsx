@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Minus, X } from "lucide-react";
+import { Maximize2, Minus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/lib";
 import { useChatWidget } from "../hooks/useChatWidget";
-import type { ChatWidgetService } from "../model/widgetTypes";
 import { ChatWidgetConversationList } from "./ChatWidgetConversationList";
 import "./ChatWidget.css";
 import { ChatWidgetWindow } from "./ChatWidgetWindow";
@@ -14,7 +13,6 @@ type ChatWidgetProps = {
   onClose: () => void;
   onExpand: () => void;
   onUnreadCountChange?: (count: number) => void;
-  service?: ChatWidgetService;
 };
 
 /**
@@ -31,9 +29,8 @@ export function ChatWidget({
   onClose,
   onExpand,
   onUnreadCountChange,
-  service,
 }: ChatWidgetProps) {
-  const widget = useChatWidget({ service });
+  const widget = useChatWidget();
   const [showMobileDetail, setShowMobileDetail] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const totalUnreadLabel =
@@ -116,6 +113,15 @@ export function ChatWidget({
             type="button"
             variant="ghost"
             size="icon"
+            aria-label="Expand chat"
+            onClick={onExpand}
+          >
+            <Maximize2 className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             aria-label="Close chat"
             onClick={onClose}
           >
@@ -136,11 +142,14 @@ export function ChatWidget({
             selectedConversationId={widget.selectedConversationId}
             searchQuery={widget.searchQuery}
             filter={widget.filter}
+            currentUid={widget.currentUid}
             isLoading={widget.isLoading}
+            isStartingConversation={widget.isStartingConversation}
             error={widget.error}
             onSearchChange={widget.setSearchQuery}
             onFilterChange={widget.setFilter}
             onSelectConversation={handleSelectConversation}
+            onStartConversation={widget.startConversation}
           />
         </div>
 
@@ -153,6 +162,7 @@ export function ChatWidget({
           <ChatWidgetWindow
             conversation={widget.selectedConversation}
             messages={widget.messages}
+            currentUid={widget.currentUid}
             isMessagesLoading={widget.isMessagesLoading}
             isSending={widget.isSending}
             error={widget.messagesError}

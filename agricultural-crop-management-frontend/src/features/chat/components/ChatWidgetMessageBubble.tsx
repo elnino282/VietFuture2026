@@ -1,28 +1,30 @@
 import { Check } from "lucide-react";
 import { cn } from "@/shared/lib";
-import type { ChatWidgetMessage } from "../model/widgetTypes";
+import { formatMessageTime } from "../lib/chatDisplayHelpers";
+import type { ChatMessage } from "../model/types";
 
 type ChatWidgetMessageBubbleProps = {
-  message: ChatWidgetMessage;
-  sellerName?: string;
+  message: ChatMessage;
+  currentUid: string | null;
+  peerLabel?: string;
 };
 
-function formatMessageTime(value: Date) {
-  return value.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-export function ChatWidgetMessageBubble({ message, sellerName }: ChatWidgetMessageBubbleProps) {
-  const isMine = message.sender === "buyer";
-  const senderLabel = isMine ? "Bạn" : (sellerName ?? "Người bán");
+export function ChatWidgetMessageBubble({
+  message,
+  currentUid,
+  peerLabel,
+}: ChatWidgetMessageBubbleProps) {
+  const isMine = currentUid === message.senderUid;
+  const senderLabel = isMine ? "Ban" : (peerLabel ?? "Nguoi ban");
 
   return (
     <div className={cn("chat-widget-message", isMine && "chat-widget-message--mine")}>
       <span className="chat-widget-message__sender">{senderLabel}</span>
       <div className="chat-widget-message__bubble">
-        <p>{message.content}</p>
+        <p>{message.text}</p>
       </div>
       <div className="chat-widget-message__meta">
-        <span>{formatMessageTime(message.sentAt)}</span>
+        <span>{formatMessageTime(message.createdAt)}</span>
         {isMine ? (
           <span aria-label="Sent" className="inline-flex items-center">
             <Check className="h-3 w-3" aria-hidden="true" />

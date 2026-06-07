@@ -1,25 +1,43 @@
 import { ChevronDown, Search } from "lucide-react";
 import { cn } from "@/shared/lib";
-import type { ChatWidgetConversation, ChatWidgetFilter } from "../model/widgetTypes";
 import {
-  getTransactionStatusClass,
-  getTransactionStatusLabel,
+  formatChatTime,
+  getChatDisplayName,
+  getChatSubtitle,
+  joinDefinedParts,
 } from "../lib/chatDisplayHelpers";
+import type { ChatConversation } from "../model/types";
+import type { ChatWidgetFilter } from "../model/widgetTypes";
+import { ChatContactSearch } from "./ChatContactSearch";
 
 type ChatWidgetConversationListProps = {
-  conversations: ChatWidgetConversation[];
+  conversations: ChatConversation[];
   selectedConversationId: string | null;
   searchQuery: string;
   filter: ChatWidgetFilter;
+  currentUid: string | null;
   isLoading: boolean;
+  isStartingConversation: boolean;
   error: string | null;
   onSearchChange: (query: string) => void;
   onFilterChange: (filter: ChatWidgetFilter) => void;
   onSelectConversation: (conversationId: string) => void;
+  onStartConversation: (peerUserId: number) => Promise<void>;
 };
 
-function formatConversationDate(value: Date) {
-  return value.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+function getAvatarLabel(conversation: ChatConversation): string {
+  return getChatDisplayName(conversation.peerProfile, conversation.peerUid)
+    .slice(0, 1)
+    .toUpperCase();
+}
+
+function getConversationSubtitle(conversation: ChatConversation): string | null {
+  const profile = conversation.peerProfile;
+  if (!profile) {
+    return null;
+  }
+
+  return joinDefinedParts([getChatSubtitle(profile), profile.address], " - ");
 }
 
 export function ChatWidgetConversationList({
@@ -27,11 +45,14 @@ export function ChatWidgetConversationList({
   selectedConversationId,
   searchQuery,
   filter,
+  currentUid,
   isLoading,
+  isStartingConversation,
   error,
   onSearchChange,
   onFilterChange,
   onSelectConversation,
+  onStartConversation,
 }: ChatWidgetConversationListProps) {
   return (
     <aside className="chat-widget-sidebar" aria-label="Conversations">
@@ -42,7 +63,7 @@ export function ChatWidgetConversationList({
           <input
             type="search"
             value={searchQuery}
-            placeholder="Tìm theo tên..."
+            placeholder="Tim hoi thoai..."
             onChange={(event) => onSearchChange(event.target.value)}
           />
         </label>
@@ -60,22 +81,40 @@ export function ChatWidgetConversationList({
         </label>
       </div>
 
+      {currentUid ? (
+        <div className="chat-widget-contact-search">
+          <ChatContactSearch
+            currentUid={currentUid}
+            conversations={conversations}
+            onStartConversation={onStartConversation}
+            onOpenExistingConversation={onSelectConversation}
+            isStartingConversation={isStartingConversation}
+          />
+        </div>
+      ) : null}
+
       <div className="chat-widget-sidebar__list">
-        {isLoading ? <p className="chat-widget-muted">Đang tải hội thoại...</p> : null}
+        {isLoading ? <p className="chat-widget-muted">Dang tai hoi thoai...</p> : null}
         {error ? <p className="chat-widget-error">{error}</p> : null}
         {!isLoading && !error && conversations.length === 0 ? (
-          <p className="chat-widget-muted">Không có hội thoại phù hợp.</p>
+          <p className="chat-widget-muted">Khong co hoi thoai phu hop.</p>
         ) : null}
         {conversations.map((conversation) => {
           const isSelected = selectedConversationId === conversation.id;
           const unreadLabel =
             conversation.unreadCount > 99 ? "99+" : String(conversation.unreadCount);
+          const displayName = getChatDisplayName(
+            conversation.peerProfile,
+            conversation.peerUid,
+          );
+          const subtitle = getConversationSubtitle(conversation);
+          const timeLabel = formatChatTime(conversation.lastMessageAt);
 
           return (
             <button
               key={conversation.id}
               type="button"
-              aria-label={`Open conversation with ${conversation.farmName}`}
+              aria-label={`Open conversation with ${displayName}`}
               aria-current={isSelected ? "true" : undefined}
               className={cn(
                 "chat-widget-conversation",
@@ -84,33 +123,29 @@ export function ChatWidgetConversationList({
               onClick={() => onSelectConversation(conversation.id)}
             >
               <div className="chat-widget-avatar" aria-hidden="true">
-                {conversation.avatarUrl ? (
+                {conversation.peerProfile?.avatarUrl ? (
                   <img
-                    src={conversation.avatarUrl}
+                    src={conversation.peerProfile.avatarUrl}
                     alt=""
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  conversation.farmName.slice(0, 1).toUpperCase()
+                  getAvatarLabel(conversation)
                 )}
-                {conversation.status === "online" ? <span /> : null}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="chat-widget-conversation__top">
-                  <strong>{conversation.farmName}</strong>
-                  <time dateTime={conversation.lastMessageAt.toISOString()}>
-                    {formatConversationDate(conversation.lastMessageAt)}
-                  </time>
+                  <strong>{displayName}</strong>
+                  {timeLabel ? (
+                    <time dateTime={conversation.lastMessageAt?.toISOString()}>
+                      {timeLabel}
+                    </time>
+                  ) : null}
                 </div>
-                <p>{conversation.lastMessage}</p>
-                <span
-                  className={cn(
-                    "chat-widget-conversation__status",
-                    getTransactionStatusClass(conversation.context.transactionStatus),
-                  )}
-                >
-                  {getTransactionStatusLabel(conversation.context.transactionStatus)}
-                </span>
+                {subtitle ? (
+                  <span className="chat-widget-conversation__subtitle">{subtitle}</span>
+                ) : null}
+                <p>{conversation.lastMessageText || "Chua co tin nhan nao."}</p>
               </div>
               {conversation.unreadCount > 0 ? (
                 <span className="chat-widget-unread" aria-label={`${unreadLabel} unread`}>

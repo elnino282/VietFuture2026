@@ -36,7 +36,7 @@ describe("ChatConversationList", () => {
     );
 
     expect(screen.getByText("Account #2")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByLabelText("3 unread messages")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Account #2/i }));
     expect(onSelectConversation).toHaveBeenCalledWith("u_1__u_2");

@@ -161,6 +161,7 @@ public class MarketplaceService {
             BigDecimal minPrice,
             BigDecimal maxPrice,
             String sort,
+            Integer farmId,
             int page,
             int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), resolveProductSort(sort));
@@ -172,6 +173,7 @@ public class MarketplaceService {
                 normalizeNullable(region),
                 minPrice,
                 maxPrice,
+                farmId,
                 pageable);
 
         Map<Long, MarketplaceProductReviewRepository.ProductRatingProjection> ratings = aggregateProductRatings(
@@ -398,7 +400,10 @@ public class MarketplaceService {
         Map<Integer, Long> productCountByFarmId = aggregateFarmProductCounts(farmIds);
 
         List<MarketplaceFarmSummaryResponse> items = farmPage.getContent().stream()
-                .map(farm -> toFarmSummary(farm, productCountByFarmId.getOrDefault(farm.getId(), 0L)))
+                .map(farm -> toFarmSummary(
+                        farm,
+                        productCountByFarmId.getOrDefault(farm.getId(), 0L),
+                        hasTraceableProducts(farm.getId())))
                 .toList();
 
         return PageResponse.of(farmPage, items);
@@ -410,8 +415,9 @@ public class MarketplaceService {
         long productCount = marketplaceProductRepository.countSellableByFarmIdAndStatusIn(
                 farmId,
                 buyerVisibleProductStatuses());
+        boolean hasTraceableProducts = hasTraceableProducts(farmId);
 
-        MarketplaceFarmSummaryResponse summary = toFarmSummary(farm, productCount);
+        MarketplaceFarmSummaryResponse summary = toFarmSummary(farm, productCount, hasTraceableProducts);
         User owner = farm.getUser();
         String ownerName = owner == null ? null : defaultDisplayName(owner);
         String ownerPhone = owner == null ? null : owner.getPhone();
@@ -423,6 +429,10 @@ public class MarketplaceService {
                 summary.address(),
                 summary.coverImageUrl(),
                 summary.productCount(),
+                summary.active(),
+                summary.ratingAverage(),
+                summary.ratingCount(),
+                summary.hasTraceableProducts(),
                 null,
                 owner == null ? null : owner.getId(),
                 ownerName,
@@ -2327,7 +2337,13 @@ public class MarketplaceService {
         }
     }
 
-    private MarketplaceFarmSummaryResponse toFarmSummary(Farm farm, long productCount) {
+    private boolean hasTraceableProducts(Integer farmId) {
+        return farmId != null && marketplaceProductRepository.existsSellableTraceableByFarmIdAndStatusIn(
+                farmId,
+                buyerVisibleProductStatuses());
+    }
+
+    private MarketplaceFarmSummaryResponse toFarmSummary(Farm farm, long productCount, boolean hasTraceableProducts) {
         String coverImage = marketplaceProductRepository
                 .findSellableByFarmIdAndStatusInOrderByPublishedAtDescIdDesc(
                         farm.getId(),
@@ -2344,7 +2360,11 @@ public class MarketplaceService {
                 resolveFarmRegion(farm),
                 resolveFarmAddress(farm),
                 coverImage,
-                productCount);
+                productCount,
+                Boolean.TRUE.equals(farm.getActive()),
+                Optional.ofNullable(farm.getAverageRating()).orElse(0.0),
+                Optional.ofNullable(farm.getRatingCount()).orElse(0),
+                hasTraceableProducts);
     }
 
     private MarketplaceFarmerProductFormFarmOptionResponse toFarmerProductFormFarmOption(Farm farm) {

@@ -30,6 +30,7 @@ export {
   useMarketplaceFarmerProductFormOptions,
   useMarketplaceFarmerProducts,
   useMarketplaceFarmDetail,
+  useMarketplaceFarmReviews,
   useMarketplaceFarms,
   useMarketplaceMergeCartMutation,
   useMarketplaceOrderDetail,

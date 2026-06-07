@@ -1,116 +1,99 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { mockChatWidgetService } from "../api/mockChatWidgetService";
-import { getTransactionStatusLabel } from "../lib/chatDisplayHelpers";
-import type {
-  ChatWidgetConversation,
-  ChatWidgetFilter,
-  ChatWidgetMessage,
-  ChatWidgetService,
-} from "../model/widgetTypes";
-
-type UseChatWidgetOptions = {
-  service?: ChatWidgetService;
-};
+import { useCallback, useMemo, useState } from "react";
+import {
+  formatRole,
+  getChatDisplayName,
+  getChatSubtitle,
+} from "../lib/chatDisplayHelpers";
+import { useChatBootstrap } from "../model/useChatBootstrap";
+import type { ChatConversation, ChatMessage } from "../model/types";
+import type { ChatWidgetFilter } from "../model/widgetTypes";
+import { useChatRealtimeState } from "./useChatRealtimeState";
+import { useConversations } from "./useConversations";
+import { useMarkConversationRead } from "./useMarkConversationRead";
+import { useMessages } from "./useMessages";
+import { useSendMessage } from "./useSendMessage";
 
 export type UseChatWidgetResult = {
-  conversations: ChatWidgetConversation[];
-  filteredConversations: ChatWidgetConversation[];
-  selectedConversation: ChatWidgetConversation | null;
+  conversations: ChatConversation[];
+  filteredConversations: ChatConversation[];
+  selectedConversation: ChatConversation | null;
   selectedConversationId: string | null;
-  messages: ChatWidgetMessage[];
+  messages: ChatMessage[];
   searchQuery: string;
   filter: ChatWidgetFilter;
   totalUnreadCount: number;
   isLoading: boolean;
   isMessagesLoading: boolean;
   isSending: boolean;
+  isStartingConversation: boolean;
   error: string | null;
   messagesError: string | null;
+  currentUid: string | null;
   setSearchQuery: (query: string) => void;
   setFilter: (filter: ChatWidgetFilter) => void;
   selectConversation: (conversationId: string) => Promise<void>;
+  startConversation: (peerUserId: number) => Promise<void>;
   clearSelectedConversation: () => void;
   sendMessage: (content: string) => Promise<void>;
 };
 
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-  return fallback;
+function sortConversations(conversations: ChatConversation[]): ChatConversation[] {
+  return [...conversations].sort((left, right) => {
+    const leftTime = left.lastMessageAt?.getTime() ?? 0;
+    const rightTime = right.lastMessageAt?.getTime() ?? 0;
+    return rightTime - leftTime;
+  });
 }
 
-function sortConversations(conversations: ChatWidgetConversation[]): ChatWidgetConversation[] {
-  return [...conversations].sort(
-    (left, right) => right.lastMessageAt.getTime() - left.lastMessageAt.getTime(),
-  );
+function getConversationSearchText(conversation: ChatConversation): string {
+  const profile = conversation.peerProfile;
+  return [
+    getChatDisplayName(profile, conversation.peerUid),
+    getChatSubtitle(profile),
+    profile?.farmName,
+    profile?.representativeName,
+    profile?.address,
+    profile?.role ? formatRole(profile.role) : null,
+    conversation.lastMessageText,
+    conversation.peerUid,
+    conversation.peerUserId ? `#${conversation.peerUserId}` : null,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
 }
 
-function matchesSearch(conversation: ChatWidgetConversation, searchQuery: string): boolean {
+function matchesSearch(conversation: ChatConversation, searchQuery: string): boolean {
   const normalizedQuery = searchQuery.trim().toLowerCase();
   if (!normalizedQuery) {
     return true;
   }
 
-  const searchableText = [
-    conversation.farmName,
-    conversation.sellerName,
-    conversation.region,
-    conversation.lastMessage,
-    conversation.context.title,
-    conversation.context.subtitle,
-    conversation.context.traceCode,
-    getTransactionStatusLabel(conversation.context.transactionStatus),
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  return searchableText.includes(normalizedQuery);
+  return getConversationSearchText(conversation).includes(normalizedQuery);
 }
 
-export function useChatWidget({
-  service = mockChatWidgetService,
-}: UseChatWidgetOptions = {}): UseChatWidgetResult {
-  const [conversations, setConversations] = useState<ChatWidgetConversation[]>([]);
+function getBootstrapError(status: ReturnType<typeof useChatBootstrap>): string | null {
+  if (status.status === "disabled" || status.status === "error") {
+    return status.error;
+  }
+  return null;
+}
+
+export function useChatWidget(): UseChatWidgetResult {
+  const bootstrap = useChatBootstrap();
+  const currentUid = bootstrap.status === "ready" ? bootstrap.appUid : null;
+  const currentRole = bootstrap.status === "ready" ? bootstrap.role : null;
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatWidgetMessage[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<ChatWidgetFilter>("all");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [messagesError, setMessagesError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadConversations() {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const loadedConversations = await service.getConversations();
-        if (!cancelled) {
-          setConversations(sortConversations(loadedConversations));
-        }
-      } catch (loadError) {
-        if (!cancelled) {
-          setError(getErrorMessage(loadError, "Unable to load chat conversations."));
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void loadConversations();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [service]);
+  const {
+    conversations,
+    isLoading: isConversationsLoading,
+    error: conversationsError,
+    isStartingConversation,
+    startDirectConversation,
+  } = useConversations(currentUid, currentRole);
 
   const selectedConversation = useMemo(
     () =>
@@ -119,13 +102,23 @@ export function useChatWidget({
     [conversations, selectedConversationId],
   );
 
+  const messagesState = useMessages(currentUid, selectedConversationId);
+  const sendState = useSendMessage(currentUid, currentRole);
+  const markReadState = useMarkConversationRead(currentUid);
+
+  const realtimeState = useChatRealtimeState({
+    currentUid,
+    conversationId: selectedConversationId,
+    peerUid: selectedConversation?.peerUid ?? null,
+  });
+
   const totalUnreadCount = useMemo(
     () => conversations.reduce((sum, conversation) => sum + conversation.unreadCount, 0),
     [conversations],
   );
 
   const filteredConversations = useMemo(() => {
-    return conversations.filter((conversation) => {
+    return sortConversations(conversations).filter((conversation) => {
       if (filter === "unread" && conversation.unreadCount <= 0) {
         return false;
       }
@@ -133,43 +126,49 @@ export function useChatWidget({
     });
   }, [conversations, filter, searchQuery]);
 
-  const markConversationReadLocally = useCallback((conversationId: string) => {
-    setConversations((current) =>
-      current.map((conversation) =>
-        conversation.id === conversationId
-          ? { ...conversation, unreadCount: 0 }
-          : conversation,
-      ),
-    );
-  }, []);
+  const markSelectedConversationRead = useCallback(
+    async (conversation: ChatConversation | null) => {
+      if (!conversation) {
+        return;
+      }
+
+      const latestSeq = Math.max(conversation.lastSeq, conversation.lastReadSeq);
+      if (latestSeq <= 0 || latestSeq <= conversation.lastReadSeq) {
+        return;
+      }
+
+      await markReadState.markRead({
+        conversationId: conversation.id,
+        lastReadSeq: latestSeq,
+      });
+    },
+    [markReadState],
+  );
 
   const selectConversation = useCallback(
     async (conversationId: string) => {
+      realtimeState.clearTypingState();
       setSelectedConversationId(conversationId);
-      setIsMessagesLoading(true);
-      setMessagesError(null);
-      markConversationReadLocally(conversationId);
-
-      try {
-        await service.markConversationAsRead(conversationId);
-        const loadedMessages = await service.getConversationMessages(conversationId);
-        setMessages(loadedMessages);
-      } catch (loadMessagesError) {
-        setMessagesError(
-          getErrorMessage(loadMessagesError, "Unable to load chat messages."),
-        );
-      } finally {
-        setIsMessagesLoading(false);
-      }
+      const conversation =
+        conversations.find((item) => item.id === conversationId) ?? null;
+      await markSelectedConversationRead(conversation);
     },
-    [markConversationReadLocally, service],
+    [conversations, markSelectedConversationRead, realtimeState],
+  );
+
+  const startConversation = useCallback(
+    async (peerUserId: number) => {
+      const conversationId = await startDirectConversation(peerUserId);
+      realtimeState.clearTypingState();
+      setSelectedConversationId(conversationId);
+    },
+    [realtimeState, startDirectConversation],
   );
 
   const clearSelectedConversation = useCallback(() => {
+    realtimeState.clearTypingState();
     setSelectedConversationId(null);
-    setMessages([]);
-    setMessagesError(null);
-  }, []);
+  }, [realtimeState]);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -178,37 +177,19 @@ export function useChatWidget({
         return;
       }
 
-      setIsSending(true);
-      setMessagesError(null);
-
-      try {
-        const sentMessage = await service.sendMessage(
-          selectedConversationId,
-          trimmedContent,
-        );
-        setMessages((current) => [...current, sentMessage]);
-        setConversations((current) =>
-          sortConversations(
-            current.map((conversation) =>
-              conversation.id === selectedConversationId
-                ? {
-                    ...conversation,
-                    lastMessage: trimmedContent,
-                    lastMessageAt: sentMessage.sentAt,
-                    unreadCount: 0,
-                  }
-                : conversation,
-            ),
-          ),
-        );
-      } catch (sendError) {
-        setMessagesError(getErrorMessage(sendError, "Unable to send message."));
-      } finally {
-        setIsSending(false);
-      }
+      realtimeState.clearTypingState();
+      await sendState.sendMessage({
+        conversationId: selectedConversationId,
+        text: trimmedContent,
+      });
     },
-    [selectedConversationId, service],
+    [realtimeState, selectedConversationId, sendState],
   );
+
+  const bootstrapError = getBootstrapError(bootstrap);
+  const error = bootstrapError ?? conversationsError;
+  const messagesError = messagesState.error ?? sendState.error ?? markReadState.error;
+  const isLoading = bootstrap.status === "loading" || isConversationsLoading;
 
   return useMemo(
     () => ({
@@ -216,37 +197,43 @@ export function useChatWidget({
       filteredConversations,
       selectedConversation,
       selectedConversationId,
-      messages,
+      messages: messagesState.messages,
       searchQuery,
       filter,
       totalUnreadCount,
       isLoading,
-      isMessagesLoading,
-      isSending,
+      isMessagesLoading: messagesState.isLoading,
+      isSending: sendState.isSending,
+      isStartingConversation,
       error,
       messagesError,
+      currentUid,
       setSearchQuery,
       setFilter,
       selectConversation,
+      startConversation,
       clearSelectedConversation,
       sendMessage,
     }),
     [
       clearSelectedConversation,
       conversations,
+      currentUid,
       error,
       filter,
       filteredConversations,
       isLoading,
-      isMessagesLoading,
-      isSending,
-      messages,
+      isStartingConversation,
       messagesError,
+      messagesState.isLoading,
+      messagesState.messages,
       searchQuery,
       selectConversation,
       selectedConversation,
       selectedConversationId,
       sendMessage,
+      sendState.isSending,
+      startConversation,
       totalUnreadCount,
     ],
   );

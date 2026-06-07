@@ -145,6 +145,13 @@
   background: var(--cw-panel);
 }
 
+.chat-widget-contact-search {
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--cw-border);
+  background: #fbfdfc;
+  padding: 10px 12px;
+}
+
 .chat-widget-search,
 .chat-widget-filter {
   position: relative;
@@ -264,6 +271,17 @@
   color: #60656b;
   font-size: 14px;
   line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-widget-conversation__subtitle {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  color: #7b8188;
+  font-size: 12px;
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

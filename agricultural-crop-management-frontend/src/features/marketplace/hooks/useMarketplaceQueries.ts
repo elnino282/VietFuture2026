@@ -44,6 +44,8 @@ export const marketplaceQueryKeys = {
   farms: (query?: MarketplaceFarmQuery) =>
     [...marketplaceQueryKeys.farmsBase(), query ?? {}] as const,
   farm: (farmId?: number) => [...marketplaceQueryKeys.root, "farm", farmId ?? 0] as const,
+  farmReviews: (farmId?: number, query?: MarketplaceReviewQuery) =>
+    [...marketplaceQueryKeys.root, "farm-reviews", farmId ?? 0, query ?? {}] as const,
   traceability: (productId?: number | null) =>
     [...marketplaceQueryKeys.root, "traceability", productId ?? 0] as const,
   cart: () => [...marketplaceQueryKeys.root, "cart"] as const,
@@ -225,6 +227,17 @@ export function useMarketplaceProductReviews(productId?: number, query?: Marketp
     enabled: Boolean(productId && productId > 0),
     queryFn: async () => {
       const response = await marketplaceApi.listProductReviews(productId ?? 0, query);
+      return response.result;
+    },
+  });
+}
+
+export function useMarketplaceFarmReviews(farmId?: number, query?: MarketplaceReviewQuery) {
+  return useQuery({
+    queryKey: marketplaceQueryKeys.farmReviews(farmId, query),
+    enabled: Boolean(farmId && farmId > 0),
+    queryFn: async () => {
+      const response = await marketplaceApi.listFarmReviews(farmId ?? 0, query);
       return response.result;
     },
   });

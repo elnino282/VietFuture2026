@@ -1,4 +1,5 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { ChatPage } from "./ChatPage";
 import { useChatRealtimeState } from "@/features/chat/hooks/useChatRealtimeState";
@@ -133,8 +134,24 @@ beforeEach(() => {
 });
 
 describe("ChatPage layout", () => {
+  it("starts a direct conversation from peerUserId query string", async () => {
+    render(
+      <MemoryRouter initialEntries={["/chat?peerUserId=2"]}>
+        <ChatPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(startConversationSpy).toHaveBeenCalledWith(2);
+    });
+  });
+
   it("renders a desktop grid wrapper with three direct panels and keeps right panel for no selection", () => {
-    render(<ChatPage />);
+    render(
+      <MemoryRouter initialEntries={["/chat"]}>
+        <ChatPage />
+      </MemoryRouter>,
+    );
 
     const desktopGrid = screen.getByTestId("chat-desktop-grid");
     expect(desktopGrid).toBeInTheDocument();
@@ -172,7 +189,11 @@ describe("ChatPage layout", () => {
       error: null,
     });
 
-    render(<ChatPage />);
+    render(
+      <MemoryRouter initialEntries={["/chat"]}>
+        <ChatPage />
+      </MemoryRouter>,
+    );
 
     const centerPanel = screen.getByTestId("chat-center-panel");
     const rightPanel = screen.getByTestId("chat-right-panel");
@@ -207,7 +228,11 @@ describe("ChatPage layout", () => {
       startDirectConversation: startConversationSpy,
     });
 
-    render(<ChatPage />);
+    render(
+      <MemoryRouter initialEntries={["/chat"]}>
+        <ChatPage />
+      </MemoryRouter>,
+    );
 
     await waitFor(() => {
       const avatarImages = screen.getAllByAltText("Rice Valley Farm avatar");

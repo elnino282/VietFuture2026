@@ -65,9 +65,10 @@ public class MarketplaceController {
             @RequestParam(value = "minPrice", required = false) BigDecimal minPrice,
             @RequestParam(value = "maxPrice", required = false) BigDecimal maxPrice,
             @RequestParam(value = "sort", required = false) String sort,
+            @RequestParam(value = "farmId", required = false) Integer farmId,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
-        return ApiResponse.success(marketplaceService.listProducts(category, q, region, traceable, minPrice, maxPrice, sort, page, size));
+        return ApiResponse.success(marketplaceService.listProducts(category, q, region, traceable, minPrice, maxPrice, sort, farmId, page, size));
     }
 
     @GetMapping("/products/{slug}")

@@ -2,95 +2,54 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   BadgeCheck,
-  Calendar,
-  CheckCircle,
   ChevronRight,
-  Heart,
   ImageOff,
+  MapPin,
   MessageCircle,
   PackageOpen,
   Search,
+  ShieldCheck,
   ShoppingCart,
-  SlidersHorizontal,
   Star,
   Tractor,
-  Truck,
-  UserPlus,
-  Users,
-  Leaf,
-  Shield,
-  Headphones,
-  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/features/auth";
-import { Button } from "@/shared/ui";
 import {
   useMarketplaceAddToCart,
   useMarketplaceFarmDetail,
+  useMarketplaceFarmReviews,
   useMarketplaceProducts,
 } from "@/features/marketplace/hooks";
+import { getCategoryLabel } from "@/features/marketplace/lib/categoryLabels";
 import { formatVnd } from "@/features/marketplace/lib/format";
-import {
-  getFarmStoreEnrichedData,
-  getFarmStoreMockProducts,
-} from "./farmStoreMockData";
-import type { FarmStoreEnrichedData, FarmStoreMockProduct } from "./farmStoreMockData";
+import { Button } from "@/shared/ui";
+import type {
+  MarketplaceFarmDetail,
+  MarketplaceProductSummary,
+  MarketplaceReview,
+} from "@/shared/api";
 import "./FarmStorePage.css";
-
-// ═══════════════════════════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════════════════════════
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Mới nhất" },
-  { value: "price_asc", label: "Giá thấp → cao" },
-  { value: "price_desc", label: "Giá cao → thấp" },
+  { value: "price_asc", label: "Giá thấp đến cao" },
+  { value: "price_desc", label: "Giá cao đến thấp" },
 ] as const;
 
 type SortValue = (typeof SORT_OPTIONS)[number]["value"];
 
-/** Fixed category tabs shown on the store page */
-const CATEGORY_TABS = [
-  { value: "", label: "Tất cả sản phẩm" },
-  { value: "Vegetable", label: "Rau củ" },
-  { value: "RICE", label: "Gạo" },
-  { value: "SOYBEAN", label: "Đậu nành" },
-  { value: "__other", label: "Khác" },
-] as const;
-
-// ═══════════════════════════════════════════════════════════════
-// TYPES
-// ═══════════════════════════════════════════════════════════════
-
-type SimpleProduct = {
-  id: number;
-  slug: string;
-  name: string;
-  imageUrl: string;
-  category: string;
-  farmName: string | null;
-  region: string | null;
-  price: number;
-  unit: string;
-  availableQuantity: number;
-  traceable: boolean;
-};
-
-// ═══════════════════════════════════════════════════════════════
-// SMALL HELPER COMPONENTS
-// ═══════════════════════════════════════════════════════════════
+function fallbackText(value: string | null | undefined, fallback = "Đang cập nhật") {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : fallback;
+}
 
 function Breadcrumb({ farmName }: { farmName: string }) {
   return (
     <nav className="farm-store-breadcrumb" aria-label="Breadcrumb">
       <Link to="/marketplace">Trang chủ</Link>
-      <span className="farm-store-breadcrumb__separator" aria-hidden="true">
-        <ChevronRight style={{ display: "inline", width: 12, height: 12 }} />
-      </span>
+      <ChevronRight aria-hidden="true" />
       <Link to="/marketplace/products">Sản phẩm</Link>
-      <span className="farm-store-breadcrumb__separator" aria-hidden="true">
-        <ChevronRight style={{ display: "inline", width: 12, height: 12 }} />
-      </span>
+      <ChevronRight aria-hidden="true" />
       <span aria-current="page">{farmName}</span>
     </nav>
   );
@@ -106,10 +65,8 @@ function ProductImage({ src, alt }: { src?: string | null; alt: string }) {
   if (!src || hasError) {
     return (
       <div className="fs-product-card__image-fallback">
-        <div>
-          <ImageOff className="mx-auto mb-1 h-6 w-6 opacity-60" aria-hidden="true" />
-          <span>Đang cập nhật</span>
-        </div>
+        <ImageOff aria-hidden="true" />
+        <span>Ảnh sản phẩm đang cập nhật</span>
       </div>
     );
   }
@@ -126,289 +83,273 @@ function ProductImage({ src, alt }: { src?: string | null; alt: string }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// HERO: BANNER + PROFILE OVERLAY + STATS
-// ═══════════════════════════════════════════════════════════════
-
-type HeroProps = {
-  farmName: string;
-  coverImageUrl: string | null;
-  enriched: FarmStoreEnrichedData;
-  productCount: number;
+type FarmHeroProps = {
+  farm: MarketplaceFarmDetail;
+  isAuthenticated: boolean;
+  currentUserId?: number | null;
 };
 
-function FarmHero({ farmName, coverImageUrl, enriched, productCount }: HeroProps) {
-  const initial = farmName.slice(0, 1).toUpperCase();
+function FarmHero({ farm, isAuthenticated, currentUserId }: FarmHeroProps) {
+  const farmName = fallbackText(farm.name, "Nông trại");
+  const ownerUserId = Number(farm.ownerUserId);
+  const currentUserNumber = currentUserId == null ? null : Number(currentUserId);
+  const isOwner = Boolean(
+    Number.isFinite(ownerUserId) &&
+      currentUserNumber != null &&
+      ownerUserId === currentUserNumber,
+  );
+  const chatHref = Number.isFinite(ownerUserId) ? `/chat?peerUserId=${ownerUserId}` : "/chat";
+  const statusLabel = farm.active ? "Đang hoạt động" : "Tạm ngưng hoạt động";
+  const verificationLabel = farm.hasTraceableProducts
+    ? "Có sản phẩm truy xuất"
+    : "Chưa có sản phẩm truy xuất";
 
   return (
-    <section className="farm-store-banner-section">
-      {/* ── Left: Banner with profile overlay ── */}
-      <div className="farm-store-banner-area">
-        {coverImageUrl ? (
+    <section className="farm-store-hero">
+      <div className="farm-store-hero__cover">
+        {farm.coverImageUrl ? (
           <img
-            src={coverImageUrl}
+            src={farm.coverImageUrl}
             alt={`Ảnh bìa ${farmName}`}
-            className="farm-store-banner-area__image"
+            className="farm-store-hero__cover-image"
             referrerPolicy="no-referrer"
           />
         ) : (
-          <div className="farm-store-banner-area__placeholder" aria-hidden="true">
+          <div className="farm-store-hero__cover-placeholder" aria-hidden="true">
             <Tractor />
           </div>
         )}
+      </div>
 
-        <div className="farm-store-profile-overlay">
-          <div className="farm-store-profile-overlay__header">
-            <div className="farm-store-profile-overlay__avatar" aria-hidden="true">
-              {initial}
-            </div>
-            <div className="farm-store-profile-overlay__info">
-              <div className="farm-store-profile-overlay__name-row">
-                <h1 className="farm-store-profile-overlay__name">{farmName}</h1>
-                {enriched.certifications.length > 0 && (
-                  <span className="farm-store-profile-overlay__verified">
-                    <BadgeCheck style={{ width: 11, height: 11 }} />
-                    Đã xác minh
-                  </span>
-                )}
-              </div>
-              <div className="farm-store-profile-overlay__status">
-                <span className="farm-store-profile-overlay__status-dot" />
-                Đang hoạt động • Online 11 phút trước
-              </div>
-              <p className="farm-store-profile-overlay__desc">
-                {enriched.introduction}
-              </p>
-            </div>
+      <div className="farm-store-hero__content">
+        <div className="farm-store-hero__identity">
+          <div className="farm-store-hero__avatar" aria-hidden="true">
+            {farmName.slice(0, 1).toUpperCase()}
           </div>
+          <div className="farm-store-hero__text">
+            <div className="farm-store-hero__title-row">
+              <h1>{farmName}</h1>
+              <span className="farm-store-pill">
+                <BadgeCheck aria-hidden="true" />
+                {verificationLabel}
+              </span>
+            </div>
+            <div className="farm-store-hero__meta">
+              <span className="farm-store-status-dot" aria-hidden="true" />
+              <span>{statusLabel}</span>
+              {farm.region ? (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>{farm.region}</span>
+                </>
+              ) : null}
+            </div>
+            <p>{farm.description || farm.address || "Nông trại đang cập nhật thông tin giới thiệu."}</p>
+          </div>
+        </div>
 
-          <div className="farm-store-profile-overlay__actions">
-            <button
-              type="button"
-              className="farm-store-profile-overlay__btn farm-store-profile-overlay__btn--primary"
-            >
-              <MessageCircle /> Nhắn tin
+        <div className="farm-store-hero__actions">
+          {isOwner ? (
+            <button type="button" className="farm-store-primary-action" disabled>
+              <MessageCircle aria-hidden="true" />
+              Đây là nông trại của bạn
             </button>
-            <button
-              type="button"
-              className="farm-store-profile-overlay__btn farm-store-profile-overlay__btn--outline"
+          ) : (
+            <Link
+              to={isAuthenticated ? chatHref : "/sign-in"}
+              className="farm-store-primary-action"
             >
-              <UserPlus /> Theo dõi
-            </button>
-          </div>
+              <MessageCircle aria-hidden="true" />
+              Nhắn tin
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* ── Right: Stats card ── */}
-      <div className="farm-store-stats-card">
-        <div className="farm-store-stat-item">
-          <BarChart3 className="farm-store-stat-item__icon" />
-          <div className="farm-store-stat-item__content">
-            <span className="farm-store-stat-item__value">{productCount}</span>
-            <span className="farm-store-stat-item__label">Sản phẩm</span>
-          </div>
+      <dl className="farm-store-stats" aria-label="Thông tin nông trại">
+        <div>
+          <dt>
+            <PackageOpen aria-hidden="true" />
+            Sản phẩm
+          </dt>
+          <dd>{farm.productCount ?? 0}</dd>
         </div>
-        <div className="farm-store-stat-item">
-          <Users className="farm-store-stat-item__icon" />
-          <div className="farm-store-stat-item__content">
-            <span className="farm-store-stat-item__value">
-              {enriched.followers.toLocaleString("vi-VN")}
-            </span>
-            <span className="farm-store-stat-item__label">Người theo dõi</span>
-          </div>
+        <div>
+          <dt>
+            <MapPin aria-hidden="true" />
+            Khu vực
+          </dt>
+          <dd>{fallbackText(farm.region)}</dd>
         </div>
-        <div className="farm-store-stat-item">
-          <Star className="farm-store-stat-item__icon" />
-          <div className="farm-store-stat-item__content">
-            <span className="farm-store-stat-item__value">
-              {enriched.rating.toFixed(1)}/5
-            </span>
-            <span className="farm-store-stat-item__label">
-              ({enriched.ratingCount} đánh giá)
-            </span>
-          </div>
+        <div>
+          <dt>
+            <Star aria-hidden="true" />
+            Đánh giá
+          </dt>
+          <dd>{(farm.ratingAverage ?? 0).toFixed(1)}/5</dd>
+          <span>{farm.ratingCount ?? 0} đánh giá</span>
         </div>
-        <div className="farm-store-stat-item">
-          <Calendar className="farm-store-stat-item__icon" />
-          <div className="farm-store-stat-item__content">
-            <span className="farm-store-stat-item__value">
-              {enriched.yearsActive} năm
-            </span>
-            <span className="farm-store-stat-item__label">Năm hoạt động</span>
-          </div>
+        <div>
+          <dt>
+            <MapPin aria-hidden="true" />
+            Địa chỉ
+          </dt>
+          <dd>{fallbackText(farm.address)}</dd>
         </div>
-      </div>
+      </dl>
     </section>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// PRODUCT CARD
-// ═══════════════════════════════════════════════════════════════
-
-/** Derive certification tags from farm-level certs + product traceability */
-function getProductTags(
-  product: SimpleProduct,
-  enriched: FarmStoreEnrichedData,
-): { label: string; type: "vietgap" | "organic" | "trace" }[] {
-  const tags: { label: string; type: "vietgap" | "organic" | "trace" }[] = [];
-  const certIds = enriched.certifications.map((c) => c.id);
-
-  if (certIds.includes("vietgap")) {
-    tags.push({ label: "VietGAP", type: "vietgap" });
-  }
-  if (certIds.includes("organic")) {
-    tags.push({ label: "Hữu cơ", type: "organic" });
-  }
-  if (product.traceable) {
-    tags.push({ label: "Truy xuất nguồn gốc", type: "trace" });
-  }
-
-  return tags;
-}
-
 function FarmProductCard({
   product,
-  enriched,
   isAuthenticated,
   isAdding,
   onAddToCart,
 }: {
-  product: SimpleProduct;
-  enriched: FarmStoreEnrichedData;
+  product: MarketplaceProductSummary;
   isAuthenticated: boolean;
   isAdding: boolean;
   onAddToCart: (productId: number) => Promise<void>;
 }) {
-  const tags = getProductTags(product, enriched);
-  const isMock = product.id < 0;
+  const isSoldOut = product.availableQuantity <= 0;
 
   return (
     <article className="fs-product-card">
-      <div className="fs-product-card__media">
+      <Link to={`/marketplace/products/${product.slug}`} className="fs-product-card__media">
         <ProductImage src={product.imageUrl} alt={product.name} />
-        {product.traceable && (
-          <span className="fs-product-card__badge-trace">Có truy xuất</span>
-        )}
-        <button type="button" className="fs-product-card__fav-btn" aria-label="Yêu thích">
-          <Heart />
-        </button>
-      </div>
+        {product.traceable ? (
+          <span className="fs-product-card__trace-badge">
+            <ShieldCheck aria-hidden="true" />
+            Có truy xuất
+          </span>
+        ) : null}
+      </Link>
 
       <div className="fs-product-card__body">
-        <Link
-          to={isMock ? "#" : `/marketplace/products/${product.slug}`}
-          className="fs-product-card__name"
-        >
+        <div className="fs-product-card__category">{getCategoryLabel(product.category)}</div>
+        <Link to={`/marketplace/products/${product.slug}`} className="fs-product-card__name">
           {product.name}
         </Link>
+        <p className="fs-product-card__description">
+          {product.shortDescription || fallbackText(product.region, "Nông sản từ trang trại")}
+        </p>
 
-        {tags.length > 0 && (
-          <div className="fs-product-card__tags">
-            {tags.map((tag) => (
-              <span
-                key={tag.label}
-                className={`fs-product-card__tag fs-product-card__tag--${tag.type}`}
-              >
-                {tag.type === "vietgap" && <Shield />}
-                {tag.type === "organic" && <Leaf />}
-                {tag.type === "trace" && <Shield />}
-                {tag.label}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div className="fs-product-card__price">
-          {formatVnd(product.price)}
-          <span className="fs-product-card__price-unit">/{product.unit}</span>
+        <div className="fs-product-card__meta">
+          <span>{isSoldOut ? "Hết hàng" : `Còn ${product.availableQuantity} ${product.unit}`}</span>
+          {product.ratingCount > 0 ? (
+            <span className="fs-product-card__rating">
+              <Star aria-hidden="true" />
+              {(product.ratingAverage ?? 0).toFixed(1)}
+            </span>
+          ) : null}
         </div>
 
-        {isAuthenticated ? (
-          <button
-            type="button"
-            className="fs-product-card__add-btn"
-            disabled={isMock || isAdding || product.availableQuantity <= 0}
-            onClick={() => {
-              if (!isMock) onAddToCart(product.id);
-            }}
-          >
-            <ShoppingCart /> Thêm vào giỏ
-          </button>
-        ) : (
-          <Link to="/sign-up" className="fs-product-card__signup-btn">
-            Tạo tài khoản để mua
-          </Link>
-        )}
+        <div className="fs-product-card__footer">
+          <div className="fs-product-card__price">
+            {formatVnd(product.price)}
+            <span>/{product.unit}</span>
+          </div>
+
+          {isAuthenticated ? (
+            <button
+              type="button"
+              className="fs-product-card__add-btn"
+              disabled={isAdding || isSoldOut}
+              onClick={() => {
+                onAddToCart(product.id);
+              }}
+            >
+              <ShoppingCart aria-hidden="true" />
+              Thêm vào giỏ
+            </button>
+          ) : (
+            <Link to="/sign-up" className="fs-product-card__add-btn fs-product-card__add-btn--link">
+              Tạo tài khoản để mua
+            </Link>
+          )}
+        </div>
       </div>
     </article>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// BOTTOM TRUST BAR
-// ═══════════════════════════════════════════════════════════════
-
-function BottomTrustBar() {
-  const items = [
-    {
-      icon: <CheckCircle />,
-      title: "Nguồn gốc minh bạch",
-      desc: "Truy xuất rõ ràng bằng mã QR",
-    },
-    {
-      icon: <Leaf />,
-      title: "Canh tác bền vững",
-      desc: "An toàn cho sức khỏe và môi trường",
-    },
-    {
-      icon: <Truck />,
-      title: "Giao hàng nhanh",
-      desc: "2–4 ngày trên toàn quốc",
-    },
-    {
-      icon: <Headphones />,
-      title: "Hỗ trợ tận tâm",
-      desc: "Chat với nông trại nhanh chóng",
-    },
-  ];
-
+function ProductCardSkeleton() {
   return (
-    <div className="farm-store-bottom-trust">
-      {items.map((item) => (
-        <div key={item.title} className="farm-store-bottom-trust__item">
-          <div className="farm-store-bottom-trust__icon">{item.icon}</div>
-          <div>
-            <div className="farm-store-bottom-trust__title">{item.title}</div>
-            <div className="farm-store-bottom-trust__desc">{item.desc}</div>
-          </div>
-        </div>
-      ))}
+    <div className="fs-product-card">
+      <div className="fs-product-card__skeleton-image" />
+      <div className="fs-product-card__skeleton-body">
+        <span />
+        <span />
+        <span />
+        <span />
+      </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// LOADING / ERROR / NOT FOUND
-// ═══════════════════════════════════════════════════════════════
+function ReviewsPanel({
+  reviews,
+  isLoading,
+}: {
+  reviews: MarketplaceReview[];
+  isLoading: boolean;
+}) {
+  if (isLoading) {
+    return (
+      <section className="farm-store-reviews" aria-label="Đánh giá gần đây">
+        <div className="farm-store-section-heading">
+          <h2>Đánh giá gần đây</h2>
+        </div>
+        <div className="farm-store-review-grid">
+          {Array.from({ length: 3 }, (_, index) => (
+            <div key={index} className="farm-store-review-card farm-store-review-card--loading" />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (reviews.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="farm-store-reviews" aria-label="Đánh giá gần đây">
+      <div className="farm-store-section-heading">
+        <h2>Đánh giá gần đây</h2>
+        <span>{reviews.length} nhận xét mới</span>
+      </div>
+      <div className="farm-store-review-grid">
+        {reviews.map((review) => (
+          <article key={review.id} className="farm-store-review-card">
+            <div className="farm-store-review-card__header">
+              <strong>{fallbackText(review.buyerDisplayName, "Người mua")}</strong>
+              <span>
+                <Star aria-hidden="true" />
+                {review.rating}/5
+              </span>
+            </div>
+            <p>{review.comment || "Người mua chưa để lại nội dung đánh giá."}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function LoadingSkeleton() {
   return (
-    <div className="container mx-auto px-4 py-6 farm-store-page">
-      <div className="h-4 w-48 animate-pulse rounded bg-muted mb-4" />
-      <div className="farm-store-skeleton-hero animate-pulse bg-muted" />
-      <div className="farm-store-skeleton-bar animate-pulse bg-muted" />
-      <div className="farm-store-products-grid">
-        {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="fs-product-card">
-            <div style={{ height: 190 }} className="animate-pulse bg-muted" />
-            <div className="space-y-2 p-3">
-              <div className="h-3 w-16 animate-pulse rounded bg-muted" />
-              <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
-              <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
-            </div>
-          </div>
-        ))}
+    <div className="farm-store-page">
+      <div className="farm-store-page__inner">
+        <div className="farm-store-skeleton farm-store-skeleton--breadcrumb" />
+        <div className="farm-store-skeleton farm-store-skeleton--hero" />
+        <div className="farm-store-skeleton farm-store-skeleton--toolbar" />
+        <div className="farm-store-products-grid">
+          {Array.from({ length: 4 }, (_, index) => (
+            <ProductCardSkeleton key={index} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -416,12 +357,12 @@ function LoadingSkeleton() {
 
 function NotFoundState() {
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="farm-store-error">
-        <Tractor className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
+    <div className="farm-store-page">
+      <div className="farm-store-empty farm-store-empty--standalone">
+        <Tractor aria-hidden="true" />
         <h2>Không tìm thấy nông trại</h2>
-        <p>Nông trại bạn tìm kiếm không tồn tại hoặc đã bị gỡ.</p>
-        <Button asChild variant="outline" className="mt-2">
+        <p>Nông trại bạn tìm kiếm không tồn tại hoặc đã bị gỡ khỏi marketplace.</p>
+        <Button asChild variant="outline">
           <Link to="/marketplace">Quay về Marketplace</Link>
         </Button>
       </div>
@@ -431,11 +372,12 @@ function NotFoundState() {
 
 function ErrorState({ message }: { message?: string }) {
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="farm-store-error">
+    <div className="farm-store-page">
+      <div className="farm-store-empty farm-store-empty--standalone">
+        <PackageOpen aria-hidden="true" />
         <h2>Đã xảy ra lỗi</h2>
         <p>{message ?? "Không thể tải thông tin nông trại. Vui lòng thử lại."}</p>
-        <Button asChild variant="outline" className="mt-2">
+        <Button asChild variant="outline">
           <Link to="/marketplace">Quay về Marketplace</Link>
         </Button>
       </div>
@@ -443,222 +385,188 @@ function ErrorState({ message }: { message?: string }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// MAIN PAGE
-// ═══════════════════════════════════════════════════════════════
-
 export function FarmStorePage() {
   const { farmId: farmIdParam } = useParams<{ farmId: string }>();
   const farmId = Number(farmIdParam);
   const isValidFarmId = Number.isFinite(farmId) && farmId > 0;
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { addToCart, isAdding } = useMarketplaceAddToCart();
-
-  // ── Fetch data ──
-  const farmQuery = useMarketplaceFarmDetail(isValidFarmId ? farmId : undefined);
-  const productsQuery = useMarketplaceProducts(
-    isValidFarmId ? { page: 0, size: 50 } : undefined,
-  );
-
-  // ── Local state ──
   const [searchQuery, setSearchQuery] = useState("");
   const [sortValue, setSortValue] = useState<SortValue>("newest");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [traceableOnly, setTraceableOnly] = useState(false);
 
-  // ── Derived ──
+  const farmQuery = useMarketplaceFarmDetail(isValidFarmId ? farmId : undefined);
+  const categoryQuery = useMarketplaceProducts(
+    isValidFarmId ? { farmId, page: 0, size: 100, sort: "newest" } : undefined,
+  );
+  const reviewsQuery = useMarketplaceFarmReviews(
+    isValidFarmId ? farmId : undefined,
+    { page: 0, size: 3 },
+  );
+
+  const productQueryParams = useMemo(() => {
+    if (!isValidFarmId) return undefined;
+
+    const trimmedSearch = searchQuery.trim();
+    return {
+      farmId,
+      page: 0,
+      size: 24,
+      sort: sortValue,
+      ...(trimmedSearch ? { q: trimmedSearch } : {}),
+      ...(selectedCategory ? { category: selectedCategory } : {}),
+      ...(traceableOnly ? { traceable: true } : {}),
+    };
+  }, [farmId, isValidFarmId, searchQuery, selectedCategory, sortValue, traceableOnly]);
+
+  const productsQuery = useMarketplaceProducts(productQueryParams);
+
   const farm = farmQuery.data;
-  const allProducts = useMemo(() => productsQuery.data?.items ?? [], [productsQuery.data]);
+  const products = productsQuery.data?.items ?? [];
+  const totalProducts = productsQuery.data?.totalElements ?? products.length;
+  const reviews = reviewsQuery.data?.items ?? [];
+  const hasActiveFilters = Boolean(searchQuery.trim() || selectedCategory || traceableOnly);
 
-  // Filter products belonging to this farm
-  const farmProducts = useMemo(
-    () => allProducts.filter((p) => p.farmId === farmId),
-    [allProducts, farmId],
-  );
-
-  // Supplement with mock products when real product count < 4
-  const mockProducts = useMemo(
-    () => (isValidFarmId ? getFarmStoreMockProducts(farmId) : []),
-    [farmId, isValidFarmId],
-  );
-
-  const displayProducts: SimpleProduct[] = useMemo(() => {
-    if (farmProducts.length >= 4) return farmProducts;
-
-    // Merge real products with mock supplements, avoiding ID collisions
-    const realIds = new Set(farmProducts.map((p) => p.id));
-    const supplements = mockProducts
-      .filter((mp: FarmStoreMockProduct) => !realIds.has(mp.id))
-      .slice(0, 4 - farmProducts.length)
-      .map((mp: FarmStoreMockProduct): SimpleProduct => ({
-        id: mp.id,
-        slug: mp.slug,
-        name: mp.name,
-        imageUrl: mp.imageUrl,
-        category: mp.category,
-        farmName: mp.farmName,
-        region: mp.region,
-        price: mp.price,
-        unit: mp.unit,
-        availableQuantity: mp.availableQuantity,
-        traceable: mp.traceable,
-      }));
-
-    return [...farmProducts, ...supplements];
-  }, [farmProducts, mockProducts]);
-
-  // Apply local filters
-  const filteredProducts = useMemo(() => {
-    let items = displayProducts;
-
-    if (selectedCategory === "__other") {
-      const knownCats: string[] = CATEGORY_TABS.filter(
-        (t) => t.value && t.value !== "__other",
-      ).map((t) => t.value);
-      items = items.filter((p) => !knownCats.includes(p.category));
-    } else if (selectedCategory) {
-      items = items.filter((p) => p.category === selectedCategory);
+  const categoryOptions = useMemo(() => {
+    const categories = new Set<string>();
+    for (const product of categoryQuery.data?.items ?? []) {
+      const category = product.category?.trim();
+      if (category) categories.add(category);
     }
+    return [...categories].sort((a, b) => a.localeCompare(b, "vi"));
+  }, [categoryQuery.data]);
 
-    const trimmed = searchQuery.trim().toLowerCase();
-    if (trimmed) {
-      items = items.filter(
-        (p) =>
-          p.name.toLowerCase().includes(trimmed) ||
-          p.category.toLowerCase().includes(trimmed),
-      );
-    }
-
-    if (sortValue === "price_asc") {
-      items = [...items].sort((a, b) => a.price - b.price);
-    } else if (sortValue === "price_desc") {
-      items = [...items].sort((a, b) => b.price - a.price);
-    }
-
-    return items;
-  }, [displayProducts, selectedCategory, searchQuery, sortValue]);
-
-  const enriched = useMemo(
-    () => (isValidFarmId ? getFarmStoreEnrichedData(farmId) : null),
-    [farmId, isValidFarmId],
-  );
-
-  // ── Guards ──
   if (!isValidFarmId) return <NotFoundState />;
   if (farmQuery.isLoading) return <LoadingSkeleton />;
   if (farmQuery.isError) return <ErrorState />;
   if (!farm) return <NotFoundState />;
-
-  const enrichedData = enriched!;
 
   async function handleAddToCart(productId: number) {
     await addToCart(productId, 1);
   }
 
   return (
-    <div className="container mx-auto px-4 py-2 farm-store-page">
-      {/* 1. Breadcrumb */}
-      <Breadcrumb farmName={farm.name} />
+    <div className="farm-store-page">
+      <div className="farm-store-page__inner">
+        <Breadcrumb farmName={farm.name} />
 
-      {/* 2. Hero: Banner + Profile Overlay + Stats */}
-      <FarmHero
-        farmName={farm.name}
-        coverImageUrl={farm.coverImageUrl}
-        enriched={enrichedData}
-        productCount={farm.productCount}
-      />
+        <FarmHero
+          farm={farm}
+          isAuthenticated={isAuthenticated}
+          currentUserId={user?.id ?? null}
+        />
 
-      {/* 3. Category Tabs */}
-      <div className="farm-store-category-tabs" role="tablist">
-        {CATEGORY_TABS.map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            role="tab"
-            aria-selected={selectedCategory === tab.value}
-            className={`farm-store-category-tab ${selectedCategory === tab.value ? "farm-store-category-tab--active" : ""
-              }`}
-            onClick={() => setSelectedCategory(tab.value)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* 4. Product heading + toolbar */}
-      <div className="farm-store-products-header">
-        <h2>Sản phẩm ({displayProducts.length})</h2>
-        <div className="farm-store-products-toolbar">
-          <div className="farm-store-products-search">
-            <Search />
-            <input
-              type="search"
-              placeholder="Tìm trong cửa hàng"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div className="farm-store-products-sort">
-            <select
-              value={sortValue}
-              onChange={(e) => setSortValue(e.target.value as SortValue)}
+        <section className="farm-store-products" aria-labelledby="farm-store-products-title">
+          <div className="farm-store-category-tabs" role="tablist" aria-label="Danh mục sản phẩm">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={selectedCategory === ""}
+              className={selectedCategory === "" ? "is-active" : ""}
+              onClick={() => setSelectedCategory("")}
             >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              Tất cả sản phẩm
+            </button>
+            {categoryOptions.map((category) => (
+              <button
+                key={category}
+                type="button"
+                role="tab"
+                aria-selected={selectedCategory === category}
+                className={selectedCategory === category ? "is-active" : ""}
+                onClick={() => setSelectedCategory(category)}
+              >
+                {getCategoryLabel(category)}
+              </button>
+            ))}
           </div>
-          <button type="button" className="farm-store-filter-btn">
-            <SlidersHorizontal /> Bộ lọc
-          </button>
-        </div>
-      </div>
 
-      {/* 5. Product grid */}
-      {productsQuery.isLoading ? (
-        <div className="farm-store-products-grid">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="fs-product-card">
-              <div style={{ height: 190 }} className="animate-pulse bg-muted" />
-              <div className="space-y-2 p-3">
-                <div className="h-3 w-16 animate-pulse rounded bg-muted" />
-                <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
-                <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
-              </div>
+          <div className="farm-store-products-header">
+            <div className="farm-store-section-heading">
+              <h2 id="farm-store-products-title">Sản phẩm ({totalProducts})</h2>
+              <span>{farm.name}</span>
             </div>
-          ))}
-        </div>
-      ) : filteredProducts.length > 0 ? (
-        <div className="farm-store-products-grid">
-          {filteredProducts.map((product) => (
-            <FarmProductCard
-              key={product.id}
-              product={product}
-              enriched={enrichedData}
-              isAuthenticated={isAuthenticated}
-              isAdding={isAdding}
-              onAddToCart={handleAddToCart}
-            />
-          ))}
-        </div>
-      ) : displayProducts.length > 0 ? (
-        <div className="farm-store-empty">
-          <Search />
-          <h3>Không tìm thấy sản phẩm</h3>
-          <p>Thử thay đổi từ khóa hoặc bộ lọc.</p>
-        </div>
-      ) : (
-        <div className="farm-store-empty">
-          <PackageOpen />
-          <h3>Chưa có sản phẩm</h3>
-          <p>Nông trại chưa đăng bán sản phẩm nào trên marketplace.</p>
-        </div>
-      )}
 
-      {/* 6. Bottom trust bar */}
-      <BottomTrustBar />
+            <div className="farm-store-products-toolbar">
+              <label className="farm-store-products-search">
+                <Search aria-hidden="true" />
+                <input
+                  type="search"
+                  placeholder="Tìm trong cửa hàng"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                />
+              </label>
+
+              <label className="farm-store-products-sort">
+                <span>Sắp xếp</span>
+                <select
+                  value={sortValue}
+                  onChange={(event) => setSortValue(event.target.value as SortValue)}
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                type="button"
+                className={`farm-store-filter-btn${traceableOnly ? " is-active" : ""}`}
+                aria-pressed={traceableOnly}
+                onClick={() => setTraceableOnly((value) => !value)}
+              >
+                <ShieldCheck aria-hidden="true" />
+                Có truy xuất
+              </button>
+            </div>
+          </div>
+
+          {productsQuery.isLoading ? (
+            <div className="farm-store-products-grid">
+              {Array.from({ length: 4 }, (_, index) => (
+                <ProductCardSkeleton key={index} />
+              ))}
+            </div>
+          ) : productsQuery.isError ? (
+            <div className="farm-store-empty">
+              <PackageOpen aria-hidden="true" />
+              <h3>Không thể tải sản phẩm</h3>
+              <p>Vui lòng thử lại sau ít phút.</p>
+            </div>
+          ) : products.length > 0 ? (
+            <div className="farm-store-products-grid">
+              {products.map((product) => (
+                <FarmProductCard
+                  key={product.id}
+                  product={product}
+                  isAuthenticated={isAuthenticated}
+                  isAdding={isAdding}
+                  onAddToCart={handleAddToCart}
+                />
+              ))}
+            </div>
+          ) : hasActiveFilters ? (
+            <div className="farm-store-empty">
+              <Search aria-hidden="true" />
+              <h3>Không tìm thấy sản phẩm</h3>
+              <p>Thử thay đổi từ khóa hoặc bộ lọc.</p>
+            </div>
+          ) : (
+            <div className="farm-store-empty">
+              <PackageOpen aria-hidden="true" />
+              <h3>Chưa có sản phẩm</h3>
+              <p>Nông trại chưa đăng bán sản phẩm nào trên marketplace.</p>
+            </div>
+          )}
+        </section>
+
+        <ReviewsPanel reviews={reviews} isLoading={reviewsQuery.isLoading} />
+      </div>
     </div>
   );
 }

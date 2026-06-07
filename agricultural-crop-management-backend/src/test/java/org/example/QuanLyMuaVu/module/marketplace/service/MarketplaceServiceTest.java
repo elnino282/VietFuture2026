@@ -184,11 +184,12 @@ class MarketplaceServiceTest {
                     any(),
                     any(),
                     any(),
+                    any(),
                     any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of(activeProduct)));
             when(marketplaceProductReviewRepository.aggregateRatingsByProductIds(List.of(300L))).thenReturn(List.of());
 
-            var response = marketplaceService.listProducts(null, null, null, null, null, null, null, 0, 20);
+            var response = marketplaceService.listProducts(null, null, null, null, null, null, null, null, 0, 20);
 
             ArgumentCaptor<Collection<MarketplaceProductStatus>> statusesCaptor = ArgumentCaptor.forClass(Collection.class);
             verify(marketplaceProductRepository).searchPublished(
@@ -199,10 +200,39 @@ class MarketplaceServiceTest {
                     any(),
                     any(),
                     any(),
+                    any(),
                     any(Pageable.class));
             assertTrue(statusesCaptor.getValue().contains(MarketplaceProductStatus.ACTIVE));
             assertTrue(statusesCaptor.getValue().contains(MarketplaceProductStatus.PUBLISHED));
             assertEquals(MarketplaceProductStatus.ACTIVE, response.getItems().getFirst().status());
+        }
+
+        @Test
+        void listProducts_PassesFarmIdToPublishedSearch() {
+            when(marketplaceProductRepository.searchPublished(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            marketplaceService.listProducts(null, null, null, null, null, null, null, 7, 0, 20);
+
+            verify(marketplaceProductRepository).searchPublished(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    org.mockito.ArgumentMatchers.eq(7),
+                    any(Pageable.class));
         }
     }
 
@@ -228,6 +258,47 @@ class MarketplaceServiceTest {
             assertEquals(0, pageable.getPageNumber());
             assertEquals(20, pageable.getPageSize());
             assertTrue(pageable.getSort().isUnsorted());
+        }
+    }
+
+    @Nested
+    @DisplayName("getFarmDetail()")
+    class GetFarmDetailTests {
+
+        @Test
+        void getFarmDetail_ReturnsFarmMarketplaceDisplayFields() {
+            User owner = User.builder()
+                    .id(20L)
+                    .username("farmer-20")
+                    .fullName("Farmer Twenty")
+                    .phone("0909000000")
+                    .build();
+            Farm farm = Farm.builder()
+                    .id(7)
+                    .name("Trace Farm")
+                    .user(owner)
+                    .active(true)
+                    .averageRating(4.7)
+                    .ratingCount(12)
+                    .build();
+
+            when(farmRepository.findById(7)).thenReturn(Optional.of(farm));
+            when(marketplaceProductRepository.countSellableByFarmIdAndStatusIn(any(), any())).thenReturn(3L);
+            when(marketplaceProductRepository.existsSellableTraceableByFarmIdAndStatusIn(any(), any())).thenReturn(true);
+            when(marketplaceProductRepository.findSellableByFarmIdAndStatusInOrderByPublishedAtDescIdDesc(
+                    any(),
+                    any(),
+                    any(Pageable.class)))
+                    .thenReturn(List.of());
+
+            var response = marketplaceService.getFarmDetail(7);
+
+            assertEquals(true, response.active());
+            assertEquals(4.7, response.ratingAverage());
+            assertEquals(12, response.ratingCount());
+            assertEquals(true, response.hasTraceableProducts());
+            assertEquals(3L, response.productCount());
+            assertEquals(20L, response.ownerUserId());
         }
     }
 
