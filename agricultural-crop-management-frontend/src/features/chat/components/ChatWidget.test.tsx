@@ -13,8 +13,16 @@ const widgetHookMocks = vi.hoisted(() => ({
   useChatWidget: vi.fn(),
 }));
 
+const marketplaceHookMocks = vi.hoisted(() => ({
+  useMarketplaceFarmDetail: vi.fn(),
+}));
+
 vi.mock("../hooks/useChatWidget", () => ({
   useChatWidget: widgetHookMocks.useChatWidget,
+}));
+
+vi.mock("@/features/marketplace/hooks", () => ({
+  useMarketplaceFarmDetail: marketplaceHookMocks.useMarketplaceFarmDetail,
 }));
 
 vi.mock("@/features/auth/context/AuthContext", () => ({
@@ -171,6 +179,16 @@ function renderFloatingButton() {
 beforeEach(() => {
   HTMLElement.prototype.scrollIntoView = vi.fn();
   widgetHookMocks.useChatWidget.mockImplementation(useMockChatWidget);
+  marketplaceHookMocks.useMarketplaceFarmDetail.mockReturnValue({
+    data: {
+      id: 31,
+      name: "Nong trai An Phu",
+      ratingAverage: 4.6,
+      ratingCount: 12,
+    },
+    isLoading: false,
+    isError: false,
+  });
 });
 
 describe("Floating chat widget", () => {
@@ -269,7 +287,7 @@ describe("Floating chat widget", () => {
     expect(screen.getByRole("dialog", { name: /chat/i })).toBeInTheDocument();
   });
 
-  it("renders the refined farm chat layout with one sidebar search and farm actions", async () => {
+  it("renders the refined farm chat layout with API rating and a single farm action", async () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
@@ -286,17 +304,18 @@ describe("Floating chat widget", () => {
       "href",
       "/marketplace/farms/31",
     );
-    expect(screen.getByRole("link", { name: /Xem sản phẩm/i })).toHaveAttribute(
-      "href",
-      "/marketplace/products?farmId=31",
-    );
-    expect(screen.getAllByText("Đang hoạt động").length).toBeGreaterThan(0);
-    expect(screen.getByText("4.8")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Xem sản phẩm/i })).not.toBeInTheDocument();
+    expect(screen.queryByText("Đang hoạt động")).not.toBeInTheDocument();
+    expect(screen.queryByText("Không hoạt động")).not.toBeInTheDocument();
+    expect(screen.getByText("4.6")).toBeInTheDocument();
+    expect(screen.getByText("(12 đánh giá)")).toBeInTheDocument();
+    expect(screen.queryByText("4.8")).not.toBeInTheDocument();
     expect(screen.getByLabelText("2 unread")).toBeInTheDocument();
 
     const css = readFileSync("src/features/chat/components/ChatWidget.css", "utf8");
     expect(css).toContain("min-height: 86px;");
-    expect(css).toContain("font-size: 16px;");
+    expect(css).toContain("grid-template-columns: minmax(0, 1fr) 84px;");
+    expect(css).toContain("border-radius: 999px;");
     expect(css).toContain("min-height: 92px;");
   });
 

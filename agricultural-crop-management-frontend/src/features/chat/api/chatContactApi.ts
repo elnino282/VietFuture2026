@@ -19,7 +19,6 @@ const ChatContactProfileSchema = z.object({
     .transform((value) => value?.trim() || null),
   ratingAverage: z.number().nullable().optional().default(null),
   ratingCount: z.number().int().nonnegative().nullable().optional().default(null),
-  isOnline: z.boolean().nullable().optional().default(null),
 });
 
 const ChatContactProfileListSchema = z.array(ChatContactProfileSchema);

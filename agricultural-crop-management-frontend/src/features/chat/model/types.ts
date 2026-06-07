@@ -12,7 +12,6 @@ export type ChatContactProfile = {
   avatarUrl?: string | null;
   ratingAverage?: number | null;
   ratingCount?: number | null;
-  isOnline?: boolean | null;
 };
 
 export type ChatConversation = {

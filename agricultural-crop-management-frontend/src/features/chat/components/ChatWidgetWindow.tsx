@@ -1,8 +1,8 @@
 import type { RefObject } from "react";
-import { ArrowLeft, ShoppingBag, Star, Store } from "lucide-react";
+import { ArrowLeft, Star, Store } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/shared/lib";
+import { useMarketplaceFarmDetail } from "@/features/marketplace/hooks";
 import {
   getChatDisplayName,
   getChatSubtitle,
@@ -35,13 +35,19 @@ function getFarmId(conversation: ChatConversation): number | null {
   return conversation.peerProfile?.farmId ?? conversation.peerUserId ?? null;
 }
 
-function getFarmRating(conversation: ChatConversation): string {
-  const rating = conversation.peerProfile?.ratingAverage;
-  return typeof rating === "number" && rating > 0 ? rating.toFixed(1) : "4.8";
-}
+function getRatingDisplay(
+  source: { ratingAverage?: number | null; ratingCount?: number | null } | null | undefined,
+): { score: string; countLabel: string } | null {
+  const rating = source?.ratingAverage;
+  const count = source?.ratingCount;
+  if (typeof rating !== "number" || typeof count !== "number" || count <= 0) {
+    return null;
+  }
 
-function isFarmActive(conversation: ChatConversation): boolean {
-  return conversation.peerProfile?.isOnline ?? true;
+  return {
+    score: rating.toFixed(1),
+    countLabel: `(${count} đánh giá)`,
+  };
 }
 
 export function ChatWidgetWindow({
@@ -55,6 +61,9 @@ export function ChatWidgetWindow({
   onSend,
   bottomRef,
 }: ChatWidgetWindowProps) {
+  const farmId = conversation ? getFarmId(conversation) : null;
+  const farmDetailQuery = useMarketplaceFarmDetail(farmId ?? undefined);
+
   if (!conversation) {
     return (
       <main className="chat-widget-window chat-widget-window--empty">
@@ -66,9 +75,7 @@ export function ChatWidgetWindow({
   const profile = conversation.peerProfile;
   const displayName = getChatDisplayName(profile, conversation.peerUid);
   const subtitle = joinDefinedParts([getChatSubtitle(profile), profile?.address], " - ");
-  const farmId = getFarmId(conversation);
-  const ratingLabel = getFarmRating(conversation);
-  const isActive = isFarmActive(conversation);
+  const ratingDisplay = getRatingDisplay(farmDetailQuery.data ?? profile);
 
   return (
     <main className="chat-widget-window">
@@ -89,12 +96,6 @@ export function ChatWidgetWindow({
             ) : (
               getAvatarLabel(conversation)
             )}
-            <span
-              className={cn(
-                "chat-widget-avatar__status-dot",
-                !isActive && "chat-widget-avatar__status-dot--offline",
-              )}
-            />
           </div>
 
           <div className="chat-widget-farm-card">
@@ -104,19 +105,23 @@ export function ChatWidgetWindow({
               </h3>
               {subtitle ? <p>{subtitle}</p> : null}
               <div className="chat-widget-farm-card__meta">
-                <span className="chat-widget-farm-card__rating">
-                  <Star className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{ratingLabel}</span>
-                </span>
-                <span
-                  className={cn(
-                    "chat-widget-farm-card__activity",
-                    !isActive && "chat-widget-farm-card__activity--offline",
-                  )}
-                >
-                  <span aria-hidden="true" />
-                  {isActive ? "Đang hoạt động" : "Không hoạt động"}
-                </span>
+                {farmDetailQuery.isLoading ? (
+                  <span className="chat-widget-farm-card__rating-muted">
+                    Đang tải đánh giá...
+                  </span>
+                ) : ratingDisplay ? (
+                  <span className="chat-widget-farm-card__rating">
+                    <Star className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{ratingDisplay.score}</span>
+                    <span className="chat-widget-farm-card__rating-count">
+                      {ratingDisplay.countLabel}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="chat-widget-farm-card__rating-muted">
+                    Chưa có đánh giá
+                  </span>
+                )}
               </div>
             </div>
 
@@ -126,17 +131,6 @@ export function ChatWidgetWindow({
                   <Link to={`/marketplace/farms/${farmId}`}>
                     <Store className="h-3.5 w-3.5" aria-hidden="true" />
                     Xem nông trại
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="sm"
-                  variant="outline"
-                  className="chat-widget-farm-card__button chat-widget-farm-card__button--secondary"
-                >
-                  <Link to={`/marketplace/products?farmId=${farmId}`}>
-                    <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" />
-                    Xem sản phẩm
                   </Link>
                 </Button>
               </div>

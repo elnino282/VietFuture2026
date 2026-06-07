@@ -36,10 +36,6 @@ function getConversationSubtitle(conversation: ChatConversation): string | null 
   return joinDefinedParts([getChatSubtitle(profile), profile.address], " - ");
 }
 
-function isConversationActive(conversation: ChatConversation): boolean {
-  return conversation.peerProfile?.isOnline ?? true;
-}
-
 export function ChatWidgetConversationList({
   conversations,
   selectedConversationId,
@@ -94,7 +90,6 @@ export function ChatWidgetConversationList({
           );
           const subtitle = getConversationSubtitle(conversation);
           const timeLabel = formatChatTime(conversation.lastMessageAt);
-          const isActive = isConversationActive(conversation);
 
           return (
             <button
@@ -118,12 +113,6 @@ export function ChatWidgetConversationList({
                 ) : (
                   getAvatarLabel(conversation)
                 )}
-                <span
-                  className={cn(
-                    "chat-widget-avatar__status-dot",
-                    !isActive && "chat-widget-avatar__status-dot--offline",
-                  )}
-                />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="chat-widget-conversation__top">
@@ -137,16 +126,6 @@ export function ChatWidgetConversationList({
                 {subtitle ? (
                   <span className="chat-widget-conversation__subtitle">{subtitle}</span>
                 ) : null}
-                <span
-                  className={cn(
-                    "chat-widget-conversation__status",
-                    isActive
-                      ? "chat-widget-conversation__status--active"
-                      : "chat-widget-conversation__status--offline",
-                  )}
-                >
-                  {isActive ? "Đang hoạt động" : "Không hoạt động"}
-                </span>
                 <p>{conversation.lastMessageText || "Chưa có tin nhắn nào."}</p>
               </div>
               {conversation.unreadCount > 0 ? (
