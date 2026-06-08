@@ -39,6 +39,9 @@ export function ProductDetailPage() {
 
   const productQuery = useMarketplaceProductDetail(slug);
   const product = productQuery.data;
+  const isOwner = Boolean(
+    product && user?.id && Number(user.id) === Number(product.farmerUserId),
+  );
 
   const allImages = useMemo(() => {
     if (!product) return [];
@@ -340,9 +343,31 @@ export function ProductDetailPage() {
                 </div>
               </div>
               <div className="pdp__farm-actions">
-                <button type="button" className="pdp__farm-btn pdp__farm-btn--outline">
-                  <MessageCircle /> Nhắn tin
-                </button>
+                {isOwner ? (
+                  <button type="button" className="pdp__farm-btn pdp__farm-btn--outline" disabled>
+                    <MessageCircle /> Đây là sản phẩm của bạn
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="pdp__farm-btn pdp__farm-btn--outline"
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        navigate("/sign-in");
+                        return;
+                      }
+                      if (product.farmerUserId) {
+                        window.dispatchEvent(
+                          new CustomEvent("open-chat-widget", {
+                            detail: { peerUserId: product.farmerUserId },
+                          })
+                        );
+                      }
+                    }}
+                  >
+                    <MessageCircle /> Nhắn tin
+                  </button>
+                )}
                 {product.farmId ? (
                   <Link to={`/marketplace/farms/${product.farmId}`} className="pdp__farm-btn pdp__farm-btn--primary">
                     <Store /> Xem nông trại

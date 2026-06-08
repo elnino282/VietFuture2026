@@ -13,6 +13,7 @@ type ChatWidgetProps = {
   onClose: () => void;
   onExpand: () => void;
   onUnreadCountChange?: (count: number) => void;
+  activePeerUserId?: number | null;
 };
 
 /**
@@ -29,6 +30,7 @@ export function ChatWidget({
   onClose,
   onExpand,
   onUnreadCountChange,
+  activePeerUserId,
 }: ChatWidgetProps) {
   const widget = useChatWidget();
   const [showMobileDetail, setShowMobileDetail] = useState(false);
@@ -39,6 +41,14 @@ export function ChatWidget({
   useEffect(() => {
     onUnreadCountChange?.(widget.totalUnreadCount);
   }, [onUnreadCountChange, widget.totalUnreadCount]);
+
+  useEffect(() => {
+    if (isOpen && activePeerUserId != null) {
+      void widget.startConversation(activePeerUserId).then(() => {
+        setShowMobileDetail(true);
+      });
+    }
+  }, [isOpen, activePeerUserId, widget.startConversation]);
 
   useEffect(() => {
     if (!isOpen) {

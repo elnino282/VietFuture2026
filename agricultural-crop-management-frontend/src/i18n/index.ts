@@ -85,7 +85,7 @@ export function normalizeLocale(locale: string | null | undefined): SupportedLoc
 export function ensureDefaultLanguagePreference(
     storage: Pick<Storage, 'getItem' | 'setItem'> | null | undefined,
 ): void {
-    if (!storage) return;
+    if (!storage || typeof storage.getItem !== 'function' || typeof storage.setItem !== 'function') return;
 
     if (storage.getItem(LANGUAGE_DEFAULT_VERSION_KEY) === LANGUAGE_DEFAULT_VERSION) {
         return;

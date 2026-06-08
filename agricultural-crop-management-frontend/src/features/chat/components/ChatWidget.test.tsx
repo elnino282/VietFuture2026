@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { readFileSync } from "node:fs";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FloatingChatButton } from "./FloatingChatButton";
 import { ChatWidget } from "./ChatWidget";
@@ -372,5 +372,51 @@ describe("Floating chat widget", () => {
 
     expect(screen.getByText("Firebase chat is disabled by environment flag.")).toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: /search chat contacts/i })).not.toBeInTheDocument();
+  });
+
+  it("closes the chat widget when the location pathname changes", async () => {
+    const user = userEvent.setup();
+
+    function NavigationTrigger() {
+      const realNavigate = useNavigate();
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            realNavigate("/another-page");
+          }}
+        >
+          Navigate
+        </button>
+      );
+    }
+
+    render(
+      <MemoryRouter
+        initialEntries={["/marketplace"]}
+        future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
+      >
+        <FloatingChatButton />
+        <NavigationTrigger />
+        <Routes>
+          <Route path="/marketplace" element={<div>Marketplace</div>} />
+          <Route path="/another-page" element={<div>Another Page</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    // Open the chat widget
+    expect(screen.getByRole("button", { name: /open chat/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /open chat/i }));
+    expect(await screen.findByRole("dialog", { name: /chat/i })).toBeInTheDocument();
+
+    // Trigger navigation
+    await user.click(screen.getByText("Navigate"));
+
+    // Verify chat widget closes and floating button becomes visible again
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: /chat/i })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /open chat/i })).toBeInTheDocument();
+    });
   });
 });

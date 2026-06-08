@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type React from "react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -186,10 +186,24 @@ describe("FarmStorePage", () => {
     expect(screen.queryByText("Alpha Rice")).not.toBeInTheDocument();
   });
 
-  it("links the message action to chat with the farm owner", () => {
-    const { container } = renderFarmStore();
+  it("triggers open-chat-widget custom event with the farm owner user ID when clicking message", () => {
+    const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+    renderFarmStore();
 
-    expect(container.querySelector('a[href="/chat?peerUserId=17"]')).not.toBeNull();
+    const messageBtn = screen.getByRole("button", { name: /nhắn tin/i });
+    expect(messageBtn).toBeInTheDocument();
+
+    fireEvent.click(messageBtn);
+
+    expect(dispatchSpy).toHaveBeenCalled();
+    const event = dispatchSpy.mock.calls.find(
+      (call) => call[0] instanceof CustomEvent && (call[0] as CustomEvent).type === "open-chat-widget"
+    )?.[0] as CustomEvent;
+
+    expect(event).toBeDefined();
+    expect(event.detail).toEqual({ peerUserId: 17 });
+
+    dispatchSpy.mockRestore();
   });
 
   it("disables the message action when the current user owns the farm", () => {

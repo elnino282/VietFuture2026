@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   BadgeCheck,
   ChevronRight,
@@ -90,6 +90,7 @@ type FarmHeroProps = {
 };
 
 function FarmHero({ farm, isAuthenticated, currentUserId }: FarmHeroProps) {
+  const navigate = useNavigate();
   const farmName = fallbackText(farm.name, "Nông trại");
   const ownerUserId = Number(farm.ownerUserId);
   const currentUserNumber = currentUserId == null ? null : Number(currentUserId);
@@ -98,7 +99,6 @@ function FarmHero({ farm, isAuthenticated, currentUserId }: FarmHeroProps) {
       currentUserNumber != null &&
       ownerUserId === currentUserNumber,
   );
-  const chatHref = Number.isFinite(ownerUserId) ? `/chat?peerUserId=${ownerUserId}` : "/chat";
   const statusLabel = farm.active ? "Đang hoạt động" : "Tạm ngưng hoạt động";
   const verificationLabel = farm.hasTraceableProducts
     ? "Có sản phẩm truy xuất"
@@ -155,13 +155,26 @@ function FarmHero({ farm, isAuthenticated, currentUserId }: FarmHeroProps) {
               Đây là nông trại của bạn
             </button>
           ) : (
-            <Link
-              to={isAuthenticated ? chatHref : "/sign-in"}
+            <button
+              type="button"
               className="farm-store-primary-action"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  navigate("/sign-in");
+                  return;
+                }
+                if (Number.isFinite(ownerUserId)) {
+                  window.dispatchEvent(
+                    new CustomEvent("open-chat-widget", {
+                      detail: { peerUserId: ownerUserId },
+                    })
+                  );
+                }
+              }}
             >
               <MessageCircle aria-hidden="true" />
               Nhắn tin
-            </Link>
+            </button>
           )}
         </div>
       </div>

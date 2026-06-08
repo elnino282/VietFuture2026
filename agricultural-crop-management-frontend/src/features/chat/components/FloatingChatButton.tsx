@@ -1,5 +1,5 @@
 import "./FloatingChatButton.css";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { MessageSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -17,6 +17,26 @@ export function FloatingChatButton() {
   const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [activePeerUserId, setActivePeerUserId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handleOpenChat = (event: Event) => {
+      const customEvent = event as CustomEvent<{ peerUserId?: number }>;
+      setIsOpen(true);
+      if (customEvent.detail?.peerUserId) {
+        setActivePeerUserId(customEvent.detail.peerUserId);
+      }
+    };
+    window.addEventListener("open-chat-widget", handleOpenChat);
+    return () => {
+      window.removeEventListener("open-chat-widget", handleOpenChat);
+    };
+  }, []);
+
+  useEffect(() => {
+    setIsOpen(false);
+    setActivePeerUserId(null);
+  }, [location.pathname]);
 
   const isVisible = isAuthenticated && location.pathname !== "/chat";
   const hasUnread = unreadCount > 0;
@@ -70,11 +90,19 @@ export function FloatingChatButton() {
 
       <ChatWidget
         isOpen={isOpen}
-        onMinimize={() => setIsOpen(false)}
-        onClose={() => setIsOpen(false)}
+        onMinimize={() => {
+          setIsOpen(false);
+          setActivePeerUserId(null);
+        }}
+        onClose={() => {
+          setIsOpen(false);
+          setActivePeerUserId(null);
+        }}
         onExpand={handleExpand}
         onUnreadCountChange={setUnreadCount}
+        activePeerUserId={activePeerUserId}
       />
     </div>
   );
 }
+
