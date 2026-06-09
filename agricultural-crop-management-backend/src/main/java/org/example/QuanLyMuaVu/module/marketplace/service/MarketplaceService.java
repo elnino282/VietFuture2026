@@ -121,6 +121,8 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 public class MarketplaceService {
 
+    private record OrderCreationItem(MarketplaceProduct product, BigDecimal quantity) {}
+
     static BigDecimal DEFAULT_SHIPPING_FEE = new BigDecimal("20000");
     static String CURRENCY_VND = "VND";
     static BigDecimal LOW_STOCK_THRESHOLD = new BigDecimal("10");
@@ -798,14 +800,54 @@ public class MarketplaceService {
             throw new AppException(ErrorCode.MARKETPLACE_IDEMPOTENCY_KEY_REQUIRED);
         }
 
-        MarketplaceCart cart = marketplaceCartRepository.findByUserIdForUpdate(buyerUserId)
-                .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_CART_EMPTY));
-        List<MarketplaceCartItem> cartItems = marketplaceCartItemRepository.findByCartIdWithProductForUpdate(cart.getId());
-        if (cartItems.isEmpty()) {
-            throw new AppException(ErrorCode.MARKETPLACE_CART_EMPTY);
+        List<OrderCreationItem> creationItems = new ArrayList<>();
+        boolean fromCart = true;
+        MarketplaceCart cart = null;
+
+        if (request.items() != null && !request.items().isEmpty()) {
+            fromCart = false;
+            Collection<Long> productIds = request.items().stream()
+                    .map(MarketplaceCreateOrderRequest.MarketplaceOrderItemRequest::productId)
+                    .distinct()
+                    .collect(Collectors.toCollection(ArrayList::new));
+            List<MarketplaceProduct> lockedProducts = marketplaceProductRepository.findAllByIdInForUpdate(productIds);
+            Map<Long, MarketplaceProduct> lockedProductById = lockedProducts.stream()
+                    .collect(Collectors.toMap(MarketplaceProduct::getId, p -> p));
+
+            if (lockedProductById.size() != productIds.size()) {
+                throw new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND);
+            }
+
+            for (MarketplaceCreateOrderRequest.MarketplaceOrderItemRequest itemReq : request.items()) {
+                MarketplaceProduct prod = lockedProductById.get(itemReq.productId());
+                creationItems.add(new OrderCreationItem(prod, itemReq.quantity()));
+            }
+        } else {
+            cart = marketplaceCartRepository.findByUserIdForUpdate(buyerUserId)
+                    .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_CART_EMPTY));
+            List<MarketplaceCartItem> cartItems = marketplaceCartItemRepository.findByCartIdWithProductForUpdate(cart.getId());
+            if (cartItems.isEmpty()) {
+                throw new AppException(ErrorCode.MARKETPLACE_CART_EMPTY);
+            }
+
+            Collection<Long> productIds = cartItems.stream()
+                    .map(ci -> ci.getProduct().getId())
+                    .collect(Collectors.toCollection(ArrayList::new));
+            List<MarketplaceProduct> lockedProducts = marketplaceProductRepository.findAllByIdInForUpdate(productIds);
+            Map<Long, MarketplaceProduct> lockedProductById = lockedProducts.stream()
+                    .collect(Collectors.toMap(MarketplaceProduct::getId, p -> p));
+
+            if (lockedProductById.size() != productIds.size()) {
+                throw new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND);
+            }
+
+            for (MarketplaceCartItem item : cartItems) {
+                MarketplaceProduct prod = lockedProductById.get(item.getProduct().getId());
+                creationItems.add(new OrderCreationItem(prod, item.getQuantity()));
+            }
         }
 
-        String requestFingerprint = buildOrderFingerprint(request, cartItems);
+        String requestFingerprint = buildOrderFingerprint(request, creationItems);
 
         Optional<MarketplaceOrderGroup> existingGroupOpt = marketplaceOrderGroupRepository
                 .findByBuyerUser_IdAndIdempotencyKey(buyerUserId, idempotencyKey);
@@ -817,16 +859,10 @@ public class MarketplaceService {
             return buildOrderResultForExistingGroup(existingGroup.getId(), existingGroup.getGroupCode());
         }
 
-        Collection<Long> productIds = cartItems.stream()
-                .map(ci -> ci.getProduct().getId())
-                .collect(Collectors.toCollection(ArrayList::new));
-        List<MarketplaceProduct> lockedProducts = marketplaceProductRepository.findAllByIdInForUpdate(productIds);
-        Map<Long, MarketplaceProduct> lockedProductById = lockedProducts.stream()
-                .collect(Collectors.toMap(MarketplaceProduct::getId, p -> p));
-
-        if (lockedProductById.size() != productIds.size()) {
-            throw new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND);
-        }
+        List<MarketplaceProduct> lockedProducts = creationItems.stream()
+                .map(OrderCreationItem::product)
+                .distinct()
+                .toList();
 
         List<Integer> lotIds = lockedProducts.stream()
                 .map(MarketplaceProduct::getLot)
@@ -838,11 +874,8 @@ public class MarketplaceService {
         Map<Integer, ProductWarehouseLot> lockedLotById = lockedLots.stream()
                 .collect(Collectors.toMap(ProductWarehouseLot::getId, lot -> lot));
 
-        for (MarketplaceCartItem item : cartItems) {
-            MarketplaceProduct lockedProduct = lockedProductById.get(item.getProduct().getId());
-            if (lockedProduct == null) {
-                throw new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND);
-            }
+        for (OrderCreationItem item : creationItems) {
+            MarketplaceProduct lockedProduct = item.product();
             if (lockedProduct.getStatus() != MarketplaceProductStatus.PUBLISHED
                     && lockedProduct.getStatus() != MarketplaceProductStatus.ACTIVE) {
                 throw new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_PUBLISHED);
@@ -851,7 +884,7 @@ public class MarketplaceService {
 
             ProductWarehouseLot lot = resolveLockedLot(lockedProduct, lockedLotById);
             ensureLotSellable(lot);
-            ensureStockAvailable(lockedProduct, item.getQuantity());
+            ensureStockAvailable(lockedProduct, item.quantity());
         }
 
         ShippingSnapshot shippingSnapshot = resolveShippingSnapshot(buyerUserId, request);
@@ -876,25 +909,25 @@ public class MarketplaceService {
             return buildOrderResultForExistingGroup(existingGroup.getId(), existingGroup.getGroupCode());
         }
 
-        Map<Long, List<MarketplaceCartItem>> groupedByFarmer = cartItems.stream()
-                .sorted(Comparator.comparing(ci -> ci.getProduct().getId()))
+        Map<Long, List<OrderCreationItem>> groupedByFarmer = creationItems.stream()
+                .sorted(Comparator.comparing(ci -> ci.product().getId()))
                 .collect(Collectors.groupingBy(
-                        ci -> ci.getProduct().getFarmerUser().getId(),
+                        ci -> ci.product().getFarmerUser().getId(),
                         TreeMap::new,
                         Collectors.toList()));
 
         List<MarketplaceOrder> createdOrders = new ArrayList<>();
-        for (Map.Entry<Long, List<MarketplaceCartItem>> groupEntry : groupedByFarmer.entrySet()) {
+        for (Map.Entry<Long, List<OrderCreationItem>> groupEntry : groupedByFarmer.entrySet()) {
             Long farmerUserId = groupEntry.getKey();
-            List<MarketplaceCartItem> groupItems = groupEntry.getValue();
-            User farmer = groupItems.getFirst().getProduct().getFarmerUser();
+            List<OrderCreationItem> groupItems = groupEntry.getValue();
+            User farmer = groupItems.getFirst().product().getFarmerUser();
 
             BigDecimal subtotal = BigDecimal.ZERO;
             List<MarketplaceOrderItem> orderItems = new ArrayList<>();
-            for (MarketplaceCartItem cartItem : groupItems) {
-                MarketplaceProduct lockedProduct = lockedProductById.get(cartItem.getProduct().getId());
+            for (OrderCreationItem creationItem : groupItems) {
+                MarketplaceProduct lockedProduct = creationItem.product();
                 ProductWarehouseLot lockedLot = resolveLockedLot(lockedProduct, lockedLotById);
-                BigDecimal lineTotal = lockedProduct.getPrice().multiply(cartItem.getQuantity());
+                BigDecimal lineTotal = lockedProduct.getPrice().multiply(creationItem.quantity());
                 subtotal = subtotal.add(lineTotal);
 
                 MarketplaceOrderItem orderItem = MarketplaceOrderItem.builder()
@@ -903,7 +936,7 @@ public class MarketplaceService {
                         .productSlugSnapshot(lockedProduct.getSlug())
                         .imageUrlSnapshot(lockedProduct.getImageUrl())
                         .unitPriceSnapshot(lockedProduct.getPrice())
-                        .quantity(cartItem.getQuantity())
+                        .quantity(creationItem.quantity())
                         .lineTotal(lineTotal)
                         .traceableSnapshot(Boolean.TRUE.equals(lockedProduct.getTraceable()))
                         .farm(lockedProduct.getFarm())
@@ -912,12 +945,12 @@ public class MarketplaceService {
                         .build();
                 orderItems.add(orderItem);
 
-                lockedProduct.setStockQuantity(currentListingQuantity(lockedProduct).subtract(cartItem.getQuantity()));
-                lockedLot.setOnHandQuantity(lockedLot.getOnHandQuantity().subtract(cartItem.getQuantity()));
+                lockedProduct.setStockQuantity(currentListingQuantity(lockedProduct).subtract(creationItem.quantity()));
+                lockedLot.setOnHandQuantity(lockedLot.getOnHandQuantity().subtract(creationItem.quantity()));
                 productWarehouseTransactionRepository.save(buildMarketplaceLotTransaction(
                         lockedLot,
                         ProductWarehouseTransactionType.MARKETPLACE_ORDER_RESERVED,
-                        cartItem.getQuantity().negate(),
+                        creationItem.quantity().negate(),
                         "ORDER",
                         orderGroup.getGroupCode(),
                         "Reserved for marketplace checkout",
@@ -954,7 +987,9 @@ public class MarketplaceService {
 
         marketplaceProductRepository.saveAll(lockedProducts);
         productWarehouseLotRepository.saveAll(lockedLots);
-        marketplaceCartItemRepository.deleteAllByCartId(cart.getId());
+        if (fromCart && cart != null) {
+            marketplaceCartItemRepository.deleteAllByCartId(cart.getId());
+        }
 
         // COD auto-advance: immediately move through PAYMENT_SUBMITTED → PAYMENT_VERIFIED
         if (request.paymentMethod() == MarketplacePaymentMethod.COD) {
@@ -1000,20 +1035,43 @@ public class MarketplaceService {
         User buyer = currentUserService.getCurrentUser();
         Long buyerUserId = buyer.getId();
 
-        MarketplaceCart cart = marketplaceCartRepository.findByUserIdForUpdate(buyerUserId)
-                .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_CART_EMPTY));
-        List<MarketplaceCartItem> cartItems = marketplaceCartItemRepository.findByCartIdWithProduct(cart.getId());
-        if (cartItems.isEmpty()) {
-            throw new AppException(ErrorCode.MARKETPLACE_CART_EMPTY);
+        List<OrderCreationItem> creationItems = new ArrayList<>();
+        if (request.items() != null && !request.items().isEmpty()) {
+            Collection<Long> productIds = request.items().stream()
+                    .map(MarketplaceCreateOrderRequest.MarketplaceOrderItemRequest::productId)
+                    .distinct()
+                    .collect(Collectors.toCollection(ArrayList::new));
+            List<MarketplaceProduct> products = marketplaceProductRepository.findAllById(productIds);
+            Map<Long, MarketplaceProduct> productById = products.stream()
+                    .collect(Collectors.toMap(MarketplaceProduct::getId, p -> p));
+
+            if (productById.size() != productIds.size()) {
+                throw new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND);
+            }
+
+            for (MarketplaceCreateOrderRequest.MarketplaceOrderItemRequest reqItem : request.items()) {
+                MarketplaceProduct prod = productById.get(reqItem.productId());
+                creationItems.add(new OrderCreationItem(prod, reqItem.quantity()));
+            }
+        } else {
+            MarketplaceCart cart = marketplaceCartRepository.findByUserIdForUpdate(buyerUserId)
+                    .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_CART_EMPTY));
+            List<MarketplaceCartItem> cartItems = marketplaceCartItemRepository.findByCartIdWithProduct(cart.getId());
+            if (cartItems.isEmpty()) {
+                throw new AppException(ErrorCode.MARKETPLACE_CART_EMPTY);
+            }
+            creationItems = cartItems.stream()
+                    .map(ci -> new OrderCreationItem(ci.getProduct(), ci.getQuantity()))
+                    .toList();
         }
 
         ShippingSnapshot shippingSnapshot = resolveShippingSnapshot(buyerUserId, request);
 
         // Group by farmer
-        Map<Long, List<MarketplaceCartItem>> groupedByFarmer = cartItems.stream()
-                .sorted(Comparator.comparing(ci -> ci.getProduct().getId()))
+        Map<Long, List<OrderCreationItem>> groupedByFarmer = creationItems.stream()
+                .sorted(Comparator.comparing(ci -> ci.product().getId()))
                 .collect(Collectors.groupingBy(
-                        ci -> ci.getProduct().getFarmerUser().getId(),
+                        ci -> ci.product().getFarmerUser().getId(),
                         LinkedHashMap::new,
                         Collectors.toList()));
 
@@ -1021,19 +1079,19 @@ public class MarketplaceService {
         BigDecimal grandShippingFee = BigDecimal.ZERO;
         List<MarketplaceOrderPreviewResponse.SellerGroup> sellerGroups = new ArrayList<>();
 
-        for (Map.Entry<Long, List<MarketplaceCartItem>> entry : groupedByFarmer.entrySet()) {
-            List<MarketplaceCartItem> sellerItems = entry.getValue();
-            MarketplaceProduct firstProduct = sellerItems.getFirst().getProduct();
+        for (Map.Entry<Long, List<OrderCreationItem>> entry : groupedByFarmer.entrySet()) {
+            List<OrderCreationItem> sellerItems = entry.getValue();
+            MarketplaceProduct firstProduct = sellerItems.getFirst().product();
             User farmer = firstProduct.getFarmerUser();
             Farm farm = firstProduct.getFarm();
 
             BigDecimal sellerSubtotal = BigDecimal.ZERO;
             List<MarketplaceOrderPreviewResponse.PreviewItem> previewItems = new ArrayList<>();
 
-            for (MarketplaceCartItem item : sellerItems) {
-                MarketplaceProduct product = item.getProduct();
+            for (OrderCreationItem item : sellerItems) {
+                MarketplaceProduct product = item.product();
                 BigDecimal unitPrice = product.getPrice();
-                BigDecimal lineTotal = unitPrice.multiply(item.getQuantity());
+                BigDecimal lineTotal = unitPrice.multiply(item.quantity());
                 sellerSubtotal = sellerSubtotal.add(lineTotal);
 
                 previewItems.add(new MarketplaceOrderPreviewResponse.PreviewItem(
@@ -1042,7 +1100,7 @@ public class MarketplaceService {
                         product.getName(),
                         product.getImageUrl(),
                         unitPrice,
-                        item.getQuantity(),
+                        item.quantity(),
                         lineTotal,
                         Boolean.TRUE.equals(product.getTraceable())));
             }
@@ -1963,7 +2021,7 @@ public class MarketplaceService {
         return normalizeNullable(payloadIdempotencyKey);
     }
 
-    private String buildOrderFingerprint(MarketplaceCreateOrderRequest request, List<MarketplaceCartItem> cartItems) {
+    private String buildOrderFingerprint(MarketplaceCreateOrderRequest request, List<OrderCreationItem> creationItems) {
         try {
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("paymentMethod", request.paymentMethod());
@@ -1973,16 +2031,16 @@ public class MarketplaceService {
             payload.put("shippingAddressLine", normalizeNullable(request.shippingAddressLine()));
             payload.put("note", normalizeNullable(request.note()));
 
-            List<Map<String, Object>> cartSnapshot = cartItems.stream()
-                    .sorted(Comparator.comparing(ci -> ci.getProduct().getId()))
+            List<Map<String, Object>> itemsSnapshot = creationItems.stream()
+                    .sorted(Comparator.comparing(ci -> ci.product().getId()))
                     .map(ci -> {
                         Map<String, Object> item = new LinkedHashMap<>();
-                        item.put("productId", ci.getProduct().getId());
-                        item.put("quantity", ci.getQuantity());
+                        item.put("productId", ci.product().getId());
+                        item.put("quantity", ci.quantity());
                         return item;
                     })
                     .toList();
-            payload.put("cart", cartSnapshot);
+            payload.put("items", itemsSnapshot);
 
             String json = objectMapper.writeValueAsString(payload);
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

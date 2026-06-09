@@ -335,6 +335,10 @@ export type MarketplaceCreateOrderRequest = {
   shippingAddressLine?: string;
   note?: string;
   idempotencyKey: string;
+  items?: Array<{
+    productId: number;
+    quantity: number;
+  }>;
 };
 
 export type MarketplaceAddressUpsertRequest = {

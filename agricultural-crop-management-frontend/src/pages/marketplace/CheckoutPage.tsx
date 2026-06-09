@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Banknote, Building2, MapPin, Pencil, Phone, Plus, Trash2, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib";
@@ -9,6 +9,8 @@ import type {
   MarketplaceAddress,
   MarketplaceAddressUpsertRequest,
   MarketplacePaymentMethod,
+  MarketplaceCart,
+  MarketplaceCartItem,
 } from "@/shared/api";
 import {
   useCheckoutValidation,
@@ -109,7 +111,20 @@ function isAddressFormValid(form: AddressFormState): boolean {
 
 export function CheckoutPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
+
+  const buyNowItem = location.state?.buyNowItem as {
+    productId: number;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    farmerUserId: number;
+    farmerName: string | null;
+    imageUrl: string;
+    slug: string;
+    traceable: boolean;
+  } | undefined;
 
   const cartQuery = useMarketplaceCart();
   const addressesQuery = useMarketplaceAddresses();
@@ -133,7 +148,41 @@ export function CheckoutPage() {
   const [addressForm, setAddressForm] = useState<AddressFormState>(() => emptyAddressForm());
   const [addressFormMessage, setAddressFormMessage] = useState<string | null>(null);
 
-  const cart = cartQuery.data;
+  const mockCart = useMemo<MarketplaceCart | undefined>(() => {
+    if (!buyNowItem) return undefined;
+    const items: MarketplaceCartItem[] = [
+      {
+        productId: buyNowItem.productId,
+        slug: buyNowItem.slug,
+        name: buyNowItem.name,
+        imageUrl: buyNowItem.imageUrl,
+        unitPrice: buyNowItem.unitPrice,
+        quantity: buyNowItem.quantity,
+        maxQuantity: buyNowItem.quantity,
+        farmerUserId: buyNowItem.farmerUserId,
+        traceable: buyNowItem.traceable,
+      },
+    ];
+    return {
+      userId: 0,
+      items,
+      sellerGroups: [
+        {
+          farmerUserId: buyNowItem.farmerUserId,
+          farmerName: buyNowItem.farmerName,
+          farmId: null,
+          farmName: buyNowItem.farmerName,
+          items,
+          subtotal: buyNowItem.unitPrice * buyNowItem.quantity,
+        },
+      ],
+      itemCount: buyNowItem.quantity,
+      subtotal: buyNowItem.unitPrice * buyNowItem.quantity,
+      currency: "VND",
+    };
+  }, [buyNowItem]);
+
+  const cart = mockCart ?? cartQuery.data;
   const cartFingerprint = useMemo(() => buildCartFingerprint(cart), [cart]);
   const lastCartFingerprintRef = useRef<string>("");
 
@@ -223,7 +272,7 @@ export function CheckoutPage() {
       ? addressLine.trim() || draftAddressLine
       : resolveShippingAddressLine(selectedAddress, addressLine);
 
-  if (cartQuery.isLoading) {
+  if (cartQuery.isLoading && !buyNowItem) {
     return (
       <div className="max-w-[1800px] mx-auto px-6 pt-6">
         <BackButton to="/marketplace/cart" className="mb-4 w-fit" />
@@ -234,7 +283,7 @@ export function CheckoutPage() {
     );
   }
 
-  if (cartQuery.isError) {
+  if (cartQuery.isError && !buyNowItem) {
     return (
       <div className="max-w-[1800px] mx-auto px-6 pt-6">
         <BackButton to="/marketplace/cart" className="mb-4 w-fit" />
@@ -331,7 +380,8 @@ export function CheckoutPage() {
   return (
     <div className="max-w-[1800px] mx-auto px-6 pt-6">
       <BackButton
-        to="/marketplace/cart"
+        to={buyNowItem ? undefined : "/marketplace/cart"}
+        onClick={buyNowItem ? () => navigate(-1) : undefined}
         confirmOnLeave={isCheckoutDirty}
         className="mb-4 w-fit"
       />
@@ -778,6 +828,7 @@ export function CheckoutPage() {
                       shippingAddressLine: effectiveShippingAddressLine ?? '',
                       note: note.trim() || undefined,
                       idempotencyKey: checkoutIdempotencyKey,
+                      items: buyNowItem ? [{ productId: buyNowItem.productId, quantity: buyNowItem.quantity }] : undefined,
                     });
 
                     toast.success('Đặt hàng thành công.');

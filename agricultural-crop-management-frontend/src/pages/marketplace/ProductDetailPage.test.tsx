@@ -5,12 +5,30 @@ import { ProductDetailPage } from './ProductDetailPage';
 
 const mocks = vi.hoisted(() => ({
   openAssistant: vi.fn(),
+  navigate: vi.fn(),
 }));
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: 'vi' },
+    ready: true,
+  }),
+  initReactI18next: { type: '3rdParty', init: vi.fn() },
+}));
+
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return {
+    ...actual,
+    useNavigate: () => mocks.navigate,
+  };
+});
 
 vi.mock('@/features/auth', () => ({
   useAuth: () => ({
     isAuthenticated: true,
-    user: { role: 'buyer' },
+    user: { id: 1, role: 'buyer' },
   }),
 }));
 
@@ -86,7 +104,7 @@ function renderPage() {
   );
 }
 
-describe('ProductDetailPage buyer AI entrypoint', () => {
+describe('ProductDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -101,5 +119,29 @@ describe('ProductDetailPage buyer AI entrypoint', () => {
       prompt: expect.stringContaining('Có nên mua sản phẩm này không?'),
     });
     expect(mocks.openAssistant.mock.calls[0][0].context).toContain('Mã lô: LOT-10');
+  });
+
+  it('navigates to checkout with buyNowItem in state when Mua ngay is clicked', async () => {
+    renderPage();
+
+    const buyButtons = screen.getAllByRole('button', { name: /Mua ngay/i });
+    expect(buyButtons.length).toBeGreaterThan(0);
+    fireEvent.click(buyButtons[0]);
+
+    expect(mocks.navigate).toHaveBeenCalledWith('/marketplace/checkout', {
+      state: {
+        buyNowItem: {
+          productId: 10,
+          name: 'Đậu đen hữu cơ',
+          quantity: 1,
+          unitPrice: 55000,
+          farmerUserId: 2,
+          farmerName: 'Nông trại xanh',
+          imageUrl: '/black-beans.jpg',
+          slug: 'black-beans',
+          traceable: true,
+        },
+      },
+    });
   });
 });

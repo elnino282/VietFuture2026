@@ -279,15 +279,26 @@ export function ProductDetailPage() {
                   <button
                     type="button"
                     className="pdp__cta-btn pdp__cta-btn--buy"
-                    disabled={isAdding || product.availableQuantity <= 0}
-                    onClick={async () => {
-                      const mode = await addToCart(product.id, quantity);
-                      if (mode === "server") {
-                        navigate("/marketplace/cart");
-                      }
+                    disabled={product.availableQuantity <= 0}
+                    onClick={() => {
+                      navigate("/marketplace/checkout", {
+                        state: {
+                          buyNowItem: {
+                            productId: product.id,
+                            name: product.name,
+                            quantity: quantityValue,
+                            unitPrice: product.price,
+                            farmerUserId: product.farmerUserId,
+                            farmerName: product.farmName ?? product.farmerDisplayName,
+                            imageUrl: product.imageUrl,
+                            slug: product.slug,
+                            traceable: product.traceable,
+                          },
+                        },
+                      });
                     }}
                   >
-                    {isAdding ? "Đang xử lý..." : "Mua ngay"}
+                    Mua ngay
                   </button>
                   {canUseBuyerAi && (
                     <button
@@ -513,15 +524,26 @@ export function ProductDetailPage() {
           <button
             type="button"
             className="pdp__cta-btn pdp__cta-btn--buy"
-            disabled={isAdding || product.availableQuantity <= 0}
-            onClick={async () => {
-              const mode = await addToCart(product.id, quantity);
-              if (mode === "server") {
-                navigate("/marketplace/cart");
-              }
+            disabled={product.availableQuantity <= 0}
+            onClick={() => {
+              navigate("/marketplace/checkout", {
+                state: {
+                  buyNowItem: {
+                    productId: product.id,
+                    name: product.name,
+                    quantity: quantityValue,
+                    unitPrice: product.price,
+                    farmerUserId: product.farmerUserId,
+                    farmerName: product.farmName ?? product.farmerDisplayName,
+                    imageUrl: product.imageUrl,
+                    slug: product.slug,
+                    traceable: product.traceable,
+                  },
+                },
+              });
             }}
           >
-            {isAdding ? "Đang xử lý..." : "Mua ngay"}
+            Mua ngay
           </button>
         </div>
       )}
