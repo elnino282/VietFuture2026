@@ -5185,9 +5185,9 @@
       "tryAgain": "Thử lại"
     },
     "tabs": {
-      "brand": "KHÔNG GIAN LÀM VIỆC (WORKSPACE)",
-      "title": "Không gian sàn thương mại",
-      "ariaLabel": "Tab người bán sàn thương mại",
+      "brand": "Bán hàng",
+      "title": "Workspace bán hàng",
+      "ariaLabel": "Không gian bán hàng",
       "items": {
         "overview": {
           "label": "Tổng quan",
@@ -5207,10 +5207,20 @@
       "title": "Quản lý sản phẩm",
       "subtitle": "Đăng bán, kiểm duyệt và quản lý tồn kho sản phẩm trên sàn.",
       "addProduct": "Thêm sản phẩm",
-      "searchPlaceholder": "Tìm kiếm sản phẩm...",
+      "searchLabel": "Tìm sản phẩm",
+      "searchPlaceholder": "Tìm theo tên, mô tả hoặc danh mục...",
+      "statusLabel": "Trạng thái",
+      "mobileListLabel": "Danh sách sản phẩm dạng thẻ",
       "loading": "Đang tải sản phẩm...",
       "emptyFiltered": "Không tìm thấy sản phẩm phù hợp với bộ lọc.",
-      "loadError": "Không thể tải danh sách sản phẩm."
+      "emptyTitle": "Chưa có sản phẩm phù hợp",
+      "emptyDescription": "Thử đổi bộ lọc hoặc thêm sản phẩm mới để khách hàng có thể đặt mua.",
+      "loadError": "Không thể tải danh sách sản phẩm.",
+      "actions": {
+        "hide": "Ẩn sản phẩm",
+        "show": "Hiện sản phẩm",
+        "edit": "Sửa sản phẩm"
+      }
     },
     "filters": {
       "allStatuses": "Tất cả trạng thái"
@@ -5300,9 +5310,11 @@
       "subtitle": "Theo dõi đơn mua, kiểm soát chuyển trạng thái và mở chi tiết đơn để xử lý.",
       "error": "Không thể tải danh sách đơn hàng người bán.",
       "empty": "Không có đơn nào khớp với bộ lọc hiện tại.",
+      "mobileListLabel": "Danh sách đơn hàng dạng thẻ",
       "filters": {
         "all": "Tất cả",
-        "ariaLabel": "Bộ lọc trạng thái đơn hàng"
+        "ariaLabel": "Bộ lọc trạng thái đơn hàng",
+        "label": "Lọc đơn hàng"
       },
       "table": {
         "orderCode": "Mã đơn",

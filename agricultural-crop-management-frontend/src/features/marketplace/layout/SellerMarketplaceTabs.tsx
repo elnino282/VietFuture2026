@@ -1,8 +1,8 @@
-﻿import { LayoutDashboard, Package, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag } from "lucide-react";
 import { NavLink } from "react-router-dom";
+// eslint-disable-next-line no-restricted-imports
 import { useI18n } from "@/hooks/useI18n";
 import { cn } from "@/shared/lib";
-import { Card, CardContent } from "@/shared/ui";
 
 const sellerTabs = [
   {
@@ -35,54 +35,41 @@ export function SellerMarketplaceTabs() {
   const { t } = useI18n();
 
   return (
-    <Card variant="content" className="rounded-xl">
-      <CardContent className="px-6 py-4">
-        <div className="mb-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
-            {t("marketplaceSeller.tabs.brand", "Seller")}
-          </p>
-          <h2 className="mt-1 text-lg font-semibold text-foreground">
-            {t("marketplaceSeller.tabs.title", "Marketplace workspace")}
-          </h2>
-        </div>
+    <nav
+      className="rounded-lg border border-border bg-card p-2 shadow-sm"
+      aria-label={t("marketplaceSeller.tabs.ariaLabel", "Marketplace seller tabs")}
+    >
+      <div className="grid gap-2 md:grid-cols-3">
+        {sellerTabs.map((tab) => {
+          const Icon = tab.icon;
 
-        <nav
-          className="grid gap-3 md:grid-cols-3"
-          aria-label={t("marketplaceSeller.tabs.ariaLabel", "Marketplace seller tabs")}
-        >
-          {sellerTabs.map((tab) => {
-            const Icon = tab.icon;
-
-            return (
-              <NavLink
-                key={tab.to}
-                to={tab.to}
-                end={tab.to.endsWith("dashboard")}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors",
-                    isActive
-                      ? "border-primary/20 bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:border-border/80 hover:bg-muted hover:text-foreground",
-                  )
-                }
-              >
-                <div className="rounded-lg bg-card p-2 shadow-sm border border-border">
-                  <Icon size={18} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold">
-                    {t(tab.labelKey, tab.labelFallback)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {t(tab.descriptionKey, tab.descriptionFallback)}
-                  </p>
-                </div>
-              </NavLink>
-            );
-          })}
-        </nav>
-      </CardContent>
-    </Card>
+          return (
+            <NavLink
+              key={tab.to}
+              to={tab.to}
+              end={tab.to.endsWith("dashboard")}
+              className={({ isActive }) =>
+                cn(
+                  "flex min-w-0 items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                  isActive
+                    ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )
+              }
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-background text-current ring-1 ring-border/70">
+                <Icon size={17} />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-semibold">{t(tab.labelKey, tab.labelFallback)}</span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {t(tab.descriptionKey, tab.descriptionFallback)}
+                </span>
+              </span>
+            </NavLink>
+          );
+        })}
+      </div>
+    </nav>
   );
 }

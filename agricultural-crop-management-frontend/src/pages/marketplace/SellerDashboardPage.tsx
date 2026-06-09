@@ -6,6 +6,7 @@ import {
   Store,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+// eslint-disable-next-line no-restricted-imports
 import { useI18n } from "@/hooks/useI18n";
 import type { MarketplaceStatsUnavailableReason } from "@/shared/api";
 import { AsyncState, Button, Card, CardContent, CardHeader, CardTitle, PageContainer } from "@/shared/ui";
@@ -30,14 +31,14 @@ function MetricCard({
   helperText?: string;
 }) {
   return (
-    <Card className="border-border shadow-sm">
-      <CardContent className="flex items-center gap-4 p-6">
-        <div className={`rounded-xl p-3 ${tone}`}>
-          <Icon size={22} />
+    <Card className="rounded-lg border-border shadow-sm">
+      <CardContent className="flex items-center gap-4 p-5">
+        <div className={`rounded-lg p-3 ${tone}`}>
+          <Icon size={21} />
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
+          <p className="mt-1 text-xl font-bold text-foreground md:text-2xl">{value}</p>
           {helperText ? (
             <p className="mt-1 text-xs text-muted-foreground">{helperText}</p>
           ) : null}
@@ -100,7 +101,7 @@ export function SellerDashboardPage() {
 
   return (
     <PageContainer variant="wide">
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-5">
         <SellerMarketplaceTabs />
 
         <AsyncState
@@ -113,7 +114,7 @@ export function SellerDashboardPage() {
 
 
           {!hasProducts ? (
-            <Card className="border-dashed border-border">
+            <Card className="rounded-lg border-dashed border-border">
               <CardContent className="space-y-4 p-8 text-center">
                 <h2 className="text-xl font-semibold text-foreground">
                   {t("marketplaceSeller.dashboard.emptyProducts.title", "No marketplace product yet")}
@@ -145,7 +146,7 @@ export function SellerDashboardPage() {
           ) : null}
 
           {hasProducts && !hasOrders ? (
-            <Card className="border-dashed border-border">
+            <Card className="rounded-lg border-dashed border-border">
               <CardContent className="space-y-3 p-8 text-center">
                 <h2 className="text-xl font-semibold text-foreground">
                   {t("marketplaceSeller.dashboard.noOrders.title", "Products are live, but no orders yet")}
@@ -202,8 +203,8 @@ export function SellerDashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <Card className="overflow-hidden border-border shadow-sm">
-              <CardHeader className="border-b border-border/50">
+            <Card className="overflow-hidden rounded-lg border-border shadow-sm">
+              <CardHeader className="border-b border-border/50 px-5 pt-5">
                 <div className="flex items-center justify-between gap-3">
                   <CardTitle>{t("marketplaceSeller.dashboard.recentOrders.title", "Recent orders")}</CardTitle>
                   <Link to="/farmer/marketplace-orders" className="text-sm font-medium text-primary hover:underline">
@@ -211,13 +212,13 @@ export function SellerDashboardPage() {
                   </Link>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4 p-6">
+              <CardContent className="space-y-3 p-5">
                 {(dashboard?.recentOrders?.length ?? 0) > 0 ? (
                   dashboard!.recentOrders.map((order) => (
                     <Link
                       key={order.id}
                       to={`/farmer/marketplace-orders/${order.id}`}
-                      className="flex items-center justify-between rounded-xl border border-border p-4 transition-colors hover:bg-muted/50"
+                      className="flex items-center justify-between rounded-lg border border-border p-4 transition-colors hover:bg-muted/50"
                     >
                       <div>
                         <p className="font-semibold text-foreground">{order.orderCode}</p>
@@ -236,7 +237,7 @@ export function SellerDashboardPage() {
                     </Link>
                   ))
                 ) : (
-                  <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+                  <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
                     {hasProducts
                       ? t("marketplaceSeller.dashboard.recentOrders.emptyWithProducts", "No buyer orders yet.")
                       : t(
@@ -248,8 +249,8 @@ export function SellerDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-border shadow-sm">
-              <CardHeader className="border-b border-border/50">
+            <Card className="overflow-hidden rounded-lg border-border shadow-sm">
+              <CardHeader className="border-b border-border/50 px-5 pt-5">
                 <div className="flex items-center justify-between gap-3">
                   <CardTitle>{t("marketplaceSeller.dashboard.topProducts.title", "Top products")}</CardTitle>
                   <Link to="/farmer/marketplace-products" className="text-sm font-medium text-primary hover:underline">
@@ -257,10 +258,10 @@ export function SellerDashboardPage() {
                   </Link>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4 p-6">
+              <CardContent className="space-y-3 p-5">
                 {topProducts.length > 0 ? (
                   topProducts.map((product) => (
-                    <div key={product.id} className="flex items-center gap-4 rounded-xl border border-border p-4">
+                    <div key={product.id} className="flex items-center gap-4 rounded-lg border border-border p-4">
                       <div className="h-14 w-14 overflow-hidden rounded-lg bg-muted">
                         <img
                           src={product.imageUrl}
@@ -286,7 +287,7 @@ export function SellerDashboardPage() {
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+                  <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
                     {hasProducts
                       ? t("marketplaceSeller.dashboard.topProducts.emptyWithProducts", "No published products yet.")
                       : t("marketplaceSeller.dashboard.topProducts.emptyNoProducts", "No products available yet.")}

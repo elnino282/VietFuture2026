@@ -5183,7 +5183,7 @@
     "tabs": {
       "brand": "Seller",
       "title": "Marketplace workspace",
-      "ariaLabel": "Marketplace seller tabs",
+      "ariaLabel": "Seller workspace",
       "items": {
         "overview": {
           "label": "Overview",
@@ -5203,10 +5203,20 @@
       "title": "Manage products",
       "subtitle": "List, moderate, and manage stock for your marketplace products.",
       "addProduct": "Add product",
-      "searchPlaceholder": "Search your listings...",
+      "searchLabel": "Search products",
+      "searchPlaceholder": "Search by name, description, or category...",
+      "statusLabel": "Status",
+      "mobileListLabel": "Product card list",
       "loading": "Loading products...",
       "emptyFiltered": "No products matched your current filters.",
-      "loadError": "Failed to load seller products."
+      "emptyTitle": "No matching products",
+      "emptyDescription": "Adjust filters or add a new product so customers can place orders.",
+      "loadError": "Failed to load seller products.",
+      "actions": {
+        "hide": "Hide product",
+        "show": "Show product",
+        "edit": "Edit product"
+      }
     },
     "filters": {
       "allStatuses": "All statuses"
@@ -5296,9 +5306,11 @@
       "subtitle": "Track buyer orders, monitor status transitions, and open order details for fulfillment.",
       "error": "Failed to load seller orders.",
       "empty": "No orders matched the current filter.",
+      "mobileListLabel": "Order card list",
       "filters": {
         "all": "All",
-        "ariaLabel": "Order status filters"
+        "ariaLabel": "Order status filters",
+        "label": "Filter orders"
       },
       "table": {
         "orderCode": "Order code",
@@ -6486,9 +6498,9 @@
       "tryAgain": "Try again"
     },
     "tabs": {
-      "brand": "WORKSPACE",
+      "brand": "Seller",
       "title": "Marketplace workspace",
-      "ariaLabel": "Seller marketplace tabs",
+      "ariaLabel": "Seller workspace",
       "items": {
         "overview": {
           "label": "Overview",
@@ -6496,22 +6508,32 @@
         },
         "products": {
           "label": "Products",
-          "description": "Listings and inventory"
+          "description": "Listings and stock"
         },
         "orders": {
           "label": "Orders",
-          "description": "Customer orders"
+          "description": "Buyer orders"
         }
       }
     },
     "products": {
-      "title": "Product management",
-      "subtitle": "Publish, review, and manage inventory for marketplace products.",
+      "title": "Manage products",
+      "subtitle": "List, moderate, and manage stock for your marketplace products.",
       "addProduct": "Add product",
-      "searchPlaceholder": "Search products...",
+      "searchLabel": "Search products",
+      "searchPlaceholder": "Search by name, description, or category...",
+      "statusLabel": "Status",
+      "mobileListLabel": "Product card list",
       "loading": "Loading products...",
       "emptyFiltered": "No products match the current filters.",
-      "loadError": "Failed to load products list."
+      "emptyTitle": "No matching products",
+      "emptyDescription": "Adjust filters or add a new product so customers can place orders.",
+      "loadError": "Failed to load products list.",
+      "actions": {
+        "hide": "Hide product",
+        "show": "Show product",
+        "edit": "Edit product"
+      }
     },
     "filters": {
       "allStatuses": "All statuses"
@@ -6597,13 +6619,15 @@
       }
     },
     "orders": {
-      "title": "Order management",
-      "subtitle": "Track orders, manage status transitions, and open order details.",
+      "title": "Manage orders",
+      "subtitle": "Track buyer orders, monitor status transitions, and open order details for fulfillment.",
       "error": "Failed to load seller orders.",
       "empty": "No orders match the current filters.",
+      "mobileListLabel": "Order card list",
       "filters": {
         "all": "All",
-        "ariaLabel": "Order status filter"
+        "ariaLabel": "Order status filters",
+        "label": "Filter orders"
       },
       "table": {
         "orderCode": "Order code",
