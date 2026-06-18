@@ -27,6 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatForm = document.getElementById("chatForm");
     const userInput = document.getElementById("userInput");
     const chatMessages = document.getElementById("chatMessages");
+    const newChatBtn = document.getElementById("newChatBtn");
+    const sidebarNewChatBtn = document.getElementById("sidebarNewChatBtn");
     
     const toastElement = document.getElementById("toast");
     const welcomeTime = document.getElementById("welcomeTime");
@@ -437,5 +439,51 @@ document.addEventListener("DOMContentLoaded", () => {
         toastTimeout = setTimeout(() => {
             toastElement.classList.add("hidden");
         }, 4000);
+    }
+
+    /* ==========================================================================
+       8. New Chat Action Implementation
+       ========================================================================== */
+    function startNewChat() {
+        // Clear chat messages
+        chatMessages.innerHTML = "";
+        
+        // Create new welcome message
+        const welcomeMessageHtml = `
+            <div class="message message-ai">
+                <div class="message-avatar">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="message-content-wrapper">
+                    <div class="message-bubble">
+                        <p>Xin chào! Tôi là trợ lý AI của FarmTrace. Tôi có thể hỗ trợ bạn tìm kiếm và trả lời các câu hỏi liên quan đến tiêu chuẩn VietGAP hoặc hệ thống FarmTrace.</p>
+                        <p>Hãy chọn một câu hỏi gợi ý bên trái hoặc nhập câu hỏi của bạn dưới đây!</p>
+                    </div>
+                    <span class="message-time">${formatTime(new Date())}</span>
+                </div>
+            </div>
+        `;
+        chatMessages.innerHTML = welcomeMessageHtml;
+        
+        // Show success toast
+        showToast("Đã bắt đầu cuộc hội thoại mới", "success");
+
+        // Clear user input and focus
+        userInput.value = "";
+        userInput.focus();
+    }
+
+    if (newChatBtn) {
+        newChatBtn.addEventListener("click", startNewChat);
+    }
+    
+    if (sidebarNewChatBtn) {
+        sidebarNewChatBtn.addEventListener("click", () => {
+            startNewChat();
+            // On mobile devices, close sidebar automatically after starting a new chat
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove("active");
+            }
+        });
     }
 });
