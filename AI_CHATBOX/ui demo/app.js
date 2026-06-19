@@ -317,14 +317,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const pageText = src.page !== null && src.page !== undefined ? `<span class="source-page">Trang ${src.page}</span>` : "";
                 
-                // Get filename only from path
-                const filename = src.source.split(/[/\\]/).pop();
+                const filename = src.file_name || "Tài liệu";
+                const heading = src.heading ? ` > ${src.heading}` : "";
+                const sourceTitle = `${filename}${heading}`;
 
                 sourceCard.innerHTML = `
                     <div class="source-card-header">
                         <div class="source-title-wrapper">
                             <i class="fa-solid fa-file-lines source-icon"></i>
-                            <span class="source-title" title="${src.source}">${filename}</span>
+                            <span class="source-title" title="${escapeHTML(sourceTitle)}">${escapeHTML(sourceTitle)}</span>
                         </div>
                         ${pageText}
                     </div>

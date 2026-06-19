@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from app.constants import MAX_PROMPT_CHUNK_CHARS
 from app.config import settings
 from app.prompts.system_prompt import SYSTEM_PROMPT, RAG_PROMPT_TEMPLATE
 from app.schemas.chat_schema import SourceDocument
@@ -8,13 +9,13 @@ from app.services.ollama_service import OllamaService
 from app.services.rag_retrieval import (
     INSUFFICIENT_DATA_MESSAGE,
     RetrievedContext,
-    append_backend_citations,
     detect_intent,
     expand_query,
     is_insufficient_answer,
     normalize_text,
     select_best_contexts,
 )
+from app.services.source_sanitizer import sanitize_prompt_content, sanitize_public_snippet
 from app.vectorstore.chroma_store import ChromaStore
 
 logger = logging.getLogger(__name__)
@@ -128,17 +129,16 @@ class RagService:
 
         context_parts: List[str] = []
         total_chars = 0
-        for index, context in enumerate(contexts, start=1):
+        for index, context in enumerate(contexts[:5], start=1):
             doc = context.doc
-            source = doc.metadata.get("source", "unknown")
-            file_name = doc.metadata.get("file_name") or source
             heading = doc.metadata.get("heading") or "Tài liệu"
-            score = f", distance {context.score:.4f}" if context.score is not None else ""
-            page = doc.metadata.get("page")
-            page_text = f", trang {page + 1}" if isinstance(page, int) else ""
+            content = sanitize_prompt_content(doc.page_content, max_chars=MAX_PROMPT_CHUNK_CHARS)
+            if not content:
+                continue
             part = (
-                f"[Nguồn {index}: {file_name} | {heading}{page_text}{score}]\n"
-                f"{doc.page_content}"
+                f"[TÀI LIỆU {index}]\n"
+                f"Tiêu đề: {heading}\n"
+                f"{content}"
             )
 
             if total_chars + len(part) > settings.MAX_CONTEXT_CHARS:
@@ -161,24 +161,37 @@ class RagService:
 
     def _build_sources(self, contexts: list[RetrievedContext]) -> List[SourceDocument]:
         sources: List[SourceDocument] = []
+        seen: set[tuple[str | None, str | None]] = set()
         for context in contexts:
             doc = context.doc
-            content = " ".join(doc.page_content.split())
-            snippet = content[:260] + "..." if len(content) > 260 else content
+            file_name = self._safe_file_name(doc.metadata)
+            heading = doc.metadata.get("heading") or "Tài liệu"
+            key = (file_name, heading)
+            if key in seen:
+                continue
+            seen.add(key)
+
+            snippet = sanitize_public_snippet(doc.page_content)
             page = doc.metadata.get("page")
             sources.append(
                 SourceDocument(
-                    source=doc.metadata.get("source", "unknown"),
-                    page=page + 1 if isinstance(page, int) else None,
                     snippet=snippet,
-                    file_name=doc.metadata.get("file_name"),
-                    category=doc.metadata.get("category"),
-                    heading=doc.metadata.get("heading"),
-                    chunk_id=doc.metadata.get("chunk_id"),
-                    score=context.score,
+                    file_name=file_name,
+                    heading=heading,
+                    page=page + 1 if isinstance(page, int) else None,
                 )
             )
         return sources
+
+    @staticmethod
+    def _safe_file_name(metadata: dict) -> str:
+        raw = metadata.get("file_name") or metadata.get("source") or "Tài liệu"
+        value = str(raw).replace("\\", "/").rstrip("/")
+        if "://" in value:
+            value = value.split("?")[0].rstrip("/").split("/")[-1]
+        else:
+            value = value.split("/")[-1]
+        return value or "Tài liệu"
 
     def _build_extractive_answer(self, question: str, contexts: list[RetrievedContext]) -> str:
         query_terms = {
@@ -246,10 +259,11 @@ class RagService:
         if is_insufficient_answer(answer):
             logger.info("Model returned insufficient-data response with selected contexts; using extractive fallback")
             answer = self._build_extractive_answer(question, contexts)
-        answer = append_backend_citations(answer, contexts)
+        answer = answer.strip()
+        sources = [] if is_insufficient_answer(answer) else self._build_sources(contexts)
         logger.info("Generated answer: %d chars", len(answer))
 
         return {
             "answer": answer,
-            "sources": self._build_sources(contexts),
+            "sources": sources,
         }

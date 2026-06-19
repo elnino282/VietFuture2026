@@ -23,5 +23,6 @@ if __name__ == "__main__":
         if result["sources"]:
             print("\nNguồn tham khảo:")
             for source in result["sources"]:
+                heading = f" > {source.heading}" if source.heading else ""
                 page = f" - page {source.page}" if source.page else ""
-                print(f"- {source.source}{page}")
+                print(f"- {source.file_name}{heading}{page}")

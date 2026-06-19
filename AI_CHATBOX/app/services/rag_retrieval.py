@@ -6,8 +6,8 @@ from typing import Iterable, List, Optional
 
 from langchain_core.documents import Document
 
+from app.constants import INSUFFICIENT_DATA_MESSAGE
 
-INSUFFICIENT_DATA_MESSAGE = "Tôi chưa có đủ dữ liệu trong tài liệu hiện tại."
 HIGH_CONFIDENCE_MIN_HITS = 2
 
 
@@ -146,31 +146,6 @@ def select_best_contexts(
         if len(selected) >= top_k:
             break
     return selected
-
-
-def format_citation(doc: Document) -> str:
-    file_name = doc.metadata.get("file_name") or doc.metadata.get("source", "unknown")
-    heading = doc.metadata.get("heading") or "Tài liệu"
-    return f"Nguồn: {file_name} - {heading}"
-
-
-def append_backend_citations(answer: str, contexts: Iterable[RetrievedContext]) -> str:
-    cleaned_answer = answer.strip()
-    if is_insufficient_answer(cleaned_answer):
-        return INSUFFICIENT_DATA_MESSAGE
-
-    citations: list[str] = []
-    seen: set[str] = set()
-    for context in contexts:
-        citation = format_citation(context.doc)
-        if citation not in seen:
-            citations.append(citation)
-            seen.add(citation)
-
-    if not citations:
-        return cleaned_answer
-
-    return f"{cleaned_answer}\n\n" + "\n".join(f"- {citation}" for citation in citations)
 
 
 def is_insufficient_answer(answer: str) -> bool:

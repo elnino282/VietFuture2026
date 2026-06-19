@@ -9,14 +9,10 @@ class ChatRequest(BaseModel):
 
 
 class SourceDocument(BaseModel):
-    source: str
+    file_name: Optional[str] = None
+    heading: Optional[str] = None
     page: Optional[int] = None
     snippet: str
-    file_name: Optional[str] = None
-    category: Optional[str] = None
-    heading: Optional[str] = None
-    chunk_id: Optional[str] = None
-    score: Optional[float] = None
 
 
 class ChatResponse(BaseModel):

@@ -1,0 +1,4 @@
+INSUFFICIENT_DATA_MESSAGE = "Tôi chưa có đủ dữ liệu trong tài liệu hiện tại."
+
+MAX_PUBLIC_SNIPPET_CHARS = 200
+MAX_PROMPT_CHUNK_CHARS = 1400

@@ -82,9 +82,10 @@ Response:
   "answer": "...",
   "sources": [
     {
-      "source": "data/vietgap/vietgap.pdf",
+      "file_name": "vietgap.pdf",
+      "heading": "4.2 Nguồn nước",
       "page": 3,
-      "snippet": "..."
+      "snippet": "Nguồn nước tưới cần được kiểm soát..."
     }
   ]
 }
