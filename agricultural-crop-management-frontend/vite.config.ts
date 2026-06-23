@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
   const parsedPort = Number.parseInt(rawPort, 10);
   const port = Number.isFinite(parsedPort) ? parsedPort : 3000;
   const proxyTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:8080';
+  const aiProxyTarget = env.VITE_AI_API_PROXY_TARGET || 'http://localhost:8000';
 
   return {
     plugins: [tailwindcss(), react()],
@@ -77,6 +78,12 @@ export default defineConfig(({ mode }) => {
           target: proxyTarget,
           changeOrigin: true,
           secure: false,
+        },
+        '/ai-api': {
+          target: aiProxyTarget,
+          changeOrigin: true,
+          secure: false,
+          rewrite: (pathName) => pathName.replace(/^\/ai-api/, '/api'),
         },
       },
     },

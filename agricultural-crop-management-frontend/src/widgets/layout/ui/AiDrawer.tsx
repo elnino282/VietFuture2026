@@ -11,7 +11,7 @@ import {
     Textarea,
 } from '@/shared/ui';
 import { cn } from '@/shared/lib';
-import { useAiChatSession } from '@/features/ai';
+import { AiChatSources, useAiChatSession } from '@/features/ai';
 import { MarkdownMessage } from '@/components/MarkdownMessage';
 import type { AiDrawerProps } from '../model/types';
 
@@ -164,7 +164,10 @@ export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
                                                 {isUser ? (
                                                     <p className="whitespace-pre-wrap">{message.content}</p>
                                                 ) : (
-                                                    <MarkdownMessage content={message.content} />
+                                                    <>
+                                                        <MarkdownMessage content={message.content} />
+                                                        <AiChatSources sources={message.sources} />
+                                                    </>
                                                 )}
                                             </div>
                                         </div>

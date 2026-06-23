@@ -1,5 +1,5 @@
 ﻿import { MarkdownMessage } from '@/components/MarkdownMessage';
-import { useAiChatSession } from '@/features/ai';
+import { AiChatSources, useAiChatSession } from '@/features/ai';
 import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/shared/lib';
 import {
@@ -159,7 +159,10 @@ export function AiAssistantPage() {
                                                 {isUser ? (
                                                     <p className="whitespace-pre-wrap">{message.content}</p>
                                                 ) : (
-                                                    <MarkdownMessage content={message.content} />
+                                                    <>
+                                                        <MarkdownMessage content={message.content} />
+                                                        <AiChatSources sources={message.sources} />
+                                                    </>
                                                 )}
                                             </div>
                                             {isUser && (

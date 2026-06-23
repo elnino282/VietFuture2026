@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Bot, RotateCcw, Send, ShieldCheck, ShoppingBasket, Sparkles } from 'lucide-react';
 import { MarkdownMessage } from '@/components/MarkdownMessage';
-import { useBuyerAiChatSession } from '@/features/ai';
+import { AiChatSources, useBuyerAiChatSession } from '@/features/ai';
 import { cn } from '@/shared/lib';
 import {
   Button,
@@ -190,7 +190,10 @@ export function BuyerAiAssistantDrawer({
                         {isUser ? (
                           <p className="whitespace-pre-wrap">{message.content}</p>
                         ) : (
-                          <MarkdownMessage content={message.content} />
+                          <>
+                            <MarkdownMessage content={message.content} />
+                            <AiChatSources sources={message.sources} />
+                          </>
                         )}
                       </div>
                     </div>
