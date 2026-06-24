@@ -165,3 +165,94 @@ jobs:
           -Dflyway.locations=filesystem:src/main/resources/db/migration
           -Dflyway.schemas=quanlymuavu_ci
           -Dflyway.ignoreMigrationPatterns=*:pending
+
+  microservices:
+    name: Microservice (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - ai-service
+          - api-gateway
+    defaults:
+      run:
+        working-directory: ${{ matrix.service }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 23
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "23"
+          cache: maven
+
+      - name: Test
+        run: |
+          if [ -f "./mvnw" ]; then
+            chmod +x ./mvnw
+            MVN_CMD="./mvnw"
+          else
+            MVN_CMD="mvn"
+          fi
+
+          $MVN_CMD -q test
+
+  database-microservices:
+    name: DB Microservice (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: identity-service
+            database: identity_service_ci
+          - service: crop-catalog-service
+            database: crop_catalog_service_ci
+    defaults:
+      run:
+        working-directory: ${{ matrix.service }}
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: ${{ matrix.database }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DB_URL: jdbc:mysql://127.0.0.1:3306/${{ matrix.database }}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USER: root
+      DB_PASS: root
+      JWT_SIGNER_KEY: ci_signer_key_please_rotate_if_reused
+      JWT_JWKS_URI: http://localhost:8081/api/v1/auth/.well-known/jwks.json
+      MAIL_ENABLED: "false"
+      APP_AI_API_KEY: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 23
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "23"
+          cache: maven
+
+      - name: Test
+        run: |
+          if [ -f "./mvnw" ]; then
+            chmod +x ./mvnw
+            MVN_CMD="./mvnw"
+          else
+            MVN_CMD="mvn"
+          fi
+
+          $MVN_CMD -q test
