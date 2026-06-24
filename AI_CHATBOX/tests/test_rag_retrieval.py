@@ -160,7 +160,7 @@ class RagRetrievalTests(unittest.TestCase):
         self.assertNotIn("chunk_id", cleaned)
         self.assertNotIn("C:/private", cleaned)
 
-    def test_build_sources_returns_sanitized_public_schema_and_preserves_order(self):
+    def test_build_sources_returns_sanitized_public_schema_and_prefers_richer_snippets(self):
         doc_a = Document(
             page_content=(
                 "# QR\n"
@@ -186,8 +186,8 @@ class RagRetrievalTests(unittest.TestCase):
 
         sources = service._build_sources(
             [
-                RetrievedContext(doc=doc_a, score=0.1, query="q"),
-                RetrievedContext(doc=doc_b, score=0.2, query="q"),
+                RetrievedContext(doc=doc_a, score=0.1, query="q", adjusted_score=0.2),
+                RetrievedContext(doc=doc_b, score=0.2, query="q", adjusted_score=0.2),
                 RetrievedContext(doc=doc_a_duplicate, score=0.3, query="q"),
             ]
         )
@@ -195,9 +195,9 @@ class RagRetrievalTests(unittest.TestCase):
 
         self.assertEqual(len(dumped), 2)
         self.assertEqual(list(dumped[0].keys()), ["file_name", "heading", "page", "snippet"])
-        self.assertEqual(dumped[0]["file_name"], "faq.md")
-        self.assertEqual(dumped[0]["heading"], "QR")
-        self.assertEqual(dumped[1]["file_name"], "vietgap.md")
+        self.assertEqual(dumped[0]["file_name"], "vietgap.md")
+        self.assertEqual(dumped[0]["heading"], "Nguon nuoc")
+        self.assertEqual(dumped[1]["file_name"], "faq.md")
         self.assertNotIn("source", dumped[0])
         self.assertNotIn("chunk_id", dumped[0])
         self.assertNotIn("score", dumped[0])
@@ -226,7 +226,7 @@ class RagRetrievalTests(unittest.TestCase):
                 pass
 
             def _retrieve_contexts(self, question, top_k):
-                return []
+                return [], False
 
         service = EmptyService()
 
@@ -250,7 +250,7 @@ class RagRetrievalTests(unittest.TestCase):
                 self.ollama_service = FakeOllama()
 
             def _retrieve_contexts(self, question, top_k):
-                return [RetrievedContext(doc=doc, score=0.1, query=question)]
+                return [RetrievedContext(doc=doc, score=0.1, query=question)], False
 
         service = FakeService()
 
@@ -265,7 +265,7 @@ class RagRetrievalTests(unittest.TestCase):
             is_insufficient_answer("Tôi chưa có đủ dữ liệu trong tài liệu hiện tại để trả lời câu hỏi này.")
         )
 
-    def test_high_confidence_route_merges_filtered_and_all_category_candidates(self):
+    def test_high_confidence_route_uses_filtered_only_when_good_enough(self):
         class FakeStore:
             def __init__(self):
                 self.filters = []
@@ -273,18 +273,29 @@ class RagRetrievalTests(unittest.TestCase):
             def similarity_search_with_score(self, query, k, filter=None):
                 self.filters.append(filter)
                 if filter is not None:
-                    filtered_doc = Document(
-                        page_content="Noi dung filtered",
+                    filtered_doc_a = Document(
+                        page_content="VietGAP yeu cau nguon nuoc sach va ghi chep day du.",
                         metadata={
-                            "chunk_id": "vietgap:filtered",
+                            "category": "vietgap",
+                            "chunk_id": "vietgap:filtered-a",
                             "file_name": "vietgap.md",
-                            "heading": "Filtered",
+                            "heading": "Filtered A",
                         },
                     )
-                    return [(filtered_doc, 0.3)]
+                    filtered_doc_b = Document(
+                        page_content="Nguon nuoc trong VietGAP can duoc kiem soat khi san xuat.",
+                        metadata={
+                            "category": "vietgap",
+                            "chunk_id": "vietgap:filtered-b",
+                            "file_name": "vietgap.md",
+                            "heading": "Filtered B",
+                        },
+                    )
+                    return [(filtered_doc_a, 0.3), (filtered_doc_b, 0.31)]
                 all_doc = Document(
                     page_content="Noi dung all tot hon",
                     metadata={
+                        "category": "faq",
                         "chunk_id": "faq:all",
                         "file_name": "faq.md",
                         "heading": "All",
@@ -303,11 +314,12 @@ class RagRetrievalTests(unittest.TestCase):
         service = RagService.__new__(RagService)
         service.chroma_store = FakeStore()
 
-        contexts = service._retrieve_contexts("VietGAP yeu cau nguon nuoc nhu the nao?", top_k=2)
+        contexts, is_definition = service._retrieve_contexts("VietGAP yeu cau nguon nuoc nhu the nao?", top_k=2)
 
-        self.assertEqual([item.doc.metadata["heading"] for item in contexts], ["All", "Filtered"])
+        self.assertFalse(is_definition)
+        self.assertEqual([item.doc.metadata["heading"] for item in contexts], ["Filtered A", "Filtered B"])
         self.assertIn({"category": "vietgap"}, service.chroma_store.filters)
-        self.assertIn(None, service.chroma_store.filters)
+        self.assertNotIn(None, service.chroma_store.filters)
 
     def test_high_confidence_route_still_searches_all_when_filtered_has_one_good_context(self):
         class FakeStore:
@@ -331,8 +343,9 @@ class RagRetrievalTests(unittest.TestCase):
         service = RagService.__new__(RagService)
         service.chroma_store = FakeStore()
 
-        contexts = service._retrieve_contexts("VietGAP yeu cau nguon nuoc nhu the nao?", top_k=1)
+        contexts, is_definition = service._retrieve_contexts("VietGAP yeu cau nguon nuoc nhu the nao?", top_k=1)
 
+        self.assertFalse(is_definition)
         self.assertEqual(len(contexts), 1)
         self.assertIn({"category": "vietgap"}, service.chroma_store.filters)
         self.assertIn(None, service.chroma_store.filters)

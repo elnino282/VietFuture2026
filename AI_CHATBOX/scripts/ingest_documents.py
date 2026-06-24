@@ -16,5 +16,7 @@ if __name__ == "__main__":
     print(f"Files skipped  : {result['files_excluded_or_skipped']}")
     print(f"Heading chunks : {result['heading_chunks']}")
     print(f"Fallback chunks: {result['fallback_chunks']}")
+    print(f"Chunks before filter: {result['chunks_before_filter']}")
+    print(f"Low-value filtered  : {result['low_value_chunks_filtered']}")
     print(f"Chunks indexed : {result['chunks_indexed']}")
     print(f"Collection     : {result['collection_name']}")

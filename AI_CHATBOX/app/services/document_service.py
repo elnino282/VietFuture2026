@@ -6,6 +6,7 @@ import uuid
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from app.config import settings
+from app.services.rag_quality import analyze_document_quality
 from app.utils.file_loader import load_documents
 from app.vectorstore.chroma_store import ChromaStore
 
@@ -127,6 +128,28 @@ class DocumentService:
                 list(duplicates.items())[:5],
             )
 
+    @staticmethod
+    def _filter_low_value_chunks(chunks: list) -> tuple[list, int]:
+        filtered = []
+        low_value_count = 0
+
+        for chunk in chunks:
+            quality = analyze_document_quality(chunk)
+            if quality.is_low_value:
+                low_value_count += 1
+                logger.debug(
+                    "[INGEST-FILTER] drop low-value chunk_id=%s file=%s heading=%s reasons=%s chars=%d",
+                    chunk.metadata.get("chunk_id"),
+                    chunk.metadata.get("file_name") or chunk.metadata.get("source"),
+                    chunk.metadata.get("heading"),
+                    ",".join(quality.reasons),
+                    len(quality.clean_text),
+                )
+                continue
+            filtered.append(chunk)
+
+        return filtered, low_value_count
+
     def ingest(self, data_dir: str | None = None, reset: bool = False) -> dict:
         target_dir = Path(data_dir) if data_dir else settings.DATA_DIR
         if not target_dir.is_absolute():
@@ -163,18 +186,22 @@ class DocumentService:
         fallback_chunks = self.splitter.split_documents(fallback_documents)
         fallback_chunks = self._ensure_chunk_metadata(fallback_chunks)
 
-        chunks = self._split_oversized_documents(heading_chunks + fallback_chunks)
+        chunks_before_filter = self._split_oversized_documents(heading_chunks + fallback_chunks)
+        chunks, low_value_chunks_filtered = self._filter_low_value_chunks(chunks_before_filter)
         self._check_chunk_id_collisions(chunks)
 
         self.chroma_store.add_documents(chunks)
 
         logger.info(
             "[INGEST] files_loaded=%d files_excluded_or_skipped=%d heading_chunks=%d "
-            "fallback_chunks=%d chunks_indexed=%d collection=%s reset=%s",
+            "fallback_chunks=%d chunks_before_filter=%d low_value_chunks_filtered=%d "
+            "chunks_indexed=%d collection=%s reset=%s",
             len(loaded_sources),
             files_excluded_or_skipped,
             len(heading_chunks),
             len(fallback_chunks),
+            len(chunks_before_filter),
+            low_value_chunks_filtered,
             len(chunks),
             settings.COLLECTION_NAME,
             reset,
@@ -188,6 +215,8 @@ class DocumentService:
             "sources_loaded": sorted(loaded_sources),
             "heading_chunks": len(heading_chunks),
             "fallback_chunks": len(fallback_chunks),
+            "chunks_before_filter": len(chunks_before_filter),
+            "low_value_chunks_filtered": low_value_chunks_filtered,
             "chunks_indexed": len(chunks),
             "collection_name": settings.COLLECTION_NAME,
         }

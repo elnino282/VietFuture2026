@@ -36,7 +36,7 @@ class MarkdownChunkingTests(unittest.TestCase):
         self.assertEqual(water_chunk.metadata["category"], "vietgap")
         self.assertEqual(water_chunk.metadata["source"], "data/vietgap/sample.md")
         self.assertEqual(water_chunk.metadata["file_name"], "sample.md")
-        self.assertTrue(water_chunk.metadata["chunk_id"].startswith("vietgap:sample.md:"))
+        self.assertTrue(water_chunk.metadata["chunk_id"].startswith("vietgap:data/vietgap/sample.md:"))
         self.assertIn("Nuoc tuoi can an toan", water_chunk.page_content)
 
     def test_unknown_folder_category_falls_back_to_unknown(self):
