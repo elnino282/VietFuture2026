@@ -1,8 +1,8 @@
 package org.example.identity.service;
 
 import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import java.text.ParseException;
@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.StringJoiner;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.example.identity.config.RsaKeyProvider;
 import org.example.identity.exception.AppException;
 import org.example.identity.exception.ErrorCode;
 import org.example.identity.entity.User;
@@ -22,25 +23,28 @@ import org.springframework.util.CollectionUtils;
 
 /**
  * Service responsible for JWT token operations.
- * Single Responsibility: Token generation, verification, and validation.
+ * Uses RS256 (RSA PKCS#1 v1.5 with SHA-256) for asymmetric signing.
+ *
+ * The private key is held exclusively by the identity-service.
+ * Other services verify tokens using the public key exposed via the JWKS endpoint.
  */
 @Service
 @Slf4j
 public class JwtTokenService {
 
     private final InvalidatedTokenRepository invalidatedTokenRepository;
+    private final RsaKeyProvider rsaKeyProvider;
 
-    @Value("${jwt.signerKey}")
-    private String signerKey;
-
-    @Value("${jwt.valid-duration}")
+    @Value("${jwt.valid-duration:3600}")
     private long validDuration;
 
-    @Value("${jwt.refreshable-duration}")
+    @Value("${jwt.refreshable-duration:36000}")
     private long refreshableDuration;
 
-    public JwtTokenService(InvalidatedTokenRepository invalidatedTokenRepository) {
+    public JwtTokenService(InvalidatedTokenRepository invalidatedTokenRepository,
+                           RsaKeyProvider rsaKeyProvider) {
         this.invalidatedTokenRepository = invalidatedTokenRepository;
+        this.rsaKeyProvider = rsaKeyProvider;
     }
 
     /**
@@ -58,7 +62,7 @@ public class JwtTokenService {
     }
 
     /**
-     * Generate JWT token with required claims.
+     * Generate JWT token with required claims, signed with RS256.
      * Claims include: sub (userId), role, user_id, email, username, scope, jti, exp
      *
      * @param user        the user to generate token for
@@ -66,9 +70,11 @@ public class JwtTokenService {
      * @return the generated JWT token string
      */
     public String generateToken(User user, String primaryRole) {
-        log.debug("Generating JWT token for user: {}", user.getEmail());
+        log.debug("Generating RS256 JWT token for user: {}", user.getEmail());
 
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
+                .keyID(rsaKeyProvider.getRsaJwk().getKeyID())
+                .build();
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(String.valueOf(user.getId()))
@@ -88,9 +94,9 @@ public class JwtTokenService {
         JWSObject jwsObject = new JWSObject(header, payload);
 
         try {
-            jwsObject.sign(new MACSigner(signerKey.getBytes()));
+            jwsObject.sign(new RSASSASigner(rsaKeyProvider.getPrivateKey()));
             String token = jwsObject.serialize();
-            log.debug("JWT token generated successfully for email: {} - expires in {} seconds",
+            log.debug("RS256 JWT token generated successfully for email: {} - expires in {} seconds",
                     user.getEmail(), validDuration);
             return token;
         } catch (JOSEException e) {
@@ -100,7 +106,7 @@ public class JwtTokenService {
     }
 
     /**
-     * Verify a JWT token.
+     * Verify a JWT token using the RSA public key.
      *
      * @param token     the token to verify
      * @param isRefresh whether this is a refresh token verification
@@ -111,7 +117,7 @@ public class JwtTokenService {
     public SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         log.debug("Verifying token - isRefresh: {}", isRefresh);
 
-        JWSVerifier verifier = new MACVerifier(signerKey.getBytes());
+        JWSVerifier verifier = new RSASSAVerifier(rsaKeyProvider.getPublicKey());
         SignedJWT signedJWT = SignedJWT.parse(token);
 
         Date expiryTime = (isRefresh)

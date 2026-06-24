@@ -31,6 +31,7 @@ public class SecurityConfig {
             "/api/v1/auth/forgot-password",
             "/api/v1/auth/reset-password",
             "/api/v1/auth/reset-password/validate",
+            "/api/v1/auth/.well-known/jwks.json",
             "/actuator/health",
             "/actuator/prometheus"
     };

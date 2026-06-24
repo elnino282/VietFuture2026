@@ -82,6 +82,7 @@ services:
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
+      JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
       JWT_VALID_DURATION: ${JWT_VALID_DURATION:-3600}
       JWT_REFRESHABLE_DURATION: ${JWT_REFRESHABLE_DURATION:-36000}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}

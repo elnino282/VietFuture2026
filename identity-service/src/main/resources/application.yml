@@ -43,7 +43,11 @@ app:
     from: ${MAIL_FROM:no-reply@localhost}
 
 jwt:
-  signerKey: ${JWT_SIGNER_KEY:supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
+  rsa:
+    private-key-location: ${JWT_RSA_PRIVATE_KEY:classpath:keys/rsa-private.pem}
+    public-key-location: ${JWT_RSA_PUBLIC_KEY:classpath:keys/rsa-public.pem}
+  valid-duration: ${JWT_VALID_DURATION:3600}
+  refreshable-duration: ${JWT_REFRESHABLE_DURATION:36000}
 
 management:
   endpoints:

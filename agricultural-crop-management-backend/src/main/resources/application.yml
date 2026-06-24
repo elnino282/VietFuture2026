@@ -12,7 +12,8 @@ spring:
           writetimeout: ${SMTP_WRITE_TIMEOUT:5000}
 
 jwt:
-  signerKey: ${JWT_SIGNER_KEY}
+  signerKey: ${JWT_SIGNER_KEY:legacy-placeholder-not-used-for-verification-must-be-64-chars!!}
+  jwks-uri: ${JWT_JWKS_URI:http://localhost:8081/api/v1/auth/.well-known/jwks.json}
   valid-duration: ${JWT_VALID_DURATION:3600}
   refreshable-duration: ${JWT_REFRESHABLE_DURATION:36000}
 
