@@ -1,5 +1,6 @@
-package org.example.QuanLyMuaVu.module.ai.dto.response;
+package org.example.ai.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,9 +15,10 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class BuyerChatResponse {
+public class ChatRequest {
 
+    @NotBlank(message = "KEY_INVALID")
     String userMessage;
-    String buyerContext;
-    String assistantMessage;
+
+    String cropContext;
 }

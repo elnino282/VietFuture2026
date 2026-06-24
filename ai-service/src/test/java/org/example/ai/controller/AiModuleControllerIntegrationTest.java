@@ -1,4 +1,4 @@
-package org.example.QuanLyMuaVu.module.ai.controller;
+package org.example.ai.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.example.QuanLyMuaVu.module.ai.service.GeminiService;
+import org.example.ai.service.GeminiService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -22,7 +22,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(controllers = { AIController.class, ChatController.class })
+@WebMvcTest(controllers = { AiController.class, ChatController.class })
 @Import(AiModuleControllerIntegrationTest.MethodSecurityTestConfig.class)
 class AiModuleControllerIntegrationTest {
 

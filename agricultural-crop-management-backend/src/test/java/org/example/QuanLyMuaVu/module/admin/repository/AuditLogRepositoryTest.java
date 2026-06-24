@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 @DataJpaTest
+@org.springframework.test.context.ActiveProfiles("test")
 class AuditLogRepositoryTest {
 
     @Autowired

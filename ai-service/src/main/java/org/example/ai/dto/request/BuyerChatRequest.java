@@ -1,4 +1,4 @@
-package org.example.QuanLyMuaVu.module.ai.dto.request;
+package org.example.ai.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;

@@ -1,12 +1,12 @@
-package org.example.QuanLyMuaVu.module.ai.controller;
+package org.example.ai.controller;
 
 import jakarta.validation.Valid;
-import org.example.QuanLyMuaVu.DTO.Common.ApiResponse;
-import org.example.QuanLyMuaVu.module.ai.dto.request.BuyerChatRequest;
-import org.example.QuanLyMuaVu.module.ai.dto.request.ChatRequest;
-import org.example.QuanLyMuaVu.module.ai.dto.response.BuyerChatResponse;
-import org.example.QuanLyMuaVu.module.ai.dto.response.ChatResponse;
-import org.example.QuanLyMuaVu.module.ai.service.GeminiService;
+import org.example.ai.dto.response.ApiResponse;
+import org.example.ai.dto.request.BuyerChatRequest;
+import org.example.ai.dto.request.ChatRequest;
+import org.example.ai.dto.response.BuyerChatResponse;
+import org.example.ai.dto.response.ChatResponse;
+import org.example.ai.service.GeminiService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

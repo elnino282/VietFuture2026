@@ -32,6 +32,10 @@ spring:
               uri: ${CROP_CATALOG_SERVICE_URI:http://localhost:8082}
               predicates:
                 - Path=/api/v1/crops/**, /api/v1/varieties/**, /api/v1/admin/varieties/**, /api/v1/admin/crops/**, /api/v1/catalog/**
+            - id: ai-route
+              uri: ${AI_SERVICE_URI:http://localhost:8083}
+              predicates:
+                - Path=/api/v1/ai/qa, /api/v1/ai/qa/**, /api/v1/farmer/ai/chat, /api/v1/farmer/ai/chat/**, /api/v1/buyer/ai/chat, /api/v1/buyer/ai/chat/**
             - id: monolith-route
               uri: ${MONOLITH_URI:http://localhost:8080}
               predicates:

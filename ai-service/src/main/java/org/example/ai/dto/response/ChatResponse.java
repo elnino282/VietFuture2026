@@ -1,4 +1,4 @@
-package org.example.QuanLyMuaVu.module.ai.dto.response;
+package org.example.ai.dto.response;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

@@ -107,6 +107,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       APP_CROP_CATALOG_SERVICE_URL: http://crop-catalog-service:8082
+      APP_AI_SERVICE_URL: http://ai-service:8083
     depends_on:
       mysql:
         condition: service_healthy
@@ -166,6 +167,23 @@ services:
       mysql:
         condition: service_healthy
 
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: ai_service_quanlymuavu
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      SERVER_PORT: 8083
+      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
+      JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
+      APP_AI_API_KEY: ${APP_AI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+    depends_on:
+      - identity-service
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -179,11 +197,13 @@ services:
       MONOLITH_URI: http://backend:8080
       IDENTITY_SERVICE_URI: http://identity-service:8081
       CROP_CATALOG_SERVICE_URI: http://crop-catalog-service:8082
+      AI_SERVICE_URI: http://ai-service:8083
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
     depends_on:
       - backend
       - identity-service
       - crop-catalog-service
+      - ai-service
 
   frontend:
     build:

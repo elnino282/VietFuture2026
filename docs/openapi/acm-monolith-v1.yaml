@@ -4568,24 +4568,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListSeasonEmployeeResponse"
-  /api/v1/farmer/ai/chat:
-    post:
-      tags:
-      - chat-controller
-      operationId: chat
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ChatRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/ApiResponseChatResponse"
   /api/v1/employee/tasks/{taskId}/progress:
     post:
       tags:
@@ -5293,24 +5275,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceImageSearchAnalysisResponse"
-  /api/v1/buyer/ai/chat:
-    post:
-      tags:
-      - chat-controller
-      operationId: buyerChat
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/BuyerChatRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/ApiResponseBuyerChatResponse"
   /api/v1/buyer/addresses:
     get:
       tags:
@@ -5401,6 +5365,13 @@ paths:
               $ref: "#/components/schemas/AuthenticationRequest"
         required: true
       responses:
+        "403":
+          description: User locked or no role
+          content:
+            application/json:
+              example:
+                code: USER_LOCKED
+                message: User account is not active.
         "200":
           description: Login successful
           content:
@@ -5430,13 +5401,6 @@ paths:
               example:
                 code: INVALID_CREDENTIALS
                 message: Invalid username/email or password.
-        "403":
-          description: User locked or no role
-          content:
-            application/json:
-              example:
-                code: USER_LOCKED
-                message: User account is not active.
   /api/v1/auth/reset-password:
     post:
       tags:
@@ -5707,18 +5671,18 @@ paths:
               $ref: "#/components/schemas/RoleRequest"
         required: true
       responses:
-        "400":
-          description: Dữ liệu đầu vào không hợp lệ
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/ApiResponseRoleResponse"
         "200":
           description: Tạo vai trò thành công
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
+        "400":
+          description: Dữ liệu đầu vào không hợp lệ
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoleResponse"
         "403":
           description: Không có quyền tạo vai trò
           content:
@@ -7456,6 +7420,25 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListMySeasonResponse"
+  /api/v1/public/seasons/exists-by-variety/{varietyId}:
+    get:
+      tags:
+      - public-season-controller
+      operationId: existsSeasonByVarietyId
+      parameters:
+      - name: varietyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: boolean
   /api/v1/public/health:
     get:
       tags:
@@ -10017,29 +10000,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseAuthenticationResponse"
-  /api/v1/ai/qa:
-    get:
-      tags:
-      - ai-controller
-      operationId: qa
-      parameters:
-      - name: question
-        in: query
-        required: true
-        schema:
-          type: string
-      - name: context
-        in: query
-        required: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/ApiResponseMapStringObject"
   /api/v1/admin/users/{id}/can-delete:
     get:
       tags:
@@ -15075,40 +15035,6 @@ components:
             $ref: "#/components/schemas/SeasonEmployeeResponse"
         generatedAt:
           type: string
-    ChatRequest:
-      required:
-      - userMessage
-      type: object
-      properties:
-        userMessage:
-          type: string
-        cropContext:
-          type: string
-    ApiResponseChatResponse:
-      type: object
-      properties:
-        status:
-          type: integer
-          format: int32
-        code:
-          type: string
-        message:
-          type: string
-        result:
-          $ref: "#/components/schemas/ChatResponse"
-        data:
-          $ref: "#/components/schemas/ChatResponse"
-        generatedAt:
-          type: string
-    ChatResponse:
-      type: object
-      properties:
-        userMessage:
-          type: string
-        cropContext:
-          type: string
-        assistantMessage:
-          type: string
     EmployeeTaskProgressRequest:
       required:
       - progressPercent
@@ -15465,40 +15391,6 @@ components:
         data:
           $ref: "#/components/schemas/MarketplaceImageSearchAnalysisResponse"
         generatedAt:
-          type: string
-    BuyerChatRequest:
-      required:
-      - userMessage
-      type: object
-      properties:
-        userMessage:
-          type: string
-        buyerContext:
-          type: string
-    ApiResponseBuyerChatResponse:
-      type: object
-      properties:
-        status:
-          type: integer
-          format: int32
-        code:
-          type: string
-        message:
-          type: string
-        result:
-          $ref: "#/components/schemas/BuyerChatResponse"
-        data:
-          $ref: "#/components/schemas/BuyerChatResponse"
-        generatedAt:
-          type: string
-    BuyerChatResponse:
-      type: object
-      properties:
-        userMessage:
-          type: string
-        buyerContext:
-          type: string
-        assistantMessage:
           type: string
     SignUpRequest:
       required:
@@ -18237,14 +18129,14 @@ components:
           $ref: "#/components/schemas/MetricValue"
         estimatedYieldMetric:
           $ref: "#/components/schemas/MetricValue"
+        noutput:
+          type: number
         nsurplus:
           type: number
         nsurplusMetric:
           $ref: "#/components/schemas/MetricValue"
         noutputMetric:
           $ref: "#/components/schemas/MetricValue"
-        noutput:
-          type: number
         nOutput:
           type: number
         nSurplus:
@@ -19226,12 +19118,12 @@ components:
           format: int32
         sort:
           $ref: "#/components/schemas/SortObject"
+        pageable:
+          $ref: "#/components/schemas/PageableObject"
         first:
           type: boolean
         last:
           type: boolean
-        pageable:
-          $ref: "#/components/schemas/PageableObject"
         numberOfElements:
           type: integer
           format: int32
@@ -19779,26 +19671,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CropResponse"
-        generatedAt:
-          type: string
-    ApiResponseMapStringObject:
-      type: object
-      properties:
-        status:
-          type: integer
-          format: int32
-        code:
-          type: string
-        message:
-          type: string
-        result:
-          type: object
-          additionalProperties:
-            type: object
-        data:
-          type: object
-          additionalProperties:
-            type: object
         generatedAt:
           type: string
     AdminUserDto:
