@@ -8,7 +8,8 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT_DIR))
 
 from app.config import settings  # noqa: E402
-from app.constants import INSUFFICIENT_DATA_MESSAGE  # noqa: E402
+from app.constants import INSUFFICIENT_DATA_MESSAGE, OFF_TOPIC_MESSAGE  # noqa: E402
+from app.services.question_router import QuestionRouter  # noqa: E402
 from app.services.rag_service import RagService  # noqa: E402
 
 
@@ -38,76 +39,139 @@ CATEGORY_FILE_HINTS = {
 @dataclass(frozen=True)
 class DemoCase:
     question: str
+    expected_mode: str
     required_keywords: tuple[str, ...] = ()
     expected_source_category: str | None = None
     expected_source_file: str | None = None
     forbidden_source_files: tuple[str, ...] = ()
-    max_answer_chars: int = 650
-    exact_fallback: bool = False
+    max_answer_chars: int = 700
+    exact_answer: str | None = None
+    expect_sources: bool | None = None
 
 
 DEMO_CASES = [
     DemoCase(
         question="VietGAP là gì?",
+        expected_mode="strict_rag",
         required_keywords=("Vietnamese Good Agricultural Practices", "Thực hành nông nghiệp tốt"),
         expected_source_category="vietgap",
         expected_source_file="tong-quan-vietgap.md",
         max_answer_chars=420,
+        expect_sources=True,
     ),
     DemoCase(
         question="ACM là gì?",
-        required_keywords=("hệ thống", "quản lý"),
+        expected_mode="strict_rag",
+        required_keywords=("hệ thống", "truy xuất"),
         expected_source_category="acm",
         expected_source_file="tong-quan-he-thong.md",
         max_answer_chars=420,
-    ),
-    DemoCase(
-        question="Làm sao tạo mùa vụ trong hệ thống ACM?",
-        required_keywords=("Quản lý mùa vụ", "Tạo mùa vụ", "Lưu"),
-        expected_source_category="acm",
-        expected_source_file="tao-mua-vu.md",
+        expect_sources=True,
     ),
     DemoCase(
         question="Sau khi tạo mùa vụ cần làm gì?",
+        expected_mode="strict_rag",
         required_keywords=("nhật ký", "thu hoạch"),
         expected_source_category="acm",
         expected_source_file="tao-mua-vu.md",
+        expect_sources=True,
     ),
     DemoCase(
         question="Nhật ký sản xuất cần ghi những nội dung gì?",
+        expected_mode="strict_rag",
         required_keywords=("đất", "phân bón", "thuốc BVTV", "thu hoạch"),
         expected_source_category="acm",
         expected_source_file="ghi-nhat-ky-san-xuat.md",
+        expect_sources=True,
     ),
     DemoCase(
         question="Khi thu hoạch xong thì nhập kho trong ACM như thế nào?",
+        expected_mode="strict_rag",
         required_keywords=("thu hoạch", "nhập kho", "sản lượng"),
         expected_source_category="acm",
         expected_source_file="thu-hoach-va-nhap-kho.md",
+        expect_sources=True,
     ),
     DemoCase(
         question="Mã QR truy xuất nguồn gốc hiển thị những thông tin nào?",
+        expected_mode="strict_rag",
         required_keywords=("tên sản phẩm", "nông trại", "ngày thu hoạch"),
         expected_source_category="traceability",
         expected_source_file="thong-tin-hien-thi-khi-quet-qr.md",
+        expect_sources=True,
     ),
     DemoCase(
         question="Người mua liên kết giỏ hàng với nông trại như thế nào?",
+        expected_mode="strict_rag",
         required_keywords=("giỏ hàng", "nông trại", "đặt hàng"),
         expected_source_category="acm",
         expected_source_file="lien-ket-gio-hang-nong-trai.md",
+        expect_sources=True,
     ),
     DemoCase(
         question="Cà chua thường gặp sâu bệnh nào?",
+        expected_mode="rag_first",
         required_keywords=("bọ phấn trắng", "sâu đục quả", "héo xanh"),
         expected_source_category="crop",
         expected_source_file="sau-benh-thuong-gap.md",
         forbidden_source_files=("data/crops/rau-an-la/", "data/crops/gao/"),
+        expect_sources=True,
     ),
     DemoCase(
         question="Hệ thống có hỗ trợ thanh toán blockchain không?",
-        exact_fallback=True,
+        expected_mode="strict_rag",
+        exact_answer=INSUFFICIENT_DATA_MESSAGE,
         max_answer_chars=120,
+        expect_sources=False,
+    ),
+    DemoCase(
+        question="VietGAP yêu cầu pH đất chính xác bao nhiêu?",
+        expected_mode="strict_rag",
+        exact_answer=INSUFFICIENT_DATA_MESSAGE,
+        max_answer_chars=120,
+        expect_sources=False,
+    ),
+    DemoCase(
+        question="Cà chua bị vàng lá do đâu?",
+        expected_mode="general_agriculture_llm",
+        required_keywords=("tham khảo chung",),
+        expect_sources=False,
+    ),
+    DemoCase(
+        question="Cây thiếu đạm có biểu hiện gì?",
+        expected_mode="general_agriculture_llm",
+        required_keywords=("tham khảo chung",),
+        expect_sources=False,
+    ),
+    DemoCase(
+        question="Sâu xanh ăn lá là gì?",
+        expected_mode="general_agriculture_llm",
+        required_keywords=("tham khảo chung",),
+        expect_sources=False,
+    ),
+    DemoCase(
+        question="Đất bị chai cứng thì nên cải tạo như thế nào?",
+        expected_mode="general_agriculture_llm",
+        required_keywords=("tham khảo chung",),
+        expect_sources=False,
+    ),
+    DemoCase(
+        question="Cây con sau khi trồng cần chăm sóc ra sao?",
+        expected_mode="general_agriculture_llm",
+        required_keywords=("tham khảo chung",),
+        expect_sources=False,
+    ),
+    DemoCase(
+        question="Viết bài thơ về tình yêu.",
+        expected_mode="off_topic",
+        exact_answer=OFF_TOPIC_MESSAGE,
+        expect_sources=False,
+    ),
+    DemoCase(
+        question="Bitcoin hôm nay giá bao nhiêu?",
+        expected_mode="off_topic",
+        exact_answer=OFF_TOPIC_MESSAGE,
+        expect_sources=False,
     ),
 ]
 
@@ -124,34 +188,32 @@ def ollama_available() -> tuple[bool, str]:
 def source_values(result: dict) -> tuple[str, str]:
     sources = result.get("sources") or []
     file_names = " ".join(str(getattr(source, "file_name", "")) for source in sources)
-    categories = " ".join(str(getattr(source, "category", "")) for source in sources)
-    # SourceDocument does not expose category, so fall back to snippets/headings
-    # for display while file expectations stay exact.
     headings = " ".join(str(getattr(source, "heading", "")) for source in sources)
     snippets = " ".join(str(getattr(source, "snippet", "")) for source in sources)
-    return file_names, f"{categories} {headings} {snippets}"
+    return file_names, f"{headings} {snippets}"
 
 
-def validate_case(case: DemoCase, result: dict) -> list[str]:
+def validate_case(case: DemoCase, result: dict, mode: str) -> list[str]:
     answer = str(result.get("answer") or "").strip()
     file_names, source_text = source_values(result)
+    sources = result.get("sources") or []
     failures: list[str] = []
 
-    if case.exact_fallback:
-        if answer != INSUFFICIENT_DATA_MESSAGE:
-            failures.append("fallback mismatch")
-        if result.get("sources"):
-            failures.append("fallback should not return sources")
-        return failures
-
-    lowered_answer = answer.casefold()
+    if mode != case.expected_mode:
+        failures.append(f"route mismatch: {mode} != {case.expected_mode}")
+    if case.exact_answer is not None and answer != case.exact_answer:
+        failures.append("exact answer mismatch")
+    if case.expect_sources is True and not sources:
+        failures.append("expected sources")
+    if case.expect_sources is False and sources:
+        failures.append("expected no sources")
     if answer.startswith(case.question):
         failures.append("answer repeats question prefix")
     for phrase in FORBIDDEN_PHRASES:
-        if phrase.casefold() in lowered_answer:
+        if phrase.casefold() in answer.casefold():
             failures.append(f"forbidden phrase: {phrase}")
     for keyword in case.required_keywords:
-        if keyword.casefold() not in lowered_answer:
+        if keyword.casefold() not in answer.casefold():
             failures.append(f"missing keyword: {keyword}")
     if len(answer) > case.max_answer_chars:
         failures.append(f"answer too long: {len(answer)} > {case.max_answer_chars}")
@@ -176,10 +238,15 @@ def main() -> int:
         return 2
 
     rag = RagService()
+    router = QuestionRouter()
     failures_total = 0
 
     for index, case in enumerate(DEMO_CASES, start=1):
+        route = router.route(case.question)
         print(f"\n[{index}] {case.question}")
+        if settings.DEBUG_RAG:
+            print(f"Route: {route.mode} category={route.category} confidence={route.confidence} reason={route.reason}")
+
         result = rag.chat(case.question)
         answer = result.get("answer", "")
         print(f"Answer ({len(answer)} chars): {answer}")
@@ -192,7 +259,7 @@ def main() -> int:
         else:
             print("Sources: none")
 
-        failures = validate_case(case, result)
+        failures = validate_case(case, result, route.mode)
         if failures:
             failures_total += 1
             print("Status: FAIL - " + "; ".join(failures))

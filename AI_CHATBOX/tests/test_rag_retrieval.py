@@ -5,6 +5,11 @@ import requests
 
 import app.services.ollama_service as ollama_module
 from app.config import settings
+from app.constants import (
+    INSUFFICIENT_DATA_MESSAGE as CANONICAL_INSUFFICIENT_MESSAGE,
+    OFF_TOPIC_MESSAGE,
+)
+from app.prompts.system_prompt import GENERAL_AGRICULTURE_PROMPT, RAG_PROMPT_TEMPLATE, SYSTEM_PROMPT
 from app.services.rag_retrieval import (
     INSUFFICIENT_DATA_MESSAGE,
     RetrievedContext,
@@ -16,6 +21,7 @@ from app.services.rag_retrieval import (
 )
 from app.services.rag_service import RagService
 from app.services.ollama_service import OllamaService
+from app.services.question_router import QuestionRouter, normalize_question
 from app.services.source_sanitizer import (
     MAX_PUBLIC_SNIPPET_CHARS,
     sanitize_prompt_content,
@@ -220,20 +226,217 @@ class RagRetrievalTests(unittest.TestCase):
         self.assertNotIn("source_path", snippet.lower())
         self.assertNotIn("http", snippet.lower())
 
-    def test_chat_empty_retrieval_returns_insufficient_without_sources(self):
+    def test_chat_empty_strict_retrieval_returns_insufficient_without_sources(self):
         class EmptyService(RagService):
             def __init__(self):
-                pass
+                self.router = QuestionRouter()
 
             def _retrieve_contexts(self, question, top_k):
                 return [], False
 
         service = EmptyService()
 
-        result = service.chat("Cau hoi khong co tai lieu?", top_k=2)
+        result = service.chat("VietGAP yeu cau pH dat chinh xac bao nhieu?", top_k=2)
 
         self.assertEqual(result["answer"], INSUFFICIENT_DATA_MESSAGE)
         self.assertEqual(result["sources"], [])
+
+    def test_chat_off_topic_returns_refusal_without_retrieval(self):
+        class OffTopicService(RagService):
+            def __init__(self):
+                self.router = QuestionRouter()
+
+            def _retrieve_contexts(self, question, top_k):
+                raise AssertionError("off-topic questions must not retrieve")
+
+        service = OffTopicService()
+
+        result = service.chat("Bitcoin hom nay gia bao nhieu?", top_k=2)
+
+        self.assertEqual(result["answer"], OFF_TOPIC_MESSAGE)
+        self.assertEqual(result["sources"], [])
+
+    def test_strict_rag_never_falls_back_to_general_llm_when_context_is_weak(self):
+        class FakeOllama:
+            general_called = False
+
+            def generate_general_agriculture_answer(self, question):
+                self.general_called = True
+                return "general answer"
+
+        class FakeService(RagService):
+            def __init__(self):
+                self.router = QuestionRouter()
+                self.ollama_service = FakeOllama()
+
+            def _retrieve_contexts(self, question, top_k):
+                return [], False
+
+        service = FakeService()
+
+        result = service.chat("ACM co ho tro thanh toan blockchain khong?", top_k=2)
+
+        self.assertEqual(result["answer"], INSUFFICIENT_DATA_MESSAGE)
+        self.assertEqual(result["sources"], [])
+        self.assertFalse(service.ollama_service.general_called)
+
+    def test_rag_first_weak_context_falls_back_to_general_agriculture_llm(self):
+        class FakeOllama:
+            general_called = False
+
+            def generate_general_agriculture_answer(self, question):
+                self.general_called = True
+                return "Đây là thông tin tham khảo chung; cần kiểm tra thực tế cây trồng trước khi xử lý."
+
+        class FakeService(RagService):
+            def __init__(self):
+                self.router = QuestionRouter()
+                self.ollama_service = FakeOllama()
+
+            def _retrieve_contexts(self, question, top_k):
+                return [], False
+
+        service = FakeService()
+
+        result = service.chat("Cà chua thường gặp sâu bệnh nào?", top_k=2)
+
+        self.assertIn("tham khảo chung", result["answer"])
+        self.assertEqual(result["sources"], [])
+        self.assertTrue(service.ollama_service.general_called)
+
+    def test_rag_first_insufficient_answer_falls_back_to_general_agriculture_llm(self):
+        doc = Document(
+            page_content=(
+                "Ca chua thuong gap bo phan trang, sau duc qua va benh heo xanh. "
+                "Nguoi trong can kiem tra la, than va qua de ghi nhan dau hieu sau benh."
+            ),
+            metadata={
+                "category": "crop",
+                "source": "data/crops/ca-chua/sau-benh-thuong-gap.md",
+                "file_name": "sau-benh-thuong-gap.md",
+                "heading": "Sau benh ca chua",
+                "chunk_id": "crop:tomato",
+            },
+        )
+
+        class FakeOllama:
+            general_called = False
+            generate_called = False
+
+            def generate(self, prompt, chunks_count=0):
+                self.generate_called = True
+                return INSUFFICIENT_DATA_MESSAGE
+
+            def generate_general_agriculture_answer(self, question):
+                self.general_called = True
+                return "Day la thong tin tham khao chung; ca chua co the gap nhieu nhom sau benh."
+
+        class FakeService(RagService):
+            def __init__(self):
+                self.router = QuestionRouter()
+                self.ollama_service = FakeOllama()
+
+            def _retrieve_contexts(self, question, top_k):
+                return [RetrievedContext(doc=doc, score=0.1, query=question)], False
+
+        service = FakeService()
+
+        result = service.chat("Ca chua thuong gap sau benh nao?", top_k=2)
+
+        self.assertIn("tham khao chung", result["answer"])
+        self.assertEqual(result["sources"], [])
+        self.assertTrue(service.ollama_service.generate_called)
+        self.assertTrue(service.ollama_service.general_called)
+
+    def test_rag_first_empty_trailing_gap_or_too_short_answer_falls_back(self):
+        doc = Document(
+            page_content=(
+                "Lua thuong gap ray nau, dao on va vang la sinh ly trong san xuat. "
+                "Nguoi trong can quan sat ruong, la va than lua de ghi nhan dau hieu bat thuong."
+            ),
+            metadata={
+                "category": "crop",
+                "source": "data/crops/gao/sau-benh-thuong-gap.md",
+                "file_name": "sau-benh-thuong-gap.md",
+                "heading": "Sau benh lua",
+                "chunk_id": "crop:rice",
+            },
+        )
+
+        poor_answers = [
+            "",
+            "Sau.",
+            "Ray nau.\n\nChua co du lieu ve: cach xu ly chi tiet.",
+        ]
+
+        for poor_answer in poor_answers:
+            with self.subTest(poor_answer=poor_answer):
+                class FakeOllama:
+                    general_called = False
+                    generate_called = False
+
+                    def generate(self, prompt, chunks_count=0):
+                        self.generate_called = True
+                        return poor_answer
+
+                    def generate_general_agriculture_answer(self, question):
+                        self.general_called = True
+                        return "Day la thong tin tham khao chung; can quan sat ruong truoc khi xu ly."
+
+                class FakeService(RagService):
+                    def __init__(self):
+                        self.router = QuestionRouter()
+                        self.ollama_service = FakeOllama()
+
+                    def _retrieve_contexts(self, question, top_k):
+                        return [RetrievedContext(doc=doc, score=0.1, query=question)], False
+
+                service = FakeService()
+
+                result = service.chat("Lua thuong gap sau benh nao?", top_k=2)
+
+                self.assertIn("tham khao chung", result["answer"])
+                self.assertEqual(result["sources"], [])
+                self.assertTrue(service.ollama_service.generate_called)
+                self.assertTrue(service.ollama_service.general_called)
+
+    def test_strict_rag_insufficient_answer_never_falls_back_to_general_llm(self):
+        doc = Document(
+            page_content="ACM la he thong quan ly san xuat nong nghiep va truy xuat nguon goc.",
+            metadata={
+                "category": "acm",
+                "source": "data/acm/tong-quan-he-thong.md",
+                "file_name": "tong-quan-he-thong.md",
+                "heading": "ACM",
+                "chunk_id": "acm:overview",
+            },
+        )
+
+        class FakeOllama:
+            general_called = False
+
+            def generate(self, prompt, chunks_count=0):
+                return INSUFFICIENT_DATA_MESSAGE
+
+            def generate_general_agriculture_answer(self, question):
+                self.general_called = True
+                return "general answer"
+
+        class FakeService(RagService):
+            def __init__(self):
+                self.router = QuestionRouter()
+                self.ollama_service = FakeOllama()
+
+            def _retrieve_contexts(self, question, top_k):
+                return [RetrievedContext(doc=doc, score=0.1, query=question)], False
+
+        service = FakeService()
+
+        result = service.chat("ACM co ho tro blockchain khong?", top_k=2)
+
+        self.assertEqual(result["answer"], INSUFFICIENT_DATA_MESSAGE)
+        self.assertEqual(result["sources"], [])
+        self.assertFalse(service.ollama_service.general_called)
 
     def test_chat_model_insufficient_returns_without_sources(self):
         doc = Document(
@@ -261,9 +464,99 @@ class RagRetrievalTests(unittest.TestCase):
 
     def test_is_insufficient_answer_normalizes_variants(self):
         self.assertTrue(is_insufficient_answer(INSUFFICIENT_DATA_MESSAGE))
+        self.assertEqual(
+            CANONICAL_INSUFFICIENT_MESSAGE,
+            "Tôi chưa có đủ dữ liệu trong tài liệu hiện tại.",
+        )
         self.assertTrue(
             is_insufficient_answer("Tôi chưa có đủ dữ liệu trong tài liệu hiện tại để trả lời câu hỏi này.")
         )
+        self.assertTrue(
+            is_insufficient_answer("Tôi chưa có đủ dữ liệu trong tài liệu hiện tại.")
+        )
+
+    def test_system_prompt_contains_acm_chatbox_policy(self):
+        self.assertIn("ACM AI Chatbox", SYSTEM_PROMPT)
+        self.assertIn("chỉ được sử dụng NỘI DUNG HỖ TRỢ", SYSTEM_PROMPT)
+        self.assertIn("Không bổ sung kiến thức bên ngoài", SYSTEM_PROMPT)
+        self.assertIn("Không liệt kê nguồn trong nội dung trả lời", SYSTEM_PROMPT)
+        self.assertIn("Không được tự tạo hoặc khẳng định", SYSTEM_PROMPT)
+        self.assertIn(CANONICAL_INSUFFICIENT_MESSAGE, SYSTEM_PROMPT)
+
+    def test_rag_prompt_template_keeps_required_sections(self):
+        self.assertIn("/no_think", RAG_PROMPT_TEMPLATE)
+        self.assertIn("=== NỘI DUNG HỖ TRỢ ===", RAG_PROMPT_TEMPLATE)
+        self.assertIn("=== CÂU HỎI NGƯỜI DÙNG ===", RAG_PROMPT_TEMPLATE)
+        self.assertIn("=== YÊU CẦU ĐẦU RA ===", RAG_PROMPT_TEMPLATE)
+        self.assertIn("Không tự thêm phần nguồn", RAG_PROMPT_TEMPLATE)
+
+    def test_general_agriculture_prompt_keeps_safety_boundaries(self):
+        self.assertIn("kiến thức nông nghiệp phổ thông", GENERAL_AGRICULTURE_PROMPT)
+        self.assertIn("không phải bằng tài liệu RAG nội bộ", GENERAL_AGRICULTURE_PROMPT)
+        self.assertIn("Không tư vấn tên thuốc BVTV cụ thể", GENERAL_AGRICULTURE_PROMPT)
+        self.assertIn("{question}", GENERAL_AGRICULTURE_PROMPT)
+
+    def test_generate_general_agriculture_answer_uses_prompt_and_cleanup(self):
+        service = OllamaService.__new__(OllamaService)
+        captured = {}
+
+        def fake_generate(prompt, chunks_count=0, num_predict=None):
+            captured["prompt"] = prompt
+            captured["chunks_count"] = chunks_count
+            captured["num_predict"] = num_predict
+            return "Theo tài liệu, Cà chua bị vàng lá do thiếu dinh dưỡng hoặc úng nước."
+
+        service.generate = fake_generate
+
+        answer = service.generate_general_agriculture_answer("Cà chua bị vàng lá do đâu?")
+
+        self.assertIn("Cà chua bị vàng lá do đâu?", captured["prompt"])
+        self.assertEqual(captured["chunks_count"], 0)
+        self.assertEqual(captured["num_predict"], settings.GENERAL_AGRICULTURE_MAX_TOKENS)
+        self.assertNotIn("Theo tài liệu", answer)
+        self.assertIn("tham khảo chung", answer)
+        self.assertIn("thiếu dinh dưỡng", answer)
+        self.assertLessEqual(len(answer), 650)
+
+    def test_general_agriculture_cleanup_removes_source_context_phrases(self):
+        service = OllamaService.__new__(OllamaService)
+
+        def fake_generate(prompt, chunks_count=0, num_predict=None):
+            return "Dua tren ngu canh va source noi bo, cay can duoc theo doi them."
+
+        service.generate = fake_generate
+
+        answer = service.generate_general_agriculture_answer("Ca phe can dieu kien gi?")
+
+        self.assertNotIn("ngu canh", answer.lower())
+        self.assertNotIn("source", answer.lower())
+        self.assertNotIn("context", answer.lower())
+
+    def test_general_agriculture_cleanup_softens_vietgap_and_pesticide_specifics(self):
+        service = OllamaService.__new__(OllamaService)
+
+        def fake_generate(prompt, chunks_count=0, num_predict=None):
+            return (
+                "Cach nay chac chan dat VietGAP. "
+                "Dung Confidor 100ml/ha va phun co dinh moi 7 ngay."
+            )
+
+        service.generate = fake_generate
+
+        answer = service.generate_general_agriculture_answer("Ho tieu bi sau thi lam gi?")
+        normalized = normalize_question(answer)
+
+        self.assertNotIn("chac chan dat vietgap", normalized)
+        self.assertNotIn("confidor", normalized)
+        self.assertNotIn("100ml/ha", normalized)
+        self.assertIn("tham khao chung", normalized)
+
+    def test_general_agriculture_cleanup_removes_dangling_list_marker(self):
+        answer = OllamaService._finalize_general_answer(
+            "Đây là thông tin tham khảo chung:\n1. Tưới vừa đủ.\n2."
+        )
+
+        self.assertNotRegex(answer, r"\n?\s*\d+[\.)]\s*$")
 
     def test_high_confidence_route_uses_filtered_only_when_good_enough(self):
         class FakeStore:

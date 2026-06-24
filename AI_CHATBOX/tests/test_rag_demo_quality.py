@@ -213,7 +213,10 @@ class RagDemoQualityTests(unittest.TestCase):
         self.assertEqual(sources[0].file_name, "qr.md")
 
     def test_blockchain_fallback_exact_match_remains_canonical(self):
-        self.assertEqual(INSUFFICIENT_DATA_MESSAGE, "Tôi chưa có đủ dữ liệu trong tài liệu hiện tại.")
+        self.assertEqual(
+            INSUFFICIENT_DATA_MESSAGE,
+            "Tôi chưa có đủ dữ liệu trong tài liệu hiện tại.",
+        )
 
 
 if __name__ == "__main__":
