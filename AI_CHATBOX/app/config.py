@@ -43,6 +43,10 @@ class Settings:
     MAX_DISTANCE_THRESHOLD: float | None = _optional_float(os.getenv("MAX_DISTANCE_THRESHOLD", "0.42"))
     MIN_RETRIEVAL_SCORE: float | None = _optional_float(os.getenv("MIN_RETRIEVAL_SCORE", ""))
     DEBUG_RAG: bool = os.getenv("DEBUG_RAG", "false").lower() in ("1", "true", "yes")
+    ENABLE_GENERAL_AGRICULTURE_LLM: bool = os.getenv(
+        "ENABLE_GENERAL_AGRICULTURE_LLM", "true"
+    ).lower() in ("1", "true", "yes")
+    GENERAL_AGRICULTURE_MAX_TOKENS: int = int(os.getenv("GENERAL_AGRICULTURE_MAX_TOKENS", "384"))
 
     NUM_PREDICT: int = int(os.getenv("NUM_PREDICT", "384"))
     NUM_CTX: int = int(os.getenv("NUM_CTX", "4096"))

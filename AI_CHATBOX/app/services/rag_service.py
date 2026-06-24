@@ -2,12 +2,17 @@ import logging
 import re
 from typing import List
 
+from app.constants import INSUFFICIENT_DATA_MESSAGE, OFF_TOPIC_MESSAGE
 from app.config import settings
 from app.prompts.system_prompt import SYSTEM_PROMPT, RAG_PROMPT_TEMPLATE
 from app.schemas.chat_schema import SourceDocument
 from app.services.ollama_service import OllamaService
+from app.services.question_router import (
+    QuestionRouter,
+    has_good_rag_context,
+    normalize_question,
+)
 from app.services.rag_retrieval import (
-    INSUFFICIENT_DATA_MESSAGE,
     RetrievedContext,
     adjust_candidate_scores,
     detect_definition_query,
@@ -36,11 +41,16 @@ _DEFINITION_MAX_ANSWER_CHARS = 350
 # Sentence-ending punctuation used for clean trimming.
 _SENTENCE_END_RE = re.compile(r"[.!?。]\s")
 
+# RAG-first crop answers shorter than this are usually fragments such as
+# "Sau." rather than useful farmer-facing guidance.
+_RAG_FIRST_MIN_USEFUL_CHARS = 24
+
 
 class RagService:
     def __init__(self) -> None:
         self.chroma_store = ChromaStore()
         self.ollama_service = OllamaService()
+        self.router = QuestionRouter()
 
     def _search_candidates(
         self,
@@ -441,26 +451,15 @@ class RagService:
 
         return answer
 
-    def chat(self, question: str, top_k: int | None = None) -> dict:
-        k = top_k or settings.DEFAULT_TOP_K
-        logger.info("Chat request: question=%r, top_k=%d", question, k)
-
-        contexts, is_definition = self._retrieve_contexts(question, k)
-        logger.info(
-            "Selected %d contexts after routing/filtering (is_definition=%s)",
-            len(contexts),
-            is_definition,
-        )
-
-        if not contexts:
-            logger.info("No selected contexts; returning insufficient-data response")
-            return {
-                "answer": INSUFFICIENT_DATA_MESSAGE,
-                "sources": [],
-            }
-
+    def _answer_with_rag(
+        self,
+        question: str,
+        contexts: list[RetrievedContext],
+        top_k: int,
+        is_definition: bool,
+    ) -> dict:
         context, used_contexts = self._build_context(
-            contexts, max_chunks=k, is_definition=is_definition
+            contexts, max_chunks=top_k, is_definition=is_definition
         )
         if not context or not used_contexts:
             logger.info("No prompt context after sanitizing/budgeting; returning insufficient-data response")
@@ -519,3 +518,92 @@ class RagService:
             "answer": answer,
             "sources": sources,
         }
+
+    def _answer_with_general_agriculture_llm(self, question: str) -> dict:
+        if not settings.ENABLE_GENERAL_AGRICULTURE_LLM:
+            logger.info("General agriculture LLM disabled; returning insufficient-data response")
+            return {
+                "answer": INSUFFICIENT_DATA_MESSAGE,
+                "sources": [],
+            }
+        answer = self.ollama_service.generate_general_agriculture_answer(question)
+        answer = self._postprocess_answer(answer, question=question, is_definition=False)
+        if not answer:
+            answer = INSUFFICIENT_DATA_MESSAGE
+        return {
+            "answer": answer,
+            "sources": [],
+        }
+
+    @staticmethod
+    def _rag_first_answer_needs_general_fallback(answer: str) -> bool:
+        cleaned = (answer or "").strip()
+        if not cleaned:
+            return True
+        if is_insufficient_answer(cleaned):
+            return True
+
+        normalized = normalize_question(cleaned)
+        if "chua co du lieu ve" in normalized:
+            return True
+
+        insufficient_normalized = normalize_question(INSUFFICIENT_DATA_MESSAGE)
+        if insufficient_normalized in normalized and len(normalized) <= len(insufficient_normalized) + 80:
+            return True
+
+        useful_text = re.sub(r"[\W_]+", "", normalized, flags=re.UNICODE)
+        return len(useful_text) < _RAG_FIRST_MIN_USEFUL_CHARS
+
+    def chat(self, question: str, top_k: int | None = None) -> dict:
+        k = top_k or settings.DEFAULT_TOP_K
+        logger.info("Chat request: question=%r, top_k=%d", question, k)
+
+        router = getattr(self, "router", QuestionRouter())
+        route = router.route(question)
+        logger.info(
+            "[ROUTER] mode=%s category=%s confidence=%s reason=%s",
+            route.mode,
+            route.category,
+            route.confidence,
+            route.reason,
+        )
+
+        if route.mode == "off_topic":
+            return {
+                "answer": OFF_TOPIC_MESSAGE,
+                "sources": [],
+            }
+
+        if route.mode == "general_agriculture_llm":
+            return self._answer_with_general_agriculture_llm(question)
+
+        contexts, is_definition = self._retrieve_contexts(question, k)
+        logger.info(
+            "Selected %d contexts after routing/filtering (is_definition=%s route=%s)",
+            len(contexts),
+            is_definition,
+            route.mode,
+        )
+
+        if not has_good_rag_context(contexts, route=route, question=question):
+            logger.info("[RAG] context quality gate failed for route=%s", route.mode)
+            if route.mode == "rag_first":
+                return self._answer_with_general_agriculture_llm(question)
+            return {
+                "answer": INSUFFICIENT_DATA_MESSAGE,
+                "sources": [],
+            }
+
+        rag_result = self._answer_with_rag(
+            question=question,
+            contexts=contexts,
+            top_k=k,
+            is_definition=is_definition,
+        )
+        if route.mode == "rag_first" and self._rag_first_answer_needs_general_fallback(
+            rag_result.get("answer", "")
+        ):
+            logger.info("[RAG] rag_first answer quality gate failed; falling back to general agriculture LLM")
+            return self._answer_with_general_agriculture_llm(question)
+
+        return rag_result
