@@ -1,0 +1,845 @@
+openapi: 3.1.0
+info:
+  title: ACM Farm Service API
+  description: API documentation for ACM Farm Service
+  license:
+    name: Apache 2.0
+    url: https://springdoc.org
+  version: 1.0.0
+servers:
+- url: http://localhost
+  description: Generated server url
+security:
+- bearerAuth: []
+tags:
+- name: Address
+  description: Address lookup and import operations
+paths:
+  /api/v1/plots/{id}:
+    get:
+      tags:
+      - plot-controller
+      operationId: getPlot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePlotResponse"
+    put:
+      tags:
+      - plot-controller
+      operationId: updatePlot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlotRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePlotResponse"
+    delete:
+      tags:
+      - plot-controller
+      operationId: deletePlot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/farms/{farmId}:
+    get:
+      tags:
+      - farm-controller
+      operationId: getFarmDetail
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFarmResponse"
+    put:
+      tags:
+      - farm-controller
+      operationId: updateFarm
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FarmUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFarmResponse"
+    delete:
+      tags:
+      - farm-controller
+      operationId: deleteFarm
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseString"
+  /api/v1/farms:
+    get:
+      tags:
+      - farm-controller
+      operationId: getMyFarms
+      parameters:
+      - name: keyword
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: active
+        in: query
+        required: false
+        schema:
+          type: boolean
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseObject"
+    post:
+      tags:
+      - farm-controller
+      operationId: createFarm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FarmCreateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFarmResponse"
+  /api/v1/farms/{farmId}/plots:
+    get:
+      tags:
+      - plot-controller
+      operationId: listPlotsByFarm
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPlotResponse"
+    post:
+      tags:
+      - plot-controller
+      operationId: createPlot
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlotRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePlotResponse"
+  /api/v1/plots:
+    get:
+      tags:
+      - plot-controller
+      operationId: listAllPlots
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPlotResponse"
+  /api/v1/locations/wards:
+    get:
+      tags:
+      - location-controller
+      operationId: getWardsByProvince
+      parameters:
+      - name: provinceId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WardResponse"
+  /api/v1/locations/provinces:
+    get:
+      tags:
+      - location-controller
+      operationId: getAllProvinces
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProvinceResponse"
+  /api/v1/internal/users/{userId}/farms/ids:
+    get:
+      tags:
+      - internal-plot-controller
+      operationId: getFarmIdsByUserId
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: int32
+  /api/v1/internal/plots/{id}:
+    get:
+      tags:
+      - internal-plot-controller
+      operationId: getPlotInternal
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PlotInternalDto"
+  /api/v1/address/wards/{id}:
+    get:
+      tags:
+      - Address
+      summary: Get ward by ID
+      description: Get a single ward by its ID
+      operationId: getWard
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseWardResponse"
+        "404":
+          description: Ward not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseWardResponse"
+  /api/v1/address/stats:
+    get:
+      tags:
+      - Address
+      summary: Get address statistics
+      description: "Get count of countries, provinces, and wards"
+      operationId: getStats
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseAddressStats"
+  /api/v1/address/provinces:
+    get:
+      tags:
+      - Address
+      summary: List all provinces
+      description: Get list of all provinces with optional filters
+      operationId: listProvinces
+      parameters:
+      - name: keyword
+        in: query
+        description: Optional keyword to search by province name
+        required: false
+        schema:
+          type: string
+      - name: type
+        in: query
+        description: "Optional type filter: 'thanh-pho' (city) or 'tinh' (province)"
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListProvinceResponse"
+  /api/v1/address/provinces/{provinceId}/wards:
+    get:
+      tags:
+      - Address
+      summary: List wards by province
+      description: Get list of wards for a specific province
+      operationId: listWardsByProvince
+      parameters:
+      - name: provinceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: keyword
+        in: query
+        description: Optional keyword to search by ward name
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListWardResponse"
+        "404":
+          description: Province not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListWardResponse"
+  /api/v1/address/provinces/{id}:
+    get:
+      tags:
+      - Address
+      summary: Get province by ID
+      description: Get a single province by its ID
+      operationId: getProvince
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseProvinceResponse"
+        "404":
+          description: Province not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseProvinceResponse"
+components:
+  schemas:
+    PlotRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        farmId:
+          type: integer
+          format: int32
+        plotName:
+          type: string
+        area:
+          type: number
+          minimum: 0.0
+        soilType:
+          type: string
+        boundaryGeoJson:
+          type: string
+        status:
+          type: string
+          enum:
+          - AVAILABLE
+          - IN_USE
+          - IDLE
+          - FALLOW
+          - MAINTENANCE
+      required:
+      - plotName
+    ApiResponsePlotResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PlotResponse"
+        data:
+          $ref: "#/components/schemas/PlotResponse"
+        generatedAt:
+          type: string
+    PlotResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        plotName:
+          type: string
+        area:
+          type: number
+        soilType:
+          type: string
+        boundaryGeoJson:
+          type: string
+        status:
+          type: string
+          enum:
+          - AVAILABLE
+          - IN_USE
+          - IDLE
+          - FALLOW
+          - MAINTENANCE
+    FarmUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        provinceId:
+          type: integer
+          format: int32
+        wardId:
+          type: integer
+          format: int32
+        area:
+          type: number
+          minimum: 0.0
+        latitude:
+          type: number
+          maximum: 90.0
+          minimum: -90.0
+        longitude:
+          type: number
+          maximum: 180.0
+          minimum: -180.0
+        active:
+          type: boolean
+    ApiResponseFarmResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/FarmResponse"
+        data:
+          $ref: "#/components/schemas/FarmResponse"
+        generatedAt:
+          type: string
+    FarmResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        name:
+          type: string
+        ownerUsername:
+          type: string
+        userId:
+          type: integer
+          format: int64
+        provinceId:
+          type: integer
+          format: int32
+        provinceName:
+          type: string
+        wardId:
+          type: integer
+          format: int32
+        wardName:
+          type: string
+        area:
+          type: number
+        latitude:
+          type: number
+        longitude:
+          type: number
+        active:
+          type: boolean
+    FarmCreateRequest:
+      type: object
+      properties:
+        farmName:
+          type: string
+        provinceId:
+          type: integer
+          format: int32
+        wardId:
+          type: integer
+          format: int32
+        area:
+          type: number
+          minimum: 0.0
+        latitude:
+          type: number
+          maximum: 90.0
+          minimum: -90.0
+        longitude:
+          type: number
+          maximum: 180.0
+          minimum: -180.0
+        active:
+          type: boolean
+      required:
+      - area
+      - farmName
+      - provinceId
+      - wardId
+    ApiResponseListPlotResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlotResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlotResponse"
+        generatedAt:
+          type: string
+    WardResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        slug:
+          type: string
+        type:
+          type: string
+        nameWithType:
+          type: string
+        provinceId:
+          type: integer
+          format: int32
+    ProvinceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        slug:
+          type: string
+        type:
+          type: string
+        nameWithType:
+          type: string
+    PlotInternalDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        plotName:
+          type: string
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        ownerUserId:
+          type: integer
+          format: int64
+        farmActive:
+          type: boolean
+    ApiResponseObject:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: object
+        data:
+          type: object
+        generatedAt:
+          type: string
+    ApiResponseWardResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/WardResponse"
+        data:
+          $ref: "#/components/schemas/WardResponse"
+        generatedAt:
+          type: string
+    AddressStats:
+      type: object
+      properties:
+        provinceCount:
+          type: integer
+          format: int64
+        wardCount:
+          type: integer
+          format: int64
+    ApiResponseAddressStats:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/AddressStats"
+        data:
+          $ref: "#/components/schemas/AddressStats"
+        generatedAt:
+          type: string
+    ApiResponseListProvinceResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProvinceResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProvinceResponse"
+        generatedAt:
+          type: string
+    ApiResponseListWardResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/WardResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/WardResponse"
+        generatedAt:
+          type: string
+    ApiResponseProvinceResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/ProvinceResponse"
+        data:
+          $ref: "#/components/schemas/ProvinceResponse"
+        generatedAt:
+          type: string
+    ApiResponseVoid:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: object
+        data:
+          type: object
+        generatedAt:
+          type: string
+    ApiResponseString:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: string
+        data:
+          type: string
+        generatedAt:
+          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      name: bearerAuth
+      scheme: bearer
+      bearerFormat: JWT

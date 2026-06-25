@@ -1,35 +1,41 @@
 package org.example.season.event;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.season.config.RabbitMQConfig;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.context.ApplicationEventPublisher;
+import org.example.season.entity.OutboxEvent;
+import org.example.season.repository.OutboxEventRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class DomainEventPublisher {
 
-    private final ApplicationEventPublisher applicationEventPublisher;
-    private final RabbitTemplate rabbitTemplate;
+    private final OutboxEventRepository outboxEventRepository;
+    private final ObjectMapper objectMapper;
 
+    @Transactional
     public void publish(DomainEvent event) {
         if (event == null) {
             return;
         }
 
-        // Publish locally via Spring Event Publisher
-        applicationEventPublisher.publishEvent(event);
-
-        // Publish to RabbitMQ
+        // Save event to outbox
         try {
-            String routingKey = "season.event." + event.getEventType().toLowerCase().replace("_", ".");
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, routingKey, event);
-            log.info("Successfully published event {} to RabbitMQ with routing key {}", event.getEventType(), routingKey);
+            OutboxEvent outboxEvent = OutboxEvent.builder()
+                    .aggregateType(event.getAggregateType())
+                    .aggregateId(event.getAggregateId().toString())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .processed(false)
+                    .build();
+
+            outboxEventRepository.save(outboxEvent);
+            log.info("Successfully saved event {} to outbox", event.getEventType());
         } catch (Exception e) {
-            log.error("Failed to publish event {} to RabbitMQ", event.getEventType(), e);
+            log.error("Failed to save event {} to outbox", event.getEventType(), e);
         }
     }
 }

@@ -1,0 +1,937 @@
+openapi: 3.1.0
+info:
+  title: ACM Crop Catalog Service API
+  description: API documentation for Crop Catalog Service
+  license:
+    name: Apache 2.0
+    url: https://springdoc.org
+  version: 1.0.0
+servers:
+- url: http://localhost
+  description: Generated server url
+security:
+- bearerAuth: []
+tags:
+- name: Admin Crops
+  description: Admin endpoints for system-wide crop management
+- name: Admin Varieties
+  description: Admin endpoints for system-wide variety management
+paths:
+  /api/v1/crops/{id}:
+    get:
+      tags:
+      - crop-controller
+      summary: Get crop detail
+      description: Get crop detail
+      operationId: getCrop
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+    put:
+      tags:
+      - crop-controller
+      summary: Update crop
+      description: Update crop information
+      operationId: updateCrop
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CropRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "409":
+          description: Conflict
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+    delete:
+      tags:
+      - crop-controller
+      summary: Delete crop
+      description: Delete a crop definition owned/used by farmer workspace
+      operationId: deleteCrop
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/admin/varieties/{id}:
+    get:
+      tags:
+      - Admin Varieties
+      summary: Get variety detail (Admin)
+      description: Get detailed information about a specific variety
+      operationId: getVariety
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+    put:
+      tags:
+      - Admin Varieties
+      summary: Update variety (Admin)
+      description: Update an existing variety
+      operationId: updateVariety
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VarietyRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+    delete:
+      tags:
+      - Admin Varieties
+      summary: Delete variety (Admin)
+      description: Delete an existing variety. Fails if referenced in seasons.
+      operationId: deleteVariety
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "409":
+          description: Conflict - Variety is referenced in seasons
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/admin/crops/{id}:
+    put:
+      tags:
+      - Admin Crops
+      summary: Update crop (Admin)
+      description: Update an existing crop definition
+      operationId: updateCrop_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CropRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+    delete:
+      tags:
+      - Admin Crops
+      summary: Delete crop
+      description: Delete an existing crop. Fails if crop has varieties or is referenced
+        in seasons.
+      operationId: deleteCrop_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "409":
+          description: Conflict - Crop has varieties or is referenced in seasons
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/crops:
+    get:
+      tags:
+      - crop-controller
+      summary: List crops
+      description: List crops for farmer workspace
+      operationId: listCrops
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCropResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCropResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCropResponse"
+    post:
+      tags:
+      - crop-controller
+      summary: Create crop
+      description: Create a new crop definition
+      operationId: createCrop
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CropRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "409":
+          description: Conflict
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+  /api/v1/admin/varieties:
+    get:
+      tags:
+      - Admin Varieties
+      summary: List varieties (Admin)
+      description: "Get list of all varieties, optionally filtered by crop"
+      operationId: listVarieties
+      parameters:
+      - name: cropId
+        in: query
+        description: Filter by crop ID
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListVarietyResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListVarietyResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListVarietyResponse"
+    post:
+      tags:
+      - Admin Varieties
+      summary: Create variety (Admin)
+      description: Create a new variety for a crop
+      operationId: createVariety
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VarietyRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+  /api/v1/admin/crops:
+    get:
+      tags:
+      - Admin Crops
+      summary: List all crops (Admin)
+      description: Get list of all crops in the system
+      operationId: listCrops_1
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCropResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCropResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCropResponse"
+    post:
+      tags:
+      - Admin Crops
+      summary: Create crop (Admin)
+      description: Create a new crop definition
+      operationId: createCrop_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CropRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropResponse"
+  /api/v1/varieties/{id}:
+    get:
+      tags:
+      - variety-controller
+      summary: Get crop variety
+      description: Get a single crop variety by id
+      operationId: get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVarietyResponse"
+  /api/v1/varieties/by-crop/{cropId}:
+    get:
+      tags:
+      - variety-controller
+      summary: List varieties of crop
+      description: List all varieties belonging to a crop
+      operationId: listByCrop
+      parameters:
+      - name: cropId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListVarietyResponse"
+  /api/v1/internal/varieties/{id}:
+    get:
+      tags:
+      - internal-crop-controller
+      operationId: getVarietyInternal
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/VarietyInternalDto"
+  /api/v1/internal/crops/{id}:
+    get:
+      tags:
+      - internal-crop-controller
+      operationId: getCropInternal
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CropInternalDto"
+  /api/v1/crops/{id}/nitrogen-reference:
+    get:
+      tags:
+      - crop-controller
+      summary: Get active nitrogen reference
+      description: Get active nitrogen reference for a crop
+      operationId: getActiveNitrogenReference
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCropNitrogenReferenceResponse"
+  /api/v1/catalog/crops:
+    get:
+      tags:
+      - catalog-controller
+      summary: Get all crops
+      description: Get list of all crops for dropdown selection
+      operationId: getAllCrops
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCropResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCropResponse"
+  /api/v1/catalog/crops/{cropId}/varieties:
+    get:
+      tags:
+      - catalog-controller
+      summary: Get varieties by crop
+      description: Get list of varieties for a specific crop
+      operationId: getVarietiesByCrop
+      parameters:
+      - name: cropId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListVarietyResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListVarietyResponse"
+        "404":
+          description: Crop not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListVarietyResponse"
+components:
+  schemas:
+    CropRequest:
+      type: object
+      properties:
+        cropName:
+          type: string
+        description:
+          type: string
+      required:
+      - cropName
+    ApiResponseCropResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/CropResponse"
+        data:
+          $ref: "#/components/schemas/CropResponse"
+        generatedAt:
+          type: string
+    CropResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        cropName:
+          type: string
+        description:
+          type: string
+    VarietyRequest:
+      type: object
+      properties:
+        cropId:
+          type: integer
+          format: int32
+        name:
+          type: string
+        description:
+          type: string
+      required:
+      - cropId
+      - name
+    ApiResponseVarietyResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/VarietyResponse"
+        data:
+          $ref: "#/components/schemas/VarietyResponse"
+        generatedAt:
+          type: string
+    VarietyResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        cropId:
+          type: integer
+          format: int32
+        cropName:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+    ApiResponseListVarietyResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/VarietyResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/VarietyResponse"
+        generatedAt:
+          type: string
+    VarietyInternalDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        cropId:
+          type: integer
+          format: int32
+    CropInternalDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        cropName:
+          type: string
+    ApiResponseListCropResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/CropResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CropResponse"
+        generatedAt:
+          type: string
+    ApiResponseCropNitrogenReferenceResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/CropNitrogenReferenceResponse"
+        data:
+          $ref: "#/components/schemas/CropNitrogenReferenceResponse"
+        generatedAt:
+          type: string
+    CropNitrogenReferenceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        cropId:
+          type: integer
+          format: int32
+        sourceReference:
+          type: string
+        active:
+          type: boolean
+        ncontentKgPerKgYield:
+          type: number
+    ApiResponseVoid:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: object
+        data:
+          type: object
+        generatedAt:
+          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      name: bearerAuth
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,5 +1,7 @@
 package org.example.season.dto.request;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +15,19 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReceiveHarvestRequest {
+    Integer seasonId;
+    String seasonName;
+    Integer farmId;
+    String farmName;
+    Integer plotId;
+    String plotName;
+    Integer cropId;
+    String cropName;
+    Integer varietyId;
+    String varietyName;
+    LocalDate harvestDate;
+    BigDecimal quantity;
+    String grade;
     Integer warehouseId;
     Integer locationId;
     Integer productId;

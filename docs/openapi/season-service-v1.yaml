@@ -1,0 +1,4275 @@
+openapi: 3.1.0
+info:
+  title: ACM Season Service API
+  description: API documentation for ACM Season Service
+  license:
+    name: Apache 2.0
+    url: https://springdoc.org
+  version: 1.0.0
+servers:
+- url: http://localhost
+  description: Generated server url
+security:
+- bearerAuth: []
+paths:
+  /api/v1/workspace/tasks/{id}:
+    get:
+      tags:
+      - task-workspace-controller
+      summary: Get task
+      description: Get task details by ID
+      operationId: getTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+    put:
+      tags:
+      - task-workspace-controller
+      summary: Update task
+      description: Update task details
+      operationId: updateTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+    delete:
+      tags:
+      - task-workspace-controller
+      summary: Delete task
+      description: Permanently delete task (dev only)
+      operationId: deleteTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/tasks/{id}:
+    get:
+      tags:
+      - task-controller
+      summary: Get task detail
+      description: Get task detail if its season belongs to current farmer
+      operationId: getTask_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "404":
+          description: Task not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+    put:
+      tags:
+      - task-controller
+      summary: Update task
+      description: Update task details while task and season are still editable
+      operationId: updateTask_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "404":
+          description: Task not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+    delete:
+      tags:
+      - task-controller
+      summary: Delete task
+      description: Delete task if allowed by status and season constraints
+      operationId: deleteTask_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "404":
+          description: Task not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/seasons/{id}:
+    get:
+      tags:
+      - season-controller
+      summary: Get season detail
+      description: Get season detail belonging to current farmer
+      operationId: getSeason
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+    put:
+      tags:
+      - season-controller
+      summary: Update season
+      description: Update season details while status is still editable
+      operationId: updateSeason
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSeasonRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "409":
+          description: Conflict
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+    delete:
+      tags:
+      - season-controller
+      summary: Delete season
+      description: Delete a season if allowed by business constraints
+      operationId: deleteSeason
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/harvests/{id}:
+    get:
+      tags:
+      - season-harvest-controller
+      summary: Get harvest detail
+      description: Get harvest detail if it belongs to a season of current farmer
+      operationId: getHarvest
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+        "404":
+          description: Harvest not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+    put:
+      tags:
+      - season-harvest-controller
+      summary: Update harvest
+      description: Update harvest information while constraints are respected
+      operationId: updateHarvest
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateHarvestDetailRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+        "404":
+          description: Harvest not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+    delete:
+      tags:
+      - season-harvest-controller
+      summary: Delete harvest
+      description: Delete a harvest batch if it has no linked orders or quality results
+      operationId: deleteHarvest
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "404":
+          description: Harvest not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/field-logs/{id}:
+    get:
+      tags:
+      - field-log-controller
+      summary: Get field log detail
+      description: Get field log detail if it belongs to a season of current farmer
+      operationId: getFieldLog
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+        "404":
+          description: Field log not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+    put:
+      tags:
+      - field-log-controller
+      summary: Update field log
+      description: Update field log content while season is still open
+      operationId: updateFieldLog
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFieldLogRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+        "404":
+          description: Field log not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+    delete:
+      tags:
+      - field-log-controller
+      summary: Delete field log
+      description: Delete a field log if allowed by season constraints
+      operationId: deleteFieldLog
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+        "404":
+          description: Field log not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/disease-treatments/{id}:
+    put:
+      tags:
+      - disease-record-controller
+      operationId: updateTreatment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDiseaseTreatmentRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseDiseaseTreatmentResponse"
+    delete:
+      tags:
+      - disease-record-controller
+      operationId: deleteTreatment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/disease-records/{id}:
+    get:
+      tags:
+      - disease-record-controller
+      operationId: getDiseaseRecordDetail
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseDiseaseRecordDetailResponse"
+    put:
+      tags:
+      - disease-record-controller
+      operationId: updateDiseaseRecord
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDiseaseRecordRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseDiseaseRecordResponse"
+    delete:
+      tags:
+      - disease-record-controller
+      operationId: deleteDiseaseRecord
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/workspace/tasks:
+    get:
+      tags:
+      - task-workspace-controller
+      summary: List tasks
+      description: List all tasks for current user with filters
+      operationId: listTasks
+      parameters:
+      - name: status
+        in: query
+        description: Filter by status
+        required: false
+        schema:
+          type: string
+          enum:
+          - PENDING
+          - IN_PROGRESS
+          - DONE
+          - OVERDUE
+          - CANCELLED
+      - name: seasonId
+        in: query
+        description: Filter by season ID
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: q
+        in: query
+        description: Search by title (min 2 chars)
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: Page number (0-based)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        description: Page size
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: sortBy
+        in: query
+        description: Sort by field
+        required: false
+        schema:
+          type: string
+          default: createdAt
+      - name: sortDirection
+        in: query
+        description: Sort direction
+        required: false
+        schema:
+          type: string
+          default: desc
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseTaskResponse"
+    post:
+      tags:
+      - task-workspace-controller
+      summary: Create task
+      description: Create a new task with optional season link
+      operationId: createTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+  /api/v1/seasons:
+    get:
+      tags:
+      - season-controller
+      summary: Search seasons
+      description: "Search seasons of the current farmer by plot, crop, status and\
+        \ date range"
+      operationId: searchSeasons
+      parameters:
+      - name: plotId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: cropId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        description: From date (yyyy-MM-dd)
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        description: To date (yyyy-MM-dd)
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        description: Page index (0-based)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        description: Page size
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseSeasonResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseSeasonResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseSeasonResponse"
+    post:
+      tags:
+      - season-controller
+      summary: Create season
+      description: Create a new season for a given plot and crop
+      operationId: createSeason
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSeasonRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+        "409":
+          description: Conflict
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonDetailResponse"
+  /api/v1/seasons/{seasonId}/tasks:
+    get:
+      tags:
+      - task-controller
+      summary: List tasks of a season
+      description: List tasks for a given season of the current farmer
+      operationId: listTasks_1
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        description: From date (yyyy-MM-dd)
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        description: To date (yyyy-MM-dd)
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        description: Page index (0-based)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        description: Page size
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseTaskResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseTaskResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseTaskResponse"
+    post:
+      tags:
+      - task-controller
+      summary: Create task in season
+      description: Create a new task within given season for current farmer
+      operationId: createTask_1
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "409":
+          description: Conflict
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+  /api/v1/seasons/{seasonId}/harvests:
+    get:
+      tags:
+      - season-harvest-controller
+      summary: List harvests of a season
+      description: List harvest batches for a season
+      operationId: listHarvests
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: from
+        in: query
+        description: From date (yyyy-MM-dd)
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        description: To date (yyyy-MM-dd)
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        description: Page index (0-based)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        description: Page size
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseHarvestResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseHarvestResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseHarvestResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseHarvestResponse"
+    post:
+      tags:
+      - season-harvest-controller
+      summary: Create harvest batch
+      description: Create a new harvest batch for a season
+      operationId: createHarvest
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateHarvestDetailRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestResponse"
+  /api/v1/seasons/{seasonId}/disease-records:
+    get:
+      tags:
+      - disease-record-controller
+      operationId: listDiseaseRecordsBySeason
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: severity
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: fromDetectedAt
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: toDetectedAt
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseDiseaseRecordResponse"
+    post:
+      tags:
+      - disease-record-controller
+      operationId: createDiseaseRecord
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDiseaseRecordRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseDiseaseRecordResponse"
+  /api/v1/seasons/{id}/start:
+    post:
+      tags:
+      - season-controller
+      summary: Start season
+      description: Start a planned season (PLANNED → ACTIVE)
+      operationId: startSeason
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartSeasonRequest"
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "400":
+          description: Invalid status transition
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+  /api/v1/seasons/{id}/complete:
+    post:
+      tags:
+      - season-controller
+      summary: Complete season
+      description: Complete an active season (ACTIVE → COMPLETED)
+      operationId: completeSeason
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteSeasonRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "400":
+          description: Invalid status transition or pending tasks exist
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+  /api/v1/seasons/{id}/cancel:
+    post:
+      tags:
+      - season-controller
+      summary: Cancel season
+      description: Cancel a season (→ CANCELLED)
+      operationId: cancelSeason
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelSeasonRequest"
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "400":
+          description: Invalid status transition or harvests exist
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+  /api/v1/field-logs:
+    get:
+      tags:
+      - field-log-controller
+      summary: List field logs
+      description: List field logs for a given season of the current farmer
+      operationId: listFieldLogs
+      parameters:
+      - name: seasonId
+        in: query
+        description: Season ID (required)
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: type
+        in: query
+        description: Filter by log type
+        required: false
+        schema:
+          type: string
+      - name: q
+        in: query
+        description: Search text in notes (min 2 chars)
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        description: From date (yyyy-MM-dd)
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        description: To date (yyyy-MM-dd)
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        description: Page index (0-based)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        description: Page size
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: sort
+        in: query
+        description: Sort field
+        required: false
+        schema:
+          type: string
+          default: "logDate,desc"
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseFieldLogResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseFieldLogResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseFieldLogResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseFieldLogResponse"
+    post:
+      tags:
+      - field-log-controller
+      summary: Create field log
+      description: Create a new field log linked to a season
+      operationId: createFieldLog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFieldLogRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+  /api/v1/farmer/labor/seasons/{seasonId}/payroll/recalculate:
+    post:
+      tags:
+      - farmer-labor-management-controller
+      operationId: recalculatePayroll
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PayrollRecalculateRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPayrollRecordResponse"
+  /api/v1/farmer/labor/seasons/{seasonId}/employees:
+    get:
+      tags:
+      - farmer-labor-management-controller
+      operationId: listSeasonEmployees
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: keyword
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseSeasonEmployeeResponse"
+    post:
+      tags:
+      - farmer-labor-management-controller
+      operationId: addSeasonEmployee
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddSeasonEmployeeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonEmployeeResponse"
+  /api/v1/farmer/labor/seasons/{seasonId}/employees/bulk:
+    post:
+      tags:
+      - farmer-labor-management-controller
+      operationId: bulkAssignSeasonEmployees
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkAssignSeasonEmployeesRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListSeasonEmployeeResponse"
+  /api/v1/disease-records/{id}/treatments:
+    get:
+      tags:
+      - disease-record-controller
+      operationId: listTreatments
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseDiseaseTreatmentResponse"
+    post:
+      tags:
+      - disease-record-controller
+      operationId: createTreatment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDiseaseTreatmentRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseDiseaseTreatmentResponse"
+  /api/v1/workspace/tasks/{id}/start:
+    patch:
+      tags:
+      - task-workspace-controller
+      summary: Start task
+      description: Mark task as started (IN_PROGRESS)
+      operationId: startTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartTaskRequest"
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+  /api/v1/workspace/tasks/{id}/done:
+    patch:
+      tags:
+      - task-workspace-controller
+      summary: Mark task as done
+      description: Mark task as completed (DONE)
+      operationId: doneTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskDoneRequest"
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+  /api/v1/workspace/tasks/{id}/cancel:
+    patch:
+      tags:
+      - task-workspace-controller
+      summary: Cancel task
+      description: Mark task as cancelled (CANCELLED)
+      operationId: cancelTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+  /api/v1/tasks/{id}/status:
+    patch:
+      tags:
+      - task-controller
+      summary: Update task status
+      description: Update task status with validation of allowed transitions
+      operationId: updateTaskStatus
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskStatusRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "404":
+          description: Task not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+        "409":
+          description: Conflict
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+  /api/v1/seasons/{id}/status:
+    patch:
+      tags:
+      - season-controller
+      summary: Update season status
+      description: Change season status (PLANNED → ACTIVE → COMPLETED/CANCELLED/ARCHIVED)
+      operationId: updateSeasonStatus
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSeasonStatusRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "404":
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "409":
+          description: Conflict
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+  /api/v1/seasons/{id}/archive:
+    patch:
+      tags:
+      - season-controller
+      summary: Archive season
+      description: "BR15: Archive a completed or cancelled season"
+      operationId: archiveSeason
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "400":
+          description: Invalid status transition - only COMPLETED or CANCELLED can
+            be archived
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonResponse"
+  /api/v1/farmer/labor/tasks/{taskId}/assign:
+    patch:
+      tags:
+      - farmer-labor-management-controller
+      operationId: assignTaskToEmployee
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignTaskEmployeeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
+  /api/v1/farmer/labor/seasons/{seasonId}/payroll/{payrollRecordId}:
+    get:
+      tags:
+      - farmer-labor-management-controller
+      operationId: getSeasonPayrollDetail
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: payrollRecordId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePayrollRecordResponse"
+    patch:
+      tags:
+      - farmer-labor-management-controller
+      operationId: updateSeasonPayroll
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: payrollRecordId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePayrollRecordRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePayrollRecordResponse"
+  /api/v1/farmer/labor/seasons/{seasonId}/employees/{employeeUserId}:
+    delete:
+      tags:
+      - farmer-labor-management-controller
+      operationId: removeSeasonEmployee
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: employeeUserId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - farmer-labor-management-controller
+      operationId: updateSeasonEmployee
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: employeeUserId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSeasonEmployeeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonEmployeeResponse"
+  /api/v1/workspace/tasks/seasons:
+    get:
+      tags:
+      - task-workspace-controller
+      summary: Get user seasons
+      description: Get minimal season list for dropdown
+      operationId: getUserSeasons
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListSeasonMinimalResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListSeasonMinimalResponse"
+  /api/v1/seasons/{seasonId}/harvests/stock-context:
+    get:
+      tags:
+      - season-harvest-controller
+      summary: Get harvest stock context
+      description: Preview existing warehouse stock for selected warehouse/product/lot
+        before recording harvest
+      operationId: getHarvestStockContext
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: warehouseId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: productName
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: lotCode
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestStockContextResponse"
+  /api/v1/seasons/search:
+    get:
+      tags:
+      - season-controller
+      summary: Search seasons by keyword
+      description: "BR17: Search seasons using Text_change() style keyword search"
+      operationId: searchSeasonsByKeyword
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListSeasonResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListSeasonResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListSeasonResponse"
+  /api/v1/seasons/my:
+    get:
+      tags:
+      - season-controller
+      summary: Get my seasons (minimal)
+      description: Get a minimal list of seasons for dropdown selectors
+      operationId: getMySeasons
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListMySeasonResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListMySeasonResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListMySeasonResponse"
+  /api/v1/harvests:
+    get:
+      tags:
+      - season-harvest-controller
+      summary: List all farmer harvests
+      description: "List all harvests for current farmer, optionally filtered by season"
+      operationId: listAllHarvests
+      parameters:
+      - name: seasonId
+        in: query
+        description: "Season ID (optional, if absent returns all farmer's harvests)"
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: from
+        in: query
+        description: From date (yyyy-MM-dd)
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        description: To date (yyyy-MM-dd)
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        description: Page index (0-based)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        description: Page size
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseHarvestResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseHarvestResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseHarvestResponse"
+  /api/v1/harvests/summary:
+    get:
+      tags:
+      - season-harvest-controller
+      summary: Get harvest summary
+      description: "Get harvest KPI summary for current farmer, optionally filtered\
+        \ by season"
+      operationId: getSummary
+      parameters:
+      - name: seasonId
+        in: query
+        description: "Season ID (optional, if absent returns summary for all farmer's\
+          \ seasons)"
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestSummaryResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestSummaryResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseHarvestSummaryResponse"
+  /api/v1/farmer/labor/seasons/{seasonId}/progress:
+    get:
+      tags:
+      - farmer-labor-management-controller
+      operationId: listSeasonProgress
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: employeeUserId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: taskId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseTaskProgressLogResponse"
+  /api/v1/farmer/labor/seasons/{seasonId}/payroll:
+    get:
+      tags:
+      - farmer-labor-management-controller
+      operationId: listSeasonPayroll
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: employeeUserId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponsePayrollRecordResponse"
+  /api/v1/farmer/labor/employees/directory:
+    get:
+      tags:
+      - farmer-labor-management-controller
+      operationId: listEmployeeDirectory
+      parameters:
+      - name: keyword
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseEmployeeDirectoryResponse"
+components:
+  schemas:
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          minLength: 0
+        description:
+          type: string
+          maxLength: 4000
+          minLength: 0
+        seasonId:
+          type: integer
+          format: int32
+        plannedDate:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date
+        notes:
+          type: string
+          maxLength: 4000
+          minLength: 0
+        assigneeUserId:
+          type: integer
+          format: int64
+      required:
+      - title
+    ApiResponseTaskResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/TaskResponse"
+        data:
+          $ref: "#/components/schemas/TaskResponse"
+        generatedAt:
+          type: string
+    TaskResponse:
+      type: object
+      properties:
+        taskId:
+          type: integer
+          format: int32
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        plannedDate:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date
+        actualStartDate:
+          type: string
+          format: date
+        actualEndDate:
+          type: string
+          format: date
+        notes:
+          type: string
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        userId:
+          type: integer
+          format: int64
+        userName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    UpdateSeasonRequest:
+      type: object
+      properties:
+        seasonName:
+          type: string
+        startDate:
+          type: string
+          format: date
+        varietyId:
+          type: integer
+          format: int32
+        plannedHarvestDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        currentPlantCount:
+          type: integer
+          format: int32
+          minimum: 1
+        expectedYieldKg:
+          type: number
+        actualYieldKg:
+          type: number
+        notes:
+          type: string
+        description:
+          type: string
+      required:
+      - currentPlantCount
+      - endDate
+      - seasonName
+      - startDate
+    ApiResponseSeasonDetailResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/SeasonDetailResponse"
+        data:
+          $ref: "#/components/schemas/SeasonDetailResponse"
+        generatedAt:
+          type: string
+    SeasonDetailResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        plotId:
+          type: integer
+          format: int32
+        cropId:
+          type: integer
+          format: int32
+        varietyId:
+          type: integer
+          format: int32
+        plotName:
+          type: string
+        cropName:
+          type: string
+        varietyName:
+          type: string
+        startDate:
+          type: string
+          format: date
+        plannedHarvestDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          type: string
+        initialPlantCount:
+          type: integer
+          format: int32
+        currentPlantCount:
+          type: integer
+          format: int32
+        expectedYieldKg:
+          type: number
+        actualYieldKg:
+          type: number
+        notes:
+          type: string
+    UpdateHarvestDetailRequest:
+      type: object
+      properties:
+        harvestDate:
+          type: string
+          format: date
+        quantity:
+          type: number
+          minimum: 0.0
+        unit:
+          type: number
+          minimum: 0.0
+        grade:
+          type: string
+        note:
+          type: string
+      required:
+      - harvestDate
+      - quantity
+      - unit
+    ApiResponseHarvestResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/HarvestResponse"
+        data:
+          $ref: "#/components/schemas/HarvestResponse"
+        generatedAt:
+          type: string
+    HarvestResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        harvestDate:
+          type: string
+          format: date
+        quantity:
+          type: number
+        unit:
+          type: number
+        grade:
+          type: string
+        revenue:
+          type: number
+        note:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    UpdateFieldLogRequest:
+      type: object
+      properties:
+        logDate:
+          type: string
+          format: date
+        logType:
+          type: string
+          maxLength: 100
+          minLength: 0
+        notes:
+          type: string
+          maxLength: 4000
+          minLength: 0
+      required:
+      - logDate
+      - logType
+    ApiResponseFieldLogResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/FieldLogResponse"
+        data:
+          $ref: "#/components/schemas/FieldLogResponse"
+        generatedAt:
+          type: string
+    FieldLogResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        logDate:
+          type: string
+          format: date
+        logType:
+          type: string
+        notes:
+          type: string
+        createdByUserId:
+          type: integer
+          format: int64
+        createdByUsername:
+          type: string
+        createdByDisplayName:
+          type: string
+        createdByType:
+          type: string
+        canEdit:
+          type: boolean
+        canDelete:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    UpdateDiseaseTreatmentRequest:
+      type: object
+      properties:
+        treatedAt:
+          type: string
+          format: date-time
+        method:
+          type: string
+          maxLength: 100
+          minLength: 0
+        supplyItemId:
+          type: integer
+          format: int32
+        supplyLotId:
+          type: integer
+          format: int32
+        materialName:
+          type: string
+          maxLength: 150
+          minLength: 0
+        quantityUsed:
+          type: number
+          minimum: 0.0
+        unit:
+          type: string
+          maxLength: 20
+          minLength: 0
+        costAmount:
+          type: number
+          minimum: 0.0
+        expenseId:
+          type: integer
+          format: int32
+        effectiveness:
+          type: string
+        resultSummary:
+          type: string
+          maxLength: 4000
+          minLength: 0
+        nextReviewAt:
+          type: string
+          format: date
+        notes:
+          type: string
+          maxLength: 4000
+          minLength: 0
+    ApiResponseDiseaseTreatmentResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/DiseaseTreatmentResponse"
+        data:
+          $ref: "#/components/schemas/DiseaseTreatmentResponse"
+        generatedAt:
+          type: string
+    DiseaseTreatmentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        diseaseRecordId:
+          type: integer
+          format: int32
+        treatedAt:
+          type: string
+          format: date-time
+        method:
+          type: string
+        supplyItemId:
+          type: integer
+          format: int32
+        supplyItemName:
+          type: string
+        supplyLotId:
+          type: integer
+          format: int32
+        batchCode:
+          type: string
+        materialName:
+          type: string
+        quantityUsed:
+          type: number
+        unit:
+          type: string
+        costAmount:
+          type: number
+        expenseId:
+          type: integer
+          format: int32
+        effectiveness:
+          type: string
+        resultSummary:
+          type: string
+        nextReviewAt:
+          type: string
+          format: date
+        notes:
+          type: string
+        createdByUserId:
+          type: integer
+          format: int64
+        createdByUsername:
+          type: string
+        createdByDisplayName:
+          type: string
+        createdByType:
+          type: string
+        canEdit:
+          type: boolean
+        canDelete:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateDiseaseRecordRequest:
+      type: object
+      properties:
+        diseaseName:
+          type: string
+          maxLength: 150
+          minLength: 0
+        symptomSummary:
+          type: string
+          maxLength: 4000
+          minLength: 0
+        severity:
+          type: string
+        status:
+          type: string
+          maxLength: 30
+          minLength: 0
+        detectedAt:
+          type: string
+          format: date-time
+        affectedPlantCount:
+          type: integer
+          format: int32
+          minimum: 0
+        affectedAreaValue:
+          type: number
+          minimum: 0.0
+        affectedAreaUnit:
+          type: string
+          maxLength: 20
+          minLength: 0
+        evidenceUrl:
+          type: string
+          maxLength: 1000
+          minLength: 0
+        notes:
+          type: string
+          maxLength: 4000
+          minLength: 0
+        incidentId:
+          type: integer
+          format: int32
+    ApiResponseDiseaseRecordResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/DiseaseRecordResponse"
+        data:
+          $ref: "#/components/schemas/DiseaseRecordResponse"
+        generatedAt:
+          type: string
+    DiseaseRecordResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        plotId:
+          type: integer
+          format: int32
+        plotName:
+          type: string
+        cropId:
+          type: integer
+          format: int32
+        cropName:
+          type: string
+        varietyId:
+          type: integer
+          format: int32
+        varietyName:
+          type: string
+        reportedByUserId:
+          type: integer
+          format: int64
+        reportedByUsername:
+          type: string
+        reportedByDisplayName:
+          type: string
+        reportedByType:
+          type: string
+        canEdit:
+          type: boolean
+        canDelete:
+          type: boolean
+        incidentId:
+          type: integer
+          format: int32
+        diseaseName:
+          type: string
+        symptomSummary:
+          type: string
+        severity:
+          type: string
+        status:
+          type: string
+        detectedAt:
+          type: string
+          format: date-time
+        affectedPlantCount:
+          type: integer
+          format: int32
+        affectedAreaValue:
+          type: number
+        affectedAreaUnit:
+          type: string
+        evidenceUrl:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        treatmentCount:
+          type: integer
+          format: int64
+        latestTreatmentAt:
+          type: string
+          format: date-time
+    CreateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          minLength: 0
+        description:
+          type: string
+          maxLength: 4000
+          minLength: 0
+        seasonId:
+          type: integer
+          format: int32
+        plannedDate:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date
+        notes:
+          type: string
+          maxLength: 4000
+          minLength: 0
+        assigneeUserId:
+          type: integer
+          format: int64
+      required:
+      - title
+    CreateSeasonRequest:
+      type: object
+      properties:
+        plotId:
+          type: integer
+          format: int32
+        cropId:
+          type: integer
+          format: int32
+        varietyId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        startDate:
+          type: string
+          format: date
+        plannedHarvestDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        initialPlantCount:
+          type: integer
+          format: int32
+          minimum: 1
+        expectedYieldKg:
+          type: number
+        notes:
+          type: string
+        description:
+          type: string
+      required:
+      - cropId
+      - endDate
+      - initialPlantCount
+      - plotId
+      - seasonName
+      - startDate
+    CreateHarvestDetailRequest:
+      type: object
+      properties:
+        harvestDate:
+          type: string
+          format: date
+        quantity:
+          type: number
+          minimum: 0.0
+        unit:
+          type: number
+          minimum: 0.0
+        warehouseId:
+          type: integer
+          format: int32
+        locationId:
+          type: integer
+          format: int32
+        productId:
+          type: integer
+          format: int32
+        productName:
+          type: string
+        productVariant:
+          type: string
+        lotCode:
+          type: string
+        inventoryUnit:
+          type: string
+        grade:
+          type: string
+        note:
+          type: string
+      required:
+      - harvestDate
+      - lotCode
+      - productName
+      - quantity
+      - unit
+      - warehouseId
+    CreateDiseaseRecordRequest:
+      type: object
+      properties:
+        diseaseName:
+          type: string
+          maxLength: 150
+          minLength: 0
+        symptomSummary:
+          type: string
+          maxLength: 4000
+          minLength: 0
+        severity:
+          type: string
+        status:
+          type: string
+          maxLength: 30
+          minLength: 0
+        detectedAt:
+          type: string
+          format: date-time
+        affectedPlantCount:
+          type: integer
+          format: int32
+          minimum: 0
+        affectedAreaValue:
+          type: number
+          minimum: 0.0
+        affectedAreaUnit:
+          type: string
+          maxLength: 20
+          minLength: 0
+        evidenceUrl:
+          type: string
+          maxLength: 1000
+          minLength: 0
+        notes:
+          type: string
+          maxLength: 4000
+          minLength: 0
+        incidentId:
+          type: integer
+          format: int32
+      required:
+      - detectedAt
+      - diseaseName
+      - severity
+    StartSeasonRequest:
+      type: object
+      properties:
+        actualStartDate:
+          type: string
+          format: date
+    ApiResponseSeasonResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/SeasonResponse"
+        data:
+          $ref: "#/components/schemas/SeasonResponse"
+        generatedAt:
+          type: string
+    SeasonResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        plotId:
+          type: integer
+          format: int32
+        cropId:
+          type: integer
+          format: int32
+        varietyId:
+          type: integer
+          format: int32
+        startDate:
+          type: string
+          format: date
+        plannedHarvestDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          type: string
+        expectedYieldKg:
+          type: number
+        actualYieldKg:
+          type: number
+    CompleteSeasonRequest:
+      type: object
+      properties:
+        endDate:
+          type: string
+          format: date
+        actualYieldKg:
+          type: number
+        forceComplete:
+          type: boolean
+      required:
+      - endDate
+    CancelSeasonRequest:
+      type: object
+      properties:
+        forceCancel:
+          type: boolean
+        reason:
+          type: string
+    CreateFieldLogRequest:
+      type: object
+      properties:
+        seasonId:
+          type: integer
+          format: int32
+        logDate:
+          type: string
+          format: date
+        logType:
+          type: string
+          maxLength: 100
+          minLength: 0
+        notes:
+          type: string
+          maxLength: 4000
+          minLength: 0
+      required:
+      - logDate
+      - logType
+    PayrollRecalculateRequest:
+      type: object
+      properties:
+        employeeUserId:
+          type: integer
+          format: int64
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+    ApiResponseListPayrollRecordResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/PayrollRecordResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PayrollRecordResponse"
+        generatedAt:
+          type: string
+    PayrollRecordResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        employeeUserId:
+          type: integer
+          format: int64
+        employeeName:
+          type: string
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        totalAssignedTasks:
+          type: integer
+          format: int32
+        totalCompletedTasks:
+          type: integer
+          format: int32
+        wagePerTask:
+          type: number
+        totalAmount:
+          type: number
+        generatedAt:
+          type: string
+          format: date-time
+        note:
+          type: string
+    AddSeasonEmployeeRequest:
+      type: object
+      properties:
+        employeeUserId:
+          type: integer
+          format: int64
+        wagePerTask:
+          type: number
+          minimum: 0
+      required:
+      - employeeUserId
+    ApiResponseSeasonEmployeeResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/SeasonEmployeeResponse"
+        data:
+          $ref: "#/components/schemas/SeasonEmployeeResponse"
+        generatedAt:
+          type: string
+    SeasonEmployeeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        employeeUserId:
+          type: integer
+          format: int64
+        employeeUsername:
+          type: string
+        employeeName:
+          type: string
+        employeeEmail:
+          type: string
+        wagePerTask:
+          type: number
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    BulkAssignSeasonEmployeesRequest:
+      type: object
+      properties:
+        employeeUserIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        wagePerTask:
+          type: number
+      required:
+      - employeeUserIds
+    ApiResponseListSeasonEmployeeResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeasonEmployeeResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeasonEmployeeResponse"
+        generatedAt:
+          type: string
+    CreateDiseaseTreatmentRequest:
+      type: object
+      properties:
+        treatedAt:
+          type: string
+          format: date-time
+        method:
+          type: string
+          maxLength: 100
+          minLength: 0
+        supplyItemId:
+          type: integer
+          format: int32
+        supplyLotId:
+          type: integer
+          format: int32
+        materialName:
+          type: string
+          maxLength: 150
+          minLength: 0
+        quantityUsed:
+          type: number
+          minimum: 0.0
+        unit:
+          type: string
+          maxLength: 20
+          minLength: 0
+        costAmount:
+          type: number
+          minimum: 0.0
+        expenseId:
+          type: integer
+          format: int32
+        effectiveness:
+          type: string
+        resultSummary:
+          type: string
+          maxLength: 4000
+          minLength: 0
+        nextReviewAt:
+          type: string
+          format: date
+        notes:
+          type: string
+          maxLength: 4000
+          minLength: 0
+      required:
+      - method
+      - treatedAt
+    StartTaskRequest:
+      type: object
+      properties:
+        actualStartDate:
+          type: string
+          format: date
+    TaskDoneRequest:
+      type: object
+      properties:
+        actualEndDate:
+          type: string
+          format: date
+    UpdateTaskStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        actualStartDate:
+          type: string
+          format: date
+        actualEndDate:
+          type: string
+          format: date
+        notes:
+          type: string
+      required:
+      - status
+    UpdateSeasonStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        actualStartDate:
+          type: string
+          format: date
+        actualEndDate:
+          type: string
+          format: date
+        reason:
+          type: string
+      required:
+      - status
+    AssignTaskEmployeeRequest:
+      type: object
+      properties:
+        employeeUserId:
+          type: integer
+          format: int64
+      required:
+      - employeeUserId
+    UpdatePayrollRecordRequest:
+      type: object
+      properties:
+        note:
+          type: string
+          maxLength: 4000
+          minLength: 0
+    ApiResponsePayrollRecordResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PayrollRecordResponse"
+        data:
+          $ref: "#/components/schemas/PayrollRecordResponse"
+        generatedAt:
+          type: string
+    UpdateSeasonEmployeeRequest:
+      type: object
+      properties:
+        wagePerTask:
+          type: number
+          minimum: 0
+        active:
+          type: boolean
+    ApiResponsePageResponseTaskResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseTaskResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseTaskResponse"
+        generatedAt:
+          type: string
+    PageResponseTaskResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponseListSeasonMinimalResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeasonMinimalResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeasonMinimalResponse"
+        generatedAt:
+          type: string
+    SeasonMinimalResponse:
+      type: object
+      properties:
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        plotId:
+          type: integer
+          format: int32
+        plotName:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        plannedHarvestDate:
+          type: string
+          format: date
+    ApiResponsePageResponseSeasonResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseSeasonResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseSeasonResponse"
+        generatedAt:
+          type: string
+    PageResponseSeasonResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeasonResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponsePageResponseHarvestResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseHarvestResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseHarvestResponse"
+        generatedAt:
+          type: string
+    PageResponseHarvestResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/HarvestResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponseHarvestStockContextResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/HarvestStockContextResponse"
+        data:
+          $ref: "#/components/schemas/HarvestStockContextResponse"
+        generatedAt:
+          type: string
+    HarvestStockContextResponse:
+      type: object
+      properties:
+        warehouseId:
+          type: integer
+          format: int32
+        warehouseName:
+          type: string
+        productName:
+          type: string
+        lotCode:
+          type: string
+        matchingLots:
+          type: integer
+          format: int64
+        onHandQuantity:
+          type: number
+        unit:
+          type: string
+    ApiResponsePageResponseDiseaseRecordResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseDiseaseRecordResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseDiseaseRecordResponse"
+        generatedAt:
+          type: string
+    PageResponseDiseaseRecordResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiseaseRecordResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponseListSeasonResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeasonResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeasonResponse"
+        generatedAt:
+          type: string
+    ApiResponseListMySeasonResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/MySeasonResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/MySeasonResponse"
+        generatedAt:
+          type: string
+    MySeasonResponse:
+      type: object
+      properties:
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        plotId:
+          type: integer
+          format: int32
+        plotName:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        plannedHarvestDate:
+          type: string
+          format: date
+        status:
+          type: string
+    ApiResponseHarvestSummaryResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/HarvestSummaryResponse"
+        data:
+          $ref: "#/components/schemas/HarvestSummaryResponse"
+        generatedAt:
+          type: string
+    HarvestSummaryResponse:
+      type: object
+      properties:
+        totalHarvestedKg:
+          type: number
+        lotsCount:
+          type: integer
+          format: int32
+        totalRevenue:
+          type: number
+        yieldVsPlanPercent:
+          type: number
+        expectedYieldKg:
+          type: number
+        actualYieldKg:
+          type: number
+        totalStoredKg:
+          type: number
+        totalSoldKg:
+          type: number
+        totalProcessingKg:
+          type: number
+        premiumGradePercentage:
+          type: number
+    ApiResponsePageResponseFieldLogResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseFieldLogResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseFieldLogResponse"
+        generatedAt:
+          type: string
+    PageResponseFieldLogResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldLogResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponsePageResponseTaskProgressLogResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseTaskProgressLogResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseTaskProgressLogResponse"
+        generatedAt:
+          type: string
+    PageResponseTaskProgressLogResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskProgressLogResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    TaskProgressLogResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        taskId:
+          type: integer
+          format: int32
+        taskTitle:
+          type: string
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        employeeUserId:
+          type: integer
+          format: int64
+        employeeName:
+          type: string
+        progressPercent:
+          type: integer
+          format: int32
+        note:
+          type: string
+        evidenceUrl:
+          type: string
+        loggedAt:
+          type: string
+          format: date-time
+    ApiResponsePageResponsePayrollRecordResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponsePayrollRecordResponse"
+        data:
+          $ref: "#/components/schemas/PageResponsePayrollRecordResponse"
+        generatedAt:
+          type: string
+    PageResponsePayrollRecordResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PayrollRecordResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponsePageResponseSeasonEmployeeResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseSeasonEmployeeResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseSeasonEmployeeResponse"
+        generatedAt:
+          type: string
+    PageResponseSeasonEmployeeResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeasonEmployeeResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponsePageResponseEmployeeDirectoryResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseEmployeeDirectoryResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseEmployeeDirectoryResponse"
+        generatedAt:
+          type: string
+    EmployeeDirectoryResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        username:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+    PageResponseEmployeeDirectoryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmployeeDirectoryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponseDiseaseRecordDetailResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/DiseaseRecordDetailResponse"
+        data:
+          $ref: "#/components/schemas/DiseaseRecordDetailResponse"
+        generatedAt:
+          type: string
+    DiseaseRecordDetailResponse:
+      type: object
+      properties:
+        record:
+          $ref: "#/components/schemas/DiseaseRecordResponse"
+        treatments:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiseaseTreatmentResponse"
+        treatmentCount:
+          type: integer
+          format: int64
+        latestTreatmentAt:
+          type: string
+          format: date-time
+        totalTreatmentCost:
+          type: number
+    ApiResponsePageResponseDiseaseTreatmentResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseDiseaseTreatmentResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseDiseaseTreatmentResponse"
+        generatedAt:
+          type: string
+    PageResponseDiseaseTreatmentResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiseaseTreatmentResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponseVoid:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: object
+        data:
+          type: object
+        generatedAt:
+          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      name: bearerAuth
+      scheme: bearer
+      bearerFormat: JWT

@@ -317,10 +317,26 @@ public class SeasonHarvestService {
                 .build();
 
         Harvest saved = harvestRepository.save(harvest);
+        ExternalServiceClient.PlotInternalDto plot = resolvePlotForHarvestReceipt(season);
+        ExternalServiceClient.CropInternalDto crop = resolveCropForHarvestReceipt(season);
+        ExternalServiceClient.VarietyInternalDto variety = resolveVarietyForHarvestReceipt(season);
         ProductWarehouseLotDto receivedLot = externalServiceClient.receiveFromHarvest(
                 saved.getId(),
                 seasonWorkspaceAccessService.getCurrentUser().getId(),
                 ReceiveHarvestRequest.builder()
+                        .seasonId(season.getId())
+                        .seasonName(season.getSeasonName())
+                        .farmId(plot.getFarmId())
+                        .farmName(plot.getFarmName())
+                        .plotId(plot.getId())
+                        .plotName(plot.getPlotName())
+                        .cropId(season.getCropId())
+                        .cropName(crop != null ? crop.getCropName() : null)
+                        .varietyId(season.getVarietyId())
+                        .varietyName(variety != null ? variety.getName() : null)
+                        .harvestDate(saved.getHarvestDate())
+                        .quantity(saved.getQuantity())
+                        .grade(saved.getGrade())
                         .warehouseId(request.getWarehouseId())
                         .locationId(request.getLocationId())
                         .productId(request.getProductId())
@@ -333,6 +349,31 @@ public class SeasonHarvestService {
         recomputeSeasonActualYield(season);
         domainEventPublisher.publish(new HarvestRecordedEvent(saved));
         return toResponseWithStatus(saved, receivedLot);
+    }
+
+    private ExternalServiceClient.PlotInternalDto resolvePlotForHarvestReceipt(Season season) {
+        if (season == null || season.getPlotId() == null) {
+            throw new AppException(ErrorCode.PLOT_NOT_FOUND);
+        }
+        ExternalServiceClient.PlotInternalDto plot = externalServiceClient.getPlot(season.getPlotId());
+        if (plot == null || plot.getId() == null || plot.getFarmId() == null) {
+            throw new AppException(ErrorCode.PLOT_NOT_FOUND);
+        }
+        return plot;
+    }
+
+    private ExternalServiceClient.CropInternalDto resolveCropForHarvestReceipt(Season season) {
+        if (season == null || season.getCropId() == null) {
+            return null;
+        }
+        return externalServiceClient.getCrop(season.getCropId());
+    }
+
+    private ExternalServiceClient.VarietyInternalDto resolveVarietyForHarvestReceipt(Season season) {
+        if (season == null || season.getVarietyId() == null) {
+            return null;
+        }
+        return externalServiceClient.getVariety(season.getVarietyId());
     }
 
     public HarvestStockContextResponse getStockContext(

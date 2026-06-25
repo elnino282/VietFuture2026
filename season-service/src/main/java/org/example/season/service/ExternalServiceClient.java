@@ -37,6 +37,9 @@ public class ExternalServiceClient {
     @Value("${app.monolith-service-url}")
     private String monolithServiceUrl;
 
+    @Value("${app.inventory-service-url}")
+    private String inventoryServiceUrl;
+
     public Boolean existsExpenseBySeasonId(Integer seasonId) {
         try {
             String url = monolithServiceUrl + "/api/v1/public/expenses/exists-by-season/" + seasonId;
@@ -69,7 +72,7 @@ public class ExternalServiceClient {
 
     public ValidationResultDto validateSupplyLot(Integer lotId, Integer itemId, String farmIdsCsv) {
         try {
-            String url = monolithServiceUrl + "/api/v1/public/lookup/supplies/validate-lot?lotId=" + lotId 
+            String url = inventoryServiceUrl + "/api/v1/public/lookup/supplies/validate-lot?lotId=" + lotId 
                     + (itemId != null ? "&itemId=" + itemId : "") + "&farmIds=" + farmIdsCsv;
             return restTemplate.getForObject(url, ValidationResultDto.class);
         } catch (Exception e) {
@@ -80,7 +83,7 @@ public class ExternalServiceClient {
 
     public ValidationResultDto validateSupplyItem(Integer itemId, String farmIdsCsv) {
         try {
-            String url = monolithServiceUrl + "/api/v1/public/lookup/supplies/validate-item?itemId=" + itemId 
+            String url = inventoryServiceUrl + "/api/v1/public/lookup/supplies/validate-item?itemId=" + itemId 
                     + "&farmIds=" + farmIdsCsv;
             return restTemplate.getForObject(url, ValidationResultDto.class);
         } catch (Exception e) {
@@ -91,7 +94,7 @@ public class ExternalServiceClient {
 
     public String getSupplyItemName(Integer itemId) {
         try {
-            String url = monolithServiceUrl + "/api/v1/public/lookup/supplies/items/" + itemId + "/name";
+            String url = inventoryServiceUrl + "/api/v1/public/lookup/supplies/items/" + itemId + "/name";
             return restTemplate.getForObject(url, String.class);
         } catch (Exception e) {
             log.error("Failed to get supply item name {}", itemId, e);
@@ -101,7 +104,7 @@ public class ExternalServiceClient {
 
     public String getSupplyLotBatchCode(Integer lotId) {
         try {
-            String url = monolithServiceUrl + "/api/v1/public/lookup/supplies/lots/" + lotId + "/batch-code";
+            String url = inventoryServiceUrl + "/api/v1/public/lookup/supplies/lots/" + lotId + "/batch-code";
             return restTemplate.getForObject(url, String.class);
         } catch (Exception e) {
             log.error("Failed to get supply lot batch code {}", lotId, e);
@@ -265,7 +268,7 @@ public class ExternalServiceClient {
 
     public ProductWarehouseLotDto receiveFromHarvest(Integer harvestId, Long actorUserId, ReceiveHarvestRequest request) {
         try {
-            String url = monolithServiceUrl + "/api/v1/public/lookup/inventory/receive-harvest?harvestId=" + harvestId 
+            String url = inventoryServiceUrl + "/api/v1/public/lookup/inventory/receive-harvest?harvestId=" + harvestId 
                     + "&actorUserId=" + actorUserId;
             return restTemplate.postForObject(url, request, ProductWarehouseLotDto.class);
         } catch (Exception e) {
@@ -277,7 +280,7 @@ public class ExternalServiceClient {
     public List<ProductWarehouseLotDto> findLotsBySeasonIds(List<Integer> seasonIds) {
         try {
             String idsCsv = seasonIds.stream().map(Object::toString).collect(Collectors.joining(","));
-            String url = monolithServiceUrl + "/api/v1/public/lookup/inventory/lots/by-seasons?seasonIds=" + idsCsv;
+            String url = inventoryServiceUrl + "/api/v1/public/lookup/inventory/lots/by-seasons?seasonIds=" + idsCsv;
             ProductWarehouseLotDto[] response = restTemplate.getForObject(url, ProductWarehouseLotDto[].class);
             return response != null ? Arrays.asList(response) : List.of();
         } catch (Exception e) {
@@ -288,7 +291,7 @@ public class ExternalServiceClient {
 
     public ProductWarehouseLotDto findLotByHarvestId(Integer harvestId) {
         try {
-            String url = monolithServiceUrl + "/api/v1/public/lookup/inventory/lots/by-harvest/" + harvestId;
+            String url = inventoryServiceUrl + "/api/v1/public/lookup/inventory/lots/by-harvest/" + harvestId;
             return restTemplate.getForObject(url, ProductWarehouseLotDto.class);
         } catch (Exception e) {
             log.error("Failed to find lot by harvest id {}", harvestId, e);
@@ -299,7 +302,7 @@ public class ExternalServiceClient {
     public List<ProductWarehouseLotDto> findLotsByHarvestIds(List<Integer> harvestIds) {
         try {
             String idsCsv = harvestIds.stream().map(Object::toString).collect(Collectors.joining(","));
-            String url = monolithServiceUrl + "/api/v1/public/lookup/inventory/lots/by-harvests?harvestIds=" + idsCsv;
+            String url = inventoryServiceUrl + "/api/v1/public/lookup/inventory/lots/by-harvests?harvestIds=" + idsCsv;
             ProductWarehouseLotDto[] response = restTemplate.getForObject(url, ProductWarehouseLotDto[].class);
             return response != null ? Arrays.asList(response) : List.of();
         } catch (Exception e) {
@@ -310,7 +313,7 @@ public class ExternalServiceClient {
 
     public ProductWarehouseLotDto syncLinkedLotFromHarvest(Integer lotId, SyncLotRequest request) {
         try {
-            String url = monolithServiceUrl + "/api/v1/public/lookup/inventory/lots/" + lotId + "/sync";
+            String url = inventoryServiceUrl + "/api/v1/public/lookup/inventory/lots/" + lotId + "/sync";
             return restTemplate.postForObject(url, request, ProductWarehouseLotDto.class);
         } catch (Exception e) {
             log.error("Failed to sync lot {}", lotId, e);
@@ -320,7 +323,7 @@ public class ExternalServiceClient {
 
     public Boolean existsProductWarehouseLotByHarvestId(Integer harvestId) {
         try {
-            String url = monolithServiceUrl + "/api/v1/public/lookup/inventory/exists-by-harvest/" + harvestId;
+            String url = inventoryServiceUrl + "/api/v1/public/lookup/inventory/exists-by-harvest/" + harvestId;
             return restTemplate.getForObject(url, Boolean.class);
         } catch (Exception e) {
             log.error("Failed to check if lot exists for harvest {}", harvestId, e);
@@ -334,7 +337,7 @@ public class ExternalServiceClient {
             String productName,
             String lotCode) {
         try {
-            String url = monolithServiceUrl + "/api/v1/public/lookup/inventory/stock-context?farmId=" + farmId
+            String url = inventoryServiceUrl + "/api/v1/public/lookup/inventory/stock-context?farmId=" + farmId
                     + "&warehouseId=" + warehouseId + "&productName=" + productName + "&lotCode=" + lotCode;
             return restTemplate.getForObject(url, HarvestStockContextDto.class);
         } catch (Exception e) {

@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.example.season.enums.TaskStatus;
 import org.example.season.repository.TaskRepository;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Scheduled job to auto-update overdue tasks daily.
  */
-@Component
+@Component("overdueTaskScheduler")
+@Profile("!test")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j

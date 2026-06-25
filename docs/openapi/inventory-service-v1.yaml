@@ -1,0 +1,2355 @@
+openapi: 3.1.0
+info:
+  title: ACM Inventory Service API
+  description: API documentation for ACM Inventory Service
+  license:
+    name: Apache 2.0
+    url: https://springdoc.org
+  version: 1.0.0
+servers:
+- url: http://localhost
+  description: Generated server url
+security:
+- bearerAuth: []
+paths:
+  /api/v1/supplies/suppliers/{id}:
+    get:
+      tags:
+      - supplies-controller
+      operationId: getSupplier
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSupplierResponse"
+    put:
+      tags:
+      - supplies-controller
+      operationId: updateSupplier
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSupplierRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSupplierResponse"
+    delete:
+      tags:
+      - supplies-controller
+      operationId: deleteSupplier
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/supplies/items/{id}:
+    put:
+      tags:
+      - supplies-controller
+      operationId: updateSupplyItem
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSupplyItemRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSupplyItemResponse"
+    delete:
+      tags:
+      - supplies-controller
+      operationId: deleteSupplyItem
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/supplies/suppliers:
+    get:
+      tags:
+      - supplies-controller
+      operationId: getSuppliers
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseSupplierResponse"
+    post:
+      tags:
+      - supplies-controller
+      operationId: createSupplier
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupplierRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSupplierResponse"
+  /api/v1/supplies/stock-in:
+    post:
+      tags:
+      - supplies-controller
+      operationId: stockIn
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockInRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseStockInResponse"
+  /api/v1/supplies/items:
+    get:
+      tags:
+      - supplies-controller
+      operationId: getSupplyItems
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: restricted
+        in: query
+        required: false
+        schema:
+          type: boolean
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseSupplyItemResponse"
+    post:
+      tags:
+      - supplies-controller
+      operationId: createSupplyItem
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupplyItemRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSupplyItemResponse"
+  /api/v1/public/lookup/inventory/receive-harvest:
+    post:
+      tags:
+      - public-internal-lookup-controller
+      operationId: receiveFromHarvest
+      parameters:
+      - name: harvestId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: actorUserId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReceiveHarvestRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ProductWarehouseLotDto"
+  /api/v1/public/lookup/inventory/lots/{lotId}/sync:
+    post:
+      tags:
+      - public-internal-lookup-controller
+      operationId: syncLinkedLotFromHarvest
+      parameters:
+      - name: lotId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncLotRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ProductWarehouseLotDto"
+  /api/v1/product-warehouses/lots:
+    get:
+      tags:
+      - product-warehouse-controller
+      operationId: listLots
+      parameters:
+      - name: warehouseId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: locationId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: seasonId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: farmId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: plotId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: harvestedFrom
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: harvestedTo
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseProductWarehouseLotResponse"
+    post:
+      tags:
+      - product-warehouse-controller
+      operationId: createLot
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductWarehouseLotRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductWarehouseLotResponse"
+  /api/v1/product-warehouses/lots/{id}/stock-out:
+    post:
+      tags:
+      - product-warehouse-controller
+      operationId: stockOutLot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockOutProductWarehouseLotRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductWarehouseLotResponse"
+  /api/v1/product-warehouses/lots/{id}/adjust:
+    post:
+      tags:
+      - product-warehouse-controller
+      operationId: adjustLot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdjustProductWarehouseLotRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductWarehouseLotResponse"
+  /api/v1/inventory/warehouses:
+    post:
+      tags:
+      - inventory-controller
+      operationId: createWarehouse
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWarehouseRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseWarehouseResponse"
+  /api/v1/inventory/movements:
+    get:
+      tags:
+      - inventory-controller
+      operationId: getMovements
+      parameters:
+      - name: warehouseId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseStockMovementResponse"
+    post:
+      tags:
+      - inventory-controller
+      operationId: recordMovement
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordStockMovementRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseStockMovementResponse"
+  /api/v1/product-warehouses/lots/{id}:
+    get:
+      tags:
+      - product-warehouse-controller
+      operationId: getLot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductWarehouseLotResponse"
+    delete:
+      tags:
+      - product-warehouse-controller
+      operationId: archiveLot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - product-warehouse-controller
+      operationId: updateLot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductWarehouseLotRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductWarehouseLotResponse"
+  /api/v1/inventory/warehouses/{warehouseId}:
+    get:
+      tags:
+      - inventory-controller
+      operationId: getWarehouseById
+      parameters:
+      - name: warehouseId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseWarehouseResponse"
+    delete:
+      tags:
+      - inventory-controller
+      operationId: deleteWarehouse
+      parameters:
+      - name: warehouseId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseBoolean"
+    patch:
+      tags:
+      - inventory-controller
+      operationId: updateWarehouse
+      parameters:
+      - name: warehouseId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWarehouseRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseWarehouseResponse"
+  /api/v1/supplies/lots:
+    get:
+      tags:
+      - supplies-controller
+      operationId: getSupplyLots
+      parameters:
+      - name: itemId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: supplierId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseSupplyLotResponse"
+  /api/v1/public/lookup/supplies/validate-lot:
+    get:
+      tags:
+      - public-internal-lookup-controller
+      operationId: validateSupplyLot
+      parameters:
+      - name: lotId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: itemId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: farmIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ValidationResultDto"
+  /api/v1/public/lookup/supplies/validate-item:
+    get:
+      tags:
+      - public-internal-lookup-controller
+      operationId: validateSupplyItem
+      parameters:
+      - name: itemId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: farmIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ValidationResultDto"
+  /api/v1/public/lookup/supplies/lots/{id}/batch-code:
+    get:
+      tags:
+      - public-internal-lookup-controller
+      operationId: getSupplyLotBatchCode
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+  /api/v1/public/lookup/supplies/items/{id}/name:
+    get:
+      tags:
+      - public-internal-lookup-controller
+      operationId: getSupplyItemName
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+  /api/v1/public/lookup/inventory/stock-context:
+    get:
+      tags:
+      - public-internal-lookup-controller
+      operationId: findHarvestStockContext
+      parameters:
+      - name: farmId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: warehouseId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: productName
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: lotCode
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/HarvestStockContextDto"
+  /api/v1/public/lookup/inventory/lots/by-seasons:
+    get:
+      tags:
+      - public-internal-lookup-controller
+      operationId: findLotsBySeasonIds
+      parameters:
+      - name: seasonIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductWarehouseLotDto"
+  /api/v1/public/lookup/inventory/lots/by-harvests:
+    get:
+      tags:
+      - public-internal-lookup-controller
+      operationId: findLotsByHarvestIds
+      parameters:
+      - name: harvestIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductWarehouseLotDto"
+  /api/v1/public/lookup/inventory/lots/by-harvest/{harvestId}:
+    get:
+      tags:
+      - public-internal-lookup-controller
+      operationId: findLotByHarvestId
+      parameters:
+      - name: harvestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ProductWarehouseLotDto"
+  /api/v1/public/lookup/inventory/exists-by-harvest/{harvestId}:
+    get:
+      tags:
+      - public-internal-lookup-controller
+      operationId: existsProductWarehouseLotByHarvestId
+      parameters:
+      - name: harvestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: boolean
+  /api/v1/product-warehouses/transactions:
+    get:
+      tags:
+      - product-warehouse-controller
+      operationId: listTransactions
+      parameters:
+      - name: lotId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseProductWarehouseTransactionResponse"
+  /api/v1/product-warehouses/overview:
+    get:
+      tags:
+      - product-warehouse-controller
+      operationId: getOverview
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductWarehouseOverviewResponse"
+  /api/v1/product-warehouses/lots/{id}/traceability:
+    get:
+      tags:
+      - product-warehouse-controller
+      operationId: getTraceability
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductWarehouseTraceabilityResponse"
+  /api/v1/inventory/warehouses/my:
+    get:
+      tags:
+      - inventory-controller
+      operationId: getMyWarehouses
+      parameters:
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListWarehouseResponse"
+  /api/v1/inventory/on-hand:
+    get:
+      tags:
+      - inventory-controller
+      operationId: getOnHand
+      parameters:
+      - name: warehouseId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: locationId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: lotId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseOnHandRowResponse"
+  /api/v1/inventory/lots/{lotId}/on-hand:
+    get:
+      tags:
+      - inventory-controller
+      operationId: getOnHandQuantity
+      parameters:
+      - name: lotId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: warehouseId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: locationId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseBigDecimal"
+  /api/v1/inventory/locations:
+    get:
+      tags:
+      - inventory-controller
+      operationId: getLocationsByWarehouse
+      parameters:
+      - name: warehouseId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListStockLocationResponse"
+components:
+  schemas:
+    UpdateSupplierRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 0
+        licenseNo:
+          type: string
+          maxLength: 100
+          minLength: 0
+        contactEmail:
+          type: string
+          maxLength: 255
+          minLength: 0
+        contactPhone:
+          type: string
+          maxLength: 30
+          minLength: 0
+      required:
+      - name
+    ApiResponseSupplierResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/SupplierResponse"
+        data:
+          $ref: "#/components/schemas/SupplierResponse"
+        generatedAt:
+          type: string
+    SupplierResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        licenseNo:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+    UpdateSupplyItemRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 150
+          minLength: 0
+        activeIngredient:
+          type: string
+          maxLength: 150
+          minLength: 0
+        unit:
+          type: string
+          maxLength: 20
+          minLength: 0
+        restrictedFlag:
+          type: boolean
+      required:
+      - name
+      - unit
+    ApiResponseSupplyItemResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/SupplyItemResponse"
+        data:
+          $ref: "#/components/schemas/SupplyItemResponse"
+        generatedAt:
+          type: string
+    SupplyItemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        activeIngredient:
+          type: string
+        unit:
+          type: string
+        restrictedFlag:
+          type: boolean
+    CreateSupplierRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 0
+        licenseNo:
+          type: string
+          maxLength: 100
+          minLength: 0
+        contactEmail:
+          type: string
+          maxLength: 255
+          minLength: 0
+        contactPhone:
+          type: string
+          maxLength: 30
+          minLength: 0
+      required:
+      - name
+    StockInRequest:
+      type: object
+      properties:
+        warehouseId:
+          type: integer
+          format: int32
+        locationId:
+          type: integer
+          format: int32
+        supplierId:
+          type: integer
+          format: int32
+        supplyItemId:
+          type: integer
+          format: int32
+        batchCode:
+          type: string
+        expiryDate:
+          type: string
+        quantity:
+          type: number
+        confirmRestricted:
+          type: boolean
+        note:
+          type: string
+      required:
+      - quantity
+      - supplierId
+      - supplyItemId
+      - warehouseId
+    ApiResponseStockInResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/StockInResponse"
+        data:
+          $ref: "#/components/schemas/StockInResponse"
+        generatedAt:
+          type: string
+    StockInResponse:
+      type: object
+      properties:
+        supplyLot:
+          $ref: "#/components/schemas/SupplyLotResponse"
+        movement:
+          $ref: "#/components/schemas/StockMovementResponse"
+    StockMovementResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        supplyLotId:
+          type: integer
+          format: int32
+        batchCode:
+          type: string
+        supplyItemName:
+          type: string
+        unit:
+          type: string
+        warehouseId:
+          type: integer
+          format: int32
+        warehouseName:
+          type: string
+        locationId:
+          type: integer
+          format: int32
+        locationLabel:
+          type: string
+        movementType:
+          type: string
+        quantity:
+          type: number
+        movementDate:
+          type: string
+          format: date-time
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        taskId:
+          type: integer
+          format: int32
+        taskTitle:
+          type: string
+        note:
+          type: string
+    SupplyLotResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        batchCode:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        status:
+          type: string
+        supplierId:
+          type: integer
+          format: int32
+        supplierName:
+          type: string
+        supplyItemId:
+          type: integer
+          format: int32
+        supplyItemName:
+          type: string
+        unit:
+          type: string
+        restrictedFlag:
+          type: boolean
+    CreateSupplyItemRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 150
+          minLength: 0
+        activeIngredient:
+          type: string
+          maxLength: 150
+          minLength: 0
+        unit:
+          type: string
+          maxLength: 20
+          minLength: 0
+        restrictedFlag:
+          type: boolean
+      required:
+      - name
+      - unit
+    ReceiveHarvestRequest:
+      type: object
+      properties:
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        plotId:
+          type: integer
+          format: int32
+        plotName:
+          type: string
+        cropId:
+          type: integer
+          format: int32
+        cropName:
+          type: string
+        varietyId:
+          type: integer
+          format: int32
+        varietyName:
+          type: string
+        harvestDate:
+          type: string
+          format: date
+        quantity:
+          type: number
+        grade:
+          type: string
+        warehouseId:
+          type: integer
+          format: int32
+        locationId:
+          type: integer
+          format: int32
+        productId:
+          type: integer
+          format: int32
+        productName:
+          type: string
+        productVariant:
+          type: string
+        lotCode:
+          type: string
+        unit:
+          type: string
+        note:
+          type: string
+    ProductWarehouseLotDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        lotCode:
+          type: string
+        productId:
+          type: integer
+          format: int32
+        productName:
+          type: string
+        productVariant:
+          type: string
+        harvestId:
+          type: integer
+          format: int32
+        warehouseId:
+          type: integer
+          format: int32
+        locationId:
+          type: integer
+          format: int32
+        harvestedAt:
+          type: string
+          format: date
+        unit:
+          type: string
+        initialQuantity:
+          type: number
+        onHandQuantity:
+          type: number
+        grade:
+          type: string
+        qualityStatus:
+          type: string
+        note:
+          type: string
+        status:
+          type: string
+          enum:
+          - IN_STOCK
+          - HOLD
+          - DEPLETED
+          - ARCHIVED
+    SyncLotRequest:
+      type: object
+      properties:
+        harvestedAt:
+          type: string
+          format: date
+        initialQuantity:
+          type: number
+        onHandQuantity:
+          type: number
+        grade:
+          type: string
+        qualityStatus:
+          type: string
+        note:
+          type: string
+        status:
+          type: string
+    CreateProductWarehouseLotRequest:
+      type: object
+      properties:
+        lotCode:
+          type: string
+        productId:
+          type: integer
+          format: int32
+        productName:
+          type: string
+        productVariant:
+          type: string
+        seasonId:
+          type: integer
+          format: int32
+        farmId:
+          type: integer
+          format: int32
+        plotId:
+          type: integer
+          format: int32
+        harvestId:
+          type: integer
+          format: int32
+        warehouseId:
+          type: integer
+          format: int32
+        locationId:
+          type: integer
+          format: int32
+        harvestedAt:
+          type: string
+          format: date
+        receivedAt:
+          type: string
+          format: date-time
+        unit:
+          type: string
+        initialQuantity:
+          type: number
+          minimum: 0.0
+        grade:
+          type: string
+        qualityStatus:
+          type: string
+        traceabilityData:
+          type: string
+        note:
+          type: string
+        status:
+          type: string
+      required:
+      - farmId
+      - harvestedAt
+      - initialQuantity
+      - plotId
+      - productName
+      - unit
+      - warehouseId
+    ApiResponseProductWarehouseLotResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/ProductWarehouseLotResponse"
+        data:
+          $ref: "#/components/schemas/ProductWarehouseLotResponse"
+        generatedAt:
+          type: string
+    ProductWarehouseLotResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        lotCode:
+          type: string
+        productId:
+          type: integer
+          format: int32
+        productName:
+          type: string
+        productVariant:
+          type: string
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        plotId:
+          type: integer
+          format: int32
+        plotName:
+          type: string
+        harvestId:
+          type: integer
+          format: int32
+        warehouseId:
+          type: integer
+          format: int32
+        warehouseName:
+          type: string
+        locationId:
+          type: integer
+          format: int32
+        locationLabel:
+          type: string
+        harvestedAt:
+          type: string
+          format: date
+        receivedAt:
+          type: string
+          format: date-time
+        unit:
+          type: string
+        initialQuantity:
+          type: number
+        onHandQuantity:
+          type: number
+        grade:
+          type: string
+        qualityStatus:
+          type: string
+        traceabilityData:
+          type: string
+        note:
+          type: string
+        status:
+          type: string
+        createdBy:
+          type: integer
+          format: int64
+        createdByName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    StockOutProductWarehouseLotRequest:
+      type: object
+      properties:
+        quantity:
+          type: number
+          minimum: 0.0
+        note:
+          type: string
+      required:
+      - quantity
+    AdjustProductWarehouseLotRequest:
+      type: object
+      properties:
+        quantityDelta:
+          type: number
+        note:
+          type: string
+      required:
+      - quantityDelta
+    CreateWarehouseRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 150
+          minLength: 0
+        farmId:
+          type: integer
+          format: int32
+        type:
+          type: string
+        provinceId:
+          type: integer
+          format: int32
+        wardId:
+          type: integer
+          format: int32
+      required:
+      - farmId
+      - name
+      - type
+    ApiResponseWarehouseResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/WarehouseResponse"
+        data:
+          $ref: "#/components/schemas/WarehouseResponse"
+        generatedAt:
+          type: string
+    WarehouseResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        type:
+          type: string
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        provinceId:
+          type: integer
+          format: int32
+        wardId:
+          type: integer
+          format: int32
+    RecordStockMovementRequest:
+      type: object
+      properties:
+        supplyLotId:
+          type: integer
+          format: int32
+        warehouseId:
+          type: integer
+          format: int32
+        locationId:
+          type: integer
+          format: int32
+        movementType:
+          type: string
+        quantity:
+          type: number
+        seasonId:
+          type: integer
+          format: int32
+        taskId:
+          type: integer
+          format: int32
+        note:
+          type: string
+      required:
+      - movementType
+      - quantity
+      - supplyLotId
+      - warehouseId
+    ApiResponseStockMovementResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/StockMovementResponse"
+        data:
+          $ref: "#/components/schemas/StockMovementResponse"
+        generatedAt:
+          type: string
+    UpdateProductWarehouseLotRequest:
+      type: object
+      properties:
+        productName:
+          type: string
+        productVariant:
+          type: string
+        locationId:
+          type: integer
+          format: int32
+        grade:
+          type: string
+        qualityStatus:
+          type: string
+        traceabilityData:
+          type: string
+        note:
+          type: string
+        status:
+          type: string
+    UpdateWarehouseRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 150
+          minLength: 0
+        farmId:
+          type: integer
+          format: int32
+        provinceId:
+          type: integer
+          format: int32
+        wardId:
+          type: integer
+          format: int32
+      required:
+      - farmId
+      - name
+    ApiResponsePageResponseSupplierResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseSupplierResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseSupplierResponse"
+        generatedAt:
+          type: string
+    PageResponseSupplierResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplierResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponsePageResponseSupplyLotResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseSupplyLotResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseSupplyLotResponse"
+        generatedAt:
+          type: string
+    PageResponseSupplyLotResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplyLotResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponsePageResponseSupplyItemResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseSupplyItemResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseSupplyItemResponse"
+        generatedAt:
+          type: string
+    PageResponseSupplyItemResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplyItemResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ValidationResultDto:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
+        resolvedItemId:
+          type: integer
+          format: int32
+    HarvestStockContextDto:
+      type: object
+      properties:
+        warehouseName:
+          type: string
+        matchingLots:
+          type: integer
+          format: int64
+        onHandQuantity:
+          type: number
+        unit:
+          type: string
+    ApiResponsePageResponseProductWarehouseTransactionResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseProductWarehouseTransactionResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseProductWarehouseTransactionResponse"
+        generatedAt:
+          type: string
+    PageResponseProductWarehouseTransactionResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductWarehouseTransactionResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ProductWarehouseTransactionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        lotId:
+          type: integer
+          format: int32
+        lotCode:
+          type: string
+        transactionType:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        resultingOnHand:
+          type: number
+        referenceType:
+          type: string
+        referenceId:
+          type: string
+        note:
+          type: string
+        createdBy:
+          type: integer
+          format: int64
+        createdByName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ApiResponseProductWarehouseOverviewResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/ProductWarehouseOverviewResponse"
+        data:
+          $ref: "#/components/schemas/ProductWarehouseOverviewResponse"
+        generatedAt:
+          type: string
+    ProductWarehouseOverviewResponse:
+      type: object
+      properties:
+        totalLots:
+          type: integer
+          format: int64
+        totalOnHandQuantity:
+          type: number
+        inStockLots:
+          type: integer
+          format: int64
+        depletedLots:
+          type: integer
+          format: int64
+    ApiResponsePageResponseProductWarehouseLotResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseProductWarehouseLotResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseProductWarehouseLotResponse"
+        generatedAt:
+          type: string
+    PageResponseProductWarehouseLotResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductWarehouseLotResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponseProductWarehouseTraceabilityResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/ProductWarehouseTraceabilityResponse"
+        data:
+          $ref: "#/components/schemas/ProductWarehouseTraceabilityResponse"
+        generatedAt:
+          type: string
+    ProductWarehouseTraceabilityResponse:
+      type: object
+      properties:
+        lotId:
+          type: integer
+          format: int32
+        lotCode:
+          type: string
+        productName:
+          type: string
+        productVariant:
+          type: string
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        plotId:
+          type: integer
+          format: int32
+        plotName:
+          type: string
+        harvestId:
+          type: integer
+          format: int32
+        harvestedAt:
+          type: string
+          format: date
+        receivedAt:
+          type: string
+          format: date-time
+        initialQuantity:
+          type: number
+        onHandQuantity:
+          type: number
+        unit:
+          type: string
+        recordedBy:
+          type: integer
+          format: int64
+        recordedByName:
+          type: string
+        traceabilityData:
+          type: string
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductWarehouseTransactionResponse"
+    ApiResponseListWarehouseResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/WarehouseResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/WarehouseResponse"
+        generatedAt:
+          type: string
+    ApiResponsePageResponseOnHandRowResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseOnHandRowResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseOnHandRowResponse"
+        generatedAt:
+          type: string
+    OnHandRowResponse:
+      type: object
+      properties:
+        warehouseId:
+          type: integer
+          format: int32
+        warehouseName:
+          type: string
+        locationId:
+          type: integer
+          format: int32
+        locationLabel:
+          type: string
+        supplyLotId:
+          type: integer
+          format: int32
+        batchCode:
+          type: string
+        supplyItemName:
+          type: string
+        unit:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        lotStatus:
+          type: string
+        onHandQuantity:
+          type: number
+    PageResponseOnHandRowResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OnHandRowResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponsePageResponseStockMovementResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PageResponseStockMovementResponse"
+        data:
+          $ref: "#/components/schemas/PageResponseStockMovementResponse"
+        generatedAt:
+          type: string
+    PageResponseStockMovementResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockMovementResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiResponseBigDecimal:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: number
+        data:
+          type: number
+        generatedAt:
+          type: string
+    ApiResponseListStockLocationResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockLocationResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockLocationResponse"
+        generatedAt:
+          type: string
+    StockLocationResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        warehouseId:
+          type: integer
+          format: int32
+        zone:
+          type: string
+        aisle:
+          type: string
+        shelf:
+          type: string
+        bin:
+          type: string
+        label:
+          type: string
+    ApiResponseVoid:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: object
+        data:
+          type: object
+        generatedAt:
+          type: string
+    ApiResponseBoolean:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: boolean
+        data:
+          type: boolean
+        generatedAt:
+          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      name: bearerAuth
+      scheme: bearer
+      bearerFormat: JWT
