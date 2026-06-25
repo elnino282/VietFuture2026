@@ -21,4 +21,14 @@ public class PublicSeasonController {
     public boolean existsSeasonByVarietyId(@PathVariable Integer varietyId) {
         return seasonQueryPort.existsSeasonByVarietyId(varietyId);
     }
+
+    @GetMapping("/exists-active-by-plot/{plotId}")
+    public boolean existsActiveSeasonByPlotId(@PathVariable Integer plotId) {
+        return seasonQueryPort.existsActiveSeasonByPlotId(plotId);
+    }
+
+    @GetMapping("/exists-active-tasks-by-plot/{plotId}")
+    public boolean existsActiveTasksByPlotId(@PathVariable Integer plotId) {
+        return seasonQueryPort.existsActiveTasksByPlotId(plotId);
+    }
 }

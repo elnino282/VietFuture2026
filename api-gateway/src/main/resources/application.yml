@@ -36,6 +36,10 @@ spring:
               uri: ${AI_SERVICE_URI:http://localhost:8083}
               predicates:
                 - Path=/api/v1/ai/qa, /api/v1/ai/qa/**, /api/v1/farmer/ai/chat, /api/v1/farmer/ai/chat/**, /api/v1/buyer/ai/chat, /api/v1/buyer/ai/chat/**
+            - id: farm-route
+              uri: ${FARM_SERVICE_URI:http://localhost:8084}
+              predicates:
+                - Path=/api/v1/farms, /api/v1/farms/**, /api/v1/plots, /api/v1/plots/**, /api/v1/address, /api/v1/address/**, /api/v1/locations, /api/v1/locations/**
             - id: monolith-route
               uri: ${MONOLITH_URI:http://localhost:8080}
               predicates:

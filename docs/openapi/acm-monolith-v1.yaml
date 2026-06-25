@@ -5365,13 +5365,6 @@ paths:
               $ref: "#/components/schemas/AuthenticationRequest"
         required: true
       responses:
-        "403":
-          description: User locked or no role
-          content:
-            application/json:
-              example:
-                code: USER_LOCKED
-                message: User account is not active.
         "200":
           description: Login successful
           content:
@@ -5401,6 +5394,13 @@ paths:
               example:
                 code: INVALID_CREDENTIALS
                 message: Invalid username/email or password.
+        "403":
+          description: User locked or no role
+          content:
+            application/json:
+              example:
+                code: USER_LOCKED
+                message: User account is not active.
   /api/v1/auth/reset-password:
     post:
       tags:
@@ -5433,18 +5433,18 @@ paths:
               $ref: "#/components/schemas/RefreshRequest"
         required: true
       responses:
-        "401":
-          description: Token invalid or expired
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/ApiResponseAuthenticationResponse"
         "200":
           description: Token refreshed successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
+        "401":
+          description: Token invalid or expired
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseAuthenticationResponse"
   /api/v1/auth/introspect:
     post:
       tags:
@@ -5671,18 +5671,18 @@ paths:
               $ref: "#/components/schemas/RoleRequest"
         required: true
       responses:
-        "200":
-          description: Tạo vai trò thành công
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiResponse"
         "400":
           description: Dữ liệu đầu vào không hợp lệ
           content:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseRoleResponse"
+        "200":
+          description: Tạo vai trò thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
         "403":
           description: Không có quyền tạo vai trò
           content:
@@ -7427,6 +7427,44 @@ paths:
       operationId: existsSeasonByVarietyId
       parameters:
       - name: varietyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: boolean
+  /api/v1/public/seasons/exists-active-tasks-by-plot/{plotId}:
+    get:
+      tags:
+      - public-season-controller
+      operationId: existsActiveTasksByPlotId
+      parameters:
+      - name: plotId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: boolean
+  /api/v1/public/seasons/exists-active-by-plot/{plotId}:
+    get:
+      tags:
+      - public-season-controller
+      operationId: existsActiveSeasonByPlotId
+      parameters:
+      - name: plotId
         in: path
         required: true
         schema:
@@ -18131,12 +18169,12 @@ components:
           $ref: "#/components/schemas/MetricValue"
         noutput:
           type: number
-        nsurplus:
-          type: number
-        nsurplusMetric:
-          $ref: "#/components/schemas/MetricValue"
         noutputMetric:
           $ref: "#/components/schemas/MetricValue"
+        nsurplusMetric:
+          $ref: "#/components/schemas/MetricValue"
+        nsurplus:
+          type: number
         nOutput:
           type: number
         nSurplus:
@@ -19118,15 +19156,15 @@ components:
           format: int32
         sort:
           $ref: "#/components/schemas/SortObject"
+        numberOfElements:
+          type: integer
+          format: int32
         pageable:
           $ref: "#/components/schemas/PageableObject"
         first:
           type: boolean
         last:
           type: boolean
-        numberOfElements:
-          type: integer
-          format: int32
         empty:
           type: boolean
     PageableObject:

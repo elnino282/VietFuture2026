@@ -38,5 +38,9 @@ public interface SeasonQueryPort {
 
     boolean existsSeasonByVarietyId(Integer varietyId);
 
+    boolean existsActiveSeasonByPlotId(Integer plotId);
+
+    boolean existsActiveTasksByPlotId(Integer plotId);
+
     long countFieldLogsBySeasonAndLogType(Integer seasonId, String logType);
 }

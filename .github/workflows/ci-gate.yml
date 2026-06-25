@@ -175,6 +175,8 @@ jobs:
         service:
           - ai-service
           - api-gateway
+          - farm-service
+          - season-service
     defaults:
       run:
         working-directory: ${{ matrix.service }}
@@ -211,6 +213,10 @@ jobs:
             database: identity_service_ci
           - service: crop-catalog-service
             database: crop_catalog_service_ci
+          - service: farm-service
+            database: farm_service_ci
+          - service: season-service
+            database: season_service_ci
     defaults:
       run:
         working-directory: ${{ matrix.service }}

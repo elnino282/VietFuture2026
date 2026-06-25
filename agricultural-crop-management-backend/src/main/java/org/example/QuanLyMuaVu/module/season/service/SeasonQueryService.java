@@ -41,6 +41,15 @@ public class SeasonQueryService implements SeasonQueryPort {
     FieldLogRepository fieldLogRepository;
     SeasonMapper seasonMapper;
     FarmAccessPort farmAccessService;
+    org.example.QuanLyMuaVu.module.season.repository.TaskRepository taskRepository;
+
+    private static final List<SeasonStatus> BLOCKING_SEASON_STATUSES = List.of(
+            SeasonStatus.PLANNED,
+            SeasonStatus.ACTIVE);
+    private static final List<org.example.QuanLyMuaVu.Enums.TaskStatus> BLOCKING_TASK_STATUSES = List.of(
+            org.example.QuanLyMuaVu.Enums.TaskStatus.PENDING,
+            org.example.QuanLyMuaVu.Enums.TaskStatus.IN_PROGRESS,
+            org.example.QuanLyMuaVu.Enums.TaskStatus.OVERDUE);
 
     @Override
     public Optional<Season> findSeasonById(Integer seasonId) {
@@ -133,6 +142,22 @@ public class SeasonQueryService implements SeasonQueryPort {
             return false;
         }
         return seasonRepository.existsByVariety_Id(varietyId);
+    }
+
+    @Override
+    public boolean existsActiveSeasonByPlotId(Integer plotId) {
+        if (plotId == null) {
+            return false;
+        }
+        return seasonRepository.existsByPlot_IdAndStatusIn(plotId, BLOCKING_SEASON_STATUSES);
+    }
+
+    @Override
+    public boolean existsActiveTasksByPlotId(Integer plotId) {
+        if (plotId == null) {
+            return false;
+        }
+        return taskRepository.existsBySeason_Plot_IdAndStatusIn(plotId, BLOCKING_TASK_STATUSES);
     }
 
     @Override
