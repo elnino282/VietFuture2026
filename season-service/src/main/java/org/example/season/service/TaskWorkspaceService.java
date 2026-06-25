@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.example.season.event.DomainEventPublisher;
+import org.example.season.event.TaskAssignedEvent;
 import org.example.season.event.TaskCompletedEvent;
 import org.example.season.constant.PredefinedRole;
 import org.example.season.dto.common.PageResponse;
@@ -90,6 +91,7 @@ public class TaskWorkspaceService {
 
         task = taskRepository.save(task);
         log.info("Created task {} for user {}", task.getId(), currentUser.getId());
+        domainEventPublisher.publish(new TaskAssignedEvent(task));
 
         return mapToResponse(task);
     }
@@ -190,9 +192,13 @@ public class TaskWorkspaceService {
         task.setPlannedDate(request.getPlannedDate());
         task.setDueDate(request.getDueDate());
         task.setNotes(request.getNotes());
+        boolean assigneeChanged = false;
         if (request.getAssigneeUserId() != null) {
             ExternalServiceClient.UserInternalDto assignee = resolveWorkspaceAssignee(request.getAssigneeUserId(), currentUser, task.getSeason());
-            task.setUserId(assignee.getId());
+            if (!assignee.getId().equals(task.getUserId())) {
+                task.setUserId(assignee.getId());
+                assigneeChanged = true;
+            }
         }
 
         // Recheck overdue status
@@ -214,6 +220,9 @@ public class TaskWorkspaceService {
 
         task = taskRepository.save(task);
         laborManagementService.syncPayrollForTask(task);
+        if (assigneeChanged) {
+            domainEventPublisher.publish(new TaskAssignedEvent(task));
+        }
         log.info("Updated task {}", taskId);
 
         return mapToResponse(task);

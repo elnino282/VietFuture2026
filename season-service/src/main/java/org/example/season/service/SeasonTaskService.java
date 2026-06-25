@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.example.season.event.DomainEventPublisher;
+import org.example.season.event.TaskAssignedEvent;
 import org.example.season.event.TaskCompletedEvent;
 import org.example.season.constant.PredefinedRole;
 import org.example.season.dto.common.PageResponse;
@@ -121,6 +122,7 @@ public class SeasonTaskService {
                 .build();
 
         Task saved = taskRepository.save(task);
+        domainEventPublisher.publish(new TaskAssignedEvent(saved));
         return toResponse(saved);
     }
 
@@ -146,13 +148,20 @@ public class SeasonTaskService {
         task.setDescription(request.getDescription());
         task.setPlannedDate(planned);
         task.setDueDate(due);
+        boolean assigneeChanged = false;
         if (request.getAssigneeUserId() != null) {
             ExternalServiceClient.UserInternalDto currentUser = seasonWorkspaceAccessService.getCurrentUser();
             ExternalServiceClient.UserInternalDto assignee = resolveTaskAssignee(task.getSeason(), request.getAssigneeUserId(), currentUser);
-            task.setUserId(assignee.getId());
+            if (!assignee.getId().equals(task.getUserId())) {
+                task.setUserId(assignee.getId());
+                assigneeChanged = true;
+            }
         }
 
         Task saved = taskRepository.save(task);
+        if (assigneeChanged) {
+            domainEventPublisher.publish(new TaskAssignedEvent(saved));
+        }
         laborManagementService.syncPayrollForTask(saved);
         return toResponse(saved);
     }

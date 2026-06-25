@@ -548,12 +548,21 @@ public class ProductWarehousePublicService {
     }
 
     private void publishStockAdjusted(ProductWarehouseLot lot, BigDecimal delta, String reason) {
+        BigDecimal previousQuantity = lot.getOnHandQuantity().subtract(delta);
+        BigDecimal newQuantity = lot.getOnHandQuantity();
+        Long actorUserId = resolveCurrentUserId();
         domainEventPublisher.publish(StockAdjustedEvent.builder()
                 .aggregateType("ProductWarehouseLot")
                 .aggregateId(String.valueOf(lot.getId()))
                 .productWarehouseLotId(lot.getId())
+                .lotCode(lot.getLotCode())
+                .farmId(lot.getFarmId())
+                .previousQuantity(previousQuantity)
+                .newQuantity(newQuantity)
                 .quantityChange(delta)
+                .unit(lot.getUnit())
                 .reason(reason)
+                .actorUserId(actorUserId)
                 .build());
     }
 

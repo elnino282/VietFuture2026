@@ -356,7 +356,6 @@ public class InventoryPublicService {
                 .name(warehouse.getName())
                 .type(warehouse.getType())
                 .farmId(warehouse.getFarmId())
-                .farmName(null)
                 .provinceId(warehouse.getProvinceId())
                 .wardId(warehouse.getWardId())
                 .build();

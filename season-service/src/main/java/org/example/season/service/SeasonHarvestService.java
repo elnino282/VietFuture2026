@@ -347,7 +347,7 @@ public class SeasonHarvestService {
                         .note(request.getNote())
                         .build());
         recomputeSeasonActualYield(season);
-        domainEventPublisher.publish(new HarvestRecordedEvent(saved));
+        domainEventPublisher.publish(new HarvestRecordedEvent(saved, seasonWorkspaceAccessService.getCurrentUser().getId()));
         return toResponseWithStatus(saved, receivedLot);
     }
 
