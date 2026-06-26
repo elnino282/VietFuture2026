@@ -64,4 +64,13 @@ class RabbitMQConfigTest {
         assertNotNull(binding);
         assertEquals("season.event.season.completed", binding.getRoutingKey());
     }
+
+    @Test
+    void cropDeletedBinding_ShouldExist() {
+        Queue queue = config.sustainabilityEventsQueue();
+        TopicExchange exchange = config.cropExchange();
+        Binding binding = config.cropDeletedBinding(queue, exchange);
+        assertNotNull(binding);
+        assertEquals("crop.event.crop.deleted", binding.getRoutingKey());
+    }
 }

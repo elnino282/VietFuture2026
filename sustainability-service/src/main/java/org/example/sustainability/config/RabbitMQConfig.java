@@ -152,6 +152,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Binding cropDeletedBinding(Queue sustainabilityEventsQueue, TopicExchange cropExchange) {
+        return BindingBuilder.bind(sustainabilityEventsQueue).to(cropExchange).with("crop.event.crop.deleted");
+    }
+
+    @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }

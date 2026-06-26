@@ -1267,9 +1267,9 @@ components:
           type: number
         nsurplus:
           type: number
-        nsurplusMetric:
-          $ref: "#/components/schemas/MetricValue"
         noutputMetric:
+          $ref: "#/components/schemas/MetricValue"
+        nsurplusMetric:
           $ref: "#/components/schemas/MetricValue"
         nOutput:
           type: number
