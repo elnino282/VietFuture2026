@@ -18,4 +18,5 @@ public class PlotChangedEventDto {
     private String soilType;
     private String boundaryGeoJson;
     private String status;
+    private String action;
 }

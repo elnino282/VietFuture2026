@@ -17,7 +17,7 @@ public class OpenApiConfig {
         final String securitySchemeName = "bearerAuth";
         return new OpenAPI()
                 .info(new Info()
-                        .title("ACM Service Template API")
+                        .title("ACM Incident Service API")
                         .version("1.0.0")
                         .description("Standard API documentation for ACM Domain Services")
                         .license(new License().name("Apache 2.0").url("https://springdoc.org")))

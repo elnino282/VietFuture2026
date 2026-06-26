@@ -1,5 +1,6 @@
 package org.example.farm.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -8,11 +9,15 @@ import org.example.farm.config.CurrentUserService;
 import org.example.farm.dto.request.PlotRequest;
 import org.example.farm.dto.response.PlotResponse;
 import org.example.farm.entity.Farm;
+import org.example.farm.entity.OutboxEvent;
 import org.example.farm.entity.Plot;
 import org.example.farm.enums.PlotStatus;
+import org.example.farm.event.PlotChangedEvent;
+import org.example.farm.event.PlotChangedEvent.Action;
 import org.example.farm.exception.AppException;
 import org.example.farm.exception.ErrorCode;
 import org.example.farm.repository.FarmRepository;
+import org.example.farm.repository.OutboxEventRepository;
 import org.example.farm.repository.PlotRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
@@ -27,6 +32,8 @@ public class PlotService {
 
     private final PlotRepository plotRepository;
     private final FarmRepository farmRepository;
+    private final OutboxEventRepository outboxEventRepository;
+    private final ObjectMapper objectMapper;
     private final CurrentUserService currentUserService;
     private final RestTemplate restTemplate;
 
@@ -83,6 +90,7 @@ public class PlotService {
                 .build();
 
         Plot savedPlot = plotRepository.save(plot);
+        writeOutboxEvent(savedPlot, Action.CREATED);
         return toResponse(savedPlot);
     }
 
@@ -117,6 +125,7 @@ public class PlotService {
         }
 
         Plot savedPlot = plotRepository.save(plot);
+        writeOutboxEvent(savedPlot, Action.UPDATED);
         return toResponse(savedPlot);
     }
 
@@ -154,7 +163,29 @@ public class PlotService {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
+        writeOutboxEvent(plot, Action.DELETED);
         plotRepository.delete(plot);
+    }
+
+    private void writeOutboxEvent(Plot plot, Action action) {
+        try {
+            PlotChangedEvent eventDto = new PlotChangedEvent(plot, action);
+            String jsonPayload = objectMapper.writeValueAsString(eventDto);
+
+            OutboxEvent outboxEvent = OutboxEvent.builder()
+                    .aggregateType("Plot")
+                    .aggregateId(String.valueOf(plot.getId()))
+                    .eventType(eventDto.getEventType())
+                    .payload(jsonPayload)
+                    .processed(false)
+                    .build();
+
+            outboxEventRepository.save(outboxEvent);
+            log.info("Saved outbox event for plot: {} (type: {})", plot.getId(), eventDto.getEventType());
+        } catch (Exception e) {
+            log.error("Failed to write outbox event for plot: {}", plot.getId(), e);
+            throw new RuntimeException("Outbox write failed", e);
+        }
     }
 
     private PlotResponse toResponse(Plot plot) {

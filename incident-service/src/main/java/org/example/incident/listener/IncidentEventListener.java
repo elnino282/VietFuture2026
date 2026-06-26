@@ -38,7 +38,6 @@ public class IncidentEventListener {
             return;
         }
 
-        // Check idempotency
         Optional<ProcessedEvent> existing = processedEventRepository.findById(eventId);
         if (existing.isPresent()) {
             log.info("Event {} already processed, skipping", eventId);
@@ -46,42 +45,62 @@ public class IncidentEventListener {
         }
 
         String eventType = (String) message.getMessageProperties().getHeaders().get("eventType");
+        if (eventType == null || eventType.isBlank()) {
+            log.warn("Received event {} without eventType header, skipping", eventId);
+            return;
+        }
+
         log.info("Processing event {} of type {}", eventId, eventType);
 
         try {
-            if (eventType.startsWith("season.event.task.")) {
-                if (eventType.equals("season.event.task.assigned")) {
-                    handleTaskAssigned(message, eventId);
-                } else if (eventType.equals("season.event.task.completed")) {
-                    handleTaskCompleted(message, eventId);
-                }
-            } else if (eventType.startsWith("finance.event.expense.")) {
-                handleExpenseChanged(message, eventId, eventType);
-            } else if (eventType.equals("season.event.harvest.recorded")) {
-                handleHarvestRecorded(message, eventId);
-            } else if (eventType.startsWith("incident.event.incident.")) {
-                handleIncidentChanged(message, eventId, eventType);
+            boolean handled = dispatchEvent(message, eventType);
+            if (handled) {
+                processedEventRepository.save(
+                        ProcessedEvent.builder()
+                                .eventId(eventId)
+                                .processedAt(LocalDateTime.now())
+                                .build()
+                );
+                log.info("Event {} processed successfully", eventId);
             } else {
-                log.info("Unknown event type {}, skipping", eventType);
+                log.warn("Unhandled event type {}, not marking as processed", eventType);
             }
-
-            // Mark event as processed only if all processing succeeded
-            processedEventRepository.save(
-                    ProcessedEvent.builder()
-                            .eventId(eventId)
-                            .processedAt(LocalDateTime.now())
-                            .build()
-            );
-            log.info("Event {} processed successfully", eventId);
         } catch (Exception e) {
             log.error("Error processing event {}: {}", eventId, e.getMessage(), e);
-            throw e; // Re-throw to let RabbitMQ retry
+            throw e;
         }
     }
 
-    private void handleTaskAssigned(Message message, String eventId) throws Exception {
+    private boolean dispatchEvent(Message message, String eventType) throws Exception {
+        if (eventType.startsWith("season.event.task.")) {
+            if ("season.event.task.assigned".equals(eventType)) {
+                handleTaskAssigned(message);
+                return true;
+            }
+            if ("season.event.task.completed".equals(eventType)) {
+                handleTaskCompleted(message);
+                return true;
+            }
+            return false;
+        }
+        if (eventType.startsWith("finance.event.expense.")) {
+            handleExpenseChanged(message, eventType);
+            return true;
+        }
+        if ("season.event.harvest.recorded".equals(eventType)) {
+            handleHarvestRecorded(message);
+            return true;
+        }
+        if (eventType.startsWith("incident.event.incident.")) {
+            handleIncidentChanged(message, eventType);
+            return true;
+        }
+        return false;
+    }
+
+    private void handleTaskAssigned(Message message) throws Exception {
         TaskAssignedEventDto event = objectMapper.readValue(message.getBody(), TaskAssignedEventDto.class);
-        log.info("Handling TASK_ASSIGNED: {}", event);
+        log.info("Handling season.event.task.assigned: {}", event);
 
         String title = "New Task Assigned";
         String msg = String.format("You have been assigned a new task: %s", event.getTaskTitle());
@@ -90,9 +109,9 @@ public class IncidentEventListener {
         notificationService.createNotificationFromEvent(event.getAssigneeUserId(), title, msg, link);
     }
 
-    private void handleTaskCompleted(Message message, String eventId) throws Exception {
+    private void handleTaskCompleted(Message message) throws Exception {
         TaskCompletedEventDto event = objectMapper.readValue(message.getBody(), TaskCompletedEventDto.class);
-        log.info("Handling TASK_COMPLETED: {}", event);
+        log.info("Handling season.event.task.completed: {}", event);
 
         String title = "Task Completed";
         String msg = String.format("Task \"%s\" has been completed!", event.getTaskTitle());
@@ -101,7 +120,7 @@ public class IncidentEventListener {
         notificationService.createNotificationFromEvent(event.getAssigneeUserId(), title, msg, link);
     }
 
-    private void handleExpenseChanged(Message message, String eventId, String eventType) throws Exception {
+    private void handleExpenseChanged(Message message, String eventType) throws Exception {
         ExpenseChangedEventDto event = objectMapper.readValue(message.getBody(), ExpenseChangedEventDto.class);
         log.info("Handling {}: {}", eventType, event);
 
@@ -129,9 +148,9 @@ public class IncidentEventListener {
         notificationService.createNotificationFromEvent(event.getOwnerUserId(), title, msg, link);
     }
 
-    private void handleHarvestRecorded(Message message, String eventId) throws Exception {
+    private void handleHarvestRecorded(Message message) throws Exception {
         HarvestRecordedEventDto event = objectMapper.readValue(message.getBody(), HarvestRecordedEventDto.class);
-        log.info("Handling HARVEST_RECORDED: {}", event);
+        log.info("Handling season.event.harvest.recorded: {}", event);
 
         String title = "Harvest Recorded";
         String msg = String.format("Harvest recorded for %s (%.2f %s)", event.getCropName(), event.getQuantity(), event.getUnit());
@@ -140,7 +159,7 @@ public class IncidentEventListener {
         notificationService.createNotificationFromEvent(event.getActorUserId(), title, msg, link);
     }
 
-    private void handleIncidentChanged(Message message, String eventId, String eventType) throws Exception {
+    private void handleIncidentChanged(Message message, String eventType) throws Exception {
         IncidentChangedEventDto event = objectMapper.readValue(message.getBody(), IncidentChangedEventDto.class);
         log.info("Handling {}: {}", eventType, event);
 

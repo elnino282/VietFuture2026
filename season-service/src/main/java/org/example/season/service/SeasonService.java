@@ -6,7 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.example.season.event.DomainEventPublisher;
-import org.example.season.event.SeasonCreatedEvent;
+import org.example.season.event.SeasonChangedEvent;
 import org.example.season.dto.common.PageResponse;
 import org.example.season.enums.SeasonStatus;
 import org.example.season.exception.AppException;
@@ -187,7 +187,7 @@ public class SeasonService {
                 .build();
 
         Season saved = seasonRepository.save(season);
-        domainEventPublisher.publish(new SeasonCreatedEvent(saved));
+        domainEventPublisher.publish(new SeasonChangedEvent(saved, plot != null ? plot.getFarmId() : null, SeasonChangedEvent.Action.CREATED));
         return seasonMapper.toDetailResponse(saved);
     }
 
@@ -246,6 +246,8 @@ public class SeasonService {
         }
 
         Season saved = seasonRepository.save(season);
+        ExternalServiceClient.PlotInternalDto plot = externalServiceClient.getPlot(saved.getPlotId());
+        domainEventPublisher.publish(new SeasonChangedEvent(saved, plot != null ? plot.getFarmId() : null, SeasonChangedEvent.Action.UPDATED));
         return seasonMapper.toDetailResponse(saved);
     }
 

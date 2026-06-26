@@ -1,5 +1,6 @@
 package org.example.cropcatalog.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,10 @@ import org.example.cropcatalog.dto.request.CropRequest;
 import org.example.cropcatalog.dto.response.CropResponse;
 import org.example.cropcatalog.dto.response.VarietyResponse;
 import org.example.cropcatalog.entity.Crop;
+import org.example.cropcatalog.entity.CropNitrogenReference;
+import org.example.cropcatalog.event.CropChangedEvent;
+import org.example.cropcatalog.event.CropChangedEvent.Action;
+import org.example.cropcatalog.event.DomainEventPublisher;
 import org.example.cropcatalog.mapper.CropMapper;
 import org.example.cropcatalog.mapper.VarietyMapper;
 import org.example.cropcatalog.repository.CropRepository;
@@ -29,13 +34,16 @@ public class CropService {
     VarietyRepository varietyRepository;
     VarietyMapper varietyMapper;
     CropNitrogenReferenceRepository cropNitrogenReferenceRepository;
+    DomainEventPublisher domainEventPublisher;
 
     public CropResponse create(CropRequest request) {
         if (cropRepository.existsByCropNameIgnoreCase(request.getCropName())) {
             throw new AppException(ErrorCode.DUPLICATE_RESOURCE);
         }
         Crop crop = cropMapper.toEntity(request);
-        return cropMapper.toResponse(cropRepository.save(crop));
+        Crop saved = cropRepository.save(crop);
+        publishCropChanged(saved, Action.CREATED);
+        return cropMapper.toResponse(saved);
     }
 
     public List<CropResponse> getAll() {
@@ -58,12 +66,15 @@ public class CropService {
         }
 
         cropMapper.update(crop, request);
-        return cropMapper.toResponse(cropRepository.save(crop));
+        Crop saved = cropRepository.save(crop);
+        publishCropChanged(saved, Action.UPDATED);
+        return cropMapper.toResponse(saved);
     }
 
     public void delete(Integer id) {
         Crop crop = cropRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CROP_NOT_FOUND));
+        publishCropChanged(crop, Action.DELETED);
         cropRepository.delete(crop);
     }
 
@@ -86,5 +97,12 @@ public class CropService {
                         .active(ref.getActive())
                         .build())
                 .orElse(null);
+    }
+
+    private void publishCropChanged(Crop crop, Action action) {
+        BigDecimal nContent = cropNitrogenReferenceRepository.findFirstByCrop_IdAndActiveTrue(crop.getId())
+                .map(CropNitrogenReference::getNContentKgPerKgYield)
+                .orElse(null);
+        domainEventPublisher.publish(new CropChangedEvent(crop, action, nContent));
     }
 }

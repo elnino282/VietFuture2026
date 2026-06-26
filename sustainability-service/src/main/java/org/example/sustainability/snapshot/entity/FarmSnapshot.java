@@ -50,6 +50,9 @@ public class FarmSnapshot {
     @Column(name = "longitude", precision = 10, scale = 6)
     BigDecimal longitude;
 
+    @Column(name = "active")
+    Boolean active;
+
     @Column(name = "snapshot_at")
     LocalDateTime snapshotAt;
 }

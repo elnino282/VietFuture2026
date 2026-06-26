@@ -15,4 +15,5 @@ public class CropChangedEventDto {
     private String cropName;
     private String description;
     private BigDecimal nContentKgPerKgYield;
+    private String action;
 }

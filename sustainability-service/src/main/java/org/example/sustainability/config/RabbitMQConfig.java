@@ -62,6 +62,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Binding farmDeletedBinding(Queue sustainabilityEventsQueue, TopicExchange farmExchange) {
+        return BindingBuilder.bind(sustainabilityEventsQueue).to(farmExchange).with("farm.event.farm.deleted");
+    }
+
+    @Bean
     public Binding plotCreatedBinding(Queue sustainabilityEventsQueue, TopicExchange farmExchange) {
         return BindingBuilder.bind(sustainabilityEventsQueue).to(farmExchange).with("farm.event.plot.created");
     }
@@ -72,8 +77,28 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Binding plotDeletedBinding(Queue sustainabilityEventsQueue, TopicExchange farmExchange) {
+        return BindingBuilder.bind(sustainabilityEventsQueue).to(farmExchange).with("farm.event.plot.deleted");
+    }
+
+    @Bean
     public Binding seasonCreatedBinding(Queue sustainabilityEventsQueue, TopicExchange seasonExchange) {
         return BindingBuilder.bind(sustainabilityEventsQueue).to(seasonExchange).with("season.event.season.created");
+    }
+
+    @Bean
+    public Binding seasonUpdatedBinding(Queue sustainabilityEventsQueue, TopicExchange seasonExchange) {
+        return BindingBuilder.bind(sustainabilityEventsQueue).to(seasonExchange).with("season.event.season.updated");
+    }
+
+    @Bean
+    public Binding seasonStatusChangedBinding(Queue sustainabilityEventsQueue, TopicExchange seasonExchange) {
+        return BindingBuilder.bind(sustainabilityEventsQueue).to(seasonExchange).with("season.event.season.status.changed");
+    }
+
+    @Bean
+    public Binding seasonCompletedBinding(Queue sustainabilityEventsQueue, TopicExchange seasonExchange) {
+        return BindingBuilder.bind(sustainabilityEventsQueue).to(seasonExchange).with("season.event.season.completed");
     }
 
     @Bean

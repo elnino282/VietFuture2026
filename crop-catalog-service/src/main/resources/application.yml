@@ -11,12 +11,17 @@ spring:
     password: ${DB_PASS:springpass}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:rabbituser}
+    password: ${SPRING_RABBITMQ_PASSWORD:rabbitpass}
+
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
     show-sql: false
 

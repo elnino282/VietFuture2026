@@ -17,6 +17,8 @@ import org.example.season.dto.request.StartSeasonRequest;
 import org.example.season.dto.request.UpdateSeasonStatusRequest;
 import org.example.season.dto.response.SeasonResponse;
 import org.example.season.entity.Season;
+import org.example.season.event.DomainEventPublisher;
+import org.example.season.event.SeasonChangedEvent;
 import org.example.season.mapper.SeasonMapper;
 import org.example.season.repository.HarvestRepository;
 import org.example.season.repository.SeasonRepository;
@@ -37,6 +39,7 @@ public class SeasonStatusService {
     SeasonWorkspaceAccessService seasonWorkspaceAccessService;
     ExternalServiceClient externalServiceClient;
     SeasonStatusStrategy statusStrategy;
+    DomainEventPublisher domainEventPublisher;
 
     public SeasonResponse updateSeasonStatus(Integer id, UpdateSeasonStatusRequest request) {
         Season season = findAndValidateAccess(id);
@@ -73,6 +76,8 @@ public class SeasonStatusService {
         }
 
         Season saved = seasonRepository.save(season);
+        ExternalServiceClient.PlotInternalDto plot = externalServiceClient.getPlot(season.getPlotId());
+        domainEventPublisher.publish(new SeasonChangedEvent(saved, plot != null ? plot.getFarmId() : null, SeasonChangedEvent.Action.STATUS_CHANGED));
         return seasonMapper.toResponse(saved);
     }
 
@@ -102,6 +107,7 @@ public class SeasonStatusService {
 
         season.setStatus(SeasonStatus.ACTIVE);
         Season saved = seasonRepository.save(season);
+        domainEventPublisher.publish(new SeasonChangedEvent(saved, plot.getFarmId(), SeasonChangedEvent.Action.STATUS_CHANGED));
         return seasonMapper.toResponse(saved);
     }
 
@@ -135,6 +141,8 @@ public class SeasonStatusService {
 
         season.setStatus(SeasonStatus.COMPLETED);
         Season saved = seasonRepository.save(season);
+        ExternalServiceClient.PlotInternalDto plot = externalServiceClient.getPlot(season.getPlotId());
+        domainEventPublisher.publish(new SeasonChangedEvent(saved, plot != null ? plot.getFarmId() : null, SeasonChangedEvent.Action.COMPLETED));
         return seasonMapper.toResponse(saved);
     }
 
@@ -156,6 +164,8 @@ public class SeasonStatusService {
         }
 
         Season saved = seasonRepository.save(season);
+        ExternalServiceClient.PlotInternalDto plot = externalServiceClient.getPlot(season.getPlotId());
+        domainEventPublisher.publish(new SeasonChangedEvent(saved, plot != null ? plot.getFarmId() : null, SeasonChangedEvent.Action.STATUS_CHANGED));
         return seasonMapper.toResponse(saved);
     }
 
@@ -168,6 +178,8 @@ public class SeasonStatusService {
 
         season.setStatus(SeasonStatus.ARCHIVED);
         Season saved = seasonRepository.save(season);
+        ExternalServiceClient.PlotInternalDto plot = externalServiceClient.getPlot(season.getPlotId());
+        domainEventPublisher.publish(new SeasonChangedEvent(saved, plot != null ? plot.getFarmId() : null, SeasonChangedEvent.Action.STATUS_CHANGED));
         return seasonMapper.toResponse(saved);
     }
 

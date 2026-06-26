@@ -13,7 +13,7 @@ import org.example.sustainability.dto.event.FarmChangedEventDto;
 import org.example.sustainability.dto.event.HarvestRecordedEventDto;
 import org.example.sustainability.dto.event.IncidentChangedEventDto;
 import org.example.sustainability.dto.event.PlotChangedEventDto;
-import org.example.sustainability.dto.event.SeasonCreatedEventDto;
+import org.example.sustainability.dto.event.SeasonChangedEventDto;
 import org.example.sustainability.entity.ProcessedEvent;
 import org.example.sustainability.repository.ProcessedEventRepository;
 import org.example.sustainability.snapshot.entity.*;
@@ -55,36 +55,65 @@ public class SustainabilityEventListener {
         }
 
         String eventType = (String) message.getMessageProperties().getHeaders().get("eventType");
+        if (eventType == null || eventType.isBlank()) {
+            log.warn("Received event {} without eventType header, skipping", eventId);
+            return;
+        }
+
         log.info("Processing event {} of type {}", eventId, eventType);
 
         try {
-            if ("farm.event.farm.created".equals(eventType) || "farm.event.farm.updated".equals(eventType)) {
-                handleFarmChanged(message);
-            } else if (eventType.startsWith("farm.event.plot.")) {
-                handlePlotChanged(message);
-            } else if (eventType.startsWith("crop.event.crop.")) {
-                handleCropChanged(message);
-            } else if ("season.event.season.created".equals(eventType)) {
-                handleSeasonCreated(message);
-            } else if ("season.event.harvest.recorded".equals(eventType)) {
-                handleHarvestRecorded(message);
-            } else if (eventType.startsWith("finance.event.expense.")) {
-                handleExpenseChanged(message);
-            } else if (eventType.startsWith("incident.event.incident.")) {
-                handleIncidentChanged(message);
+            boolean handled = dispatchEvent(message, eventType);
+            if (handled) {
+                processedEventRepository.save(ProcessedEvent.builder()
+                        .eventId(eventId)
+                        .processedAt(LocalDateTime.now())
+                        .build());
+                log.info("Event {} processed successfully", eventId);
             } else {
-                log.info("Unknown event type {}, skipping", eventType);
+                log.warn("Unhandled event type {}, not marking as processed", eventType);
             }
-
-            processedEventRepository.save(ProcessedEvent.builder()
-                    .eventId(eventId)
-                    .processedAt(LocalDateTime.now())
-                    .build());
-            log.info("Event {} processed successfully", eventId);
         } catch (Exception e) {
             log.error("Error processing event {}: {}", eventId, e.getMessage(), e);
             throw e;
         }
+    }
+
+    private boolean dispatchEvent(Message message, String eventType) throws Exception {
+        if ("farm.event.farm.created".equals(eventType)
+                || "farm.event.farm.updated".equals(eventType)
+                || "farm.event.farm.deleted".equals(eventType)) {
+            handleFarmChanged(message);
+            return true;
+        }
+        if (eventType.startsWith("farm.event.plot.")) {
+            handlePlotChanged(message);
+            return true;
+        }
+        if (eventType.startsWith("crop.event.crop.")) {
+            handleCropChanged(message);
+            return true;
+        }
+        if ("season.event.season.created".equals(eventType)
+                || "season.event.season.updated".equals(eventType)
+                || "season.event.season.status.changed".equals(eventType)
+                || "season.event.season.completed".equals(eventType)) {
+            handleSeasonChanged(message);
+            return true;
+        }
+        if ("season.event.harvest.recorded".equals(eventType)) {
+            handleHarvestRecorded(message);
+            return true;
+        }
+        if (eventType.startsWith("finance.event.expense.")) {
+            handleExpenseChanged(message);
+            return true;
+        }
+        if (eventType.startsWith("incident.event.incident.")) {
+            handleIncidentChanged(message);
+            return true;
+        }
+        return false;
     }
 
     private void handleFarmChanged(Message message) throws Exception {
@@ -100,22 +129,38 @@ public class SustainabilityEventListener {
                 .area(dto.getArea())
                 .latitude(dto.getLatitude())
                 .longitude(dto.getLongitude())
+                .active(dto.getActive())
                 .snapshotAt(LocalDateTime.now())
                 .build();
         farmSnapshotRepository.save(snapshot);
     }
 
-    private void handleSeasonCreated(Message message) throws Exception {
-        SeasonCreatedEventDto dto = objectMapper.readValue(message.getBody(), SeasonCreatedEventDto.class);
+    private void handleSeasonChanged(Message message) throws Exception {
+        SeasonChangedEventDto dto = objectMapper.readValue(message.getBody(), SeasonChangedEventDto.class);
         SeasonSnapshot snapshot = SeasonSnapshot.builder()
                 .seasonId(dto.getSeasonId())
                 .seasonName(dto.getSeasonName())
                 .plotId(dto.getPlotId())
                 .farmId(dto.getFarmId())
                 .cropId(dto.getCropId())
+                .varietyId(dto.getVarietyId())
+                .startDate(dto.getStartDate())
+                .plannedHarvestDate(dto.getPlannedHarvestDate())
+                .endDate(dto.getEndDate())
+                .status(dto.getStatus())
+                .initialPlantCount(dto.getInitialPlantCount())
+                .currentPlantCount(dto.getCurrentPlantCount())
+                .expectedYieldKg(dto.getExpectedYieldKg())
+                .actualYieldKg(dto.getActualYieldKg())
+                .budgetAmount(dto.getBudgetAmount())
+                .notes(dto.getNotes())
                 .snapshotAt(LocalDateTime.now())
                 .build();
         seasonSnapshotRepository.save(snapshot);
+    }
+
+    private void handleSeasonCreated(Message message) throws Exception {
+        handleSeasonChanged(message);
     }
 
     private void handleHarvestRecorded(Message message) throws Exception {
@@ -181,6 +226,17 @@ public class SustainabilityEventListener {
 
     private void handlePlotChanged(Message message) throws Exception {
         PlotChangedEventDto dto = objectMapper.readValue(message.getBody(), PlotChangedEventDto.class);
+        if ("DELETED".equalsIgnoreCase(dto.getAction())) {
+            plotSnapshotRepository.save(
+                    PlotSnapshot.builder()
+                            .plotId(dto.getPlotId())
+                            .farmId(dto.getFarmId())
+                            .plotName(dto.getPlotName())
+                            .status("DELETED")
+                            .snapshotAt(LocalDateTime.now())
+                            .build());
+            return;
+        }
         PlotSnapshot snapshot = PlotSnapshot.builder()
                 .plotId(dto.getPlotId())
                 .farmId(dto.getFarmId())
@@ -196,6 +252,17 @@ public class SustainabilityEventListener {
 
     private void handleCropChanged(Message message) throws Exception {
         CropChangedEventDto dto = objectMapper.readValue(message.getBody(), CropChangedEventDto.class);
+        if ("DELETED".equalsIgnoreCase(dto.getAction())) {
+            cropSnapshotRepository.save(
+                    CropSnapshot.builder()
+                            .cropId(dto.getCropId())
+                            .cropName(dto.getCropName())
+                            .description("DELETED")
+                            .nContentKgPerKgYield(dto.getNContentKgPerKgYield())
+                            .snapshotAt(LocalDateTime.now())
+                            .build());
+            return;
+        }
         CropSnapshot snapshot = CropSnapshot.builder()
                 .cropId(dto.getCropId())
                 .cropName(dto.getCropName())

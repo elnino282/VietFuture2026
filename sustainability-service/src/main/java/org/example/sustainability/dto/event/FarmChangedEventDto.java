@@ -26,4 +26,5 @@ public class FarmChangedEventDto {
     private java.math.BigDecimal area;
     private java.math.BigDecimal latitude;
     private java.math.BigDecimal longitude;
+    private Boolean active;
 }
