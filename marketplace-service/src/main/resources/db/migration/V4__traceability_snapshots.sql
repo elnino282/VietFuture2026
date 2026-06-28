@@ -21,7 +21,4 @@ ALTER TABLE `marketplace_order_items`
     ADD COLUMN `lot_initial_quantity` DECIMAL(19,3) NULL AFTER `lot_grade`,
     ADD COLUMN `plot_id` INT NULL AFTER `lot_initial_quantity`,
     ADD COLUMN `plot_name` VARCHAR(255) NULL AFTER `plot_id`,
-    ADD COLUMN `plot_area` DECIMAL(19,4) NULL AFTER `plot_name`,
-    ADD COLUMN `crop_name` VARCHAR(255) NULL AFTER `plot_area`,
-    ADD COLUMN `farm_name` VARCHAR(255) NULL AFTER `crop_name`,
-    ADD COLUMN `season_name` VARCHAR(255) NULL AFTER `farm_name`;
+    ADD COLUMN `plot_area` DECIMAL(19,4) NULL AFTER `plot_name`;

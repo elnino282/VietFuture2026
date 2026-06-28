@@ -47,6 +47,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * @deprecated Marketplace traffic is owned by the extracted marketplace-service.
+ * This monolith controller is intentionally not registered as a public route and
+ * is retained only as an internal rollback/fallback reference during migration.
+ */
+@Deprecated(since = "microservice-extraction", forRemoval = true)
 // @RestController
 // @RequestMapping("/api/v1/marketplace")
 @RequiredArgsConstructor

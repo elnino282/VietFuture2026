@@ -57,6 +57,9 @@ public class MarketplaceOrderItem {
     @Column(name = "unit_price_snapshot", nullable = false, precision = 19, scale = 2)
     BigDecimal unitPriceSnapshot;
 
+    @Column(name = "unit_snapshot", nullable = false, length = 50)
+    String unitSnapshot;
+
     @Column(name = "quantity", nullable = false, precision = 19, scale = 3)
     BigDecimal quantity;
 

@@ -66,9 +66,10 @@
 
 5. Marketplace
    - Extract `marketplace-service`.
+   - Monolith marketplace routes are disabled and deprecated; keep the old module only as an internal rollback/fallback reference.
    - Checkout calls inventory synchronously to reserve stock using `X-Idempotency-Key`.
    - Orders publish `OrderCreated`, `PaymentSubmitted`, `PaymentVerified`, `OrderCompleted`, `OrderCancelled`.
-   - Traceability uses projections/events or Gateway/BFF aggregation, not direct DB joins.
+   - Traceability uses marketplace-owned snapshot projections copied from inventory/farm/season APIs; Gateway/BFF aggregation is not used for this flow.
 
 6. Admin And Reporting
    - Convert current admin dashboard/report APIs into `admin-reporting-service`.

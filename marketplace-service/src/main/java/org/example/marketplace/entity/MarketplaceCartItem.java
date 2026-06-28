@@ -49,6 +49,9 @@ public class MarketplaceCartItem {
     @Column(name = "unit_price_snapshot", nullable = false, precision = 19, scale = 2)
     BigDecimal unitPriceSnapshot;
 
+    @Column(name = "unit_snapshot", nullable = false, length = 50)
+    String unitSnapshot;
+
     // Denormalized fields for inventory reservation (derived from product)
     @Column(name = "farmer_user_id", nullable = false)
     Long farmerUserId;
@@ -86,15 +89,32 @@ public class MarketplaceCartItem {
         if (updatedAt == null) {
             updatedAt = now;
         }
-        // Initialize snapshot fields from product if not set
-        if (product != null && lotId == null) {
-            lotId = product.getLotId();
-            lotCode = product.getLotCode();
-            farmerUserId = product.getFarmerUserId();
-            productNameSnapshot = product.getName();
-            productSlugSnapshot = product.getSlug();
-            imageUrlSnapshot = product.getImageUrl();
-            traceableSnapshot = lotId != null;
+        // Initialize snapshot fields from product if not set.
+        if (product != null) {
+            if (lotId == null) {
+                lotId = product.getLotId();
+            }
+            if (lotCode == null || lotCode.isBlank()) {
+                lotCode = product.getLotCode();
+            }
+            if (farmerUserId == null) {
+                farmerUserId = product.getFarmerUserId();
+            }
+            if (productNameSnapshot == null || productNameSnapshot.isBlank()) {
+                productNameSnapshot = product.getName();
+            }
+            if (productSlugSnapshot == null || productSlugSnapshot.isBlank()) {
+                productSlugSnapshot = product.getSlug();
+            }
+            if (imageUrlSnapshot == null || imageUrlSnapshot.isBlank()) {
+                imageUrlSnapshot = product.getImageUrl();
+            }
+            if (traceableSnapshot == null) {
+                traceableSnapshot = lotId != null;
+            }
+            if (unitSnapshot == null || unitSnapshot.isBlank()) {
+                unitSnapshot = product.getUnit();
+            }
         }
     }
 

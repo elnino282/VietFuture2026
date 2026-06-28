@@ -7,6 +7,8 @@ spring:
 
   cloud:
     gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
       server:
         webflux:
           globalcors:
@@ -43,7 +45,7 @@ spring:
             - id: finance-route
               uri: ${FINANCE_SERVICE_URI:-http://localhost:8087}
               predicates:
-                - Path=/api/v1/expenses, /api/v1/expenses/**, /api/v1/public/lookup/expenses, /api/v1/public/lookup/expenses/**, /api/v1/seasons/*/expenses, /api/v1/seasons/*/expenses/**, /api/v1/seasons/**/expenses, /api/v1/seasons/**/expenses/**
+                - Path=/api/v1/expenses, /api/v1/expenses/**, /api/v1/public/lookup/expenses, /api/v1/public/lookup/expenses/**, /api/v1/seasons/*/expenses, /api/v1/seasons/*/expenses/**
             - id: incident-route
               uri: ${INCIDENT_SERVICE_URI:-http://localhost:8088}
               predicates:

@@ -1,10 +1,13 @@
 package org.example.marketplace.shared.security;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class CurrentUserService {
 
     public Long getCurrentUserId() {
@@ -24,8 +27,19 @@ public class CurrentUserService {
                 return null;
             }
         }
-        // For JWT-based auth, the user ID is typically in the token claims
-        // This will be handled by the JWT decoder
+        if (principal instanceof Jwt jwt) {
+            Object userIdClaim = jwt.getClaim("user_id");
+            if (userIdClaim instanceof Number num) {
+                return num.longValue();
+            }
+            if (userIdClaim instanceof String str) {
+                try {
+                    return Long.parseLong(str);
+                } catch (NumberFormatException e) {
+                    log.warn("Cannot parse user_id from JWT: {}", str);
+                }
+            }
+        }
         return null;
     }
 

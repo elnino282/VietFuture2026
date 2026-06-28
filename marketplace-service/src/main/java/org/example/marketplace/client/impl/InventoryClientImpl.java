@@ -1,6 +1,8 @@
 package org.example.marketplace.client.impl;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +16,9 @@ import org.example.marketplace.client.InventoryClient.ReservationResult.Reserved
 import org.example.marketplace.client.InventoryClient.ReserveItem;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -31,12 +36,23 @@ public class InventoryClientImpl implements InventoryClient {
         return webClientBuilder.baseUrl(inventoryServiceUrl).build();
     }
 
+    private <T extends WebClient.RequestHeadersSpec<?>> T authorize(T requestSpec) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof Jwt jwt) {
+                requestSpec.header("Authorization", "Bearer " + jwt.getTokenValue());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to propagate security context to WebClient: {}", e.getMessage());
+        }
+        return requestSpec;
+    }
+
     @Override
     public LotDetailDto getLotDetail(Integer lotId) {
         try {
-            ProductWarehouseLotResponse response = getWebClient()
-                    .get()
-                    .uri("/api/v1/product-warehouses/lots/{id}", lotId)
+            ProductWarehouseLotResponse response = authorize(getWebClient().get()
+                    .uri("/api/v1/product-warehouses/lots/{id}", lotId))
                     .retrieve()
                     .bodyToMono(ProductWarehouseLotResponse.class)
                     .timeout(Duration.ofSeconds(10))
@@ -56,7 +72,18 @@ public class InventoryClientImpl implements InventoryClient {
                     response.unit(),
                     response.initialQuantity(),
                     response.onHandQuantity(),
-                    response.status()
+                    response.status(),
+                    response.farmName(),
+                    response.seasonName(),
+                    response.plotId(),
+                    response.plotName(),
+                    response.harvestId(),
+                    response.warehouseName(),
+                    response.locationLabel(),
+                    response.harvestedAt(),
+                    response.receivedAt(),
+                    response.grade(),
+                    response.qualityStatus()
             );
         } catch (Exception e) {
             log.error("Failed to get lot detail: {}", e.getMessage(), e);
@@ -74,9 +101,8 @@ public class InventoryClientImpl implements InventoryClient {
     @Override
     public ReservationResult reserveStock(String idempotencyKey, Long orderId, List<ReserveItem> items) {
         try {
-            LocalReservationResponse response = getWebClient()
-                    .post()
-                    .uri("/api/v1/inventory/reservations/reserve")
+            LocalReservationResponse response = authorize(getWebClient().post()
+                    .uri("/api/v1/inventory/reservations/reserve"))
                     .header("X-Idempotency-Key", idempotencyKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(new ReserveStockRequestBody(idempotencyKey, orderId, items))
@@ -110,9 +136,8 @@ public class InventoryClientImpl implements InventoryClient {
     @Override
     public ReservationResult releaseReservation(Long orderId, String reason) {
         try {
-            LocalReservationResponse response = getWebClient()
-                    .post()
-                    .uri("/api/v1/inventory/reservations/release")
+            LocalReservationResponse response = authorize(getWebClient().post()
+                    .uri("/api/v1/inventory/reservations/release"))
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(Map.of(
                             "orderId", orderId,
@@ -148,9 +173,8 @@ public class InventoryClientImpl implements InventoryClient {
     @Override
     public ReservationResult confirmStockOut(Long orderId, String reason) {
         try {
-            LocalReservationResponse response = getWebClient()
-                    .post()
-                    .uri("/api/v1/inventory/reservations/confirm")
+            LocalReservationResponse response = authorize(getWebClient().post()
+                    .uri("/api/v1/inventory/reservations/confirm"))
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(Map.of(
                             "orderId", orderId,
@@ -192,9 +216,8 @@ public class InventoryClientImpl implements InventoryClient {
                             .reduce((a, b) -> a + "&lotIds=" + b)
                             .orElse("");
 
-            List<LocalAvailableStockResponse> response = getWebClient()
-                    .get()
-                    .uri(uri)
+            List<LocalAvailableStockResponse> response = authorize(getWebClient().get()
+                    .uri(uri))
                     .retrieve()
                     .bodyToFlux(LocalAvailableStockResponse.class)
                     .collectList()
@@ -233,9 +256,8 @@ public class InventoryClientImpl implements InventoryClient {
                             .reduce((a, b) -> a + "&seasonIds=" + b)
                             .orElse("");
 
-            List<ProductWarehouseLotResponse> response = getWebClient()
-                    .get()
-                    .uri(uri)
+            List<ProductWarehouseLotResponse> response = authorize(getWebClient().get()
+                    .uri(uri))
                     .retrieve()
                     .bodyToFlux(ProductWarehouseLotResponse.class)
                     .collectList()
@@ -257,7 +279,18 @@ public class InventoryClientImpl implements InventoryClient {
                             item.unit(),
                             item.initialQuantity(),
                             item.onHandQuantity(),
-                            item.status()
+                            item.status(),
+                            item.farmName(),
+                            item.seasonName(),
+                            item.plotId(),
+                            item.plotName(),
+                            item.harvestId(),
+                            item.warehouseName(),
+                            item.locationLabel(),
+                            item.harvestedAt(),
+                            item.receivedAt(),
+                            item.grade(),
+                            item.qualityStatus()
                     ))
                     .toList();
         } catch (Exception e) {
@@ -273,10 +306,21 @@ public class InventoryClientImpl implements InventoryClient {
             String productName,
             String productVariant,
             Integer seasonId,
+            String seasonName,
             Integer farmId,
+            String farmName,
+            Integer plotId,
+            String plotName,
+            Integer harvestId,
+            String warehouseName,
+            String locationLabel,
+            LocalDate harvestedAt,
+            LocalDateTime receivedAt,
             String unit,
             BigDecimal initialQuantity,
             BigDecimal onHandQuantity,
+            String grade,
+            String qualityStatus,
             String status
     ) {}
 

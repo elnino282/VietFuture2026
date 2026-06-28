@@ -1,6 +1,8 @@
 package org.example.marketplace.client;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface InventoryClient {
@@ -19,9 +21,28 @@ public interface InventoryClient {
     
     List<AvailableStock> getAvailableStock(List<Integer> lotIds);
     
-    record LotDetailDto(Integer id, String lotCode, Integer farmId, Integer seasonId,
-                       String productName, String productVariant, String unit,
-                       BigDecimal initialQuantity, BigDecimal onHandQuantity, String status) {}
+    record LotDetailDto(
+            Integer id,
+            String lotCode,
+            Integer farmId,
+            Integer seasonId,
+            String productName,
+            String productVariant,
+            String unit,
+            BigDecimal initialQuantity,
+            BigDecimal onHandQuantity,
+            String status,
+            String farmName,
+            String seasonName,
+            Integer plotId,
+            String plotName,
+            Integer harvestId,
+            String warehouseName,
+            String locationLabel,
+            LocalDate harvestedAt,
+            LocalDateTime receivedAt,
+            String grade,
+            String qualityStatus) {}
     
     record ReserveItem(Long orderItemId, Integer lotId, String lotCode, BigDecimal quantity, String unit) {}
     

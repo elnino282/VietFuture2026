@@ -4,7 +4,8 @@ public enum ProductWarehouseLotStatus {
     IN_STOCK,
     HOLD,
     DEPLETED,
-    ARCHIVED;
+    ARCHIVED,
+    AVAILABLE;
 
     public static ProductWarehouseLotStatus fromCode(String code) {
         if (code == null || code.isBlank()) {

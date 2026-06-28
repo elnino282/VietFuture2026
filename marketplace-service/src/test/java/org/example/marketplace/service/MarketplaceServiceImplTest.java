@@ -58,7 +58,28 @@ class MarketplaceServiceImplTest {
         when(seasonClient.getSeasonsByIds(List.of(100))).thenReturn(List.of(new SeasonDetailDto(100, "Spring 2026", null, null, null, null, 10)));
 
         when(inventoryClient.getLotsBySeasonIds(List.of(100))).thenReturn(List.of(
-                new InventoryClient.LotDetailDto(500, "LOT-500", 10, 100, "Carrot", "Premium", "kg", BigDecimal.TEN, BigDecimal.TEN, "AVAILABLE")
+                new InventoryClient.LotDetailDto(
+                        500,
+                        "LOT-500",
+                        10,
+                        100,
+                        "Carrot",
+                        "Premium",
+                        "kg",
+                        BigDecimal.TEN,
+                        BigDecimal.TEN,
+                        "AVAILABLE",
+                        "Happy Farm",
+                        "Spring 2026",
+                        20,
+                        "Plot A",
+                        30,
+                        "Main Warehouse",
+                        "Zone A",
+                        null,
+                        null,
+                        "A",
+                        "GOOD")
         ));
 
         MarketplaceProduct linkedProduct = new MarketplaceProduct();

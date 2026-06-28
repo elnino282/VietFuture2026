@@ -457,6 +457,66 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseWarehouseResponse"
+  /api/v1/inventory/reservations/reserve:
+    post:
+      tags:
+      - reservation-controller
+      operationId: reserveStock
+      parameters:
+      - name: X-Idempotency-Key
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReserveStockRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+  /api/v1/inventory/reservations/release:
+    post:
+      tags:
+      - reservation-controller
+      operationId: releaseReservation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReleaseReservationRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+  /api/v1/inventory/reservations/confirm:
+    post:
+      tags:
+      - reservation-controller
+      operationId: confirmStockOut
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmStockOutRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
   /api/v1/inventory/movements:
     get:
       tags:
@@ -1011,6 +1071,50 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListWarehouseResponse"
+  /api/v1/inventory/reservations/order/{orderId}:
+    get:
+      tags:
+      - reservation-controller
+      operationId: getReservationsByOrder
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReservationResponse"
+  /api/v1/inventory/reservations/available:
+    get:
+      tags:
+      - reservation-controller
+      operationId: getAvailableStock
+      parameters:
+      - name: lotIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvailableStockResponse"
   /api/v1/inventory/on-hand:
     get:
       tags:
@@ -1479,6 +1583,7 @@ components:
           - HOLD
           - DEPLETED
           - ARCHIVED
+          - AVAILABLE
     SyncLotRequest:
       type: object
       properties:
@@ -1726,6 +1831,108 @@ components:
         wardId:
           type: integer
           format: int32
+    ReserveItem:
+      type: object
+      properties:
+        orderItemId:
+          type: integer
+          format: int64
+        lotId:
+          type: integer
+          format: int32
+        lotCode:
+          type: string
+        quantity:
+          type: number
+          minimum: 0.0
+        unit:
+          type: string
+      required:
+      - lotCode
+      - lotId
+      - quantity
+      - unit
+    ReserveStockRequest:
+      type: object
+      properties:
+        idempotencyKey:
+          type: string
+        orderId:
+          type: integer
+          format: int64
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReserveItem"
+      required:
+      - idempotencyKey
+      - items
+      - orderId
+    ReservationResponse:
+      type: object
+      properties:
+        reservationId:
+          type: integer
+          format: int64
+        idempotencyKey:
+          type: string
+        orderId:
+          type: integer
+          format: int64
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReservedItemResponse"
+        status:
+          type: string
+          enum:
+          - RESERVED
+          - ALREADY_EXISTS
+          - FAILED
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ReservedItemResponse:
+      type: object
+      properties:
+        itemId:
+          type: integer
+          format: int64
+        lotId:
+          type: integer
+          format: int32
+        lotCode:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        previousOnHand:
+          type: number
+        newOnHand:
+          type: number
+    ReleaseReservationRequest:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        reason:
+          type: string
+      required:
+      - orderId
+    ConfirmStockOutRequest:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        reason:
+          type: string
+      required:
+      - orderId
     RecordStockMovementRequest:
       type: object
       properties:
@@ -2161,6 +2368,25 @@ components:
             $ref: "#/components/schemas/WarehouseResponse"
         generatedAt:
           type: string
+    AvailableStockResponse:
+      type: object
+      properties:
+        lotId:
+          type: integer
+          format: int32
+        lotCode:
+          type: string
+        onHandQuantity:
+          type: number
+        reservedQuantity:
+          type: number
+        availableQuantity:
+          type: number
+        unit:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
     ApiResponsePageResponseOnHandRowResponse:
       type: object
       properties:

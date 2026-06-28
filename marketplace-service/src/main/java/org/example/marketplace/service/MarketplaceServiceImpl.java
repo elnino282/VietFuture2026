@@ -1087,6 +1087,12 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         order.setStatus(request.status());
         order = marketplaceOrderRepository.save(order);
 
+        if (request.status() == MarketplaceOrderStatus.COMPLETED) {
+            publishOrderCompletedEvent(order);
+        } else if (request.status() == MarketplaceOrderStatus.CANCELLED) {
+            publishOrderCancelledEvent(order, currentUserService.getCurrentUserId(), "Cancelled by admin");
+        }
+
         return toOrderResponse(order);
     }
 
