@@ -38,6 +38,13 @@ public class InternalUserController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping("/users/{userId}/display-name")
+    public ResponseEntity<String> getUserDisplayName(@PathVariable Long userId) {
+        return userRepository.findById(userId)
+                .map(user -> ResponseEntity.ok(user.getFullName() != null ? user.getFullName() : user.getUsername()))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/users/employees")
     public ResponseEntity<Page<UserInternalDto>> searchEmployees(
             @RequestParam(required = false) String keyword,

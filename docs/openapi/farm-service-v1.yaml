@@ -137,6 +137,29 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseString"
+  /api/v1/internal/farms/batch:
+    post:
+      tags:
+      - internal-farm-controller
+      operationId: getFarmsByIds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: int32
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FarmSummaryDto"
   /api/v1/farms:
     get:
       tags:
@@ -320,6 +343,25 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/PlotInternalDto"
+  /api/v1/internal/farms/{farmId}:
+    get:
+      tags:
+      - internal-farm-controller
+      operationId: getFarmDetail_1
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/FarmDetailDto"
   /api/v1/address/wards/{id}:
     get:
       tags:
@@ -594,6 +636,20 @@ components:
           type: number
         active:
           type: boolean
+    FarmSummaryDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        provinceName:
+          type: string
+        wardName:
+          type: string
+        area:
+          type: number
     FarmCreateRequest:
       type: object
       properties:
@@ -692,6 +748,30 @@ components:
           format: int64
         farmActive:
           type: boolean
+    FarmDetailDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        provinceName:
+          type: string
+        wardName:
+          type: string
+        area:
+          type: number
+        latitude:
+          type: number
+        longitude:
+          type: number
+        averageRating:
+          type: number
+          format: double
+        userId:
+          type: integer
+          format: int64
     ApiResponseObject:
       type: object
       properties:

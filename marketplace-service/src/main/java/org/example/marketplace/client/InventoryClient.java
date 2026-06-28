@@ -8,6 +8,8 @@ public interface InventoryClient {
     LotDetailDto getLotDetail(Integer lotId);
     
     List<LotDetailDto> getLotsByIds(List<Integer> lotIds);
+
+    List<LotDetailDto> getLotsBySeasonIds(List<Integer> seasonIds);
     
     ReservationResult reserveStock(String idempotencyKey, Long orderId, List<ReserveItem> items);
     

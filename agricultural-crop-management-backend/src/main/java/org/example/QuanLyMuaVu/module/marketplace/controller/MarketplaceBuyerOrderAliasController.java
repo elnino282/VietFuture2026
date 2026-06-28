@@ -29,8 +29,8 @@ import org.springframework.web.multipart.MultipartFile;
  * Maps {@code /api/v1/buyer/orders} to the same service methods as
  * {@code /api/v1/marketplace/orders} for API convention compatibility.
  */
-@RestController
-@RequestMapping("/api/v1/buyer/orders")
+// @RestController
+// @RequestMapping("/api/v1/buyer/orders")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MarketplaceBuyerOrderAliasController {

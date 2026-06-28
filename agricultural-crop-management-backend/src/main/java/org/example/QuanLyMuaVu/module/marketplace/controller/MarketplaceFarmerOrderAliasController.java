@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
  * Maps {@code /api/v1/farmer/orders} to the same service methods as
  * {@code /api/v1/marketplace/farmer/orders} for API convention compatibility.
  */
-@RestController
-@RequestMapping("/api/v1/farmer/orders")
+// @RestController
+// @RequestMapping("/api/v1/farmer/orders")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MarketplaceFarmerOrderAliasController {

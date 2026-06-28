@@ -1,6 +1,7 @@
 package org.example.marketplace.model;
 
 public enum MarketplaceOrderStatus {
+    PENDING_RESERVATION,
     PENDING,
     PENDING_PAYMENT,
     PAYMENT_SUBMITTED,

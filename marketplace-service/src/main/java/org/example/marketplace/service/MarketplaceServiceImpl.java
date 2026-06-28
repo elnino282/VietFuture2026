@@ -11,6 +11,7 @@ import org.example.marketplace.client.InventoryClient;
 import org.example.marketplace.client.SeasonClient;
 import org.example.marketplace.dto.client.FarmDetailDto;
 import org.example.marketplace.dto.client.FarmSummaryDto;
+import org.example.marketplace.dto.client.SeasonDetailDto;
 import org.example.marketplace.dto.request.MarketplaceAddCartItemRequest;
 import org.example.marketplace.dto.request.MarketplaceAddressUpsertRequest;
 import org.example.marketplace.dto.request.MarketplaceCreateOrderRequest;
@@ -48,6 +49,7 @@ import org.example.marketplace.entity.MarketplaceAddress;
 import org.example.marketplace.entity.MarketplaceCart;
 import org.example.marketplace.entity.MarketplaceCartItem;
 import org.example.marketplace.entity.MarketplaceOrder;
+import org.example.marketplace.entity.MarketplaceOrderAuditLog;
 import org.example.marketplace.entity.MarketplaceOrderGroup;
 import org.example.marketplace.entity.MarketplaceOrderItem;
 import org.example.marketplace.entity.MarketplaceProduct;
@@ -71,6 +73,7 @@ import org.example.marketplace.repository.MarketplaceOrderItemRepository;
 import org.example.marketplace.repository.MarketplaceOrderRepository;
 import org.example.marketplace.repository.MarketplaceProductRepository;
 import org.example.marketplace.repository.MarketplaceProductReviewRepository;
+import org.example.marketplace.repository.MarketplaceOrderAuditLogRepository;
 import org.example.marketplace.shared.security.CurrentUserService;
 import org.example.DTO.Common.PageResponse;
 import org.springframework.data.domain.Page;
@@ -109,6 +112,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     MarketplaceOrderRepository marketplaceOrderRepository;
     MarketplaceAddressRepository marketplaceAddressRepository;
     MarketplaceProductReviewRepository marketplaceProductReviewRepository;
+    MarketplaceOrderAuditLogRepository marketplaceOrderAuditLogRepository;
     FarmClient farmClient;
     SeasonClient seasonClient;
     InventoryClient inventoryClient;
@@ -159,34 +163,108 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional(readOnly = true)
     public PageResponse<MarketplaceFarmSummaryResponse> listFarms(String q, String region, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        // TODO: Implement via FarmClient - fetch farms and map to response
-        List<MarketplaceFarmSummaryResponse> items = List.of();
-        return new PageResponse<>(items, page, size, 0, 0, false, false);
+        
+        Page<MarketplaceProductRepository.FarmProjection> farmProjectionsPage =
+                marketplaceProductRepository.searchDistinctFarmsWithPublishedProducts(
+                        q != null ? q.trim() : null,
+                        region != null ? region.trim() : null,
+                        pageable);
+
+        if (farmProjectionsPage.isEmpty()) {
+            return new PageResponse<>(List.of(), page, size, 0, 0, false, false);
+        }
+
+        List<Integer> farmIds = farmProjectionsPage.getContent().stream()
+                .map(MarketplaceProductRepository.FarmProjection::getFarmId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<FarmSummaryDto> farmDtos = farmClient.getFarmsByIds(farmIds);
+        Map<Integer, FarmSummaryDto> farmDtoById = farmDtos.stream()
+                .filter(Objects::nonNull)
+                .collect(java.util.stream.Collectors.toMap(FarmSummaryDto::id, f -> f, (f1, f2) -> f1));
+
+        List<MarketplaceProductRepository.FarmProductCountProjection> countProjections =
+                marketplaceProductRepository.countPublishedByFarmIds(farmIds);
+        Map<Integer, Long> productCountByFarmId = countProjections.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        MarketplaceProductRepository.FarmProductCountProjection::getFarmId,
+                        MarketplaceProductRepository.FarmProductCountProjection::getProductCount
+                ));
+
+        List<Integer> traceableFarmIds = marketplaceProductRepository.findFarmIdsWithTraceableProducts(farmIds);
+        java.util.Set<Integer> traceableFarmIdSet = new java.util.HashSet<>(traceableFarmIds);
+
+        List<MarketplaceFarmSummaryResponse> items = farmProjectionsPage.getContent().stream()
+                .map(proj -> {
+                    Integer fId = proj.getFarmId();
+                    String farmName = proj.getFarmName();
+                    
+                    FarmSummaryDto dto = farmDtoById.get(fId);
+                    String regionStr = null;
+                    if (dto != null) {
+                        farmName = dto.name() != null ? dto.name() : farmName;
+                        regionStr = dto.provinceName() != null ? dto.provinceName() : "";
+                        if (dto.wardName() != null && !dto.wardName().isBlank()) {
+                            regionStr = regionStr.isEmpty() ? dto.wardName() : regionStr + ", " + dto.wardName();
+                        }
+                    }
+
+                    long prodCount = productCountByFarmId.getOrDefault(fId, 0L);
+                    boolean hasTraceable = traceableFarmIdSet.contains(fId);
+
+                    return new MarketplaceFarmSummaryResponse(
+                            fId,
+                            farmName,
+                            regionStr,
+                            null,
+                            null,
+                            prodCount,
+                            true,
+                            null,
+                            null,
+                            hasTraceable
+                    );
+                })
+                .toList();
+
+        return PageResponse.of(farmProjectionsPage, items);
     }
 
     @Override
     @Transactional(readOnly = true)
     public MarketplaceFarmDetailResponse getFarmDetail(Integer farmId) {
-        // TODO: Implement via FarmClient
         FarmDetailDto farmDetail = farmClient.getFarmDetail(farmId);
         if (farmDetail == null) {
             throw new RuntimeException("Farm not found");
         }
+        String region = farmDetail.provinceName() != null ? farmDetail.provinceName() : "";
+        if (farmDetail.wardName() != null) {
+            region += ", " + farmDetail.wardName();
+        }
+        
+        long productCount = marketplaceProductRepository.countSellableByFarmId(farmId);
+        boolean hasTraceable = marketplaceProductRepository.existsSellableTraceableByFarmId(farmId);
+        String ownerDisplayName = null;
+        if (farmDetail.userId() != null) {
+            ownerDisplayName = identityClient.getUserDisplayName(farmDetail.userId());
+        }
+
         return new MarketplaceFarmDetailResponse(
                 farmDetail.id(),
                 farmDetail.name(),
-                farmDetail.region(),
+                region,
                 null,
-                farmDetail.coverImageUrl(),
-                0L,
-                farmDetail.active(),
+                null,
+                productCount,
+                true,
                 farmDetail.averageRating(),
-                farmDetail.ratingCount(),
-                false,
+                0,
+                hasTraceable,
                 null,
-                farmDetail.ownerUserId(),
-                farmDetail.ownerName(),
-                farmDetail.ownerPhone());
+                farmDetail.userId(),
+                ownerDisplayName,
+                null);
     }
 
     @Override
@@ -228,8 +306,47 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Override
     @Transactional
     public MarketplaceReviewResponse createReview(Long orderId, MarketplaceCreateReviewRequest request) {
-        // TODO: Implement full review creation logic
-        throw new UnsupportedOperationException("Not yet implemented");
+        Long buyerUserId = currentUserService.getCurrentUserId();
+
+        // Get the order item
+        MarketplaceOrderItem item = marketplaceOrderItemRepository.findById(request.orderItemId())
+                .orElseThrow(() -> new RuntimeException("Order item not found"));
+
+        // Verify buyer owns this order
+        if (!item.getOrder().getBuyerUserId().equals(buyerUserId)) {
+            throw new RuntimeException("Forbidden: you can only review your own orders");
+        }
+
+        // Verify order is completed
+        if (item.getOrder().getStatus() != MarketplaceOrderStatus.COMPLETED) {
+            throw new RuntimeException("Can only review completed orders");
+        }
+
+        // Check if review already exists
+        marketplaceProductReviewRepository.findByOrderItemIdAndBuyerUserId(request.orderItemId(), buyerUserId)
+                .ifPresent(existing -> {
+                    throw new RuntimeException("You have already reviewed this item");
+                });
+
+        String buyerDisplayName = identityClient.getUserDisplayName(buyerUserId);
+        if (buyerDisplayName == null || buyerDisplayName.isBlank()) {
+            buyerDisplayName = "Buyer";
+        }
+
+        // Create review
+        MarketplaceProductReview review = MarketplaceProductReview.builder()
+                .productId(item.getProductId())
+                .orderId(item.getOrder().getId())
+                .orderItemId(request.orderItemId())
+                .buyerUserId(buyerUserId)
+                .buyerDisplayName(buyerDisplayName)
+                .rating(request.rating())
+                .comment(request.comment())
+                .hidden(false)
+                .build();
+
+        review = marketplaceProductReviewRepository.save(review);
+        return toReviewResponse(review);
     }
 
     @Override
@@ -401,16 +518,116 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public MarketplaceOrderPreviewResponse previewOrder(MarketplaceCreateOrderRequest request) {
-        // TODO: Implement full preview logic
+        Long buyerUserId = currentUserService.getCurrentUserId();
+
+        // Get cart items
+        MarketplaceCart cart = marketplaceCartRepository.findByUserIdWithItems(buyerUserId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        List<MarketplaceCartItem> cartItems = cart.getItems();
+        if (cartItems.isEmpty()) {
+            return new MarketplaceOrderPreviewResponse(
+                    List.of(),
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    null, null, null,
+                    0,
+                    CURRENCY_VND);
+        }
+
+        // Get buyer address if addressId provided
+        String shippingRecipientName = request.shippingRecipientName();
+        String phoneVal = request.shippingPhone();
+        String addressLineVal = request.shippingAddressLine();
+        if (request.addressId() != null) {
+            Optional<MarketplaceAddress> addressOpt = marketplaceAddressRepository.findByIdAndUserId(request.addressId(), buyerUserId);
+            if (addressOpt.isPresent()) {
+                MarketplaceAddress addr = addressOpt.get();
+                shippingRecipientName = addr.getFullName();
+                phoneVal = addr.getPhone();
+                String addrLine = addr.getStreet() + ", " + addr.getWard() + ", " + addr.getDistrict() + ", " + addr.getProvince();
+                if (addr.getDetail() != null && !addr.getDetail().isBlank()) {
+                    addrLine = addr.getDetail() + ", " + addrLine;
+                }
+                addressLineVal = addrLine;
+            }
+        }
+        final String shippingPhone = phoneVal;
+        final String shippingAddressLine = addressLineVal;
+
+        // Group items by farmer
+        Map<Long, List<MarketplaceCartItem>> itemsByFarmer = cartItems.stream()
+                .collect(java.util.stream.Collectors.groupingBy(MarketplaceCartItem::getFarmerUserId));
+
+        // Build seller groups
+        List<MarketplaceOrderPreviewResponse.SellerGroup> sellerGroups = new ArrayList<>();
+        BigDecimal grandSubtotal = BigDecimal.ZERO;
+        int totalSellers = 0;
+
+        for (Map.Entry<Long, List<MarketplaceCartItem>> entry : itemsByFarmer.entrySet()) {
+            Long farmerUserId = entry.getKey();
+            List<MarketplaceCartItem> farmerItems = entry.getValue();
+
+            // Get farmer display name
+            String farmerDisplayName = identityClient.getUserDisplayName(farmerUserId);
+            if (farmerDisplayName == null) {
+                farmerDisplayName = "Farmer " + farmerUserId;
+            }
+
+            // Get farm info from first item
+            Integer farmId = farmerItems.get(0).getProduct().getFarmId();
+            String farmName = farmerItems.get(0).getProduct().getFarmName();
+
+            BigDecimal subtotal = BigDecimal.ZERO;
+            List<MarketplaceOrderPreviewResponse.PreviewItem> previewItems = new ArrayList<>();
+
+            for (MarketplaceCartItem item : farmerItems) {
+                MarketplaceProduct product = item.getProduct();
+                BigDecimal lineTotal = product.getPrice().multiply(item.getQuantity());
+                subtotal = subtotal.add(lineTotal);
+
+                previewItems.add(new MarketplaceOrderPreviewResponse.PreviewItem(
+                        product.getId(),
+                        product.getSlug(),
+                        product.getName(),
+                        product.getImageUrl(),
+                        product.getPrice(),
+                        item.getQuantity(),
+                        lineTotal,
+                        product.getLotId() != null
+                ));
+            }
+
+            grandSubtotal = grandSubtotal.add(subtotal);
+            totalSellers++;
+
+            // Shipping fee could be calculated based on rules, default to 0 for now
+            BigDecimal shippingFee = BigDecimal.ZERO;
+
+            sellerGroups.add(new MarketplaceOrderPreviewResponse.SellerGroup(
+                    farmerUserId,
+                    farmerDisplayName,
+                    farmId,
+                    farmName,
+                    previewItems,
+                    subtotal,
+                    shippingFee,
+                    subtotal.add(shippingFee)
+            ));
+        }
+
         return new MarketplaceOrderPreviewResponse(
-                List.of(),
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                null, null, null,
-                0,
+                sellerGroups,
+                grandSubtotal,
+                BigDecimal.ZERO, // grandShippingFee
+                grandSubtotal, // grandTotal
+                shippingRecipientName,
+                shippingPhone,
+                shippingAddressLine,
+                totalSellers,
                 CURRENCY_VND);
     }
 
@@ -462,26 +679,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         Map<Long, List<MarketplaceCartItem>> itemsByFarmer = cartItems.stream()
                 .collect(java.util.stream.Collectors.groupingBy(MarketplaceCartItem::getFarmerUserId));
 
-        // 3. Reserve stock in inventory service for all items
-        List<InventoryClient.ReserveItem> reserveItems = cartItems.stream()
-                .map(item -> new InventoryClient.ReserveItem(
-                        item.getId(),
-                        item.getLotId(),
-                        item.getLotCode(),
-                        item.getQuantity(),
-                        item.getProduct().getUnit()))
-                .toList();
-
-        InventoryClient.ReservationResult reserveResult = inventoryClient.reserveStock(
-                idempotencyKey + "-reserve",
-                null, // orderId not known yet
-                reserveItems);
-
-        if (!reserveResult.success()) {
-            throw new RuntimeException("Failed to reserve stock: " + reserveResult.message());
-        }
-
-        // 4. Create order group
+        // 3. Create order group with PENDING_RESERVATION status
         String groupCode = "OG-" + System.currentTimeMillis() + "-" + buyerUserId;
         MarketplaceOrderGroup orderGroup = MarketplaceOrderGroup.builder()
                 .groupCode(groupCode)
@@ -489,29 +687,29 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 .idempotencyKey(idempotencyKey)
                 .requestFingerprint(request.toString().hashCode() + "-" + buyerUserId)
                 .totalAmount(BigDecimal.ZERO)
-                .status("PENDING")
+                .status("PENDING_RESERVATION")
                 .build();
-        MarketplaceOrderGroup savedOrderGroup = marketplaceOrderGroupRepository.save(orderGroup);
+        orderGroup = marketplaceOrderGroupRepository.save(orderGroup);
+        marketplaceOrderGroupRepository.flush();
+        Long orderGroupId = orderGroup.getId();
 
-        Long orderGroupId = savedOrderGroup.getId();
-
-        // 5. Create orders and order items per farmer
-        BigDecimal totalAmount = BigDecimal.ZERO;
+        // 4. Create orders with PENDING_RESERVATION status (no payment yet)
         List<MarketplaceOrder> createdOrders = new ArrayList<>();
+        List<MarketplaceOrderItem> allOrderItems = new ArrayList<>();
 
         for (Map.Entry<Long, List<MarketplaceCartItem>> farmerEntry : itemsByFarmer.entrySet()) {
             Long farmerUserId = farmerEntry.getKey();
             List<MarketplaceCartItem> farmerItems = farmerEntry.getValue();
 
-            // Create order for this farmer
             MarketplaceOrder order = MarketplaceOrder.builder()
                     .orderGroupId(orderGroupId)
                     .buyerUserId(buyerUserId)
                     .farmerUserId(farmerUserId)
-                    .status(MarketplaceOrderStatus.PAYMENT_SUBMITTED)
+                    .status(MarketplaceOrderStatus.PENDING_RESERVATION)
                     .totalAmount(BigDecimal.ZERO)
                     .build();
             order = marketplaceOrderRepository.save(order);
+            order = marketplaceOrderRepository.saveAndFlush(order); // Ensure ID is generated
 
             BigDecimal orderTotal = BigDecimal.ZERO;
 
@@ -519,7 +717,6 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 MarketplaceProduct product = cartItem.getProduct();
                 BigDecimal lineTotal = product.getPrice().multiply(cartItem.getQuantity());
 
-                // Create order item
                 MarketplaceOrderItem orderItem = MarketplaceOrderItem.builder()
                         .order(order)
                         .productId(product.getId())
@@ -540,7 +737,8 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                         .cropName(product.getName())
                         .publishedAtSnapshot(LocalDateTime.now())
                         .build();
-                marketplaceOrderItemRepository.save(orderItem);
+                orderItem = marketplaceOrderItemRepository.save(orderItem);
+                allOrderItems.add(orderItem);
 
                 orderTotal = orderTotal.add(lineTotal);
             }
@@ -548,30 +746,95 @@ public class MarketplaceServiceImpl implements MarketplaceService {
             order.setTotalAmount(orderTotal);
             marketplaceOrderRepository.save(order);
             createdOrders.add(order);
-            totalAmount = totalAmount.add(orderTotal);
         }
 
-        // 6. Update order group total
-        savedOrderGroup.setTotalAmount(totalAmount);
-        marketplaceOrderGroupRepository.save(savedOrderGroup);
+        // 5. Reserve stock for each individual order using its order ID
+        List<MarketplaceOrder> successfulReservations = new ArrayList<>();
+        boolean allReserved = true;
+        String reservationFailureMessage = "";
 
-        // 7. Clear the cart
+        for (MarketplaceOrder order : createdOrders) {
+            List<MarketplaceOrderItem> orderItems = marketplaceOrderItemRepository.findByOrderId(order.getId());
+            List<InventoryClient.ReserveItem> reserveItems = orderItems.stream()
+                    .map(item -> new InventoryClient.ReserveItem(
+                            item.getId(),
+                            item.getLotId(),
+                            item.getLotCode(),
+                            item.getQuantity(),
+                            null)) // unit
+                    .toList();
+
+            String reserveIdempotencyKey = idempotencyKey + "-reserve-" + order.getId();
+            try {
+                InventoryClient.ReservationResult reserveResult = inventoryClient.reserveStock(
+                        reserveIdempotencyKey,
+                        order.getId(),
+                        reserveItems);
+
+                if (reserveResult.success()) {
+                    successfulReservations.add(order);
+                } else {
+                    allReserved = false;
+                    reservationFailureMessage = reserveResult.message();
+                    break;
+                }
+            } catch (Exception e) {
+                log.error("Exception reserving stock for orderId={}", order.getId(), e);
+                allReserved = false;
+                reservationFailureMessage = e.getMessage();
+                break;
+            }
+        }
+
+        if (!allReserved) {
+            // Rollback reservations of successful ones
+            for (MarketplaceOrder order : successfulReservations) {
+                try {
+                    inventoryClient.releaseReservation(order.getId(), "Rollback checkout failure");
+                } catch (Exception e) {
+                    log.error("Failed to release reservation on rollback for orderId={}", order.getId(), e);
+                }
+            }
+
+            // Mark all created orders as REJECTED
+            for (MarketplaceOrder order : createdOrders) {
+                order.setStatus(MarketplaceOrderStatus.REJECTED);
+                marketplaceOrderRepository.save(order);
+            }
+            orderGroup.setStatus("REJECTED");
+            marketplaceOrderGroupRepository.save(orderGroup);
+            throw new RuntimeException("Failed to reserve stock: " + reservationFailureMessage);
+        }
+
+        // 6. Reservation successful - update to PENDING_PAYMENT
+        for (MarketplaceOrder order : createdOrders) {
+            order.setStatus(MarketplaceOrderStatus.PENDING_PAYMENT);
+            marketplaceOrderRepository.save(order);
+        }
+        orderGroup.setStatus("PENDING_PAYMENT");
+        orderGroup.setTotalAmount(createdOrders.stream()
+                .map(MarketplaceOrder::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add));
+        marketplaceOrderGroupRepository.save(orderGroup);
+
+        // 8. Clear the cart
         marketplaceCartItemRepository.deleteAll(cartItems);
         cart.setItems(new ArrayList<>());
         marketplaceCartRepository.save(cart);
 
-        // 8. Record the successful response for idempotency
+        // 9. Record the successful response for idempotency
+        BigDecimal totalAmount = orderGroup.getTotalAmount();
         MarketplaceCreateOrderResultResponse result = new MarketplaceCreateOrderResultResponse(
                 orderGroupId,
                 createdOrders.stream().map(MarketplaceOrder::getId).toList(),
                 totalAmount,
                 CURRENCY_VND,
-                "Order created successfully. Please complete payment.",
+                "Order created and stock reserved. Please complete payment.",
                 null);
 
         idempotencyService.recordResponse(idempotencyKey, endpoint, result, 200);
 
-        // 9. Publish OrderCreated events for each order
+        // 10. Publish OrderCreated events for each order
         for (MarketplaceOrder order : createdOrders) {
             List<MarketplaceOrderItem> items = marketplaceOrderItemRepository.findByOrderId(order.getId());
             publishOrderCreatedEvent(order, items);
@@ -649,6 +912,18 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 )
         );
         domainEventPublisher.publish(event);
+    }
+
+    private void createAuditLog(String entityType, Long entityId, String operation, Long performedBy, String reason) {
+        MarketplaceOrderAuditLog log = MarketplaceOrderAuditLog.builder()
+                .entityType(entityType)
+                .entityId(entityId)
+                .operation(operation)
+                .performedBy(performedBy)
+                .performedAt(LocalDateTime.now())
+                .reason(reason)
+                .build();
+        marketplaceOrderAuditLogRepository.save(log);
     }
 
     @Override
@@ -833,21 +1108,78 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Override
     @Transactional(readOnly = true)
     public List<MarketplaceOrderAuditLogResponse> listOrderAuditLogs(Long orderId) {
-        // TODO: Implement audit log retrieval
-        return List.of();
+        List<MarketplaceOrderAuditLog> logs = marketplaceOrderAuditLogRepository
+                .findByEntityTypeAndEntityIdOrderByPerformedAtDesc("MarketplaceOrder", orderId);
+        return logs.stream()
+                .map(log -> new MarketplaceOrderAuditLogResponse(
+                        log.getId(),
+                        log.getEntityType(),
+                        Math.toIntExact(log.getEntityId()),
+                        log.getOperation(),
+                        log.getPerformedBy() != null ? "User " + log.getPerformedBy() : "System",
+                        log.getPerformedAt(),
+                        log.getSnapshotDataJson(),
+                        log.getReason(),
+                        log.getIpAddress()))
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public MarketplaceAdminStatsResponse getAdminStats() {
-        // TODO: Implement full stats calculation
+        // Product stats
+        long totalProducts = marketplaceProductRepository.count();
+        long pendingReviewProducts = marketplaceProductRepository.countByStatus(MarketplaceProductStatus.PENDING_REVIEW);
+        long publishedProducts = marketplaceProductRepository.countByStatus(MarketplaceProductStatus.PUBLISHED)
+                + marketplaceProductRepository.countByStatus(MarketplaceProductStatus.ACTIVE);
+        long hiddenProducts = marketplaceProductRepository.countByStatus(MarketplaceProductStatus.HIDDEN)
+                + marketplaceProductRepository.countByStatus(MarketplaceProductStatus.INACTIVE);
+
+        // Order stats
+        long totalOrders = marketplaceOrderRepository.count();
+        long activeOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.PENDING_PAYMENT)
+                + marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.CONFIRMED)
+                + marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.PREPARING)
+                + marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.SHIPPED)
+                + marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.DELIVERED);
+        long completedOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.COMPLETED);
+        long cancelledOrders = marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.CANCELLED)
+                + marketplaceOrderRepository.countByStatus(MarketplaceOrderStatus.REJECTED);
+        long pendingPaymentVerificationOrders = marketplaceOrderRepository.countByPaymentVerificationStatus(
+                MarketplacePaymentVerificationStatus.SUBMITTED);
+
+        // Revenue (completed orders)
+        BigDecimal totalRevenue = marketplaceOrderRepository.sumTotalAmountByStatus(MarketplaceOrderStatus.COMPLETED);
+        if (totalRevenue == null) {
+            totalRevenue = BigDecimal.ZERO;
+        }
+
+        // Last order time
+        java.time.LocalDateTime lastOrderAt = marketplaceOrderRepository.findTopByOrderByCreatedAtDesc()
+                .map(MarketplaceOrder::getCreatedAt)
+                .orElse(null);
+
+        List<String> unavailableReasons = new ArrayList<>();
+        if (totalProducts == 0) unavailableReasons.add("No products in marketplace");
+        if (totalOrders == 0) unavailableReasons.add("No orders yet");
+        if (completedOrders == 0) unavailableReasons.add("No completed orders for revenue data");
+
         return new MarketplaceAdminStatsResponse(
-                0L, 0L, 0L, 0L,
-                0L, 0L, 0L, 0L, 0L,
-                BigDecimal.ZERO,
-                false, false, false,
-                null,
-                List.of());
+                totalProducts,
+                pendingReviewProducts,
+                publishedProducts,
+                hiddenProducts,
+                totalOrders,
+                activeOrders,
+                completedOrders,
+                cancelledOrders,
+                pendingPaymentVerificationOrders,
+                totalRevenue,
+                totalProducts > 0,
+                totalOrders > 0,
+                completedOrders > 0,
+                lastOrderAt,
+                unavailableReasons);
     }
 
     @Override
@@ -996,14 +1328,55 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional(readOnly = true)
     public MarketplaceFarmerDashboardResponse getFarmerDashboard() {
         Long userId = currentUserService.getCurrentUserId();
-        // TODO: Implement full dashboard logic
+
+        // Product stats
+        long totalProducts = marketplaceProductRepository.countByFarmerUserId(userId);
+        long pendingReviewProducts = marketplaceProductRepository.countByFarmerUserIdAndStatus(userId, MarketplaceProductStatus.PENDING_REVIEW);
+        long publishedProducts = marketplaceProductRepository.countByFarmerUserIdAndStatus(userId, MarketplaceProductStatus.PUBLISHED)
+                + marketplaceProductRepository.countByFarmerUserIdAndStatus(userId, MarketplaceProductStatus.ACTIVE);
+        long lowStockProducts = 0; // Would need inventory integration
+
+        // Order stats
+        long pendingOrders = marketplaceOrderRepository.countByFarmerUserIdAndStatus(userId, MarketplaceOrderStatus.PENDING_PAYMENT);
+
+        // Revenue
+        Page<MarketplaceOrder> completedOrders = marketplaceOrderRepository.findByFarmerUserIdAndStatus(
+                userId, MarketplaceOrderStatus.COMPLETED, PageRequest.of(0, 100));
+        BigDecimal totalRevenue = completedOrders.stream()
+                .map(MarketplaceOrder::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Last order
+        LocalDateTime lastOrderAt = completedOrders.stream()
+                .map(MarketplaceOrder::getCreatedAt)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
+
+        // Recent orders (last 5)
+        Page<MarketplaceOrder> recentOrdersPage = marketplaceOrderRepository.findByFarmerUserId(
+                userId, PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt")));
+        List<MarketplaceOrderResponse> recentOrders = recentOrdersPage.getContent().stream()
+                .map(this::toOrderResponse)
+                .toList();
+
+        List<String> unavailableReasons = new ArrayList<>();
+        if (totalProducts == 0) unavailableReasons.add("No products listed");
+        if (pendingOrders == 0) unavailableReasons.add("No pending orders");
+        if (completedOrders.getTotalElements() == 0) unavailableReasons.add("No completed orders");
+
         return new MarketplaceFarmerDashboardResponse(
-                0L, 0L, 0L, 0L, 0L,
-                BigDecimal.ZERO,
-                false, false, false,
-                null,
-                List.of(),
-                List.of());
+                totalProducts,
+                pendingReviewProducts,
+                publishedProducts,
+                lowStockProducts,
+                pendingOrders,
+                totalRevenue,
+                totalProducts > 0,
+                pendingOrders > 0 || completedOrders.getTotalElements() > 0,
+                completedOrders.getTotalElements() > 0,
+                lastOrderAt,
+                unavailableReasons,
+                recentOrders);
     }
 
     @Override
@@ -1026,17 +1399,93 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceFarmerProductFormOptionsResponse getFarmerProductFormOptions() {
         Long userId = currentUserService.getCurrentUserId();
 
-        // Get farms via FarmClient
-        List<MarketplaceFarmerProductFormFarmOptionResponse> farms = List.of();
-        // TODO: Implement via FarmClient
+        List<MarketplaceFarmerProductFormFarmOptionResponse> farms = new ArrayList<>();
+        try {
+            List<Integer> farmIds = farmClient.getFarmIdsByUserId(userId);
+            if (farmIds != null && !farmIds.isEmpty()) {
+                List<FarmSummaryDto> farmDtos = farmClient.getFarmsByIds(farmIds);
+                for (FarmSummaryDto dto : farmDtos) {
+                    if (dto != null) {
+                        farms.add(new MarketplaceFarmerProductFormFarmOptionResponse(dto.id(), dto.name()));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch farms: {}", e.getMessage());
+        }
 
-        // Get seasons via SeasonClient
-        List<MarketplaceFarmerProductFormSeasonOptionResponse> seasons = List.of();
-        // TODO: Implement via SeasonClient
+        List<MarketplaceFarmerProductFormSeasonOptionResponse> seasons = new ArrayList<>();
+        try {
+            List<Integer> seasonIds = seasonClient.getSeasonIdsByOwnerId(userId);
+            if (seasonIds != null && !seasonIds.isEmpty()) {
+                List<SeasonDetailDto> seasonDtos = seasonClient.getSeasonsByIds(seasonIds);
+                for (SeasonDetailDto dto : seasonDtos) {
+                    if (dto != null) {
+                        seasons.add(new MarketplaceFarmerProductFormSeasonOptionResponse(dto.id(), dto.seasonName(), dto.farmId()));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch seasons: {}", e.getMessage());
+        }
 
-        // Get lots via InventoryClient
-        List<MarketplaceFarmerProductFormLotOptionResponse> lots = List.of();
-        // TODO: Implement via InventoryClient
+        List<MarketplaceFarmerProductFormLotOptionResponse> lots = new ArrayList<>();
+        try {
+            List<Integer> seasonIds = seasonClient.getSeasonIdsByOwnerId(userId);
+            if (seasonIds != null && !seasonIds.isEmpty()) {
+                List<InventoryClient.LotDetailDto> lotDtos = inventoryClient.getLotsBySeasonIds(seasonIds);
+                if (lotDtos != null && !lotDtos.isEmpty()) {
+                    List<Integer> lotIds = lotDtos.stream().map(InventoryClient.LotDetailDto::id).toList();
+                    List<MarketplaceProduct> linkedProducts = marketplaceProductRepository.findByLotIdIn(lotIds);
+                    Map<Integer, MarketplaceProduct> productByLotId = linkedProducts.stream()
+                            .collect(java.util.stream.Collectors.toMap(MarketplaceProduct::getLotId, p -> p, (p1, p2) -> p1));
+
+                    Map<Integer, String> farmNameById = farms.stream()
+                            .collect(java.util.stream.Collectors.toMap(
+                                    MarketplaceFarmerProductFormFarmOptionResponse::id,
+                                    MarketplaceFarmerProductFormFarmOptionResponse::name,
+                                    (n1, n2) -> n1
+                            ));
+
+                    Map<Integer, String> seasonNameById = seasons.stream()
+                            .collect(java.util.stream.Collectors.toMap(
+                                    MarketplaceFarmerProductFormSeasonOptionResponse::id,
+                                    MarketplaceFarmerProductFormSeasonOptionResponse::seasonName,
+                                    (n1, n2) -> n1
+                            ));
+
+                    for (InventoryClient.LotDetailDto lotDto : lotDtos) {
+                        if (lotDto != null) {
+                            MarketplaceProduct linkedProduct = productByLotId.get(lotDto.id());
+                            Long linkedProductId = linkedProduct != null ? linkedProduct.getId() : null;
+                            org.example.marketplace.model.MarketplaceProductStatus linkedProductStatus = 
+                                    linkedProduct != null ? linkedProduct.getStatus() : null;
+
+                            String farmName = farmNameById.get(lotDto.farmId());
+                            String seasonName = seasonNameById.get(lotDto.seasonId());
+
+                            lots.add(new MarketplaceFarmerProductFormLotOptionResponse(
+                                    lotDto.id(),
+                                    lotDto.lotCode(),
+                                    lotDto.farmId(),
+                                    farmName,
+                                    lotDto.seasonId(),
+                                    seasonName,
+                                    lotDto.onHandQuantity(),
+                                    null,
+                                    lotDto.unit(),
+                                    lotDto.productName(),
+                                    lotDto.productVariant(),
+                                    linkedProductId,
+                                    linkedProductStatus
+                            ));
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch lots: {}", e.getMessage());
+        }
 
         return new MarketplaceFarmerProductFormOptionsResponse(farms, seasons, lots);
     }
@@ -1071,6 +1520,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 .ratingCount(0)
                 .build();
 
+        populateTraceabilityFields(product);
         product = marketplaceProductRepository.save(product);
         return toProductDetail(product);
     }
@@ -1091,8 +1541,60 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         product.setImageUrl(request.imageUrl());
         product.setLotId(request.lotId());
 
+        populateTraceabilityFields(product);
         product = marketplaceProductRepository.save(product);
         return toProductDetail(product);
+    }
+
+    private void populateTraceabilityFields(MarketplaceProduct product) {
+        if (product == null) return;
+
+        try {
+            String displayName = identityClient.getUserDisplayName(product.getFarmerUserId());
+            product.setFarmerDisplayName(displayName);
+        } catch (Exception e) {
+            log.warn("Failed to populate farmer display name: {}", e.getMessage());
+        }
+
+        if (product.getLotId() != null) {
+            try {
+                InventoryClient.LotDetailDto lotDto = inventoryClient.getLotDetail(product.getLotId());
+                if (lotDto != null) {
+                    product.setLotCode(lotDto.lotCode());
+                    product.setUnit(lotDto.unit());
+                    product.setLotInitialQuantity(lotDto.initialQuantity());
+                    product.setLotGrade(lotDto.status());
+                    product.setFarmId(lotDto.farmId());
+                    product.setSeasonId(lotDto.seasonId());
+
+                    if (lotDto.farmId() != null) {
+                        try {
+                            FarmDetailDto farmDto = farmClient.getFarmDetail(lotDto.farmId());
+                            if (farmDto != null) {
+                                product.setFarmName(farmDto.name());
+                                product.setFarmRegion(farmDto.provinceName());
+                            }
+                        } catch (Exception e) {
+                            log.warn("Failed to populate farm details for farmId={}: {}", lotDto.farmId(), e.getMessage());
+                        }
+                    }
+
+                    if (lotDto.seasonId() != null) {
+                        try {
+                            SeasonDetailDto seasonDto = seasonClient.getSeasonDetail(lotDto.seasonId());
+                            if (seasonDto != null) {
+                                product.setSeasonName(seasonDto.seasonName());
+                                product.setCropName(seasonDto.cropName());
+                            }
+                        } catch (Exception e) {
+                            log.warn("Failed to populate season details for seasonId={}: {}", lotDto.seasonId(), e.getMessage());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to populate lot details for lotId={}: {}", product.getLotId(), e.getMessage());
+            }
+        }
     }
 
     @Override

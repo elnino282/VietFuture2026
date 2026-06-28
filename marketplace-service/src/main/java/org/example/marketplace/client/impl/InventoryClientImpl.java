@@ -34,11 +34,11 @@ public class InventoryClientImpl implements InventoryClient {
     @Override
     public LotDetailDto getLotDetail(Integer lotId) {
         try {
-            Map<String, Object> response = getWebClient()
+            ProductWarehouseLotResponse response = getWebClient()
                     .get()
                     .uri("/api/v1/product-warehouses/lots/{id}", lotId)
                     .retrieve()
-                    .bodyToMono(Map.class)
+                    .bodyToMono(ProductWarehouseLotResponse.class)
                     .timeout(Duration.ofSeconds(10))
                     .block();
 
@@ -47,16 +47,16 @@ public class InventoryClientImpl implements InventoryClient {
             }
 
             return new LotDetailDto(
-                    ((Number) response.get("id")).intValue(),
-                    (String) response.get("lotCode"),
-                    ((Number) response.get("farmId")).intValue(),
-                    response.get("seasonId") != null ? ((Number) response.get("seasonId")).intValue() : null,
-                    (String) response.get("productName"),
-                    (String) response.get("productVariant"),
-                    (String) response.get("unit"),
-                    new BigDecimal(response.get("initialQuantity").toString()),
-                    new BigDecimal(response.get("onHandQuantity").toString()),
-                    (String) response.get("status")
+                    response.id(),
+                    response.lotCode(),
+                    response.farmId(),
+                    response.seasonId(),
+                    response.productName(),
+                    response.productVariant(),
+                    response.unit(),
+                    response.initialQuantity(),
+                    response.onHandQuantity(),
+                    response.status()
             );
         } catch (Exception e) {
             log.error("Failed to get lot detail: {}", e.getMessage(), e);
@@ -74,27 +74,14 @@ public class InventoryClientImpl implements InventoryClient {
     @Override
     public ReservationResult reserveStock(String idempotencyKey, Long orderId, List<ReserveItem> items) {
         try {
-            Map<String, Object> requestBody = Map.of(
-                    "idempotencyKey", idempotencyKey,
-                    "orderId", orderId,
-                    "items", items.stream()
-                            .map(item -> Map.of(
-                                    "orderItemId", item.orderItemId() != null ? item.orderItemId() : null,
-                                    "lotId", item.lotId(),
-                                    "lotCode", item.lotCode(),
-                                    "quantity", item.quantity(),
-                                    "unit", item.unit()))
-                            .toList()
-            );
-
-            Map<String, Object> response = getWebClient()
+            LocalReservationResponse response = getWebClient()
                     .post()
                     .uri("/api/v1/inventory/reservations/reserve")
                     .header("X-Idempotency-Key", idempotencyKey)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(requestBody)
+                    .bodyValue(new ReserveStockRequestBody(idempotencyKey, orderId, items))
                     .retrieve()
-                    .bodyToMono(Map.class)
+                    .bodyToMono(LocalReservationResponse.class)
                     .timeout(Duration.ofSeconds(30))
                     .block();
 
@@ -102,23 +89,18 @@ public class InventoryClientImpl implements InventoryClient {
                 return new ReservationResult(false, "No response from inventory service", List.of());
             }
 
-            String status = (String) response.get("status");
-            boolean success = "RESERVED".equals(status) || "ALREADY_EXISTS".equals(status);
-            String message = (String) response.getOrDefault("message", "");
-
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> itemsList = (List<Map<String, Object>>) response.getOrDefault("items", List.of());
-            List<ReservedItem> reservedItems = itemsList.stream()
+            boolean success = "RESERVED".equals(response.status()) || "ALREADY_EXISTS".equals(response.status());
+            List<ReservedItem> reservedItems = response.items() == null ? List.of() : response.items().stream()
                     .map(item -> new ReservedItem(
-                            item.get("itemId") != null ? ((Number) item.get("itemId")).longValue() : null,
-                            ((Number) item.get("lotId")).intValue(),
-                            new BigDecimal(item.get("quantity").toString()),
-                            item.get("previousOnHand") != null ? new BigDecimal(item.get("previousOnHand").toString()) : BigDecimal.ZERO,
-                            item.get("newOnHand") != null ? new BigDecimal(item.get("newOnHand").toString()) : BigDecimal.ZERO
+                            item.itemId(),
+                            item.lotId(),
+                            item.quantity(),
+                            item.previousOnHand() != null ? item.previousOnHand() : BigDecimal.ZERO,
+                            item.newOnHand() != null ? item.newOnHand() : BigDecimal.ZERO
                     ))
                     .toList();
 
-            return new ReservationResult(success, message, reservedItems);
+            return new ReservationResult(success, response.message(), reservedItems);
         } catch (Exception e) {
             log.error("Failed to reserve stock in inventory service: {}", e.getMessage(), e);
             return new ReservationResult(false, "Failed to reserve stock: " + e.getMessage(), List.of());
@@ -128,18 +110,16 @@ public class InventoryClientImpl implements InventoryClient {
     @Override
     public ReservationResult releaseReservation(Long orderId, String reason) {
         try {
-            Map<String, Object> requestBody = Map.of(
-                    "orderId", orderId,
-                    "reason", reason != null ? reason : ""
-            );
-
-            Map<String, Object> response = getWebClient()
+            LocalReservationResponse response = getWebClient()
                     .post()
                     .uri("/api/v1/inventory/reservations/release")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(requestBody)
+                    .bodyValue(Map.of(
+                            "orderId", orderId,
+                            "reason", reason != null ? reason : ""
+                    ))
                     .retrieve()
-                    .bodyToMono(Map.class)
+                    .bodyToMono(LocalReservationResponse.class)
                     .timeout(Duration.ofSeconds(30))
                     .block();
 
@@ -147,23 +127,18 @@ public class InventoryClientImpl implements InventoryClient {
                 return new ReservationResult(false, "No response from inventory service", List.of());
             }
 
-            String status = (String) response.get("status");
-            boolean success = "RESERVED".equals(status); // Release returns RESERVED on success
-            String message = (String) response.getOrDefault("message", "");
-
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> itemsList = (List<Map<String, Object>>) response.getOrDefault("items", List.of());
-            List<ReservedItem> releasedItems = itemsList.stream()
+            boolean success = "RESERVED".equals(response.status());
+            List<ReservedItem> releasedItems = response.items() == null ? List.of() : response.items().stream()
                     .map(item -> new ReservedItem(
-                            item.get("itemId") != null ? ((Number) item.get("itemId")).longValue() : null,
-                            ((Number) item.get("lotId")).intValue(),
-                            new BigDecimal(item.get("quantity").toString()),
+                            item.itemId(),
+                            item.lotId(),
+                            item.quantity(),
                             BigDecimal.ZERO,
                             BigDecimal.ZERO
                     ))
                     .toList();
 
-            return new ReservationResult(success, message, releasedItems);
+            return new ReservationResult(success, response.message(), releasedItems);
         } catch (Exception e) {
             log.error("Failed to release reservation in inventory service: {}", e.getMessage(), e);
             return new ReservationResult(false, "Failed to release reservation: " + e.getMessage(), List.of());
@@ -173,18 +148,16 @@ public class InventoryClientImpl implements InventoryClient {
     @Override
     public ReservationResult confirmStockOut(Long orderId, String reason) {
         try {
-            Map<String, Object> requestBody = Map.of(
-                    "orderId", orderId,
-                    "reason", reason != null ? reason : ""
-            );
-
-            Map<String, Object> response = getWebClient()
+            LocalReservationResponse response = getWebClient()
                     .post()
                     .uri("/api/v1/inventory/reservations/confirm")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(requestBody)
+                    .bodyValue(Map.of(
+                            "orderId", orderId,
+                            "reason", reason != null ? reason : ""
+                    ))
                     .retrieve()
-                    .bodyToMono(Map.class)
+                    .bodyToMono(LocalReservationResponse.class)
                     .timeout(Duration.ofSeconds(30))
                     .block();
 
@@ -192,23 +165,18 @@ public class InventoryClientImpl implements InventoryClient {
                 return new ReservationResult(false, "No response from inventory service", List.of());
             }
 
-            String status = (String) response.get("status");
-            boolean success = "RESERVED".equals(status); // Confirm returns RESERVED on success
-            String message = (String) response.getOrDefault("message", "");
-
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> itemsList = (List<Map<String, Object>>) response.getOrDefault("items", List.of());
-            List<ReservedItem> confirmedItems = itemsList.stream()
+            boolean success = "RESERVED".equals(response.status());
+            List<ReservedItem> confirmedItems = response.items() == null ? List.of() : response.items().stream()
                     .map(item -> new ReservedItem(
-                            item.get("itemId") != null ? ((Number) item.get("itemId")).longValue() : null,
-                            ((Number) item.get("lotId")).intValue(),
-                            new BigDecimal(item.get("quantity").toString()),
-                            item.get("previousOnHand") != null ? new BigDecimal(item.get("previousOnHand").toString()) : BigDecimal.ZERO,
-                            item.get("newOnHand") != null ? new BigDecimal(item.get("newOnHand").toString()) : BigDecimal.ZERO
+                            item.itemId(),
+                            item.lotId(),
+                            item.quantity(),
+                            item.previousOnHand() != null ? item.previousOnHand() : BigDecimal.ZERO,
+                            item.newOnHand() != null ? item.newOnHand() : BigDecimal.ZERO
                     ))
                     .toList();
 
-            return new ReservationResult(success, message, confirmedItems);
+            return new ReservationResult(success, response.message(), confirmedItems);
         } catch (Exception e) {
             log.error("Failed to confirm stock-out in inventory service: {}", e.getMessage(), e);
             return new ReservationResult(false, "Failed to confirm stock-out: " + e.getMessage(), List.of());
@@ -224,12 +192,12 @@ public class InventoryClientImpl implements InventoryClient {
                             .reduce((a, b) -> a + "&lotIds=" + b)
                             .orElse("");
 
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> response = getWebClient()
+            List<LocalAvailableStockResponse> response = getWebClient()
                     .get()
                     .uri(uri)
                     .retrieve()
-                    .bodyToMono(List.class)
+                    .bodyToFlux(LocalAvailableStockResponse.class)
+                    .collectList()
                     .timeout(Duration.ofSeconds(10))
                     .block();
 
@@ -239,12 +207,12 @@ public class InventoryClientImpl implements InventoryClient {
 
             return response.stream()
                     .map(item -> new AvailableStock(
-                            ((Number) item.get("lotId")).intValue(),
-                            (String) item.get("lotCode"),
-                            new BigDecimal(item.get("onHandQuantity").toString()),
-                            item.get("reservedQuantity") != null ? new BigDecimal(item.get("reservedQuantity").toString()) : BigDecimal.ZERO,
-                            item.get("availableQuantity") != null ? new BigDecimal(item.get("availableQuantity").toString()) : BigDecimal.ZERO,
-                            (String) item.get("unit")
+                            item.lotId(),
+                            item.lotCode(),
+                            item.onHandQuantity(),
+                            item.reservedQuantity() != null ? item.reservedQuantity() : BigDecimal.ZERO,
+                            item.availableQuantity() != null ? item.availableQuantity() : BigDecimal.ZERO,
+                            item.unit()
                     ))
                     .toList();
         } catch (Exception e) {
@@ -252,4 +220,97 @@ public class InventoryClientImpl implements InventoryClient {
             return List.of();
         }
     }
+
+    @Override
+    public List<LotDetailDto> getLotsBySeasonIds(List<Integer> seasonIds) {
+        if (seasonIds == null || seasonIds.isEmpty()) {
+            return List.of();
+        }
+        try {
+            String uri = "/api/v1/public/lookup/inventory/lots/by-seasons?seasonIds=" +
+                    seasonIds.stream()
+                            .map(String::valueOf)
+                            .reduce((a, b) -> a + "&seasonIds=" + b)
+                            .orElse("");
+
+            List<ProductWarehouseLotResponse> response = getWebClient()
+                    .get()
+                    .uri(uri)
+                    .retrieve()
+                    .bodyToFlux(ProductWarehouseLotResponse.class)
+                    .collectList()
+                    .timeout(Duration.ofSeconds(10))
+                    .block();
+
+            if (response == null) {
+                return List.of();
+            }
+
+            return response.stream()
+                    .map(item -> new LotDetailDto(
+                            item.id(),
+                            item.lotCode(),
+                            item.farmId(),
+                            item.seasonId(),
+                            item.productName(),
+                            item.productVariant(),
+                            item.unit(),
+                            item.initialQuantity(),
+                            item.onHandQuantity(),
+                            item.status()
+                    ))
+                    .toList();
+        } catch (Exception e) {
+            log.error("Failed to get lots by season IDs from inventory service: {}", e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    private record ProductWarehouseLotResponse(
+            Integer id,
+            String lotCode,
+            Integer productId,
+            String productName,
+            String productVariant,
+            Integer seasonId,
+            Integer farmId,
+            String unit,
+            BigDecimal initialQuantity,
+            BigDecimal onHandQuantity,
+            String status
+    ) {}
+
+    private record ReserveStockRequestBody(
+            String idempotencyKey,
+            Long orderId,
+            List<ReserveItem> items
+    ) {}
+
+    private record LocalReservationResponse(
+            Long reservationId,
+            String idempotencyKey,
+            Long orderId,
+            List<LocalReservedItemResponse> items,
+            String status,
+            String message
+    ) {
+        public record LocalReservedItemResponse(
+                Long itemId,
+                Integer lotId,
+                String lotCode,
+                BigDecimal quantity,
+                String unit,
+                BigDecimal previousOnHand,
+                BigDecimal newOnHand
+        ) {}
+    }
+
+    private record LocalAvailableStockResponse(
+            Integer lotId,
+            String lotCode,
+            BigDecimal onHandQuantity,
+            BigDecimal reservedQuantity,
+            BigDecimal availableQuantity,
+            String unit
+    ) {}
 }

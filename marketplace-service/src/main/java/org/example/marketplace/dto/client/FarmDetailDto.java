@@ -3,12 +3,11 @@ package org.example.marketplace.dto.client;
 public record FarmDetailDto(
         Integer id,
         String name,
-        String region,
+        String provinceName,
+        String wardName,
+        java.math.BigDecimal area,
+        java.math.BigDecimal latitude,
+        java.math.BigDecimal longitude,
         Double averageRating,
-        Integer ratingCount,
-        Boolean active,
-        String coverImageUrl,
-        Long ownerUserId,
-        String ownerName,
-        String ownerPhone) {
+        Long userId) {
 }
