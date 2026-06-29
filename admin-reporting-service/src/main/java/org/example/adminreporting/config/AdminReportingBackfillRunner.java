@@ -10,12 +10,11 @@ import org.springframework.beans.factory.annotation.Value;
 /**
  * Programmatic backfill runner (Deprecated).
  * <p>
- * Primary backfill is now done via Flyway migration {@code V7__one_shot_backfill.sql}
- * during deployment. This runner is kept only for local dev environments where
- * cross-schema access is available and Flyway migrations are not applied.
+ * The primary data-population path is event-driven (domain events → AdminEventListener).
+ * This runner is kept only for local dev environments where cross-schema access is available.
  * Set {@code admin-reporting.backfill.enabled=true} to run this runner manually.
  * </p>
- * @deprecated Use {@code V7__one_shot_backfill.sql} for production deployments.
+ * @deprecated Use event-driven sync for all production data population.
  */
 @Component
 @RequiredArgsConstructor
@@ -35,7 +34,7 @@ public class AdminReportingBackfillRunner implements CommandLineRunner {
             return;
         }
 
-        log.warn("Programmatic backfill is enabled. Prefer Flyway migration V7__one_shot_backfill.sql in production.");
+        log.warn("Programmatic backfill is enabled. This is deprecated — prefer event-driven sync.");
         log.info("Starting admin reporting database-split-compatible programmatic backfill...");
 
         boolean hasAccess = false;
@@ -44,7 +43,7 @@ public class AdminReportingBackfillRunner implements CommandLineRunner {
             hasAccess = true;
             log.info("Connection has access to monolithic/service databases. Performing backfill queries...");
         } catch (Exception e) {
-            log.warn("Monolithic/service databases are not accessible on this connection (e.g. database-split active or test environment). Skipping backfill. Reason: {}", e.getMessage());
+            log.warn("Cross-schema databases are not accessible (e.g. database-split active or test environment). Skipping backfill. Reason: {}", e.getMessage());
         }
 
         if (!hasAccess) {
@@ -113,16 +112,6 @@ public class AdminReportingBackfillRunner implements CommandLineRunner {
             "INSERT IGNORE INTO admin_marketplace_product_summary (product_id, product_name, farm_id, farm_name, farmer_id, farmer_name, status, updated_at) " +
             "SELECT p.id, p.name, p.farm_id, p.farm_name, p.farmer_user_id, p.farmer_display_name, p.status, p.updated_at " +
             "FROM marketplace_db.marketplace_products p");
-
-        runBackfill("Backfill Audit Log Entries",
-            "INSERT IGNORE INTO admin_audit_log_entries (audit_log_id, entity_type, entity_id, operation, performed_by, performed_at, snapshot_data, reason, ip_address) " +
-            "SELECT audit_log_id, entity_type, entity_id, operation, performed_by, performed_at, snapshot_data, reason, ip_address " +
-            "FROM quanlymuavu.audit_logs");
-
-        runBackfill("Backfill Documents",
-            "INSERT IGNORE INTO admin_documents (document_id, title, url, description, crop, stage, topic, is_active, is_public, created_by, document_type, view_count, is_pinned, created_at, updated_at) " +
-            "SELECT document_id, title, url, description, crop, stage, topic, is_active, is_public, created_by, document_type, view_count, is_pinned, created_at, updated_at " +
-            "FROM quanlymuavu.documents");
 
         runBackfill("Backfill Marketplace Order Items",
             "INSERT IGNORE INTO admin_marketplace_order_item_summary (item_id, order_id, season_id, quantity, unit_price, line_total) " +

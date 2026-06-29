@@ -29,7 +29,6 @@ Each service owns its own schema. No cross-schema queries at runtime.
 | admin-reporting-service | `admin_reporting_db` | 8091 | Aggregated read models |
 | api-gateway | — | 8000 | Routes only |
 | ai-service | — | 8083 | Stateless AI calls |
-| monolith (deprecated) | `quanlymuavu` | 8080 | Legacy fallback only |
 
 ### Cross-schema Dependencies (Runtime)
 **None.** All cross-service data flow goes through RabbitMQ events.
@@ -61,25 +60,13 @@ services:
 ## 2. Deployment Checklist
 
 ### Pre-deployment
-- [ ] Run `V7__one_shot_backfill.sql` (if migrating from monolith) on `admin_reporting_db`
 - [ ] Verify all Flyway migrations ran successfully in each service DB
 - [ ] Check no cross-schema connections are required (each service connects to its own DB only)
 - [ ] Verify RabbitMQ exchanges and queues are declared in all services
 - [ ] Run smoke tests (see Section 6)
 
-### Clean Install (no monolith dependency)
+### Clean Install
 ```bash
-docker-compose -f docker-compose.yml up -d
-```
-All services start independently. No cross-schema access needed.
-
-### With Monolith Migration
-```bash
-# 1. Run one-shot backfill (requires access to monolith + all source DBs)
-mysql -h <monolith-host> -u root -p admin_reporting_db < \
-  admin-reporting-service/src/main/resources/db/migration/V7__one_shot_backfill.sql
-
-# 2. Then start services (cross-schema access no longer needed)
 docker-compose -f docker-compose.yml up -d
 ```
 
@@ -187,7 +174,6 @@ docker-compose restart admin-reporting-service
 
 ### Prerequisites
 - Read access to all source schemas on the same or reachable MySQL instance:
-  `identity_db`, `farm_db`, `season_db`, `inventory_db`, `finance_db`, `incident_db`, `crop_catalog_db`, `marketplace_db`, `quanlymuavu`
 - Target DB: `admin_reporting_db` (Flyway migrations V1–V6 applied)
 
 ### Execution
@@ -219,7 +205,7 @@ UNION ALL SELECT 'admin_documents', COUNT(*) FROM admin_documents;
 
 ---
 
-## 5. Rollback Playbook
+## 5. Event Replay after Incident
 
 ### Scenario A: Rollback Service Binary (no DB change)
 
@@ -254,24 +240,6 @@ flyway -url=jdbc:mysql://<host>:<port>/<schema> \
 ```bash
 mysql -h <host> -u <user> -p<pass> <schema> < backup/<schema>_Vx-1.sql
 ```
-
-### Scenario C: Full Rollback to Monolith (emergency)
-If `admin-reporting-service` fails catastrophically:
-
-1. Disable admin-reporting route in gateway:
-```yaml
-# Temporarily comment out admin-reporting routes in api-gateway/application.yml
-# Or set ADMIN_REPORTING_SERVICE_URI=http://backend:8080
-```
-
-2. Restart gateway:
-```bash
-docker-compose up -d api-gateway
-```
-
-3. Admin users access the monolith at `http://backend:8080/api/v1/admin/**`
-
-4. After service is fixed, re-enable the route and restart gateway.
 
 ---
 
@@ -336,7 +304,7 @@ GET /actuator/info
   - Returns `DOWN` if `messageCount > 1000` (configurable via `QUEUEDEPTHTHRESHOLD` env)
 
 ### Prometheus Scrape Targets
-All 13 services (including monolith fallback) are configured in `prometheus/prometheus.yml`.
+All 12 services are configured in `prometheus/prometheus.yml`.
 
 Scrape: `http://localhost:9090/targets`
 

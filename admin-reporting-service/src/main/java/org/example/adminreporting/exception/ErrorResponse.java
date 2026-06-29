@@ -1,4 +1,4 @@
-package org.example.template.exception;
+package org.example.adminreporting.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

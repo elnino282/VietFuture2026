@@ -63,109 +63,6 @@ jobs:
       - name: Build
         run: npm run build
 
-  backend:
-    name: Backend (compile/test)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: agricultural-crop-management-backend
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: quanlymuavu_ci
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=20
-    env:
-      DB_URL: jdbc:mysql://127.0.0.1:3306/quanlymuavu_ci?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      DB_USER: root
-      DB_PASS: root
-      JWT_SIGNER_KEY: ci_signer_key_please_rotate_if_reused
-      MAIL_ENABLED: "false"
-      APP_AI_API_KEY: ""
-      # AI is deferred; placeholder only to avoid accidental secret dependency in CI.
-      APP_AI_BASE_URL: https://example.invalid
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java 23
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "23"
-          cache: maven
-
-      - name: Make Maven wrapper executable
-        run: chmod +x ./mvnw
-
-      - name: Compile
-        run: ./mvnw -q -DskipTests compile
-
-      - name: Test (unit/integration/architecture)
-        run: ./mvnw -q test
-
-  backend-migration-validate:
-    name: Backend (flyway validate)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: agricultural-crop-management-backend
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: quanlymuavu_ci
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=20
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java 23
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "23"
-          cache: maven
-
-      - name: Make Maven wrapper executable
-        run: chmod +x ./mvnw
-
-      - name: Flyway baseline (append-only starting point)
-        run: >
-          ./mvnw -q -DskipTests
-          org.flywaydb:flyway-maven-plugin:11.7.2:baseline
-          -Dflyway.url="jdbc:mysql://127.0.0.1:3306/quanlymuavu_ci"
-          -Dflyway.user=root
-          -Dflyway.password=root
-          -Dflyway.locations=filesystem:src/main/resources/db/migration
-          -Dflyway.schemas=quanlymuavu_ci
-          -Dflyway.baselineVersion=13
-
-      - name: Flyway validate
-        run: >
-          ./mvnw -q -DskipTests
-          org.flywaydb:flyway-maven-plugin:11.7.2:validate
-          -Dflyway.url="jdbc:mysql://127.0.0.1:3306/quanlymuavu_ci"
-          -Dflyway.user=root
-          -Dflyway.password=root
-          -Dflyway.locations=filesystem:src/main/resources/db/migration
-          -Dflyway.schemas=quanlymuavu_ci
-          -Dflyway.ignoreMigrationPatterns=*:pending
-
   microservices:
     name: Microservice (${{ matrix.service }})
     runs-on: ubuntu-latest
@@ -229,6 +126,8 @@ jobs:
             database: incident_service_ci
           - service: sustainability-service
             database: sustainability_service_ci
+          - service: marketplace-service
+            database: marketplace_service_ci
     defaults:
       run:
         working-directory: ${{ matrix.service }}

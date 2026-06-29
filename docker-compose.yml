@@ -5,14 +5,13 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-quanlymuavu}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-identity_db}
       MYSQL_USER: ${MYSQL_USER:-springuser}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-springpass}
     ports:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./init-mysql.sql:/docker-entrypoint-initdb.d/init-mysql.sql
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -66,56 +65,6 @@ services:
       timeout: 5s
       retries: 5
 
-  backend:
-    build:
-      context: ./agricultural-crop-management-backend
-      dockerfile: Dockerfile
-    container_name: backend_quanlymuavu
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
-      SERVER_PORT: 8080
-      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-quanlymuavu}
-      DB_USER: ${MYSQL_USER:-springuser}
-      DB_PASS: ${MYSQL_PASSWORD:-springpass}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
-      JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
-      JWT_VALID_DURATION: ${JWT_VALID_DURATION:-3600}
-      JWT_REFRESHABLE_DURATION: ${JWT_REFRESHABLE_DURATION:-36000}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      SMTP_HOST: mailhog
-      SMTP_PORT: 1025
-      SMTP_AUTH: false
-      SMTP_STARTTLS: false
-      MAIL_ENABLED: ${MAIL_ENABLED:-false}
-      APP_URL: ${APP_URL:-http://localhost:3000}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:8000}
-      APP_AI_API_KEY: ${APP_AI_API_KEY:-dummy_api_key_placeholder}
-      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
-      FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON:-}
-      WEATHER_API_KEY: ${WEATHER_API_KEY:-}
-      # RabbitMQ configurations
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
-      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-rabbitpass}
-      # MinIO storage configuration overrides
-      MINIO_URL: http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      APP_CROP_CATALOG_SERVICE_URL: http://crop-catalog-service:8082
-      APP_AI_SERVICE_URL: http://ai-service:8083
-    depends_on:
-      mysql:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-
   identity-service:
     build:
       context: ./identity-service
@@ -130,7 +79,6 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
       JWT_VALID_DURATION: ${JWT_VALID_DURATION:-3600}
       JWT_REFRESHABLE_DURATION: ${JWT_REFRESHABLE_DURATION:-36000}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
@@ -166,14 +114,11 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/crop_catalog_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-rabbituser}
-      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-rabbitpass}
-      APP_BACKEND_URL: http://backend:8080
-    depends_on:
+      SPRING_RABBITMQ_HOST: rabbitmq
       mysql:
         condition: service_healthy
       rabbitmq:
@@ -188,7 +133,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8083
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
       APP_AI_API_KEY: ${APP_AI_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
@@ -210,9 +154,7 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/farm_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
-      APP_BACKEND_URL: http://backend:8080
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
@@ -237,13 +179,11 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/season_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
       APP_FARM_SERVICE_URL: http://farm-service:8084
       APP_CROP_CATALOG_SERVICE_URL: http://crop-catalog-service:8082
       APP_IDENTITY_SERVICE_URL: http://identity-service:8081
       APP_INVENTORY_SERVICE_URL: http://inventory-service:8086
-      APP_BACKEND_URL: http://backend:8080
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
@@ -270,9 +210,7 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/inventory_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
-      APP_BACKEND_URL: http://backend:8080
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
@@ -297,10 +235,8 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/finance_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
       APP_SEASON_SERVICE_URL: http://season-service:8085
-      APP_BACKEND_URL: http://backend:8080
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
@@ -327,11 +263,9 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/incident_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
       APP_SEASON_SERVICE_URL: http://season-service:8085
       APP_IDENTITY_SERVICE_URL: http://identity-service:8081
-      APP_BACKEND_URL: http://backend:8080
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
@@ -360,14 +294,12 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/sustainability_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
       APP_SEASON_SERVICE_URL: http://season-service:8085
       APP_FARM_SERVICE_URL: http://farm-service:8084
       APP_FINANCE_SERVICE_URL: http://finance-service:8087
       APP_INCIDENT_SERVICE_URL: http://incident-service:8088
       APP_CROP_CATALOG_SERVICE_URL: http://crop-catalog-service:8082
-      APP_BACKEND_URL: http://backend:8080
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
@@ -400,9 +332,7 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/marketplace_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
-      APP_BACKEND_URL: http://backend:8080
       EXTERNAL_SERVICES_FARM_SERVICE_URL: http://farm-service:8084
       EXTERNAL_SERVICES_SEASON_SERVICE_URL: http://season-service:8085
       EXTERNAL_SERVICES_INVENTORY_SERVICE_URL: http://inventory-service:8086
@@ -439,7 +369,6 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/admin_reporting_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
-      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
@@ -470,7 +399,6 @@ services:
       - "8000:8000"
     environment:
       GATEWAY_PORT: 8000
-      MONOLITH_URI: http://backend:8080
       IDENTITY_SERVICE_URI: http://identity-service:8081
       CROP_CATALOG_SERVICE_URI: http://crop-catalog-service:8082
       AI_SERVICE_URI: http://ai-service:8083
@@ -484,7 +412,6 @@ services:
       ADMIN_REPORTING_SERVICE_URI: http://admin-reporting-service:8091
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
     depends_on:
-      - backend
       - identity-service
       - crop-catalog-service
       - ai-service

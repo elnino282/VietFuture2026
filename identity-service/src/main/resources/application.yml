@@ -56,6 +56,12 @@ jwt:
   refreshable-duration: ${JWT_REFRESHABLE_DURATION:36000}
 
 management:
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://tempo:4317}
   endpoints:
     web:
       exposure:

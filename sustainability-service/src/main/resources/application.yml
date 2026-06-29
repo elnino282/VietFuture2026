@@ -32,10 +32,15 @@ spring:
     password: ${RABBITMQ_PASS:rabbitpass}
 
 jwt:
-  signerKey: ${JWT_SIGNER_KEY:supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
-  jwksUri: ${JWT_JWKS_URI:http://localhost:8081/api/v1/auth/.well-known/jwks.json}
+  jwks-uri: ${JWT_JWKS_URI:http://localhost:8081/api/v1/auth/.well-known/jwks.json}
 
 management:
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://tempo:4317}
   endpoints:
     web:
       exposure:

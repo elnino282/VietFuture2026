@@ -62,8 +62,3 @@ scrape_configs:
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['admin-reporting-service:8091']
-
-  - job_name: 'monolith-backend'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['backend:8080']
