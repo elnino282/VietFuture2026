@@ -185,12 +185,21 @@ export default tseslint.config(
     // ERROR RULES - Legacy Imports (Immediate enforcement)
     // ===========================================
 
-    // Legacy imports from services/, hooks/ - ERROR (no new usage allowed)
+    // Legacy imports from services/, hooks/ - WARN in widgets/features, ERROR elsewhere
     {
-        files: ['src/app/**/*.{ts,tsx}', 'src/pages/**/*.{ts,tsx}', 'src/widgets/**/*.{ts,tsx}', 'src/features/**/*.{ts,tsx}', 'src/entities/**/*.{ts,tsx}', 'src/shared/**/*.{ts,tsx}'],
+        files: ['src/app/**/*.{ts,tsx}', 'src/pages/**/*.{ts,tsx}', 'src/features/**/*.{ts,tsx}', 'src/entities/**/*.{ts,tsx}', 'src/shared/**/*.{ts,tsx}'],
         ignores: ['src/services/**/*'],
         rules: {
             'no-restricted-imports': ['error', {
+                patterns: LEGACY_PATTERNS,
+            }],
+        },
+    },
+    {
+        files: ['src/widgets/**/*.{ts,tsx}'],
+        ignores: ['src/services/**/*'],
+        rules: {
+            'no-restricted-imports': ['warn', {
                 patterns: LEGACY_PATTERNS,
             }],
         },
