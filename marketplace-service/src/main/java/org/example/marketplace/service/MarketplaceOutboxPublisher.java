@@ -68,6 +68,7 @@ public class MarketplaceOutboxPublisher {
             case "MarketplacePaymentVerifiedEvent" -> RabbitMQConfig.ROUTING_KEY_PAYMENT_VERIFIED;
             case "MarketplaceOrderCompletedEvent" -> RabbitMQConfig.ROUTING_KEY_ORDER_COMPLETED;
             case "MarketplaceOrderCancelledEvent" -> RabbitMQConfig.ROUTING_KEY_ORDER_CANCELLED;
+            case "MarketplaceProductChanged" -> "marketplace.product.changed";
             default -> "marketplace." + eventType;
         };
     }

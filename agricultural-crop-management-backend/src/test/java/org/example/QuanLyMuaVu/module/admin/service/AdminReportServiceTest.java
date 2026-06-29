@@ -37,8 +37,9 @@ class AdminReportServiceTest {
     @Test
     @DisplayName("getProfitReport aggregates revenue and cost with pending marketplace status")
     void getProfitReport_ComputesProfitAndPendingMarketplace() {
+        when(adminReportReadRepository.countMarketplaceOrders()).thenReturn(0L);
         when(adminReportReadRepository.findSeasonFinancialRows(any())).thenReturn(List.of(
-                row(1, "S1", "Rice", "Farm A", "Plot A", "100", "500", "200")));
+                row(1, "S1", "Rice", "Farm A", "Plot A", "100", "500", "200", null)));
 
         List<AdminReportResponse.ProfitReport> rows = adminReportService.getProfitReport(AdminReportFilter.builder().build());
 
@@ -49,16 +50,17 @@ class AdminReportServiceTest {
         assertEquals(new BigDecimal("300"), row.getGrossProfit());
         assertEquals(new BigDecimal("60.00"), row.getProfitMargin());
         assertEquals(new BigDecimal("150.00"), row.getReturnOnCost());
-        assertNull(row.getMarketplaceRevenue());
-        assertEquals("TODO_PENDING_MARKETPLACE_REVENUE_CONTRACT", row.getMarketplaceRevenueStatus());
+        assertEquals(BigDecimal.ZERO, row.getMarketplaceRevenue());
+        assertEquals("MARKETPLACE_REVENUE_PROJECTION_EMPTY", row.getMarketplaceRevenueStatus());
     }
 
     @Test
     @DisplayName("getSummary aggregates totals and carries area filter with marketplace warning")
     void getSummary_AggregatesAndMarksMarketplacePending() {
+        when(adminReportReadRepository.countMarketplaceOrders()).thenReturn(0L);
         when(adminReportReadRepository.findSeasonFinancialRows(any())).thenReturn(List.of(
-                row(1, "S1", "Rice", "Farm A", "Plot A", "100", "200", "40"),
-                row(2, "S2", "Corn", "Farm B", "Plot B", "200", "300", "60")));
+                row(1, "S1", "Rice", "Farm A", "Plot A", "100", "200", "40", null),
+                row(2, "S2", "Corn", "Farm B", "Plot B", "200", "300", "60", null)));
 
         AdminReportFilter filter = AdminReportFilter.builder()
                 .areaMinHa(new BigDecimal("1.5"))
@@ -74,8 +76,8 @@ class AdminReportServiceTest {
         assertEquals(new BigDecimal("400"), summary.getGrossProfit());
         assertEquals(new BigDecimal("80.00"), summary.getMarginPercent());
         assertEquals(new BigDecimal("0.33"), summary.getCostPerTon());
-        assertNull(summary.getMarketplaceRevenue());
-        assertEquals("TODO_PENDING_MARKETPLACE_REVENUE_CONTRACT", summary.getMarketplaceRevenueStatus());
+        assertEquals(BigDecimal.ZERO, summary.getMarketplaceRevenue());
+        assertEquals("MARKETPLACE_REVENUE_PROJECTION_EMPTY", summary.getMarketplaceRevenueStatus());
         assertEquals(new BigDecimal("1.5"), summary.getAppliedFilters().getAreaMinHa());
         assertEquals(new BigDecimal("5.0"), summary.getAppliedFilters().getAreaMaxHa());
         assertTrue(summary.getWarnings().stream().anyMatch(msg -> msg.contains("Marketplace revenue is excluded")));
@@ -84,14 +86,15 @@ class AdminReportServiceTest {
     @Test
     @DisplayName("exportReportCsv for revenue includes marketplace contract columns")
     void exportReportCsv_RevenueIncludesMarketplaceColumns() {
+        when(adminReportReadRepository.countMarketplaceOrders()).thenReturn(0L);
         when(adminReportReadRepository.findSeasonFinancialRows(any())).thenReturn(List.of(
-                row(3, "S3", "Coffee", "Farm C", "Plot C", "50", "250", "90")));
+                row(3, "S3", "Coffee", "Farm C", "Plot C", "50", "250", "90", null)));
 
         String csv = adminReportService.exportReportCsv("revenue", AdminReportFilter.builder().build(), null);
 
         assertTrue(csv.startsWith(
                 "crop_name,plot_name,total_quantity_kg,total_revenue,marketplace_revenue,marketplace_revenue_status,avg_price"));
-        assertTrue(csv.contains("TODO_PENDING_MARKETPLACE_REVENUE_CONTRACT"));
+        assertTrue(csv.contains("MARKETPLACE_REVENUE_PROJECTION_EMPTY"));
     }
 
     private SeasonFinancialRow row(
@@ -102,7 +105,8 @@ class AdminReportServiceTest {
             String plotName,
             String quantity,
             String revenue,
-            String expense) {
+            String expense,
+            String marketplaceRevenue) {
         return SeasonFinancialRow.builder()
                 .seasonId(seasonId)
                 .seasonName(seasonName)
@@ -113,6 +117,7 @@ class AdminReportServiceTest {
                 .harvestQuantityKg(new BigDecimal(quantity))
                 .harvestRevenue(new BigDecimal(revenue))
                 .totalExpense(new BigDecimal(expense))
+                .marketplaceRevenue(marketplaceRevenue != null ? new BigDecimal(marketplaceRevenue) : null)
                 .build();
     }
 }

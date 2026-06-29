@@ -60,6 +60,7 @@ import org.example.marketplace.event.MarketplaceOrderCompletedEvent;
 import org.example.marketplace.event.MarketplaceOrderCreatedEvent;
 import org.example.marketplace.event.MarketplacePaymentSubmittedEvent;
 import org.example.marketplace.event.MarketplacePaymentVerifiedEvent;
+import org.example.marketplace.event.MarketplaceProductChangedEvent;
 import org.example.marketplace.model.MarketplaceOrderStatus;
 import org.example.marketplace.model.MarketplacePaymentMethod;
 import org.example.marketplace.model.MarketplacePaymentVerificationStatus;
@@ -1531,6 +1532,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
 
         populateTraceabilityFields(product);
         product = marketplaceProductRepository.save(product);
+        publishProductChangedEvent(product);
         return toProductDetail(product);
     }
 
@@ -1552,6 +1554,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
 
         populateTraceabilityFields(product);
         product = marketplaceProductRepository.save(product);
+        publishProductChangedEvent(product);
         return toProductDetail(product);
     }
 
@@ -1621,6 +1624,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         product.setStatusChangedByUserId(userId);
 
         product = marketplaceProductRepository.save(product);
+        publishProductChangedEvent(product);
         return toProductDetail(product);
     }
 
@@ -1660,7 +1664,29 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         product.setStatusChangedByUserId(currentUserService.getCurrentUserId());
 
         product = marketplaceProductRepository.save(product);
+        publishProductChangedEvent(product);
         return toProductDetail(product);
+    }
+
+    private void publishProductChangedEvent(MarketplaceProduct product) {
+        if (product == null) return;
+        MarketplaceProductChangedEvent event = new MarketplaceProductChangedEvent(
+                java.util.UUID.randomUUID().toString(),
+                "MarketplaceProduct",
+                product.getId().toString(),
+                LocalDateTime.now(),
+                new MarketplaceProductChangedEvent.Payload(
+                        product.getId(),
+                        product.getName(),
+                        product.getFarmId(),
+                        product.getFarmName(),
+                        product.getFarmerUserId(),
+                        product.getFarmerDisplayName(),
+                        product.getStatus() != null ? product.getStatus().name() : null,
+                        product.getUpdatedAt() != null ? product.getUpdatedAt().toString() : LocalDateTime.now().toString()
+                )
+        );
+        domainEventPublisher.publish(event);
     }
 
     // ==================== Helper Methods ====================

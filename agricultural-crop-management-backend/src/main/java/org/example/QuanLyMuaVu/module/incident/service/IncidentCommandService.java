@@ -9,6 +9,8 @@ import org.example.QuanLyMuaVu.module.incident.entity.Incident;
 import org.example.QuanLyMuaVu.module.incident.port.IncidentCommandPort;
 import org.example.QuanLyMuaVu.module.incident.repository.AlertRepository;
 import org.example.QuanLyMuaVu.module.incident.repository.IncidentRepository;
+import org.example.QuanLyMuaVu.module.shared.pattern.Observer.DomainEventPublisher;
+import org.example.QuanLyMuaVu.module.shared.pattern.Observer.AlertChangedEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,10 +24,13 @@ public class IncidentCommandService implements IncidentCommandPort {
     IncidentRepository incidentRepository;
     IdentityQueryPort identityQueryPort;
     NotificationService notificationService;
+    DomainEventPublisher domainEventPublisher;
 
     @Override
     public Alert saveAlert(Alert alert) {
-        return alertRepository.save(alert);
+        Alert saved = alertRepository.save(alert);
+        domainEventPublisher.publish(new AlertChangedEvent(saved));
+        return saved;
     }
 
     @Override

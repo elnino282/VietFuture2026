@@ -34,10 +34,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AdminReportService {
 
-    private static final String MARKETPLACE_REVENUE_STATUS_PENDING = "TODO_PENDING_MARKETPLACE_REVENUE_CONTRACT";
-
     private final ExpenseQueryPort expenseQueryPort;
     private final AdminReportReadRepository adminReportReadRepository;
+
+    private String getMarketplaceRevenueStatus() {
+        if (adminReportReadRepository.countMarketplaceOrders() == 0) {
+            return "MARKETPLACE_REVENUE_PROJECTION_EMPTY";
+        }
+        return "ACTIVE";
+    }
+
+    private BigDecimal getMarketplaceRevenue(BigDecimal dbValue) {
+        if (adminReportReadRepository.countMarketplaceOrders() == 0) {
+            return BigDecimal.ZERO;
+        }
+        return dbValue != null ? dbValue : BigDecimal.ZERO;
+    }
 
     public List<AdminReportResponse.YieldReport> getYieldReport(AdminReportFilter filter) {
         List<SeasonFinancialRow> rows = findSeasonRows(filter);
@@ -87,18 +99,21 @@ public class AdminReportService {
             return Collections.emptyList();
         }
 
+        String status = getMarketplaceRevenueStatus();
         return rows.stream().map(row -> {
             BigDecimal quantity = normalize(row.getHarvestQuantityKg());
-            BigDecimal revenue = normalize(row.getHarvestRevenue());
+            BigDecimal harvestRev = normalize(row.getHarvestRevenue());
+            BigDecimal mktRevenue = getMarketplaceRevenue(row.getMarketplaceRevenue());
+            BigDecimal totalRev = harvestRev.add(mktRevenue);
             return AdminReportResponse.RevenueReport.builder()
                     .seasonId(row.getSeasonId())
                     .seasonName(row.getSeasonName())
                     .cropName(row.getCropName())
                     .totalQuantity(quantity)
-                    .totalRevenue(revenue)
-                    .marketplaceRevenue(null)
-                    .marketplaceRevenueStatus(MARKETPLACE_REVENUE_STATUS_PENDING)
-                    .avgPricePerUnit(calculateAvgPrice(revenue, quantity))
+                    .totalRevenue(totalRev)
+                    .marketplaceRevenue(mktRevenue)
+                    .marketplaceRevenueStatus(status)
+                    .avgPricePerUnit(calculateAvgPrice(totalRev, quantity))
                     .build();
         }).collect(Collectors.toList());
     }
@@ -109,21 +124,24 @@ public class AdminReportService {
             return Collections.emptyList();
         }
 
+        String status = getMarketplaceRevenueStatus();
         return rows.stream().map(row -> {
-            BigDecimal revenue = normalize(row.getHarvestRevenue());
+            BigDecimal harvestRev = normalize(row.getHarvestRevenue());
+            BigDecimal mktRevenue = getMarketplaceRevenue(row.getMarketplaceRevenue());
+            BigDecimal totalRev = harvestRev.add(mktRevenue);
             BigDecimal expense = normalize(row.getTotalExpense());
-            BigDecimal profit = revenue.subtract(expense);
+            BigDecimal profit = totalRev.subtract(expense);
             return AdminReportResponse.ProfitReport.builder()
                     .seasonId(row.getSeasonId())
                     .seasonName(row.getSeasonName())
                     .cropName(row.getCropName())
                     .farmName(row.getFarmName())
-                    .totalRevenue(revenue)
-                    .marketplaceRevenue(null)
-                    .marketplaceRevenueStatus(MARKETPLACE_REVENUE_STATUS_PENDING)
+                    .totalRevenue(totalRev)
+                    .marketplaceRevenue(mktRevenue)
+                    .marketplaceRevenueStatus(status)
                     .totalExpense(expense)
                     .grossProfit(profit)
-                    .profitMargin(calculatePercentage(profit, revenue))
+                    .profitMargin(calculatePercentage(profit, totalRev))
                     .returnOnCost(calculatePercentage(profit, expense))
                     .build();
         }).collect(Collectors.toList());
@@ -136,11 +154,16 @@ public class AdminReportService {
                 .map(this::normalize).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalCost = rows.stream().map(SeasonFinancialRow::getTotalExpense)
                 .map(this::normalize).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal revenue = rows.stream().map(SeasonFinancialRow::getHarvestRevenue)
+        BigDecimal harvestRevenue = rows.stream().map(SeasonFinancialRow::getHarvestRevenue)
                 .map(this::normalize).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal grossProfit = revenue.subtract(totalCost);
-        BigDecimal marginPercent = calculatePercentage(grossProfit, revenue);
+        String status = getMarketplaceRevenueStatus();
+        BigDecimal marketplaceRevenue = rows.stream().map(row -> getMarketplaceRevenue(row.getMarketplaceRevenue()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalRevenue = harvestRevenue.add(marketplaceRevenue);
+        BigDecimal grossProfit = totalRevenue.subtract(totalCost);
+        BigDecimal marginPercent = calculatePercentage(grossProfit, totalRevenue);
         BigDecimal costPerTon = calculateCostPerKg(totalCost, actualYield);
 
         boolean vietnameseLocale = isVietnameseLocale();
@@ -157,10 +180,12 @@ public class AdminReportService {
                     "No harvested yield in selected range while expenses exist",
                     "Có chi phí trong khoảng đã chọn nhưng chưa có sản lượng thu hoạch"));
         }
-        warnings.add(localize(
-                vietnameseLocale,
-                "Marketplace revenue is excluded until marketplace report contract is finalized.",
-                "Doanh thu marketplace chưa được tính cho đến khi hoàn tất contract báo cáo marketplace."));
+        if ("MARKETPLACE_REVENUE_PROJECTION_EMPTY".equals(status)) {
+            warnings.add(localize(
+                    vietnameseLocale,
+                    "Marketplace revenue is excluded because no orders exist.",
+                    "Doanh thu marketplace chưa được tính vì chưa có đơn hàng nào."));
+        }
 
         AdminReportResponse.AppliedFilters appliedFilters = AdminReportResponse.AppliedFilters.builder()
                 .dateFrom(filter.getEffectiveFromDate() != null ? filter.getEffectiveFromDate().toString() : null)
@@ -177,9 +202,9 @@ public class AdminReportService {
                 .actualYield(actualYield)
                 .totalCost(totalCost)
                 .costPerTon(costPerTon)
-                .revenue(revenue)
-                .marketplaceRevenue(null)
-                .marketplaceRevenueStatus(MARKETPLACE_REVENUE_STATUS_PENDING)
+                .revenue(totalRevenue)
+                .marketplaceRevenue(marketplaceRevenue)
+                .marketplaceRevenueStatus(status)
                 .grossProfit(grossProfit)
                 .marginPercent(marginPercent)
                 .warnings(warnings)
@@ -302,8 +327,8 @@ public class AdminReportService {
                     .totals(AdminReportResponse.RevenueTotals.builder()
                             .totalQuantity(BigDecimal.ZERO)
                             .totalRevenue(BigDecimal.ZERO)
-                            .marketplaceRevenue(null)
-                            .marketplaceRevenueStatus(MARKETPLACE_REVENUE_STATUS_PENDING)
+                            .marketplaceRevenue(BigDecimal.ZERO)
+                            .marketplaceRevenueStatus("MARKETPLACE_REVENUE_PROJECTION_EMPTY")
                             .avgPrice(null)
                             .build())
                     .build();
@@ -327,16 +352,20 @@ public class AdminReportService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalRevenue = tableRows.stream().map(AdminReportResponse.RevenueRow::getTotalRevenue).map(this::normalize)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal mktRevenue = rows.stream().map(row -> getMarketplaceRevenue(row.getMarketplaceRevenue()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalRevenueWithMkt = totalRevenue.add(mktRevenue);
+        String status = getMarketplaceRevenueStatus();
 
         return AdminReportResponse.RevenueAnalyticsResponse.builder()
                 .tableRows(tableRows)
                 .chartSeries(tableRows)
                 .totals(AdminReportResponse.RevenueTotals.builder()
                         .totalQuantity(totalQuantity)
-                        .totalRevenue(totalRevenue)
-                        .marketplaceRevenue(null)
-                        .marketplaceRevenueStatus(MARKETPLACE_REVENUE_STATUS_PENDING)
-                        .avgPrice(calculateAvgPrice(totalRevenue, totalQuantity))
+                        .totalRevenue(totalRevenueWithMkt)
+                        .marketplaceRevenue(mktRevenue)
+                        .marketplaceRevenueStatus(status)
+                        .avgPrice(calculateAvgPrice(totalRevenueWithMkt, totalQuantity))
                         .build())
                 .build();
     }
@@ -349,8 +378,8 @@ public class AdminReportService {
                     .chartSeries(Collections.emptyList())
                     .totals(AdminReportResponse.ProfitTotals.builder()
                             .totalRevenue(BigDecimal.ZERO)
-                            .marketplaceRevenue(null)
-                            .marketplaceRevenueStatus(MARKETPLACE_REVENUE_STATUS_PENDING)
+                            .marketplaceRevenue(BigDecimal.ZERO)
+                            .marketplaceRevenueStatus("MARKETPLACE_REVENUE_PROJECTION_EMPTY")
                             .totalCost(BigDecimal.ZERO)
                             .grossProfit(BigDecimal.ZERO)
                             .marginPercent(null)
@@ -378,18 +407,22 @@ public class AdminReportService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalCost = tableRows.stream().map(AdminReportResponse.ProfitRow::getTotalCost).map(this::normalize)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal grossProfit = totalRevenue.subtract(totalCost);
+        BigDecimal mktRevenue = rows.stream().map(row -> getMarketplaceRevenue(row.getMarketplaceRevenue()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalRevenueWithMkt = totalRevenue.add(mktRevenue);
+        BigDecimal grossProfit = totalRevenueWithMkt.subtract(totalCost);
+        String status = getMarketplaceRevenueStatus();
 
         return AdminReportResponse.ProfitAnalyticsResponse.builder()
                 .tableRows(tableRows)
                 .chartSeries(tableRows)
                 .totals(AdminReportResponse.ProfitTotals.builder()
-                        .totalRevenue(totalRevenue)
-                        .marketplaceRevenue(null)
-                        .marketplaceRevenueStatus(MARKETPLACE_REVENUE_STATUS_PENDING)
+                        .totalRevenue(totalRevenueWithMkt)
+                        .marketplaceRevenue(mktRevenue)
+                        .marketplaceRevenueStatus(status)
                         .totalCost(totalCost)
                         .grossProfit(grossProfit)
-                        .marginPercent(calculatePercentage(grossProfit, totalRevenue))
+                        .marginPercent(calculatePercentage(grossProfit, totalRevenueWithMkt))
                         .build())
                 .build();
     }
@@ -563,13 +596,15 @@ public class AdminReportService {
 
     private String buildRevenueCsv(AdminReportResponse.RevenueAnalyticsResponse response) {
         StringBuilder b = new StringBuilder(revenueCsvHeader());
+        String status = response.getTotals().getMarketplaceRevenueStatus();
+        BigDecimal marketplaceRevenue = response.getTotals().getMarketplaceRevenue();
         for (AdminReportResponse.RevenueRow row : response.getTableRows()) {
             b.append(csv(row.getCropName())).append(',')
                     .append(csv(row.getPlotName())).append(',')
                     .append(csvNumber(row.getTotalQuantity())).append(',')
                     .append(csvNumber(row.getTotalRevenue())).append(',')
-                    .append(',')
-                    .append(csv(MARKETPLACE_REVENUE_STATUS_PENDING)).append(',')
+                    .append(csvNumber(marketplaceRevenue)).append(',')
+                    .append(csv(status)).append(',')
                     .append(csvNumber(row.getAvgPrice())).append('\n');
         }
         return b.toString();
@@ -577,12 +612,14 @@ public class AdminReportService {
 
     private String buildProfitCsv(AdminReportResponse.ProfitAnalyticsResponse response) {
         StringBuilder b = new StringBuilder(profitCsvHeader());
+        String status = response.getTotals().getMarketplaceRevenueStatus();
+        BigDecimal marketplaceRevenue = response.getTotals().getMarketplaceRevenue();
         for (AdminReportResponse.ProfitRow row : response.getTableRows()) {
             b.append(csv(row.getCropName())).append(',')
                     .append(csv(row.getPlotName())).append(',')
                     .append(csvNumber(row.getTotalRevenue())).append(',')
-                    .append(',')
-                    .append(csv(MARKETPLACE_REVENUE_STATUS_PENDING)).append(',')
+                    .append(csvNumber(marketplaceRevenue)).append(',')
+                    .append(csv(status)).append(',')
                     .append(csvNumber(row.getTotalCost())).append(',')
                     .append(csvNumber(row.getGrossProfit())).append(',')
                     .append(csvNumber(row.getMarginPercent())).append('\n');

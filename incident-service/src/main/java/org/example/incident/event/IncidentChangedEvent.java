@@ -26,6 +26,7 @@ public class IncidentChangedEvent extends DomainEvent {
     private final String status;
     private final LocalDate deadline;
     private final LocalDateTime resolvedAt;
+    private final LocalDateTime createdAt;
 
     public IncidentChangedEvent(Incident incident, Action action, Long reporterUserId) {
         super("Incident",
@@ -43,5 +44,6 @@ public class IncidentChangedEvent extends DomainEvent {
         this.status = incident != null && incident.getStatus() != null ? incident.getStatus().name() : null;
         this.deadline = incident != null ? incident.getDeadline() : null;
         this.resolvedAt = incident != null ? incident.getResolvedAt() : null;
+        this.createdAt = incident != null ? incident.getCreatedAt() : null;
     }
 }

@@ -1,0 +1,51 @@
+package org.example.apigateway;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.gateway.route.Route;
+import org.springframework.cloud.gateway.route.RouteLocator;
+
+import java.util.List;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class GatewayRoutingTest {
+
+    @Autowired
+    private RouteLocator routeLocator;
+
+    @Test
+    void testAdminReportingRoutesAreCutOver() {
+        List<Route> routes = routeLocator.getRoutes().collectList().block();
+        assertThat(routes).isNotEmpty();
+
+        System.out.println("=== API Gateway Routing Configuration ===");
+        routes.forEach(route -> System.out.println("Route ID: " + route.getId() + " -> URI: " + route.getUri()));
+
+        // 1. Verify admin-reporting-route points to reporting service
+        Route adminReportingRoute = routes.stream()
+                .filter(r -> "admin-reporting-route".equals(r.getId()))
+                .findFirst()
+                .orElse(null);
+        assertThat(adminReportingRoute).isNotNull();
+        assertThat(adminReportingRoute.getUri().toString()).contains("8091");
+
+        // 2. Verify admin-reporting-documents-get-route points to reporting service
+        Route adminReportingDocsGetRoute = routes.stream()
+                .filter(r -> "admin-reporting-documents-get-route".equals(r.getId()))
+                .findFirst()
+                .orElse(null);
+        assertThat(adminReportingDocsGetRoute).isNotNull();
+        assertThat(adminReportingDocsGetRoute.getUri().toString()).contains("8091");
+
+        // 3. Verify admin-reporting-reads-route points to reporting service
+        Route adminReportingReadsRoute = routes.stream()
+                .filter(r -> "admin-reporting-reads-route".equals(r.getId()))
+                .findFirst()
+                .orElse(null);
+        assertThat(adminReportingReadsRoute).isNotNull();
+        assertThat(adminReportingReadsRoute.getUri().toString()).contains("8091");
+    }
+}

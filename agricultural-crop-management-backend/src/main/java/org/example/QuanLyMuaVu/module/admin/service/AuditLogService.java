@@ -61,6 +61,7 @@ public class AuditLogService {
 
     AuditLogRepository auditLogRepository;
     ObjectMapper objectMapper;
+    org.example.QuanLyMuaVu.module.shared.pattern.Observer.DomainEventPublisher domainEventPublisher;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void logFarmOperation(
@@ -251,7 +252,16 @@ public class AuditLogService {
                 .ipAddress(resolveIpAddress(ipAddress))
                 .build();
 
-        auditLogRepository.save(auditLog);
+        AuditLog saved = auditLogRepository.save(auditLog);
+        domainEventPublisher.publish(new org.example.QuanLyMuaVu.module.shared.pattern.Observer.AuditLogCreatedEvent(
+                saved.getId(),
+                saved.getOperation(),
+                extractModule(saved.getEntityType()),
+                saved.getSnapshotDataJson(),
+                saved.getIpAddress(),
+                saved.getPerformedBy(),
+                saved.getPerformedAt()
+        ));
     }
 
     private String serializeAndRedactSnapshot(Object snapshot) throws JsonProcessingException {

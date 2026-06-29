@@ -20,4 +20,16 @@ public class IncidentSummary {
 
     @Column(name = "status", nullable = false)
     private String status;
+
+    @Column(name = "incident_type")
+    private String incidentType;
+
+    @Column(name = "severity")
+    private String severity;
+
+    @Column(name = "resolved_at")
+    private java.time.LocalDateTime resolvedAt;
+
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt;
 }

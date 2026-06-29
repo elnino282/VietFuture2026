@@ -36,6 +36,10 @@ class AdminEventListenerTest {
     @Mock private ExpenseSummaryRepository expenseSummaryRepository;
     @Mock private MarketplaceOrderSummaryRepository marketplaceOrderSummaryRepository;
     @Mock private MarketplaceOrderItemSummaryRepository marketplaceOrderItemSummaryRepository;
+    @Mock private UserSummaryRepository userSummaryRepository;
+    @Mock private AuditLogEntryRepository auditLogEntryRepository;
+    @Mock private DocumentRepository documentRepository;
+    @Mock private MarketplaceProductSummaryRepository marketplaceProductSummaryRepository;
 
     private ObjectMapper objectMapper;
     private AdminEventListener listener;
@@ -58,7 +62,11 @@ class AdminEventListenerTest {
                 harvestSummaryRepository,
                 expenseSummaryRepository,
                 marketplaceOrderSummaryRepository,
-                marketplaceOrderItemSummaryRepository
+                marketplaceOrderItemSummaryRepository,
+                userSummaryRepository,
+                auditLogEntryRepository,
+                documentRepository,
+                marketplaceProductSummaryRepository
         );
         messageProperties = new MessageProperties();
         messageProperties.setMessageId("evt-123");

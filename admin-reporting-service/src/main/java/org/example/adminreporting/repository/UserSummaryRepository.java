@@ -24,4 +24,6 @@ public interface UserSummaryRepository extends JpaRepository<UserSummary, Long> 
 
     @Query("SELECT DISTINCT u.roleCode FROM UserSummary u WHERE u.roleCode IS NOT NULL")
     List<String> findDistinctRoleCodes();
+
+    long countByStatus(String status);
 }

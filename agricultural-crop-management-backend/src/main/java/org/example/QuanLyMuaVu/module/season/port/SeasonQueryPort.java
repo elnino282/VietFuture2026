@@ -43,4 +43,8 @@ public interface SeasonQueryPort {
     boolean existsActiveTasksByPlotId(Integer plotId);
 
     long countFieldLogsBySeasonAndLogType(Integer seasonId, String logType);
+
+    java.math.BigDecimal getMarketplaceRevenueBySeasonId(Integer seasonId);
+
+    long countMarketplaceOrders();
 }

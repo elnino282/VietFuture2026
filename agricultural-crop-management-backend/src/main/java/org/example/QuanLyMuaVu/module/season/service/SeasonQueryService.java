@@ -301,4 +301,17 @@ public class SeasonQueryService implements SeasonQueryPort {
         LocalDate rangeEnd = toDate != null ? toDate : seasonEnd;
         return !seasonEnd.isBefore(rangeStart) && !seasonStart.isAfter(rangeEnd);
     }
+
+    @Override
+    public java.math.BigDecimal getMarketplaceRevenueBySeasonId(Integer seasonId) {
+        if (seasonId == null) {
+            return java.math.BigDecimal.ZERO;
+        }
+        return seasonRepository.getMarketplaceRevenueBySeasonId(seasonId);
+    }
+
+    @Override
+    public long countMarketplaceOrders() {
+        return seasonRepository.countMarketplaceOrders();
+    }
 }

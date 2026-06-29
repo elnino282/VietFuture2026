@@ -151,4 +151,16 @@ public class SnapshotQueryService {
     }
 
     public record ExpenseFertilizerSnapshot(Integer quantity, String itemName, String note) {}
+
+    public BigDecimal getMarketplaceRevenueBySeasonId(Integer seasonId) {
+        if (seasonId == null) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal val = seasonSnapshotRepository.getMarketplaceRevenueBySeasonId(seasonId);
+        return val != null ? val : BigDecimal.ZERO;
+    }
+
+    public long countMarketplaceOrders() {
+        return seasonSnapshotRepository.countMarketplaceOrders();
+    }
 }

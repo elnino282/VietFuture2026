@@ -20,5 +20,11 @@ public class IncidentChangedEventDto {
     private Integer seasonId;
     private Integer farmId;
     private Long reporterUserId;
+    private String incidentType;
+    private String severity;
+    private String status;
+    private java.time.LocalDate deadline;
+    private java.time.LocalDateTime resolvedAt;
+    private java.time.LocalDateTime createdAt;
 }
 

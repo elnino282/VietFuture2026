@@ -11,7 +11,4 @@ CREATE TABLE IF NOT EXISTS admin_marketplace_order_item_summary (
     CONSTRAINT fk_admin_marketplace_order_item_summary_order FOREIGN KEY (order_id) REFERENCES admin_marketplace_order_summary(order_id) ON DELETE CASCADE
 );
 
--- Seed existing order items
-INSERT IGNORE INTO admin_marketplace_order_item_summary (item_id, order_id, season_id, quantity, unit_price, line_total)
-SELECT id, order_id, season_id, quantity, unit_price_snapshot, line_total
-FROM marketplace_db.marketplace_order_items;
+-- Seed existing order items moved to programmatic backfill runner

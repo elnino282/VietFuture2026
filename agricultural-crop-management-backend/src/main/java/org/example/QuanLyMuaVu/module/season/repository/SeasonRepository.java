@@ -160,4 +160,10 @@ public interface SeasonRepository extends JpaRepository<Season, Integer>,
                         @Param("farmId") Integer farmId,
                         @Param("plotId") Integer plotId,
                         @Param("varietyId") Integer varietyId);
+
+        @Query(value = "SELECT COALESCE(SUM(oi.line_total), 0) FROM marketplace_order_items oi JOIN marketplace_orders o ON o.id = oi.order_id WHERE oi.season_id = :seasonId AND o.status = 'COMPLETED'", nativeQuery = true)
+        java.math.BigDecimal getMarketplaceRevenueBySeasonId(@Param("seasonId") Integer seasonId);
+
+        @Query(value = "SELECT COUNT(*) FROM marketplace_orders", nativeQuery = true)
+        long countMarketplaceOrders();
 }

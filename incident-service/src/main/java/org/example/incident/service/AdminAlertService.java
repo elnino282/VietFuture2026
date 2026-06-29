@@ -1,4 +1,4 @@
-package org.example.QuanLyMuaVu.module.admin.service;
+package org.example.incident.service;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -8,13 +8,14 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.example.QuanLyMuaVu.DTO.Common.PageResponse;
-import org.example.QuanLyMuaVu.Exception.AppException;
-import org.example.QuanLyMuaVu.Exception.ErrorCode;
-import org.example.QuanLyMuaVu.module.admin.dto.request.AdminAlertSendRequest;
-import org.example.QuanLyMuaVu.module.admin.dto.response.AdminAlertResponse;
-import org.example.QuanLyMuaVu.module.incident.port.IncidentCommandPort;
-import org.example.QuanLyMuaVu.module.incident.port.IncidentQueryPort;
+import org.example.incident.dto.common.PageResponse;
+import org.example.incident.exception.AppException;
+import org.example.incident.exception.ErrorCode;
+import org.example.incident.dto.request.AdminAlertSendRequest;
+import org.example.incident.dto.response.AdminAlertResponse;
+import org.example.incident.entity.Alert;
+import org.example.incident.port.IncidentCommandPort;
+import org.example.incident.port.IncidentQueryPort;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ public class AdminAlertService {
 
     IncidentQueryPort incidentQueryPort;
     IncidentCommandPort incidentCommandPort;
+    ExternalServiceClient externalServiceClient;
 
     @Transactional(readOnly = true)
     public PageResponse<AdminAlertResponse> listAlerts(
@@ -50,7 +52,7 @@ public class AdminAlertService {
                 safeLimit,
                 Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        Page<org.example.QuanLyMuaVu.module.incident.entity.Alert> alertsPage = incidentQueryPort.searchAlerts(
+        Page<Alert> alertsPage = incidentQueryPort.searchAlerts(
                 normalizeNullable(type),
                 normalizeNullable(severity),
                 normalizeNullable(status),
@@ -70,7 +72,7 @@ public class AdminAlertService {
     public List<AdminAlertResponse> refreshAlerts(Integer windowDays) {
         LocalDateTime fromDate = resolveFromDate(windowDays);
 
-        Page<org.example.QuanLyMuaVu.module.incident.entity.Alert> alertsPage = incidentQueryPort.searchAlerts(
+        Page<Alert> alertsPage = incidentQueryPort.searchAlerts(
                 null,
                 null,
                 null,
@@ -85,7 +87,7 @@ public class AdminAlertService {
     }
 
     public AdminAlertResponse sendAlert(Integer alertId, AdminAlertSendRequest request) {
-        org.example.QuanLyMuaVu.module.incident.entity.Alert alert = incidentQueryPort.findAlertById(alertId)
+        Alert alert = incidentQueryPort.findAlertById(alertId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
 
         alert.setStatus("SENT");
@@ -98,12 +100,12 @@ public class AdminAlertService {
             alert.setRecipientFarmerIds(csv);
         }
 
-        org.example.QuanLyMuaVu.module.incident.entity.Alert saved = incidentCommandPort.saveAlert(alert);
+        Alert saved = incidentCommandPort.saveAlert(alert);
         return toResponse(saved);
     }
 
     public AdminAlertResponse updateStatus(Integer alertId, String status) {
-        org.example.QuanLyMuaVu.module.incident.entity.Alert alert = incidentQueryPort.findAlertById(alertId)
+        Alert alert = incidentQueryPort.findAlertById(alertId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
 
         String normalizedStatus = normalizeRequiredStatus(status);
@@ -112,21 +114,28 @@ public class AdminAlertService {
             alert.setSentAt(LocalDateTime.now());
         }
 
-        org.example.QuanLyMuaVu.module.incident.entity.Alert saved = incidentCommandPort.saveAlert(alert);
+        Alert saved = incidentCommandPort.saveAlert(alert);
         return toResponse(saved);
     }
 
-    private AdminAlertResponse toResponse(org.example.QuanLyMuaVu.module.incident.entity.Alert alert) {
+    private AdminAlertResponse toResponse(Alert alert) {
+        String farmName = null;
+        if (alert.getFarmId() != null) {
+            ExternalServiceClient.FarmInternalDto farm = externalServiceClient.getFarm(alert.getFarmId());
+            if (farm != null) {
+                farmName = farm.getName();
+            }
+        }
         return AdminAlertResponse.builder()
                 .id(alert.getId())
                 .type(alert.getType())
                 .severity(alert.getSeverity())
                 .status(alert.getStatus())
-                .farmId(alert.getFarm() != null ? alert.getFarm().getId() : null)
-                .farmName(alert.getFarm() != null ? alert.getFarm().getName() : null)
-                .seasonId(alert.getSeason() != null ? alert.getSeason().getId() : null)
-                .plotId(alert.getPlot() != null ? alert.getPlot().getId() : null)
-                .cropId(alert.getCrop() != null ? alert.getCrop().getId() : null)
+                .farmId(alert.getFarmId())
+                .farmName(farmName)
+                .seasonId(alert.getSeasonId())
+                .plotId(alert.getPlotId())
+                .cropId(alert.getCropId())
                 .title(alert.getTitle())
                 .message(alert.getMessage())
                 .suggestedActionType(alert.getSuggestedActionType())

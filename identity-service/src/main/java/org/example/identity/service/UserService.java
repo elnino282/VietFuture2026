@@ -36,6 +36,7 @@ public class UserService {
     RoleRepository roleRepository;
     FarmerMapper farmerMapper;
     PasswordEncoder passwordEncoder;
+    org.example.identity.event.DomainEventPublisher domainEventPublisher;
 
     public FarmerResponse signUp(SignUpRequest request) {
         String effectiveUsername = request.getEffectiveUsername();
@@ -88,6 +89,7 @@ public class UserService {
 
         try {
             user = userRepository.save(user);
+            domainEventPublisher.publish(new org.example.identity.event.UserChangedEvent(user, org.example.identity.event.UserChangedEvent.Action.CREATED));
         } catch (DataIntegrityViolationException exception) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
@@ -142,7 +144,9 @@ public class UserService {
             user.setWardId(request.getWardId());
         }
 
-        return farmerMapper.toFarmerResponse(userRepository.save(user));
+        User saved = userRepository.save(user);
+        domainEventPublisher.publish(new org.example.identity.event.UserChangedEvent(saved, org.example.identity.event.UserChangedEvent.Action.UPDATED));
+        return farmerMapper.toFarmerResponse(saved);
     }
 
     public FarmerResponse changeMyPassword(ChangePasswordRequest request) {

@@ -11,6 +11,9 @@ import org.example.incident.repository.IncidentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.example.incident.event.AlertChangedEvent;
+import org.example.incident.event.DomainEventPublisher;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -21,10 +24,14 @@ public class IncidentCommandService implements IncidentCommandPort {
     IncidentRepository incidentRepository;
     ExternalServiceClient externalServiceClient;
     NotificationService notificationService;
+    DomainEventPublisher domainEventPublisher;
 
     @Override
     public Alert saveAlert(Alert alert) {
-        return alertRepository.save(alert);
+        boolean isNew = (alert.getId() == null);
+        Alert saved = alertRepository.save(alert);
+        domainEventPublisher.publish(new AlertChangedEvent(saved, isNew ? AlertChangedEvent.Action.CREATED : AlertChangedEvent.Action.UPDATED));
+        return saved;
     }
 
     @Override

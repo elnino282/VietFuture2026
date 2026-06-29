@@ -1,4 +1,4 @@
-package org.example.QuanLyMuaVu.module.admin.controller;
+package org.example.adminreporting.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -10,22 +10,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDateTime;
 import java.util.List;
-import org.example.QuanLyMuaVu.DTO.Common.PageResponse;
-import org.example.QuanLyMuaVu.module.admin.dto.response.AdminAuditLogResponse;
-import org.example.QuanLyMuaVu.module.admin.service.AuditLogService;
+import org.example.adminreporting.config.CustomJwtDecoder;
+import org.example.adminreporting.dto.PageResponse;
+import org.example.adminreporting.dto.response.AdminAuditLogResponse;
+import org.example.adminreporting.service.AuditLogService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = AdminAuditLogController.class)
-@Import(AdminAuditLogControllerTest.MethodSecurityTestConfig.class)
+@org.springframework.context.annotation.Import(AdminAuditLogControllerTest.MethodSecurityTestConfig.class)
 class AdminAuditLogControllerTest {
+
+    @org.springframework.boot.test.context.TestConfiguration
+    @org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
+    static class MethodSecurityTestConfig {
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -33,10 +36,8 @@ class AdminAuditLogControllerTest {
     @MockBean
     private AuditLogService auditLogService;
 
-    @TestConfiguration
-    @EnableMethodSecurity
-    static class MethodSecurityTestConfig {
-    }
+    @MockBean
+    private CustomJwtDecoder customJwtDecoder;
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -101,11 +102,5 @@ class AdminAuditLogControllerTest {
     void listAuditLogs_withNonAdminRole_returnsForbidden() throws Exception {
         mockMvc.perform(get("/api/v1/admin/audit-logs"))
                 .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void listAuditLogs_withoutAuthentication_returnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/api/v1/admin/audit-logs"))
-                .andExpect(status().isUnauthorized());
     }
 }

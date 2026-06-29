@@ -49,6 +49,9 @@ class AdminUserCommandServiceTest {
     @Mock
     private AuditLogService auditLogService;
 
+    @Mock
+    private org.example.QuanLyMuaVu.module.shared.pattern.Observer.DomainEventPublisher domainEventPublisher;
+
     @InjectMocks
     private AdminUserCommandService adminUserCommandService;
 

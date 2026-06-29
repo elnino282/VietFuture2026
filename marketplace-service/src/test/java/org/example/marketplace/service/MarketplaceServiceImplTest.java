@@ -11,6 +11,12 @@ import org.example.marketplace.entity.MarketplaceProduct;
 import org.example.marketplace.model.MarketplaceProductStatus;
 import org.example.marketplace.repository.MarketplaceProductRepository;
 import org.example.marketplace.shared.security.CurrentUserService;
+import org.example.marketplace.event.DomainEventPublisher;
+import org.example.marketplace.event.MarketplaceProductChangedEvent;
+import org.example.marketplace.dto.request.MarketplaceFarmerProductUpsertRequest;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +46,8 @@ class MarketplaceServiceImplTest {
     private IdentityClient identityClient;
     @Mock
     private CurrentUserService currentUserService;
+    @Mock
+    private DomainEventPublisher domainEventPublisher;
 
     @InjectMocks
     private MarketplaceServiceImpl marketplaceService;
@@ -106,5 +114,60 @@ class MarketplaceServiceImplTest {
         assertThat(lotOpt.linkedProductStatus()).isEqualTo(MarketplaceProductStatus.PUBLISHED);
         assertThat(lotOpt.farmName()).isEqualTo("Happy Farm");
         assertThat(lotOpt.seasonName()).isEqualTo("Spring 2026");
+    }
+
+    @Test
+    @DisplayName("Should publish MarketplaceProductChangedEvent on product creation")
+    void createFarmerProduct_shouldPublishMarketplaceProductChangedEvent() {
+        // Given
+        Long userId = 1L;
+        when(currentUserService.getCurrentUserId()).thenReturn(userId);
+
+        MarketplaceFarmerProductUpsertRequest request = new MarketplaceFarmerProductUpsertRequest(
+                "Fresh Lettuce",
+                "VEGETABLE",
+                "Crisp green lettuce",
+                "Locally grown organic lettuce",
+                BigDecimal.valueOf(15000),
+                BigDecimal.valueOf(100),
+                "http://example.com/lettuce.png",
+                List.of(),
+                1001
+        );
+
+        MarketplaceProduct savedProduct = MarketplaceProduct.builder()
+                .id(999L)
+                .name(request.name())
+                .category(request.category())
+                .shortDescription(request.shortDescription())
+                .description(request.description())
+                .price(request.price())
+                .stockQuantity(request.stockQuantity())
+                .imageUrl(request.imageUrl())
+                .farmerUserId(userId)
+                .lotId(request.lotId())
+                .status(MarketplaceProductStatus.DRAFT)
+                .traceable(true)
+                .build();
+
+        when(marketplaceProductRepository.save(any(MarketplaceProduct.class))).thenReturn(savedProduct);
+
+        // When
+        MarketplaceProductDetailResponse response = marketplaceService.createFarmerProduct(request);
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.id()).isEqualTo(999L);
+        assertThat(response.name()).isEqualTo("Fresh Lettuce");
+
+        ArgumentCaptor<MarketplaceProductChangedEvent> eventCaptor = ArgumentCaptor.forClass(MarketplaceProductChangedEvent.class);
+        verify(domainEventPublisher).publish(eventCaptor.capture());
+
+        MarketplaceProductChangedEvent capturedEvent = eventCaptor.getValue();
+        assertThat(capturedEvent).isNotNull();
+        assertThat(capturedEvent.payload().productId()).isEqualTo(999L);
+        assertThat(capturedEvent.payload().productName()).isEqualTo("Fresh Lettuce");
+        assertThat(capturedEvent.payload().farmerId()).isEqualTo(1L);
+        assertThat(capturedEvent.payload().status()).isEqualTo("DRAFT");
     }
 }

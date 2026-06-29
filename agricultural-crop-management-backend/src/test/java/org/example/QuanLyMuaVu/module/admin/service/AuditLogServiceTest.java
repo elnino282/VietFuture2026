@@ -23,9 +23,12 @@ class AuditLogServiceTest {
     @Mock
     private AuditLogRepository auditLogRepository;
 
+    @Mock
+    private org.example.QuanLyMuaVu.module.shared.pattern.Observer.DomainEventPublisher domainEventPublisher;
+
     @Test
     void logEntityOperation_redactsSensitiveFieldsInSnapshot() {
-        AuditLogService auditLogService = new AuditLogService(auditLogRepository, new ObjectMapper());
+        AuditLogService auditLogService = new AuditLogService(auditLogRepository, new ObjectMapper(), domainEventPublisher);
 
         Map<String, Object> snapshot = new LinkedHashMap<>();
         snapshot.put("username", "target-user");

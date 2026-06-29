@@ -103,4 +103,23 @@ public class ExternalServiceClient {
         private java.time.LocalDate plannedHarvestDate;
         private Integer plotId;
     }
+
+    public FarmInternalDto getFarm(Integer farmId) {
+        try {
+            String url = farmServiceUrl + "/api/v1/internal/farms/" + farmId;
+            return restTemplate.getForObject(url, FarmInternalDto.class);
+        } catch (Exception e) {
+            log.error("Failed to fetch farm {} from farm-service", farmId, e);
+            return null;
+        }
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FarmInternalDto {
+        private Integer id;
+        private String name;
+    }
 }

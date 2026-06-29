@@ -41,6 +41,7 @@ public class AdminUserCommandService {
     private final PasswordEncoder passwordEncoder;
     private final CurrentUserService currentUserService;
     private final AuditLogService auditLogService;
+    private final org.example.QuanLyMuaVu.module.shared.pattern.Observer.DomainEventPublisher domainEventPublisher;
 
     /**
      * DTO for user response in admin operations.
@@ -88,6 +89,7 @@ public class AdminUserCommandService {
 
         user = identityCommandPort.saveUser(user);
         log.info("Successfully created user with ID: {}", user.getId());
+        domainEventPublisher.publish(new org.example.QuanLyMuaVu.module.shared.pattern.Observer.UserChangedEvent(user, org.example.QuanLyMuaVu.module.shared.pattern.Observer.UserChangedEvent.Action.CREATED));
 
         return toResponse(user);
     }
@@ -147,6 +149,7 @@ public class AdminUserCommandService {
 
         user = identityCommandPort.saveUser(user);
         log.info("Successfully updated user ID: {}", id);
+        domainEventPublisher.publish(new org.example.QuanLyMuaVu.module.shared.pattern.Observer.UserChangedEvent(user, org.example.QuanLyMuaVu.module.shared.pattern.Observer.UserChangedEvent.Action.UPDATED));
         String actor = resolveAuditActor();
         List<String> afterRoles = normalizeRoleCodes(user.getRoles());
         String afterStatus = user.getStatus() != null ? user.getStatus().name() : null;

@@ -24,6 +24,11 @@ import org.example.adminreporting.repository.AdminReportReadRepository;
 import org.example.adminreporting.repository.AdminReportReadRepository.SeasonFinancialRow;
 import org.example.adminreporting.repository.ExpenseSummaryRepository;
 import org.example.adminreporting.repository.MarketplaceOrderSummaryRepository;
+import org.example.adminreporting.repository.TaskSummaryRepository;
+import org.example.adminreporting.repository.IncidentSummaryRepository;
+import org.example.adminreporting.repository.InventoryLotSummaryRepository;
+import org.example.adminreporting.entity.IncidentSummary;
+import org.example.adminreporting.entity.InventoryLotSummary;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,11 +39,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AdminReportService {
 
-    private static final String MARKETPLACE_REVENUE_STATUS_PENDING = "TODO_PENDING_MARKETPLACE_REVENUE_CONTRACT";
-
     private final ExpenseSummaryRepository expenseSummaryRepository;
     private final AdminReportReadRepository adminReportReadRepository;
     private final MarketplaceOrderSummaryRepository marketplaceOrderSummaryRepository;
+    private final TaskSummaryRepository taskSummaryRepository;
+    private final IncidentSummaryRepository incidentSummaryRepository;
+    private final InventoryLotSummaryRepository inventoryLotSummaryRepository;
 
     private String getMarketplaceRevenueStatus() {
         if (marketplaceOrderSummaryRepository.count() == 0) {
@@ -689,5 +695,119 @@ public class AdminReportService {
 
     private String localize(boolean vietnameseLocale, String english, String vietnamese) {
         return vietnameseLocale ? vietnamese : english;
+    }
+
+    public AdminReportResponse.TaskPerformanceReport getTaskPerformance(Integer year) {
+        long totalTasks = taskSummaryRepository.countTasksByYear(year);
+        long completedTasks = taskSummaryRepository.countTasksByYearAndStatus(year, "DONE");
+        long overdueTasks = taskSummaryRepository.countTasksByYearAndStatus(year, "OVERDUE");
+        long pendingTasks = taskSummaryRepository.countTasksByYearAndStatus(year, "PENDING");
+        long inProgressTasks = taskSummaryRepository.countTasksByYearAndStatus(year, "IN_PROGRESS");
+        long cancelledTasks = taskSummaryRepository.countTasksByYearAndStatus(year, "CANCELLED");
+
+        BigDecimal completionRate = totalTasks > 0
+                ? BigDecimal.valueOf(completedTasks).multiply(BigDecimal.valueOf(100)).divide(BigDecimal.valueOf(totalTasks), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        BigDecimal overdueRate = totalTasks > 0
+                ? BigDecimal.valueOf(overdueTasks).multiply(BigDecimal.valueOf(100)).divide(BigDecimal.valueOf(totalTasks), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        return AdminReportResponse.TaskPerformanceReport.builder()
+                .totalTasks(totalTasks)
+                .completedTasks(completedTasks)
+                .overdueTasks(overdueTasks)
+                .pendingTasks(pendingTasks)
+                .inProgressTasks(inProgressTasks)
+                .cancelledTasks(cancelledTasks)
+                .completionRate(completionRate)
+                .overdueRate(overdueRate)
+                .build();
+    }
+
+    public List<AdminReportResponse.InventoryOnHandReport> getInventoryOnHandReport() {
+        List<InventoryLotSummary> lots = inventoryLotSummaryRepository.findAll();
+        LocalDate today = LocalDate.now();
+        LocalDate cutoff = today.plusDays(30);
+
+        Map<Integer, List<InventoryLotSummary>> grouped = lots.stream()
+                .filter(lot -> lot.getWarehouseId() != null)
+                .collect(Collectors.groupingBy(InventoryLotSummary::getWarehouseId));
+
+        return grouped.entrySet().stream().map(entry -> {
+            Integer warehouseId = entry.getKey();
+            List<InventoryLotSummary> groupLots = entry.getValue();
+            String warehouseName = groupLots.get(0).getWarehouseName();
+            String farmName = groupLots.get(0).getFarmName();
+
+            int totalLots = groupLots.size();
+            BigDecimal totalQuantity = groupLots.stream()
+                    .map(InventoryLotSummary::getQuantityOnHand)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            int expired = (int) groupLots.stream()
+                    .filter(lot -> lot.getExpiryDate() != null && lot.getExpiryDate().isBefore(today))
+                    .count();
+
+            int expiringSoon = (int) groupLots.stream()
+                    .filter(lot -> lot.getExpiryDate() != null && !lot.getExpiryDate().isBefore(today) && !lot.getExpiryDate().isAfter(cutoff))
+                    .count();
+
+            return AdminReportResponse.InventoryOnHandReport.builder()
+                    .warehouseId(warehouseId)
+                    .warehouseName(warehouseName)
+                    .farmName(farmName)
+                    .totalLots(totalLots)
+                    .totalQuantityOnHand(totalQuantity)
+                    .expiredLots(expired)
+                    .expiringSoonLots(expiringSoon)
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    public AdminReportResponse.IncidentStatisticsReport getIncidentStatistics(Integer year) {
+        List<IncidentSummary> incidents = incidentSummaryRepository.findIncidentsByYear(year);
+
+        Map<String, Long> byIncidentType = incidents.stream()
+                .filter(i -> i.getIncidentType() != null)
+                .collect(Collectors.groupingBy(IncidentSummary::getIncidentType, Collectors.counting()));
+
+        Map<String, Long> bySeverity = incidents.stream()
+                .filter(i -> i.getSeverity() != null)
+                .collect(Collectors.groupingBy(IncidentSummary::getSeverity, Collectors.counting()));
+
+        Map<String, Long> byStatus = incidents.stream()
+                .filter(i -> i.getStatus() != null)
+                .collect(Collectors.groupingBy(IncidentSummary::getStatus, Collectors.counting()));
+
+        long totalCount = incidents.size();
+        long openCount = incidents.stream()
+                .filter(i -> "OPEN".equalsIgnoreCase(i.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(i.getStatus()))
+                .count();
+        long resolvedCount = incidents.stream()
+                .filter(i -> "RESOLVED".equalsIgnoreCase(i.getStatus()))
+                .count();
+
+        List<Long> resolutionTimes = incidents.stream()
+                .filter(i -> "RESOLVED".equalsIgnoreCase(i.getStatus()) && i.getResolvedAt() != null && i.getCreatedAt() != null)
+                .map(i -> java.time.Duration.between(i.getCreatedAt(), i.getResolvedAt()).toDays())
+                .collect(Collectors.toList());
+
+        BigDecimal averageResolutionDays = BigDecimal.ZERO;
+        if (!resolutionTimes.isEmpty()) {
+            double avg = resolutionTimes.stream().mapToLong(Long::longValue).average().orElse(0.0);
+            averageResolutionDays = BigDecimal.valueOf(avg).setScale(2, RoundingMode.HALF_UP);
+        }
+
+        return AdminReportResponse.IncidentStatisticsReport.builder()
+                .byIncidentType(byIncidentType)
+                .bySeverity(bySeverity)
+                .byStatus(byStatus)
+                .totalCount(totalCount)
+                .openCount(openCount)
+                .resolvedCount(resolvedCount)
+                .averageResolutionDays(averageResolutionDays)
+                .build();
     }
 }

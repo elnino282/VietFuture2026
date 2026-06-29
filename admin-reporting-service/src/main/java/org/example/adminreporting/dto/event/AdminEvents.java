@@ -123,6 +123,7 @@ public class AdminEvents {
         private String status;
         private LocalDate deadline;
         private LocalDateTime resolvedAt;
+        private LocalDateTime createdAt;
     }
 
     @Data
@@ -274,6 +275,102 @@ public class AdminEvents {
             private Long buyerUserId;
             private Long cancelledByUserId;
             private String reason;
+        }
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UserChangedEventDto {
+        private String action;
+        private Long userId;
+        private String username;
+        private String email;
+        private String fullName;
+        private String phone;
+        private String status;
+        private java.util.List<String> roles;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TaskEventDto {
+        private Integer taskId;
+        private String taskTitle;
+        private Integer seasonId;
+        private Long assigneeUserId;
+        private Long ownerUserId;
+        private Long assignedByUserId;
+        private String previousStatus;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AlertChangedEventDto {
+        private Integer alertId;
+        private Integer seasonId;
+        private String alertType;
+        private String severity;
+        private String status;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AuditLogCreatedEventDto {
+        private Long id;
+        private String action;
+        private String module;
+        private String details;
+        private String ipAddress;
+        private String createdBy;
+        private LocalDateTime createdAt;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DocumentEventDto {
+        private String action;
+        private Integer id;
+        private String title;
+        private String topic;
+        private Boolean isActive;
+        private String url;
+        private String description;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MarketplaceProductChangedEventDto {
+        private String eventId;
+        private String aggregateType;
+        private String aggregateId;
+        private LocalDateTime occurredAt;
+        private Payload payload;
+
+        @Data
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class Payload {
+            private Long productId;
+            private String productName;
+            private Integer farmId;
+            private String farmName;
+            private Long farmerId;
+            private String farmerName;
+            private String status;
+            private String updatedAt;
         }
     }
 }

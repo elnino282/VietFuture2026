@@ -32,4 +32,15 @@ public interface TaskSummaryRepository extends JpaRepository<TaskSummary, Intege
             @Param("seasonId") Integer seasonId,
             @Param("status") String status,
             Pageable pageable);
+
+    @Query("SELECT COUNT(t) FROM TaskSummary t " +
+           "JOIN SeasonSummary s ON t.seasonId = s.seasonId " +
+           "WHERE (:year IS NULL OR YEAR(s.startDate) = :year) " +
+           "AND (:status IS NULL OR UPPER(t.status) = UPPER(:status))")
+    long countTasksByYearAndStatus(@Param("year") Integer year, @Param("status") String status);
+
+    @Query("SELECT COUNT(t) FROM TaskSummary t " +
+           "JOIN SeasonSummary s ON t.seasonId = s.seasonId " +
+           "WHERE (:year IS NULL OR YEAR(s.startDate) = :year)")
+    long countTasksByYear(@Param("year") Integer year);
 }

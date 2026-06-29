@@ -34,9 +34,15 @@ public class AdminReportReadRepository {
             .harvestRevenue(getBigDecimal(rs, "harvestRevenue"))
             .harvestCount(getLong(rs, "harvestCount"))
             .totalExpense(getBigDecimal(rs, "totalExpense"))
+            .marketplaceRevenue(getBigDecimal(rs, "marketplaceRevenue"))
             .build();
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
+
+    public long countMarketplaceOrders() {
+        Long val = jdbcTemplate.queryForObject("select count(*) from marketplace_orders", new MapSqlParameterSource(), Long.class);
+        return val != null ? val : 0L;
+    }
 
     public List<SeasonFinancialRow> findSeasonFinancialRows(AdminReportFilter filter) {
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -66,7 +72,8 @@ public class AdminReportReadRepository {
                                coalesce(h.totalQuantity, 0) as harvestQuantityKg,
                                coalesce(h.totalRevenue, 0) as harvestRevenue,
                                coalesce(h.harvestCount, 0) as harvestCount,
-                               coalesce(e.totalExpense, 0) as totalExpense
+                               coalesce(e.totalExpense, 0) as totalExpense,
+                               coalesce(m.marketplaceRevenue, 0) as marketplaceRevenue
                         from seasons s
                         join plots p on p.plot_id = s.plot_id
                         join farms f on f.farm_id = p.farm_id
@@ -86,6 +93,14 @@ public class AdminReportReadRepository {
                             from expenses e
                             group by e.season_id
                         ) e on e.seasonId = s.season_id
+                        left join (
+                            select oi.season_id as seasonId,
+                                   sum(coalesce(oi.line_total, 0)) as marketplaceRevenue
+                            from marketplace_order_items oi
+                            join marketplace_orders o on o.id = oi.order_id
+                            where o.status = 'COMPLETED'
+                            group by oi.season_id
+                        ) m on m.seasonId = s.season_id
                         where (:from is null or s.start_date >= :from)
                           and (:to is null or s.start_date < :to)
                           and (:cropId is null or s.crop_id = :cropId)
@@ -145,5 +160,6 @@ public class AdminReportReadRepository {
         BigDecimal harvestRevenue;
         Long harvestCount;
         BigDecimal totalExpense;
+        BigDecimal marketplaceRevenue;
     }
 }

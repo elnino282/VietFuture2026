@@ -27,8 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class FarmerReportService {
 
-    private static final String MARKETPLACE_REVENUE_STATUS_PENDING = "TODO_PENDING_MARKETPLACE_REVENUE_CONTRACT";
-
     SeasonQueryPort seasonQueryPort;
     HarvestQueryPort harvestQueryPort;
     ExpenseQueryPort expenseQueryPort;
@@ -75,11 +73,29 @@ public class FarmerReportService {
                 .toList();
     }
 
+    private String getMarketplaceRevenueStatus() {
+        if (seasonQueryPort.countMarketplaceOrders() == 0) {
+            return "MARKETPLACE_REVENUE_PROJECTION_EMPTY";
+        }
+        return "ACTIVE";
+    }
+
+    private BigDecimal getMarketplaceRevenue(Integer seasonId) {
+        if (seasonQueryPort.countMarketplaceOrders() == 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal rev = seasonQueryPort.getMarketplaceRevenueBySeasonId(seasonId);
+        return rev != null ? rev : BigDecimal.ZERO;
+    }
+
     public List<AdminReportResponse.RevenueReport> getRevenueReport(FarmerReportFilter filter) {
+        String status = getMarketplaceRevenueStatus();
         return resolveSeasons(filter).stream()
                 .map(season -> {
                     BigDecimal totalQuantity = normalize(harvestQueryPort.sumQuantityBySeasonId(season.getId()));
-                    BigDecimal totalRevenue = normalize(harvestQueryPort.sumRevenueBySeasonId(season.getId()));
+                    BigDecimal harvestRevenue = normalize(harvestQueryPort.sumRevenueBySeasonId(season.getId()));
+                    BigDecimal mktRevenue = getMarketplaceRevenue(season.getId());
+                    BigDecimal totalRevenue = harvestRevenue.add(mktRevenue);
 
                     return AdminReportResponse.RevenueReport.builder()
                             .seasonId(season.getId())
@@ -87,8 +103,8 @@ public class FarmerReportService {
                             .cropName(season.getCrop() != null ? season.getCrop().getCropName() : null)
                             .totalQuantity(totalQuantity)
                             .totalRevenue(totalRevenue)
-                            .marketplaceRevenue(null)
-                            .marketplaceRevenueStatus(MARKETPLACE_REVENUE_STATUS_PENDING)
+                            .marketplaceRevenue(mktRevenue)
+                            .marketplaceRevenueStatus(status)
                             .avgPricePerUnit(calculateAveragePrice(totalRevenue, totalQuantity))
                             .build();
                 })
@@ -96,9 +112,12 @@ public class FarmerReportService {
     }
 
     public List<AdminReportResponse.ProfitReport> getProfitReport(FarmerReportFilter filter) {
+        String status = getMarketplaceRevenueStatus();
         return resolveSeasons(filter).stream()
                 .map(season -> {
-                    BigDecimal totalRevenue = normalize(harvestQueryPort.sumRevenueBySeasonId(season.getId()));
+                    BigDecimal harvestRevenue = normalize(harvestQueryPort.sumRevenueBySeasonId(season.getId()));
+                    BigDecimal mktRevenue = getMarketplaceRevenue(season.getId());
+                    BigDecimal totalRevenue = harvestRevenue.add(mktRevenue);
                     BigDecimal totalExpense = normalize(expenseQueryPort.sumTotalCostBySeasonId(season.getId()));
                     BigDecimal grossProfit = totalRevenue.subtract(totalExpense);
 
@@ -110,8 +129,8 @@ public class FarmerReportService {
                                     ? season.getPlot().getFarm().getName()
                                     : null)
                             .totalRevenue(totalRevenue)
-                            .marketplaceRevenue(null)
-                            .marketplaceRevenueStatus(MARKETPLACE_REVENUE_STATUS_PENDING)
+                            .marketplaceRevenue(mktRevenue)
+                            .marketplaceRevenueStatus(status)
                             .totalExpense(totalExpense)
                             .grossProfit(grossProfit)
                             .profitMargin(calculatePercentage(grossProfit, totalRevenue))

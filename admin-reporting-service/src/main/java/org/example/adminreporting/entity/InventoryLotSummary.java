@@ -24,4 +24,13 @@ public class InventoryLotSummary {
 
     @Column(name = "expiry_date")
     private LocalDate expiryDate;
+
+    @Column(name = "warehouse_id")
+    private Integer warehouseId;
+
+    @Column(name = "warehouse_name")
+    private String warehouseName;
+
+    @Column(name = "quantity_on_hand")
+    private java.math.BigDecimal quantityOnHand;
 }

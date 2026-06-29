@@ -35,6 +35,11 @@ public class AdminEventListener {
     private final MarketplaceOrderSummaryRepository marketplaceOrderSummaryRepository;
     private final MarketplaceOrderItemSummaryRepository marketplaceOrderItemSummaryRepository;
 
+    private final UserSummaryRepository userSummaryRepository;
+    private final AuditLogEntryRepository auditLogEntryRepository;
+    private final DocumentRepository documentRepository;
+    private final MarketplaceProductSummaryRepository marketplaceProductSummaryRepository;
+
     @Transactional
     @RabbitListener(queues = RabbitMQConfig.ADMIN_REPORTING_EVENTS_QUEUE)
     public void handleEvent(Message message) throws Exception {
@@ -139,6 +144,34 @@ public class AdminEventListener {
             handleOrderCancelled(message);
             return true;
         }
+        if ("identity.event.user.created".equals(eventType) || "identity.event.user.updated".equals(eventType)) {
+            handleUserChanged(message);
+            return true;
+        }
+        if ("TASK_ASSIGNED".equals(eventType)) {
+            handleTaskAssigned(message);
+            return true;
+        }
+        if ("TASK_COMPLETED".equals(eventType)) {
+            handleTaskCompleted(message);
+            return true;
+        }
+        if ("ALERT_CHANGED".equals(eventType)) {
+            handleAlertChanged(message);
+            return true;
+        }
+        if ("audit.event.created".equals(eventType)) {
+            handleAuditLogCreated(message);
+            return true;
+        }
+        if (eventType.startsWith("document.event.")) {
+            handleDocumentEvent(message);
+            return true;
+        }
+        if ("marketplace.product.changed".equals(eventType)) {
+            handleMarketplaceProductChanged(message);
+            return true;
+        }
         return false;
     }
 
@@ -223,6 +256,10 @@ public class AdminEventListener {
                 .incidentId(dto.getIncidentId())
                 .seasonId(dto.getSeasonId())
                 .status(dto.getStatus())
+                .incidentType(dto.getIncidentType())
+                .severity(dto.getSeverity())
+                .resolvedAt(dto.getResolvedAt())
+                .createdAt(dto.getCreatedAt())
                 .build();
         incidentSummaryRepository.save(summary);
     }
@@ -237,6 +274,9 @@ public class AdminEventListener {
                 .lotId(dto.getLotId())
                 .farmId(dto.getFarmId())
                 .farmName(farmName)
+                .warehouseId(dto.getWarehouseId())
+                .warehouseName("Warehouse " + dto.getWarehouseId())
+                .quantityOnHand(dto.getQuantity())
                 .build();
         inventoryLotSummaryRepository.save(summary);
     }
@@ -305,5 +345,113 @@ public class AdminEventListener {
                     order.setStatus("CANCELLED");
                     marketplaceOrderSummaryRepository.save(order);
                 });
+    }
+
+    private void handleUserChanged(Message message) throws Exception {
+        UserChangedEventDto dto = objectMapper.readValue(message.getBody(), UserChangedEventDto.class);
+        if ("DELETED".equals(dto.getAction())) {
+            userSummaryRepository.deleteById(dto.getUserId());
+        } else {
+            UserSummary summary = UserSummary.builder()
+                    .userId(dto.getUserId())
+                    .username(dto.getUsername())
+                    .email(dto.getEmail())
+                    .fullName(dto.getFullName())
+                    .status(dto.getStatus())
+                    .roleCode(dto.getRoles() != null && !dto.getRoles().isEmpty() ? dto.getRoles().get(0) : "")
+                    .build();
+            userSummaryRepository.save(summary);
+        }
+    }
+
+    private void handleTaskAssigned(Message message) throws Exception {
+        TaskEventDto dto = objectMapper.readValue(message.getBody(), TaskEventDto.class);
+        TaskSummary summary = TaskSummary.builder()
+                .taskId(dto.getTaskId())
+                .seasonId(dto.getSeasonId())
+                .status("ASSIGNED")
+                .build();
+        taskSummaryRepository.save(summary);
+    }
+
+    private void handleTaskCompleted(Message message) throws Exception {
+        TaskEventDto dto = objectMapper.readValue(message.getBody(), TaskEventDto.class);
+        TaskSummary summary = TaskSummary.builder()
+                .taskId(dto.getTaskId())
+                .seasonId(dto.getSeasonId())
+                .status("COMPLETED")
+                .build();
+        taskSummaryRepository.save(summary);
+    }
+
+    private void handleAlertChanged(Message message) throws Exception {
+        AlertChangedEventDto dto = objectMapper.readValue(message.getBody(), AlertChangedEventDto.class);
+        AlertSummary summary = AlertSummary.builder()
+                .alertId(dto.getAlertId())
+                .seasonId(dto.getSeasonId())
+                .type(dto.getAlertType())
+                .severity(dto.getSeverity())
+                .status(dto.getStatus())
+                .build();
+        alertSummaryRepository.save(summary);
+    }
+
+    private void handleAuditLogCreated(Message message) throws Exception {
+        AuditLogCreatedEventDto dto = objectMapper.readValue(message.getBody(), AuditLogCreatedEventDto.class);
+        AuditLogEntry entry = AuditLogEntry.builder()
+                .id(dto.getId())
+                .entityType(dto.getModule() != null ? dto.getModule() : "unknown")
+                .entityId(0) // default
+                .operation(dto.getAction())
+                .performedBy(dto.getCreatedBy())
+                .performedAt(dto.getCreatedAt() != null ? dto.getCreatedAt() : LocalDateTime.now())
+                .snapshotDataJson(dto.getDetails())
+                .ipAddress(dto.getIpAddress())
+                .build();
+        auditLogEntryRepository.save(entry);
+    }
+
+    private void handleDocumentEvent(Message message) throws Exception {
+        DocumentEventDto dto = objectMapper.readValue(message.getBody(), DocumentEventDto.class);
+        if ("DELETED".equals(dto.getAction())) {
+            documentRepository.deleteById(dto.getId());
+        } else {
+            Optional<Document> existing = documentRepository.findById(dto.getId());
+            Document doc;
+            if (existing.isPresent()) {
+                doc = existing.get();
+                doc.setTitle(dto.getTitle());
+                doc.setTopic(dto.getTopic());
+                doc.setIsActive(dto.getIsActive());
+                if (dto.getUrl() != null) doc.setUrl(dto.getUrl());
+                if (dto.getDescription() != null) doc.setDescription(dto.getDescription());
+            } else {
+                doc = Document.builder()
+                        .documentId(dto.getId())
+                        .title(dto.getTitle())
+                        .topic(dto.getTopic())
+                        .isActive(dto.getIsActive())
+                        .url(dto.getUrl() != null ? dto.getUrl() : "")
+                        .description(dto.getDescription())
+                        .isPublic(true)
+                        .build();
+            }
+            documentRepository.save(doc);
+        }
+    }
+
+    private void handleMarketplaceProductChanged(Message message) throws Exception {
+        MarketplaceProductChangedEventDto dto = objectMapper.readValue(message.getBody(), MarketplaceProductChangedEventDto.class);
+        MarketplaceProductSummary summary = MarketplaceProductSummary.builder()
+                .productId(dto.getPayload().getProductId())
+                .productName(dto.getPayload().getProductName())
+                .farmId(dto.getPayload().getFarmId())
+                .farmName(dto.getPayload().getFarmName())
+                .farmerId(dto.getPayload().getFarmerId())
+                .farmerName(dto.getPayload().getFarmerName())
+                .status(dto.getPayload().getStatus())
+                .updatedAt(dto.getPayload().getUpdatedAt() != null ? LocalDateTime.parse(dto.getPayload().getUpdatedAt()) : LocalDateTime.now())
+                .build();
+        marketplaceProductSummaryRepository.save(summary);
     }
 }

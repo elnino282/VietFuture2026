@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.adminreporting.dto.ApiResponse;
 import org.example.adminreporting.dto.request.AdminReportFilter;
 import org.example.adminreporting.dto.response.AdminReportResponse;
+import org.example.adminreporting.repository.UserSummaryRepository;
 import org.example.adminreporting.service.AdminReportService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminReportController {
 
         private final AdminReportService adminReportService;
+        private final UserSummaryRepository userSummaryRepository;
 
         private AdminReportFilter buildFilter(
                         Integer year,
@@ -346,5 +348,41 @@ public class AdminReportController {
                                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                                 .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
                                 .body(csv.getBytes(StandardCharsets.UTF_8));
+        }
+
+        @GetMapping("/users/summary")
+        public ResponseEntity<ApiResponse<UserSummaryReport>> getUserSummary() {
+                long totalUsers = userSummaryRepository.count();
+                long activeUsers = userSummaryRepository.countByStatus("ACTIVE");
+                long lockedUsers = userSummaryRepository.countByStatus("LOCKED");
+                return ResponseEntity.ok(ApiResponse.success("USER_REPORT_SUMMARY_SUCCESS",
+                                new UserSummaryReport(totalUsers, activeUsers, lockedUsers)));
+        }
+
+        @GetMapping("/task-performance")
+        public ResponseEntity<ApiResponse<AdminReportResponse.TaskPerformanceReport>> getTaskPerformance(
+                        @RequestParam(required = false) Integer year) {
+                AdminReportResponse.TaskPerformanceReport report = adminReportService.getTaskPerformance(year);
+                return ResponseEntity.ok(ApiResponse.success("Task performance report generated", report));
+        }
+
+        @GetMapping("/inventory-onhand")
+        public ResponseEntity<ApiResponse<List<AdminReportResponse.InventoryOnHandReport>>> getInventoryOnHand() {
+                List<AdminReportResponse.InventoryOnHandReport> report = adminReportService.getInventoryOnHandReport();
+                return ResponseEntity.ok(ApiResponse.success("Inventory on-hand report generated", report));
+        }
+
+        @GetMapping("/incident-statistics")
+        public ResponseEntity<ApiResponse<AdminReportResponse.IncidentStatisticsReport>> getIncidentStatistics(
+                        @RequestParam(required = false) Integer year) {
+                AdminReportResponse.IncidentStatisticsReport report = adminReportService.getIncidentStatistics(year);
+                return ResponseEntity.ok(ApiResponse.success("Incident statistics report generated", report));
+        }
+
+        @lombok.Value
+        public static class UserSummaryReport {
+                long totalUsers;
+                long activeUsers;
+                long lockedUsers;
         }
 }

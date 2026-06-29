@@ -1,16 +1,16 @@
-package org.example.QuanLyMuaVu.module.admin.controller;
+package org.example.incident.controller;
 
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.example.QuanLyMuaVu.DTO.Common.ApiResponse;
-import org.example.QuanLyMuaVu.DTO.Common.PageResponse;
-import org.example.QuanLyMuaVu.module.admin.dto.request.AdminAlertRefreshRequest;
-import org.example.QuanLyMuaVu.module.admin.dto.request.AdminAlertSendRequest;
-import org.example.QuanLyMuaVu.module.admin.dto.request.AdminAlertStatusUpdateRequest;
-import org.example.QuanLyMuaVu.module.admin.dto.response.AdminAlertResponse;
-import org.example.QuanLyMuaVu.module.admin.service.AdminAlertService;
+import org.example.incident.dto.common.ApiResponse;
+import org.example.incident.dto.common.PageResponse;
+import org.example.incident.dto.request.AdminAlertRefreshRequest;
+import org.example.incident.dto.request.AdminAlertSendRequest;
+import org.example.incident.dto.request.AdminAlertStatusUpdateRequest;
+import org.example.incident.dto.response.AdminAlertResponse;
+import org.example.incident.service.AdminAlertService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;

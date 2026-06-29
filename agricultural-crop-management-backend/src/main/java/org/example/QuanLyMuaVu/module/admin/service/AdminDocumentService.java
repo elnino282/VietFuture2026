@@ -14,6 +14,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.example.QuanLyMuaVu.module.shared.pattern.Observer.DomainEventPublisher;
+import org.example.QuanLyMuaVu.module.shared.pattern.Observer.DocumentEvent;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -22,6 +25,7 @@ public class AdminDocumentService {
     private static final DateTimeFormatter DTF = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final DocumentRepository documentRepository;
+    private final DomainEventPublisher domainEventPublisher;
 
     @Transactional(readOnly = true)
     public PageResponse<AdminDocumentResponse> listDocuments(
@@ -66,7 +70,9 @@ public class AdminDocumentService {
                 .isActive("ACTIVE".equalsIgnoreCase(status))
                 .isPublic(true)
                 .build();
-        return mapToResponse(documentRepository.save(doc));
+        Document saved = documentRepository.save(doc);
+        domainEventPublisher.publish(new DocumentEvent(saved.getId(), saved.getTitle(), saved.getTopic(), saved.getIsActive(), saved.getUrl(), saved.getDescription(), DocumentEvent.Action.CREATED));
+        return mapToResponse(saved);
     }
 
     public AdminDocumentResponse updateDocument(
@@ -85,21 +91,24 @@ public class AdminDocumentService {
         doc.setTopic(documentType);
         doc.setIsActive("ACTIVE".equalsIgnoreCase(status));
 
-        return mapToResponse(documentRepository.save(doc));
+        Document saved = documentRepository.save(doc);
+        domainEventPublisher.publish(new DocumentEvent(saved.getId(), saved.getTitle(), saved.getTopic(), saved.getIsActive(), saved.getUrl(), saved.getDescription(), DocumentEvent.Action.UPDATED));
+        return mapToResponse(saved);
     }
 
     public void softDeleteDocument(Integer id) {
         Document doc = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found: " + id));
         doc.setIsActive(false);
-        documentRepository.save(doc);
+        Document saved = documentRepository.save(doc);
+        domainEventPublisher.publish(new DocumentEvent(saved.getId(), saved.getTitle(), saved.getTopic(), saved.getIsActive(), saved.getUrl(), saved.getDescription(), DocumentEvent.Action.DELETED));
     }
 
     public void hardDeleteDocument(Integer id) {
-        if (!documentRepository.existsById(id)) {
-            throw new RuntimeException("Document not found: " + id);
-        }
-        documentRepository.deleteById(id);
+        Document doc = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found: " + id));
+        documentRepository.delete(doc);
+        domainEventPublisher.publish(new DocumentEvent(doc.getId(), doc.getTitle(), doc.getTopic(), doc.getIsActive(), doc.getUrl(), doc.getDescription(), DocumentEvent.Action.DELETED));
     }
 
     private AdminDocumentResponse mapToResponse(Document doc) {
