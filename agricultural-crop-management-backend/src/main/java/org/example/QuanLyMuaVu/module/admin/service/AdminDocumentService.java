@@ -17,9 +17,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.example.QuanLyMuaVu.module.shared.pattern.Observer.DomainEventPublisher;
 import org.example.QuanLyMuaVu.module.shared.pattern.Observer.DocumentEvent;
 
+/**
+ * Admin document write service (Deprecated)
+ * <p>
+ * Write operations have been migrated to {@code admin-reporting-service}
+ * so this class should no longer be used for new admin document writes.
+ * It is kept temporarily for backward compatibility.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Deprecated
 public class AdminDocumentService {
 
     private static final DateTimeFormatter DTF = DateTimeFormatter.ISO_LOCAL_DATE_TIME;

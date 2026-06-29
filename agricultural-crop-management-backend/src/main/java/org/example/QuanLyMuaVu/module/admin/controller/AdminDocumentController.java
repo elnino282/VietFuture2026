@@ -10,13 +10,18 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Admin Document Management Controller
- * Provides CRUD operations for system documents (Admin only)
+ * Admin Document Management Controller (Deprecated)
+ * <p>
+ * Write operations have been migrated to {@code admin-reporting-service}
+ * under the same base path {@code /api/v1/admin/documents}.
+ * This controller remains only for backward compatibility during transition.
+ * </p>
  */
 @RestController
 @RequestMapping("/api/v1/admin/documents")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
+@Deprecated
 public class AdminDocumentController {
 
     private final AdminDocumentService adminDocumentService;

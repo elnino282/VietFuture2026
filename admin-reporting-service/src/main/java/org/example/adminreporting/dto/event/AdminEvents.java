@@ -323,6 +323,36 @@ public class AdminEvents {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class StockAdjustedEventDto {
+        private Integer productWarehouseLotId;
+        private String lotCode;
+        private Integer farmId;
+        private BigDecimal previousQuantity;
+        private BigDecimal newQuantity;
+        private BigDecimal quantityChange;
+        private String unit;
+        private String reason;
+        private Long actorUserId;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ProductWarehouseLotChangedEventDto {
+        private Integer lotId;
+        private String lotCode;
+        private Integer farmId;
+        private Integer warehouseId;
+        private BigDecimal quantityOnHand;
+        private String status;
+        private String action;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class AuditLogCreatedEventDto {
         private Long id;
         private String action;

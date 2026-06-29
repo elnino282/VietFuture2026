@@ -30,6 +30,7 @@ import org.example.inventory.entity.Warehouse;
 import org.example.inventory.enums.ProductWarehouseLotStatus;
 import org.example.inventory.enums.ProductWarehouseTransactionType;
 import org.example.inventory.event.DomainEventPublisher;
+import org.example.inventory.event.ProductWarehouseLotChangedEvent;
 import org.example.inventory.event.StockAdjustedEvent;
 import org.example.inventory.exception.AppException;
 import org.example.inventory.exception.ErrorCode;
@@ -165,6 +166,7 @@ public class ProductWarehousePublicService {
                 request.getHarvestId() != null ? String.valueOf(request.getHarvestId()) : String.valueOf(saved.getId()),
                 request.getNote(),
                 actorUserId);
+        publishLotChanged(saved, "CREATED");
         return toLotResponse(saved);
     }
 
@@ -195,13 +197,16 @@ public class ProductWarehousePublicService {
         if (request.getStatus() != null) {
             lot.setStatus(parseLotStatusOrDefault(request.getStatus(), lot.getStatus()));
         }
-        return toLotResponse(productWarehouseLotRepository.save(lot));
+        ProductWarehouseLot saved = productWarehouseLotRepository.save(lot);
+        publishLotChanged(saved, "UPDATED");
+        return toLotResponse(saved);
     }
 
     public void archiveLot(Integer id) {
         ProductWarehouseLot lot = getLotForUpdate(id);
         lot.setStatus(ProductWarehouseLotStatus.ARCHIVED);
-        productWarehouseLotRepository.save(lot);
+        ProductWarehouseLot saved = productWarehouseLotRepository.save(lot);
+        publishLotChanged(saved, "ARCHIVED");
     }
 
     public ProductWarehouseLotResponse adjustLot(Integer id, AdjustProductWarehouseLotRequest request) {
@@ -564,6 +569,21 @@ public class ProductWarehousePublicService {
                 lot.getUnit(),
                 reason,
                 actorUserId
+        ));
+    }
+
+    private void publishLotChanged(ProductWarehouseLot lot, String action) {
+        domainEventPublisher.publish(new ProductWarehouseLotChangedEvent(
+                "ProductWarehouseLot",
+                String.valueOf(lot.getId()),
+                "inventory-service",
+                lot.getId(),
+                lot.getLotCode(),
+                lot.getFarmId(),
+                lot.getWarehouseId(),
+                lot.getOnHandQuantity(),
+                lot.getStatus() != null ? lot.getStatus().name() : null,
+                action
         ));
     }
 

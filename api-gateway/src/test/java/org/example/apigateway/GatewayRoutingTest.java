@@ -32,13 +32,13 @@ class GatewayRoutingTest {
         assertThat(adminReportingRoute).isNotNull();
         assertThat(adminReportingRoute.getUri().toString()).contains("8091");
 
-        // 2. Verify admin-reporting-documents-get-route points to reporting service
-        Route adminReportingDocsGetRoute = routes.stream()
-                .filter(r -> "admin-reporting-documents-get-route".equals(r.getId()))
+        // 2. Verify admin-reporting-documents-route points to reporting service (all methods)
+        Route adminReportingDocsRoute = routes.stream()
+                .filter(r -> "admin-reporting-documents-route".equals(r.getId()))
                 .findFirst()
                 .orElse(null);
-        assertThat(adminReportingDocsGetRoute).isNotNull();
-        assertThat(adminReportingDocsGetRoute.getUri().toString()).contains("8091");
+        assertThat(adminReportingDocsRoute).isNotNull();
+        assertThat(adminReportingDocsRoute.getUri().toString()).contains("8091");
 
         // 3. Verify admin-reporting-reads-route points to reporting service
         Route adminReportingReadsRoute = routes.stream()

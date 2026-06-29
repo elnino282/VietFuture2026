@@ -124,6 +124,14 @@ public class AdminEventListener {
             handleInventoryLotReceived(message);
             return true;
         }
+        if ("inventory.event.stock_adjusted".equals(eventType)) {
+            handleStockAdjusted(message);
+            return true;
+        }
+        if (eventType.startsWith("inventory.event.lot.")) {
+            handleProductWarehouseLotChanged(message);
+            return true;
+        }
         if ("order.created".equals(eventType)) {
             handleOrderCreated(message);
             return true;
@@ -148,15 +156,15 @@ public class AdminEventListener {
             handleUserChanged(message);
             return true;
         }
-        if ("TASK_ASSIGNED".equals(eventType)) {
+        if ("season.event.task.assigned".equals(eventType)) {
             handleTaskAssigned(message);
             return true;
         }
-        if ("TASK_COMPLETED".equals(eventType)) {
+        if ("season.event.task.completed".equals(eventType)) {
             handleTaskCompleted(message);
             return true;
         }
-        if ("ALERT_CHANGED".equals(eventType)) {
+        if ("incident.event.alert.created".equals(eventType) || "incident.event.alert.updated".equals(eventType)) {
             handleAlertChanged(message);
             return true;
         }
@@ -278,6 +286,36 @@ public class AdminEventListener {
                 .warehouseName("Warehouse " + dto.getWarehouseId())
                 .quantityOnHand(dto.getQuantity())
                 .build();
+        inventoryLotSummaryRepository.save(summary);
+    }
+
+    private void handleStockAdjusted(Message message) throws Exception {
+        StockAdjustedEventDto dto = objectMapper.readValue(message.getBody(), StockAdjustedEventDto.class);
+        inventoryLotSummaryRepository.findById(dto.getProductWarehouseLotId())
+                .ifPresent(lot -> {
+                    lot.setQuantityOnHand(dto.getNewQuantity());
+                    inventoryLotSummaryRepository.save(lot);
+                });
+    }
+
+    private void handleProductWarehouseLotChanged(Message message) throws Exception {
+        ProductWarehouseLotChangedEventDto dto = objectMapper.readValue(message.getBody(), ProductWarehouseLotChangedEventDto.class);
+        String farmName = farmSummaryRepository.findById(dto.getFarmId())
+                .map(FarmSummary::getFarmName)
+                .orElse("Farm " + dto.getFarmId());
+
+        InventoryLotSummary summary = inventoryLotSummaryRepository.findById(dto.getLotId())
+                .orElseGet(() -> InventoryLotSummary.builder()
+                        .lotId(dto.getLotId())
+                        .farmId(dto.getFarmId())
+                        .farmName(farmName)
+                        .warehouseId(dto.getWarehouseId())
+                        .warehouseName("Warehouse " + dto.getWarehouseId())
+                        .build());
+        summary.setFarmName(farmName);
+        summary.setWarehouseId(dto.getWarehouseId());
+        summary.setWarehouseName("Warehouse " + dto.getWarehouseId());
+        summary.setQuantityOnHand(dto.getQuantityOnHand());
         inventoryLotSummaryRepository.save(summary);
     }
 

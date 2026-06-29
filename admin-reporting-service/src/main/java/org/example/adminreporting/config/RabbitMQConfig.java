@@ -20,6 +20,8 @@ public class RabbitMQConfig {
     public static final String INCIDENT_EXCHANGE = "incident-exchange";
     public static final String INVENTORY_EXCHANGE = "inventory-exchange";
     public static final String MARKETPLACE_EXCHANGE = "marketplace-exchange";
+    public static final String IDENTITY_EXCHANGE = "identity-exchange";
+    public static final String MONOLITH_EXCHANGE = "monolith-exchange";
 
     public static final String ADMIN_REPORTING_EVENTS_QUEUE = "admin-reporting-service.events";
 
@@ -51,6 +53,16 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange marketplaceExchange() {
         return new TopicExchange(MARKETPLACE_EXCHANGE);
+    }
+
+    @Bean
+    public TopicExchange identityExchange() {
+        return new TopicExchange(IDENTITY_EXCHANGE);
+    }
+
+    @Bean
+    public TopicExchange monolithExchange() {
+        return new TopicExchange(MONOLITH_EXCHANGE);
     }
 
     @Bean
@@ -159,6 +171,38 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(adminReportingEventsQueue).to(inventoryExchange).with("inventory.event.product_warehouse_lot_received");
     }
 
+    @Bean
+    public Binding stockAdjustedBinding(Queue adminReportingEventsQueue, TopicExchange inventoryExchange) {
+        return BindingBuilder.bind(adminReportingEventsQueue).to(inventoryExchange).with("inventory.event.stock_adjusted");
+    }
+
+    @Bean
+    public Binding productWarehouseLotChangedBinding(Queue adminReportingEventsQueue, TopicExchange inventoryExchange) {
+        return BindingBuilder.bind(adminReportingEventsQueue).to(inventoryExchange).with("inventory.event.lot.#");
+    }
+
+    // Bindings for Task events (from season-exchange)
+    @Bean
+    public Binding taskAssignedBinding(Queue adminReportingEventsQueue, TopicExchange seasonExchange) {
+        return BindingBuilder.bind(adminReportingEventsQueue).to(seasonExchange).with("season.event.task.assigned");
+    }
+
+    @Bean
+    public Binding taskCompletedBinding(Queue adminReportingEventsQueue, TopicExchange seasonExchange) {
+        return BindingBuilder.bind(adminReportingEventsQueue).to(seasonExchange).with("season.event.task.completed");
+    }
+
+    // Bindings for Alert events (from incident-exchange)
+    @Bean
+    public Binding alertCreatedBinding(Queue adminReportingEventsQueue, TopicExchange incidentExchange) {
+        return BindingBuilder.bind(adminReportingEventsQueue).to(incidentExchange).with("incident.event.alert.created");
+    }
+
+    @Bean
+    public Binding alertUpdatedBinding(Queue adminReportingEventsQueue, TopicExchange incidentExchange) {
+        return BindingBuilder.bind(adminReportingEventsQueue).to(incidentExchange).with("incident.event.alert.updated");
+    }
+
     // Bindings for Marketplace events
     @Bean
     public Binding orderCreatedBinding(Queue adminReportingEventsQueue, TopicExchange marketplaceExchange) {
@@ -183,6 +227,34 @@ public class RabbitMQConfig {
     @Bean
     public Binding orderCancelledBinding(Queue adminReportingEventsQueue, TopicExchange marketplaceExchange) {
         return BindingBuilder.bind(adminReportingEventsQueue).to(marketplaceExchange).with("order.cancelled");
+    }
+
+    // Bindings for Identity events
+    @Bean
+    public Binding userCreatedBinding(Queue adminReportingEventsQueue, TopicExchange identityExchange) {
+        return BindingBuilder.bind(adminReportingEventsQueue).to(identityExchange).with("identity.event.user.created");
+    }
+
+    @Bean
+    public Binding userUpdatedBinding(Queue adminReportingEventsQueue, TopicExchange identityExchange) {
+        return BindingBuilder.bind(adminReportingEventsQueue).to(identityExchange).with("identity.event.user.updated");
+    }
+
+    // Bindings for Monolith events
+    @Bean
+    public Binding auditCreatedBinding(Queue adminReportingEventsQueue, TopicExchange monolithExchange) {
+        return BindingBuilder.bind(adminReportingEventsQueue).to(monolithExchange).with("audit.event.created");
+    }
+
+    @Bean
+    public Binding documentEventBinding(Queue adminReportingEventsQueue, TopicExchange monolithExchange) {
+        return BindingBuilder.bind(adminReportingEventsQueue).to(monolithExchange).with("document.event.#");
+    }
+
+    // Bindings for Marketplace Product events
+    @Bean
+    public Binding marketplaceProductChangedBinding(Queue adminReportingEventsQueue, TopicExchange marketplaceExchange) {
+        return BindingBuilder.bind(adminReportingEventsQueue).to(marketplaceExchange).with("marketplace.product.changed");
     }
 
     @Bean

@@ -142,4 +142,68 @@ class AdminEventListenerTest {
         assertEquals(99L, captor.getValue().getOrderId());
         assertEquals("PENDING", captor.getValue().getStatus());
     }
+
+    @Test
+    void handleEvent_TaskAssigned_ShouldSaveTaskSummary() throws Exception {
+        TaskEventDto dto = TaskEventDto.builder()
+                .taskId(7)
+                .seasonId(3)
+                .build();
+        messageProperties.setHeader("eventType", "season.event.task.assigned");
+        Message message = new Message(objectMapper.writeValueAsBytes(dto), messageProperties);
+
+        when(processedEventRepository.findById("evt-123")).thenReturn(Optional.empty());
+
+        listener.handleEvent(message);
+
+        ArgumentCaptor<TaskSummary> captor = ArgumentCaptor.forClass(TaskSummary.class);
+        verify(taskSummaryRepository).save(captor.capture());
+        assertEquals(7, captor.getValue().getTaskId());
+        assertEquals("ASSIGNED", captor.getValue().getStatus());
+    }
+
+    @Test
+    void handleEvent_AlertCreated_ShouldSaveAlertSummary() throws Exception {
+        AlertChangedEventDto dto = AlertChangedEventDto.builder()
+                .alertId(12)
+                .seasonId(5)
+                .alertType("SEASON_RISK")
+                .severity("HIGH")
+                .status("ACTIVE")
+                .build();
+        messageProperties.setHeader("eventType", "incident.event.alert.created");
+        Message message = new Message(objectMapper.writeValueAsBytes(dto), messageProperties);
+
+        when(processedEventRepository.findById("evt-123")).thenReturn(Optional.empty());
+
+        listener.handleEvent(message);
+
+        ArgumentCaptor<AlertSummary> captor = ArgumentCaptor.forClass(AlertSummary.class);
+        verify(alertSummaryRepository).save(captor.capture());
+        assertEquals(12, captor.getValue().getAlertId());
+        assertEquals("HIGH", captor.getValue().getSeverity());
+    }
+
+    @Test
+    void handleEvent_StockAdjusted_ShouldUpdateLotQuantity() throws Exception {
+        StockAdjustedEventDto dto = StockAdjustedEventDto.builder()
+                .productWarehouseLotId(20)
+                .newQuantity(BigDecimal.valueOf(75))
+                .build();
+        messageProperties.setHeader("eventType", "inventory.event.stock_adjusted");
+        Message message = new Message(objectMapper.writeValueAsBytes(dto), messageProperties);
+
+        InventoryLotSummary existingLot = InventoryLotSummary.builder()
+                .lotId(20)
+                .quantityOnHand(BigDecimal.valueOf(100))
+                .build();
+        when(processedEventRepository.findById("evt-123")).thenReturn(Optional.empty());
+        when(inventoryLotSummaryRepository.findById(20)).thenReturn(Optional.of(existingLot));
+
+        listener.handleEvent(message);
+
+        ArgumentCaptor<InventoryLotSummary> captor = ArgumentCaptor.forClass(InventoryLotSummary.class);
+        verify(inventoryLotSummaryRepository).save(captor.capture());
+        assertEquals(BigDecimal.valueOf(75), captor.getValue().getQuantityOnHand());
+    }
 }

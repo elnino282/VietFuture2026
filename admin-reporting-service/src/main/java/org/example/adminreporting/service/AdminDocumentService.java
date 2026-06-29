@@ -16,13 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class AdminDocumentService {
 
     private static final DateTimeFormatter DTF = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final DocumentRepository documentRepository;
 
+    @Transactional(readOnly = true)
     public PageResponse<AdminDocumentResponse> listDocuments(
             int page,
             int size,
@@ -37,7 +37,6 @@ public class AdminDocumentService {
                 : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParts[0]));
 
-        // Simple listing for read-only admin document overview
         Page<Document> documentPage = documentRepository.findAll(pageable);
         List<AdminDocumentResponse> items = documentPage.getContent().stream()
                 .map(this::mapToResponse)
@@ -45,10 +44,64 @@ public class AdminDocumentService {
         return PageResponse.of(documentPage, items);
     }
 
+    @Transactional(readOnly = true)
     public AdminDocumentResponse getDocumentById(Integer id) {
         Document doc = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found: " + id));
         return mapToResponse(doc);
+    }
+
+    @Transactional
+    public AdminDocumentResponse createDocument(
+            String title,
+            String description,
+            String documentUrl,
+            String documentType,
+            String status) {
+        Document doc = Document.builder()
+                .title(title)
+                .description(description)
+                .url(documentUrl)
+                .topic(documentType)
+                .isActive("ACTIVE".equalsIgnoreCase(status))
+                .isPublic(true)
+                .build();
+        Document saved = documentRepository.save(doc);
+        return mapToResponse(saved);
+    }
+
+    @Transactional
+    public AdminDocumentResponse updateDocument(
+            Integer id,
+            String title,
+            String description,
+            String documentUrl,
+            String documentType,
+            String status) {
+        Document doc = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found: " + id));
+        doc.setTitle(title);
+        doc.setDescription(description);
+        doc.setUrl(documentUrl);
+        doc.setTopic(documentType);
+        doc.setIsActive("ACTIVE".equalsIgnoreCase(status));
+        Document saved = documentRepository.save(doc);
+        return mapToResponse(saved);
+    }
+
+    @Transactional
+    public void softDeleteDocument(Integer id) {
+        Document doc = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found: " + id));
+        doc.setIsActive(false);
+        documentRepository.save(doc);
+    }
+
+    @Transactional
+    public void hardDeleteDocument(Integer id) {
+        Document doc = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found: " + id));
+        documentRepository.delete(doc);
     }
 
     private AdminDocumentResponse mapToResponse(Document doc) {
