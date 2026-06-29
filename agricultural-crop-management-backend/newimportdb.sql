@@ -657,9 +657,15 @@ CREATE TABLE marketplace_products (
     image_url VARCHAR(1024) NULL,
     image_urls_json TEXT NULL,
     farmer_user_id BIGINT NOT NULL,
+    farmer_display_name VARCHAR(255) NULL,
     farm_id INT NULL,
+    farm_name VARCHAR(255) NULL,
+    farm_region VARCHAR(255) NULL,
     season_id INT NULL,
+    season_name VARCHAR(255) NULL,
     lot_id INT NOT NULL,
+    lot_code VARCHAR(120) NULL,
+    catalog_snapshot TEXT NULL,
     traceable BOOLEAN NOT NULL DEFAULT FALSE,
     average_rating DOUBLE NOT NULL DEFAULT 0,
     rating_count INT NOT NULL DEFAULT 0,
@@ -668,11 +674,7 @@ CREATE TABLE marketplace_products (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT uk_marketplace_products_slug UNIQUE (slug),
-    CONSTRAINT uk_marketplace_products_lot UNIQUE (lot_id),
-    CONSTRAINT fk_marketplace_products_farmer_user FOREIGN KEY (farmer_user_id) REFERENCES users(user_id),
-    CONSTRAINT fk_marketplace_products_farm FOREIGN KEY (farm_id) REFERENCES farms(farm_id),
-    CONSTRAINT fk_marketplace_products_season FOREIGN KEY (season_id) REFERENCES seasons(season_id),
-    CONSTRAINT fk_marketplace_products_lot FOREIGN KEY (lot_id) REFERENCES product_warehouse_lots(id)
+    CONSTRAINT uk_marketplace_products_lot UNIQUE (lot_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE marketplace_carts (
@@ -680,21 +682,24 @@ CREATE TABLE marketplace_carts (
     user_id BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT uk_marketplace_carts_user UNIQUE (user_id),
-    CONSTRAINT fk_marketplace_carts_user FOREIGN KEY (user_id) REFERENCES users(user_id)
+    CONSTRAINT uk_marketplace_carts_user UNIQUE (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE marketplace_cart_items (
     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     cart_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
+    farmer_user_id BIGINT NOT NULL,
+    product_name VARCHAR(255) NOT NULL,
+    product_slug VARCHAR(191) NOT NULL,
+    image_url VARCHAR(1024) NULL,
+    traceable BOOLEAN NOT NULL DEFAULT TRUE,
     quantity DECIMAL(19,3) NOT NULL,
     unit_price_snapshot DECIMAL(19,2) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT uk_marketplace_cart_items_cart_product UNIQUE (cart_id, product_id),
-    CONSTRAINT fk_marketplace_cart_items_cart FOREIGN KEY (cart_id) REFERENCES marketplace_carts(id) ON DELETE CASCADE,
-    CONSTRAINT fk_marketplace_cart_items_product FOREIGN KEY (product_id) REFERENCES marketplace_products(id)
+    CONSTRAINT fk_marketplace_cart_items_cart FOREIGN KEY (cart_id) REFERENCES marketplace_carts(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE marketplace_order_groups (
@@ -1843,9 +1848,9 @@ VALUES
 INSERT INTO marketplace_carts (id, user_id, created_at, updated_at) VALUES
     (1, @buyer_user_id, '2026-04-20 10:00:00', '2026-04-22 16:00:00');
 
-INSERT INTO marketplace_cart_items (id, cart_id, product_id, quantity, unit_price_snapshot, created_at, updated_at) VALUES
-    (1, 1, 2, 0.750, 125000.00, '2026-04-22 15:30:00', '2026-04-22 15:30:00'),
-    (2, 1, 6, 1.500, 170000.00, '2026-04-22 16:00:00', '2026-04-22 16:00:00');
+INSERT INTO marketplace_cart_items (id, cart_id, product_id, farmer_user_id, product_name, product_slug, image_url, traceable, quantity, unit_price_snapshot, created_at, updated_at) VALUES
+    (1, 1, 2, 2, 'Gao OM5451 chon loc', 'gao-om5451-chon-loc', 'https://loremflickr.com/1200/800/rice,grain?lock=5451', TRUE, 0.750, 125000.00, '2026-04-22 15:30:00', '2026-04-22 15:30:00'),
+    (2, 1, 6, @farmer2_user_id, 'Ngo ngot Cao Nguyen Xanh', 'ngo-ngot-cao-nguyen-xanh', 'https://loremflickr.com/1200/800/corn,maize?lock=1701', TRUE, 1.500, 170000.00, '2026-04-22 16:00:00', '2026-04-22 16:00:00');
 
 INSERT INTO marketplace_addresses
     (id, user_id, full_name, phone, province, district, ward, street, detail, label, is_default, created_at, updated_at, deleted_at)

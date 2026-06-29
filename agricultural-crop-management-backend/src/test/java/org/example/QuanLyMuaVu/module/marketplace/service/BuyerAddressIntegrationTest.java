@@ -67,7 +67,7 @@ class BuyerAddressIntegrationTest {
     @Test @DisplayName("First address auto-defaults")
     void createFirst_AutoDefault() {
         when(currentUserService.getCurrentUser()).thenReturn(buyer);
-        when(marketplaceAddressRepository.existsByUser_IdAndDeletedAtIsNull(10L)).thenReturn(false);
+        when(marketplaceAddressRepository.existsByUserIdAndDeletedAtIsNull(10L)).thenReturn(false);
         when(marketplaceAddressRepository.save(any())).thenAnswer(i -> { MarketplaceAddress a = i.getArgument(0); a.setId(1L); return a; });
         MarketplaceAddressResponse r = marketplaceService.createAddress(req("A", "0901234567", false));
         assertTrue(r.isDefault());
@@ -76,7 +76,7 @@ class BuyerAddressIntegrationTest {
     @Test @DisplayName("Second address not default")
     void createSecond_NotDefault() {
         when(currentUserService.getCurrentUser()).thenReturn(buyer);
-        when(marketplaceAddressRepository.existsByUser_IdAndDeletedAtIsNull(10L)).thenReturn(true);
+        when(marketplaceAddressRepository.existsByUserIdAndDeletedAtIsNull(10L)).thenReturn(true);
         when(marketplaceAddressRepository.save(any())).thenAnswer(i -> { MarketplaceAddress a = i.getArgument(0); a.setId(2L); return a; });
         MarketplaceAddressResponse r = marketplaceService.createAddress(req("B", "0987654321", false));
         assertFalse(r.isDefault());
@@ -93,7 +93,7 @@ class BuyerAddressIntegrationTest {
     @Test @DisplayName("List returns active addresses")
     void list_ReturnsActive() {
         when(currentUserService.getCurrentUserId()).thenReturn(10L);
-        when(marketplaceAddressRepository.findAllByUser_IdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(10L))
+        when(marketplaceAddressRepository.findAllByUserIdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(10L))
                 .thenReturn(List.of(addr(1L, buyer, "A", true), addr(2L, buyer, "B", false)));
         assertEquals(2, marketplaceService.listAddresses().size());
     }
@@ -101,7 +101,7 @@ class BuyerAddressIntegrationTest {
     @Test @DisplayName("Update address fields")
     void update_Fields() {
         when(currentUserService.getCurrentUserId()).thenReturn(10L);
-        when(marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(1L, 10L)).thenReturn(Optional.of(addr(1L, buyer, "Old", false)));
+        when(marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(1L, 10L)).thenReturn(Optional.of(addr(1L, buyer, "Old", false)));
         when(marketplaceAddressRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         assertEquals("New", marketplaceService.updateAddress(1L, req("New", "0987654321", false)).fullName());
     }
@@ -109,7 +109,7 @@ class BuyerAddressIntegrationTest {
     @Test @DisplayName("Update non-existent throws NOT_FOUND")
     void update_NotFound() {
         when(currentUserService.getCurrentUserId()).thenReturn(10L);
-        when(marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(999L, 10L)).thenReturn(Optional.empty());
+        when(marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(999L, 10L)).thenReturn(Optional.empty());
         assertEquals(ErrorCode.MARKETPLACE_ADDRESS_NOT_FOUND,
                 assertThrows(AppException.class, () -> marketplaceService.updateAddress(999L, req("X", "0901234567", false))).getErrorCode());
     }
@@ -118,7 +118,7 @@ class BuyerAddressIntegrationTest {
     void delete_SoftDeletes() {
         when(currentUserService.getCurrentUserId()).thenReturn(10L);
         MarketplaceAddress a = addr(1L, buyer, "A", false);
-        when(marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(1L, 10L)).thenReturn(Optional.of(a));
+        when(marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(1L, 10L)).thenReturn(Optional.of(a));
         when(marketplaceAddressRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         marketplaceService.deleteAddress(1L);
         assertNotNull(a.getDeletedAt());
@@ -129,9 +129,9 @@ class BuyerAddressIntegrationTest {
         when(currentUserService.getCurrentUserId()).thenReturn(10L);
         MarketplaceAddress def = addr(1L, buyer, "Def", true);
         MarketplaceAddress next = addr(2L, buyer, "Next", false);
-        when(marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(1L, 10L)).thenReturn(Optional.of(def));
+        when(marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(1L, 10L)).thenReturn(Optional.of(def));
         when(marketplaceAddressRepository.save(any())).thenAnswer(i -> i.getArgument(0));
-        when(marketplaceAddressRepository.findAllByUser_IdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(10L)).thenReturn(List.of(next));
+        when(marketplaceAddressRepository.findAllByUserIdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(10L)).thenReturn(List.of(next));
         marketplaceService.deleteAddress(1L);
         assertTrue(next.getIsDefault());
     }
@@ -140,7 +140,7 @@ class BuyerAddressIntegrationTest {
     void setDefault_Works() {
         when(currentUserService.getCurrentUserId()).thenReturn(10L);
         MarketplaceAddress a = addr(2L, buyer, "B", false);
-        when(marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(2L, 10L)).thenReturn(Optional.of(a));
+        when(marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(2L, 10L)).thenReturn(Optional.of(a));
         when(marketplaceAddressRepository.clearDefaultByUserId(10L)).thenReturn(1);
         when(marketplaceAddressRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         assertTrue(marketplaceService.setDefaultAddress(2L).isDefault());
@@ -149,7 +149,7 @@ class BuyerAddressIntegrationTest {
     @Test @DisplayName("Set default on missing throws NOT_FOUND")
     void setDefault_NotFound() {
         when(currentUserService.getCurrentUserId()).thenReturn(10L);
-        when(marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(999L, 10L)).thenReturn(Optional.empty());
+        when(marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(999L, 10L)).thenReturn(Optional.empty());
         assertEquals(ErrorCode.MARKETPLACE_ADDRESS_NOT_FOUND,
                 assertThrows(AppException.class, () -> marketplaceService.setDefaultAddress(999L)).getErrorCode());
     }

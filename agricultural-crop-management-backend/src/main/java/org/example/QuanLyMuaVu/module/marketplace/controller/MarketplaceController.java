@@ -53,8 +53,8 @@ import org.springframework.web.multipart.MultipartFile;
  * is retained only as an internal rollback/fallback reference during migration.
  */
 @Deprecated(since = "microservice-extraction", forRemoval = true)
-// @RestController
-// @RequestMapping("/api/v1/marketplace")
+@RestController
+@RequestMapping("/api/v1/marketplace")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MarketplaceController {

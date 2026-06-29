@@ -66,7 +66,7 @@ class MarketplaceOrderStatusLifecycleTest {
     void setUp() {
         farmer = User.builder().id(20L).username("farmer-20").fullName("Farmer 20").build();
         buyer = User.builder().id(10L).username("buyer-10").fullName("Buyer 10").build();
-        lenient().when(marketplaceProductReviewRepository.findByOrder_IdAndBuyerUser_Id(anyLong(), anyLong()))
+        lenient().when(marketplaceProductReviewRepository.findByOrderIdAndBuyerUserId(anyLong(), anyLong()))
                 .thenReturn(List.of());
         lenient().when(marketplaceProductRepository.saveAll(any())).thenAnswer(i -> i.getArgument(0));
         lenient().when(productWarehouseTransactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));

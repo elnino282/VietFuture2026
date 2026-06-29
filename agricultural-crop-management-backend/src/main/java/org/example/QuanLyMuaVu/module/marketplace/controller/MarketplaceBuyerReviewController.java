@@ -25,8 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
  *   <li>DELETE /api/v1/buyer/reviews/{id}              — delete own review</li>
  * </ul>
  */
-// @RestController
-// @RequestMapping("/api/v1/buyer")
+@RestController
+@RequestMapping("/api/v1/buyer")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MarketplaceBuyerReviewController {

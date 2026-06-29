@@ -114,10 +114,14 @@ class MarketplaceAdminControllerIntegrationTest {
             product.setPrice(new BigDecimal("50000"));
             product.setStockQuantity(new BigDecimal("50"));
             product.setUnit("kg");
-            product.setFarmerUser(farmer);
-            product.setFarm(farm);
-            product.setSeason(season);
-            product.setLot(lot);
+            product.setFarmerUserId(farmer.getId());
+            product.setFarmerDisplayName(farmer.getFullName());
+            product.setFarmId(farm.getId());
+            product.setFarmName(farm.getName());
+            product.setSeasonId(season != null ? season.getId() : null);
+            product.setSeasonName(season != null ? season.getSeasonName() : null);
+            product.setLotId(lot.getId());
+            product.setLotCode(lot.getLotCode());
             product.setTraceable(true);
             product.setStatus(MarketplaceProductStatus.PENDING_REVIEW);
             product = marketplaceProductRepository.save(product);

@@ -186,6 +186,8 @@ class MarketplaceTraceabilityServiceTest {
             ProductWarehouseLot lot = buildLot(farm, plot, season, harvest);
             MarketplaceProduct product = buildProduct(farm, season, lot);
 
+            when(productWarehouseLotRepository.findById(lot.getId()))
+                    .thenReturn(Optional.of(lot));
             when(marketplaceProductRepository.findSellableByIdAndStatusIn(eq(1L), any()))
                     .thenReturn(Optional.of(product));
 
@@ -283,6 +285,8 @@ class MarketplaceTraceabilityServiceTest {
                     .publishedAt(LocalDateTime.of(2026, 3, 5, 10, 0))
                     .build();
 
+            when(productWarehouseLotRepository.findById(lot.getId()))
+                    .thenReturn(Optional.of(lot));
             when(marketplaceProductRepository.findSellableByIdAndStatusIn(eq(2L), any()))
                     .thenReturn(Optional.of(product));
 
@@ -328,6 +332,8 @@ class MarketplaceTraceabilityServiceTest {
                     .status(MarketplaceProductStatus.PUBLISHED)
                     .build();
 
+            when(productWarehouseLotRepository.findById(lot.getId()))
+                    .thenReturn(Optional.of(lot));
             when(marketplaceProductRepository.findSellableByIdAndStatusIn(eq(3L), any()))
                     .thenReturn(Optional.of(product));
 
@@ -388,6 +394,8 @@ class MarketplaceTraceabilityServiceTest {
                     .build();
             orderItem.setOrder(order);
 
+            when(productWarehouseLotRepository.findById(lot.getId()))
+                    .thenReturn(Optional.of(lot));
             when(marketplaceOrderRepository.findByIdAndBuyerUserIdWithItems(100L, buyerUserId))
                     .thenReturn(Optional.of(order));
 

@@ -659,6 +659,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceOrderResponse"
+      deprecated: true
     post:
       tags:
       - marketplace-controller
@@ -677,6 +678,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceOrderResponse"
+      deprecated: true
   /api/v1/marketplace/farmer/products/{productId}:
     get:
       tags:
@@ -745,6 +747,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceCartResponse"
+      deprecated: true
     delete:
       tags:
       - marketplace-controller
@@ -763,6 +766,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceCartResponse"
+      deprecated: true
     patch:
       tags:
       - marketplace-controller
@@ -787,6 +791,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceCartResponse"
+      deprecated: true
   /api/v1/incidents/{id}:
     get:
       tags:
@@ -3795,6 +3800,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponsePageResponseMarketplaceOrderResponse"
+      deprecated: true
     post:
       tags:
       - marketplace-controller
@@ -3818,6 +3824,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceCreateOrderResultResponse"
+      deprecated: true
   /api/v1/marketplace/orders/{orderId}/payment-proof:
     post:
       tags:
@@ -3848,6 +3855,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceOrderResponse"
+      deprecated: true
   /api/v1/marketplace/orders/preview:
     post:
       tags:
@@ -3866,6 +3874,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceOrderPreviewResponse"
+      deprecated: true
   /api/v1/marketplace/farmer/products:
     get:
       tags:
@@ -3970,6 +3979,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceCartResponse"
+      deprecated: true
   /api/v1/marketplace/cart/items:
     post:
       tags:
@@ -3988,6 +3998,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceCartResponse"
+      deprecated: true
   /api/v1/marketplace/addresses:
     get:
       tags:
@@ -4000,6 +4011,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListMarketplaceAddressResponse"
+      deprecated: true
     post:
       tags:
       - marketplace-controller
@@ -4017,6 +4029,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceAddressResponse"
+      deprecated: true
   /api/v1/inventory/warehouses:
     post:
       tags:
@@ -5435,13 +5448,6 @@ paths:
               $ref: "#/components/schemas/AuthenticationRequest"
         required: true
       responses:
-        "401":
-          description: Invalid credentials
-          content:
-            application/json:
-              example:
-                code: INVALID_CREDENTIALS
-                message: Invalid username/email or password.
         "403":
           description: User locked or no role
           content:
@@ -5471,6 +5477,13 @@ paths:
                         provinceId: 24
                         wardId: 25112
                       redirectTo: /farmer
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              example:
+                code: INVALID_CREDENTIALS
+                message: Invalid username/email or password.
   /api/v1/auth/reset-password:
     post:
       tags:
@@ -5503,18 +5516,18 @@ paths:
               $ref: "#/components/schemas/RefreshRequest"
         required: true
       responses:
-        "401":
-          description: Token invalid or expired
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/ApiResponseAuthenticationResponse"
         "200":
           description: Token refreshed successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
+        "401":
+          description: Token invalid or expired
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseAuthenticationResponse"
   /api/v1/auth/introspect:
     post:
       tags:
@@ -6466,6 +6479,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseVoid"
+      deprecated: true
     patch:
       tags:
       - marketplace-controller
@@ -6490,6 +6504,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceAddressResponse"
+      deprecated: true
   /api/v1/marketplace/addresses/{addressId}/default:
     patch:
       tags:
@@ -6509,6 +6524,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceAddressResponse"
+      deprecated: true
   /api/v1/inventory/warehouses/{warehouseId}:
     get:
       tags:
@@ -8098,6 +8114,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponsePageResponseMarketplaceProductSummaryResponse"
+      deprecated: true
   /api/v1/marketplace/products/{slug}:
     get:
       tags:
@@ -8116,6 +8133,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceProductDetailResponse"
+      deprecated: true
   /api/v1/marketplace/products/{productId}/traceability:
     get:
       tags:
@@ -8135,6 +8153,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceTraceabilityResponse"
+      deprecated: true
   /api/v1/marketplace/products/{productId}/reviews:
     get:
       tags:
@@ -8168,6 +8187,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponsePageResponseMarketplaceReviewResponse"
+      deprecated: true
   /api/v1/marketplace/product-images/{fileName}:
     get:
       tags:
@@ -8187,6 +8207,7 @@ paths:
               schema:
                 type: string
                 format: binary
+      deprecated: true
   /api/v1/marketplace/orders/{orderId}:
     get:
       tags:
@@ -8206,6 +8227,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceOrderResponse"
+      deprecated: true
   /api/v1/marketplace/farms:
     get:
       tags:
@@ -8243,6 +8265,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponsePageResponseMarketplaceFarmSummaryResponse"
+      deprecated: true
   /api/v1/marketplace/farms/{farmId}:
     get:
       tags:
@@ -8262,6 +8285,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceFarmDetailResponse"
+      deprecated: true
   /api/v1/marketplace/farms/{farmId}/reviews:
     get:
       tags:
@@ -8295,6 +8319,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponsePageResponseMarketplaceReviewResponse"
+      deprecated: true
   /api/v1/marketplace/farmer/product-form-options:
     get:
       tags:
@@ -8393,6 +8418,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceCartResponse"
+      deprecated: true
     delete:
       tags:
       - marketplace-controller
@@ -8404,6 +8430,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseMarketplaceCartResponse"
+      deprecated: true
   /api/v1/marketplace/admin/stats:
     get:
       tags:
@@ -18640,14 +18667,14 @@ components:
           $ref: "#/components/schemas/MetricValue"
         estimatedYieldMetric:
           $ref: "#/components/schemas/MetricValue"
-        noutput:
-          type: number
+        noutputMetric:
+          $ref: "#/components/schemas/MetricValue"
         nsurplusMetric:
           $ref: "#/components/schemas/MetricValue"
         nsurplus:
           type: number
-        noutputMetric:
-          $ref: "#/components/schemas/MetricValue"
+        noutput:
+          type: number
         nOutput:
           type: number
         nSurplus:
@@ -19648,14 +19675,14 @@ components:
           format: int64
         sort:
           $ref: "#/components/schemas/SortObject"
-        unpaged:
-          type: boolean
         paged:
           type: boolean
-        pageSize:
+        unpaged:
+          type: boolean
+        pageNumber:
           type: integer
           format: int32
-        pageNumber:
+        pageSize:
           type: integer
           format: int32
     SortObject:
@@ -19663,9 +19690,9 @@ components:
       properties:
         empty:
           type: boolean
-        sorted:
-          type: boolean
         unsorted:
+          type: boolean
+        sorted:
           type: boolean
     ApiResponseListDashboardRecentActivityResponse:
       type: object

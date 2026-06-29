@@ -64,13 +64,8 @@ public class AdminPendingApprovalService {
     }
 
     private AdminPendingApprovalItemDTO toPendingProductApproval(MarketplaceProduct product) {
-        String farmName = product.getFarm() != null ? safeText(product.getFarm().getName()) : null;
-        String sellerName = product.getFarmerUser() != null
-                ? firstNonBlank(
-                        product.getFarmerUser().getFullName(),
-                        product.getFarmerUser().getUsername(),
-                        product.getFarmerUser().getEmail())
-                : null;
+        String farmName = product.getFarmName() != null ? safeText(product.getFarmName()) : null;
+        String sellerName = product.getFarmerDisplayName() != null ? safeText(product.getFarmerDisplayName()) : null;
 
         List<String> subtitleParts = new ArrayList<>();
         if (farmName != null) {
@@ -78,8 +73,8 @@ public class AdminPendingApprovalService {
         }
         if (sellerName != null) {
             subtitleParts.add("Seller: " + sellerName);
-        } else if (product.getFarmerUser() != null && product.getFarmerUser().getId() != null) {
-            subtitleParts.add("Seller user #" + product.getFarmerUser().getId());
+        } else if (product.getFarmerUserId() != null) {
+            subtitleParts.add("Seller user #" + product.getFarmerUserId());
         }
         if (subtitleParts.isEmpty()) {
             subtitleParts.add("Listing #" + product.getId());
@@ -107,8 +102,8 @@ public class AdminPendingApprovalService {
     private AdminPendingApprovalItemDTO toPendingPaymentProofApproval(MarketplaceOrder order) {
         String orderCode = safeText(order.getOrderCode());
         String orderLabel = orderCode != null ? orderCode : ("#" + order.getId());
-        String buyerLabel = order.getBuyerUser() != null && order.getBuyerUser().getId() != null
-                ? ("Buyer #" + order.getBuyerUser().getId())
+        String buyerLabel = order.getBuyerUserId() != null
+                ? ("Buyer #" + order.getBuyerUserId())
                 : null;
         List<String> subtitleParts = new ArrayList<>();
         subtitleParts.add("Order " + orderLabel);

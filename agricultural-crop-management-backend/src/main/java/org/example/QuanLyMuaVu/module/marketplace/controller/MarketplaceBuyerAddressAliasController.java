@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
  * Maps {@code /api/v1/buyer/addresses} to the same service methods as
  * {@code /api/v1/marketplace/addresses} for API convention compatibility.
  */
-// @RestController
-// @RequestMapping("/api/v1/buyer/addresses")
+@RestController
+@RequestMapping("/api/v1/buyer/addresses")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MarketplaceBuyerAddressAliasController {

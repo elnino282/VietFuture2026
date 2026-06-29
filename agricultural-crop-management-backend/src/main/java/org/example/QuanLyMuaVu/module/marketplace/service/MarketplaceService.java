@@ -1,6 +1,7 @@
 package org.example.QuanLyMuaVu.module.marketplace.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
@@ -100,6 +101,10 @@ import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceOrderIte
 import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceOrderRepository;
 import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceProductRepository;
 import org.example.QuanLyMuaVu.module.marketplace.repository.MarketplaceProductReviewRepository;
+import org.example.QuanLyMuaVu.module.identity.entity.User;
+import org.example.QuanLyMuaVu.module.farm.entity.Farm;
+import org.example.QuanLyMuaVu.module.farm.repository.FarmRepository;
+import org.example.QuanLyMuaVu.module.inventory.entity.ProductWarehouseLot;
 import org.example.QuanLyMuaVu.module.season.entity.Season;
 import org.example.QuanLyMuaVu.module.season.repository.SeasonRepository;
 import org.example.QuanLyMuaVu.module.shared.security.CurrentUserService;
@@ -405,20 +410,35 @@ public class MarketplaceService {
     @Transactional(readOnly = true)
     public PageResponse<MarketplaceFarmSummaryResponse> listFarms(String q, String region, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        Page<Farm> farmPage = marketplaceProductRepository.searchDistinctFarmsWithPublishedProducts(
+        Page<MarketplaceProductRepository.FarmProjection> farmPage = marketplaceProductRepository.searchDistinctFarmsWithPublishedProducts(
                 buyerVisibleProductStatuses(),
                 normalizeNullable(q),
                 normalizeNullable(region),
                 pageable);
 
-        List<Integer> farmIds = farmPage.getContent().stream().map(Farm::getId).toList();
+        List<Integer> farmIds = farmPage.getContent().stream()
+                .map(MarketplaceProductRepository.FarmProjection::getFarmId)
+                .filter(Objects::nonNull)
+                .toList();
         Map<Integer, Long> productCountByFarmId = aggregateFarmProductCounts(farmIds);
 
+        List<Farm> farms = farmIds.isEmpty() ? Collections.emptyList() : farmRepository.findAllById(farmIds);
+        Map<Integer, Farm> farmById = farms.stream().collect(Collectors.toMap(Farm::getId, f -> f));
+
         List<MarketplaceFarmSummaryResponse> items = farmPage.getContent().stream()
-                .map(farm -> toFarmSummary(
-                        farm,
-                        productCountByFarmId.getOrDefault(farm.getId(), 0L),
-                        hasTraceableProducts(farm.getId())))
+                .map(proj -> {
+                    Farm farm = farmById.get(proj.getFarmId());
+                    if (farm == null) {
+                        farm = Farm.builder()
+                                .id(proj.getFarmId())
+                                .name(proj.getFarmName())
+                                .build();
+                    }
+                    return toFarmSummary(
+                            farm,
+                            productCountByFarmId.getOrDefault(proj.getFarmId(), 0L),
+                            hasTraceableProducts(proj.getFarmId()));
+                })
                 .toList();
 
         return PageResponse.of(farmPage, items);
@@ -484,7 +504,9 @@ public class MarketplaceService {
         boolean traceable = Boolean.TRUE.equals(orderItem.getTraceableSnapshot());
 
         // Use snapshotted references from order item (they are captured at order creation time)
-        LocalDateTime publishedAt = orderItem.getPublishedAtSnapshot();
+        LocalDateTime publishedAt = marketplaceProductRepository.findById(productId)
+                .map(MarketplaceProduct::getPublishedAt)
+                .orElse(null);
 
         return buildTraceabilityResponseFromOrderItem(
                 productId,
@@ -499,62 +521,129 @@ public class MarketplaceService {
             MarketplaceProduct product,
             LocalDateTime publishedAt) {
 
-        // Build farm traceability from snapshot fields
+        ProductWarehouseLot lot = null;
+        if (product != null && product.getLotId() != null) {
+            lot = productWarehouseLotRepository.findById(product.getLotId()).orElse(null);
+        }
+
+        org.example.QuanLyMuaVu.module.farm.entity.Farm farm = null;
+        if (lot != null) {
+            farm = lot.getFarm();
+        } else if (product != null && product.getFarmId() != null) {
+            farm = farmRepository.findById(product.getFarmId()).orElse(null);
+        }
+
+        org.example.QuanLyMuaVu.module.farm.entity.Plot plot = null;
+        if (lot != null) {
+            plot = lot.getPlot();
+        }
+
+        Season season = null;
+        if (lot != null) {
+            season = lot.getSeason();
+        } else if (product != null && product.getSeasonId() != null) {
+            season = seasonRepository.findById(product.getSeasonId()).orElse(null);
+        }
+
+        org.example.QuanLyMuaVu.module.season.entity.Harvest harvest = null;
+        if (lot != null) {
+            harvest = lot.getHarvest();
+        }
+
+        // Build farm traceability
         MarketplaceTraceabilityResponse.FarmTraceability farmTrace = null;
-        if (product.getFarmId() != null) {
-            // TODO: Consider adding more snapshot fields to MarketplaceProduct (region, address, certifications)
-            // For now, we only have farmName and farmRegion from the entity
+        if (farm != null) {
+            String region = resolveFarmRegion(farm);
+            String address = resolveFarmAddress(farm);
+            farmTrace = new MarketplaceTraceabilityResponse.FarmTraceability(
+                    farm.getId(),
+                    farm.getName(),
+                    region,
+                    address,
+                    null);
+        } else if (product != null && product.getFarmId() != null) {
             farmTrace = new MarketplaceTraceabilityResponse.FarmTraceability(
                     product.getFarmId(),
                     product.getFarmName(),
                     product.getFarmRegion(),
-                    null, // address - not available in snapshot
-                    null); // certificationInfo - not available in snapshot
+                    null,
+                    null);
         }
 
-        // Plot traceability - not available in snapshot, return null
+        // Plot
         MarketplaceTraceabilityResponse.PlotTraceability plotTrace = null;
-        // TODO: Consider adding plot snapshot fields to MarketplaceOrderItem if traceability detail is needed
+        if (plot != null) {
+            plotTrace = new MarketplaceTraceabilityResponse.PlotTraceability(
+                    plot.getId(),
+                    plot.getPlotName(),
+                    plot.getArea()
+            );
+        }
 
-        // Season traceability from snapshot
+        // Season
         MarketplaceTraceabilityResponse.SeasonTraceability seasonTrace = null;
-        if (product.getSeasonId() != null) {
-            // TODO: Consider adding cropName, varietyName, dates to MarketplaceProduct/MarketplaceOrderItem
+        if (season != null) {
+            seasonTrace = new MarketplaceTraceabilityResponse.SeasonTraceability(
+                    season.getId(),
+                    season.getSeasonName(),
+                    season.getCrop() != null ? season.getCrop().getCropName() : null,
+                    season.getVariety() != null ? season.getVariety().getName() : null,
+                    season.getStartDate(),
+                    season.getPlannedHarvestDate()
+            );
+        } else if (product != null && product.getSeasonId() != null) {
             seasonTrace = new MarketplaceTraceabilityResponse.SeasonTraceability(
                     product.getSeasonId(),
                     product.getSeasonName(),
-                    null, // cropName - not available in snapshot
-                    null, // varietyName - not available in snapshot
-                    null, // startDate - not available in snapshot
-                    null); // plannedHarvestDate - not available in snapshot
+                    null, null, null, null
+            );
         }
 
-        // Harvest traceability - not available in snapshot
+        // Harvest
         MarketplaceTraceabilityResponse.HarvestTraceability harvestTrace = null;
+        if (harvest != null) {
+            harvestTrace = new MarketplaceTraceabilityResponse.HarvestTraceability(
+                    harvest.getId(),
+                    harvest.getHarvestDate(),
+                    harvest.getQuantity(),
+                    harvest.getGrade()
+            );
+        }
 
-        // Product lot traceability from snapshot
+        // Product lot
         MarketplaceTraceabilityResponse.ProductLotTraceability lotTrace = null;
-        if (product.getLotId() != null) {
+        if (lot != null) {
+            String storageLoc = null;
+            if (lot.getLocation() != null) {
+                org.example.QuanLyMuaVu.module.inventory.entity.StockLocation location = lot.getLocation();
+                List<String> parts = new ArrayList<>();
+                if (location.getZone() != null) parts.add("Zone " + location.getZone());
+                if (location.getAisle() != null) parts.add("Aisle " + location.getAisle());
+                if (location.getShelf() != null) parts.add("Shelf " + location.getShelf());
+                if (location.getBin() != null) parts.add("Bin " + location.getBin());
+                storageLoc = String.join(", ", parts);
+            }
+            lotTrace = new MarketplaceTraceabilityResponse.ProductLotTraceability(
+                    lot.getId(),
+                    lot.getLotCode(),
+                    lot.getHarvestedAt(),
+                    lot.getReceivedAt(),
+                    lot.getUnit(),
+                    lot.getInitialQuantity(),
+                    lot.getGrade(),
+                    lot.getWarehouse() != null ? lot.getWarehouse().getName() : null,
+                    storageLoc
+            );
+        } else if (product != null && product.getLotId() != null) {
             lotTrace = new MarketplaceTraceabilityResponse.ProductLotTraceability(
                     product.getLotId(),
                     product.getLotCode(),
-                    null, // harvestedAt - not available in snapshot
-                    null, // receivedAt - not available in snapshot
-                    product.getUnit(),
-                    null, // initialQuantity - not available in snapshot
-                    null, // grade - not available in snapshot
-                    null, // warehouseName - not available in snapshot
-                    null); // storageLocation - not available in snapshot
+                    null, null, product.getUnit(), null, null, null, null
+            );
         }
 
-        // Timeline milestones - simplified to LISTED only since we lack granular dates
-        List<MarketplaceTraceabilityResponse.TimelineMilestone> timeline = new ArrayList<>();
-        if (publishedAt != null) {
-            timeline.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
-                    "LISTED",
-                    publishedAt,
-                    "Listed on marketplace"));
-        }
+        // Timeline milestones
+        List<MarketplaceTraceabilityResponse.TimelineMilestone> timeline = buildTimelineMilestones(season, lot, publishedAt);
 
         return new MarketplaceTraceabilityResponse(
                 productId,
@@ -574,58 +663,129 @@ public class MarketplaceService {
             MarketplaceOrderItem orderItem,
             LocalDateTime publishedAt) {
 
-        // Build farm traceability from snapshot fields
+        ProductWarehouseLot lot = null;
+        if (orderItem != null && orderItem.getLotId() != null) {
+            lot = productWarehouseLotRepository.findById(orderItem.getLotId()).orElse(null);
+        }
+
+        org.example.QuanLyMuaVu.module.farm.entity.Farm farm = null;
+        if (lot != null) {
+            farm = lot.getFarm();
+        } else if (orderItem != null && orderItem.getFarmId() != null) {
+            farm = farmRepository.findById(orderItem.getFarmId()).orElse(null);
+        }
+
+        org.example.QuanLyMuaVu.module.farm.entity.Plot plot = null;
+        if (lot != null) {
+            plot = lot.getPlot();
+        }
+
+        Season season = null;
+        if (lot != null) {
+            season = lot.getSeason();
+        } else if (orderItem != null && orderItem.getSeasonId() != null) {
+            season = seasonRepository.findById(orderItem.getSeasonId()).orElse(null);
+        }
+
+        org.example.QuanLyMuaVu.module.season.entity.Harvest harvest = null;
+        if (lot != null) {
+            harvest = lot.getHarvest();
+        }
+
+        // Build farm traceability
         MarketplaceTraceabilityResponse.FarmTraceability farmTrace = null;
-        if (orderItem.getFarmId() != null) {
+        if (farm != null) {
+            String region = resolveFarmRegion(farm);
+            String address = resolveFarmAddress(farm);
+            farmTrace = new MarketplaceTraceabilityResponse.FarmTraceability(
+                    farm.getId(),
+                    farm.getName(),
+                    region,
+                    address,
+                    null);
+        } else if (orderItem != null && orderItem.getFarmId() != null) {
             farmTrace = new MarketplaceTraceabilityResponse.FarmTraceability(
                     orderItem.getFarmId(),
                     orderItem.getFarmName(),
-                    null, // region - not available in order item snapshot
-                    null, // address - not available in snapshot
-                    null); // certificationInfo
+                    null,
+                    null,
+                    null);
         }
 
-        // Plot traceability - not available in snapshot
+        // Plot
         MarketplaceTraceabilityResponse.PlotTraceability plotTrace = null;
+        if (plot != null) {
+            plotTrace = new MarketplaceTraceabilityResponse.PlotTraceability(
+                    plot.getId(),
+                    plot.getPlotName(),
+                    plot.getArea()
+            );
+        }
 
-        // Season traceability from snapshot
+        // Season
         MarketplaceTraceabilityResponse.SeasonTraceability seasonTrace = null;
-        if (orderItem.getSeasonId() != null) {
+        if (season != null) {
+            seasonTrace = new MarketplaceTraceabilityResponse.SeasonTraceability(
+                    season.getId(),
+                    season.getSeasonName(),
+                    season.getCrop() != null ? season.getCrop().getCropName() : null,
+                    season.getVariety() != null ? season.getVariety().getName() : null,
+                    season.getStartDate(),
+                    season.getPlannedHarvestDate()
+            );
+        } else if (orderItem != null && orderItem.getSeasonId() != null) {
             seasonTrace = new MarketplaceTraceabilityResponse.SeasonTraceability(
                     orderItem.getSeasonId(),
                     orderItem.getSeasonName(),
-                    orderItem.getCropName(), // crop name captured at order creation
-                    null, // varietyName - not available in snapshot
-                    null, // startDate - not available in snapshot
-                    null); // plannedHarvestDate - not available in snapshot
+                    orderItem.getCropName(), null, null, null
+            );
         }
 
-        // Harvest traceability - not available in snapshot
+        // Harvest
         MarketplaceTraceabilityResponse.HarvestTraceability harvestTrace = null;
+        if (harvest != null) {
+            harvestTrace = new MarketplaceTraceabilityResponse.HarvestTraceability(
+                    harvest.getId(),
+                    harvest.getHarvestDate(),
+                    harvest.getQuantity(),
+                    harvest.getGrade()
+            );
+        }
 
-        // Product lot traceability from snapshot
+        // Product lot
         MarketplaceTraceabilityResponse.ProductLotTraceability lotTrace = null;
-        if (orderItem.getLotId() != null) {
+        if (lot != null) {
+            String storageLoc = null;
+            if (lot.getLocation() != null) {
+                org.example.QuanLyMuaVu.module.inventory.entity.StockLocation location = lot.getLocation();
+                List<String> parts = new ArrayList<>();
+                if (location.getZone() != null) parts.add("Zone " + location.getZone());
+                if (location.getAisle() != null) parts.add("Aisle " + location.getAisle());
+                if (location.getShelf() != null) parts.add("Shelf " + location.getShelf());
+                if (location.getBin() != null) parts.add("Bin " + location.getBin());
+                storageLoc = String.join(", ", parts);
+            }
+            lotTrace = new MarketplaceTraceabilityResponse.ProductLotTraceability(
+                    lot.getId(),
+                    lot.getLotCode(),
+                    lot.getHarvestedAt(),
+                    lot.getReceivedAt(),
+                    lot.getUnit(),
+                    lot.getInitialQuantity(),
+                    lot.getGrade(),
+                    lot.getWarehouse() != null ? lot.getWarehouse().getName() : null,
+                    storageLoc
+            );
+        } else if (orderItem != null && orderItem.getLotId() != null) {
             lotTrace = new MarketplaceTraceabilityResponse.ProductLotTraceability(
                     orderItem.getLotId(),
                     orderItem.getLotCode(),
-                    null, // harvestedAt - not available in snapshot
-                    null, // receivedAt - not available in snapshot
-                    null, // unit - not available in order item snapshot
-                    null, // initialQuantity - not available in snapshot
-                    null, // grade - not available in snapshot
-                    null, // warehouseName - not available in snapshot
-                    null); // storageLocation - not available in snapshot
+                    null, null, null, null, null, null, null
+            );
         }
 
-        // Timeline milestones - simplified to LISTED only
-        List<MarketplaceTraceabilityResponse.TimelineMilestone> timeline = new ArrayList<>();
-        if (publishedAt != null) {
-            timeline.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
-                    "LISTED",
-                    publishedAt,
-                    "Listed on marketplace"));
-        }
+        // Timeline milestones
+        List<MarketplaceTraceabilityResponse.TimelineMilestone> timeline = buildTimelineMilestones(season, lot, publishedAt);
 
         return new MarketplaceTraceabilityResponse(
                 productId,
@@ -639,6 +799,89 @@ public class MarketplaceService {
                 LocalDateTime.now());
     }
 
+    private List<MarketplaceTraceabilityResponse.TimelineMilestone> buildTimelineMilestones(
+            Season season,
+            ProductWarehouseLot lot,
+            LocalDateTime publishedAt) {
+        List<MarketplaceTraceabilityResponse.TimelineMilestone> milestones = new ArrayList<>();
+
+        // PLANTED — season start date
+        if (season != null && season.getStartDate() != null) {
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "PLANTED",
+                    season.getStartDate().atStartOfDay(),
+                    "Crop planted — " + (season.getCrop() != null ? season.getCrop().getCropName() : season.getSeasonName())));
+        }
+
+        // TENDED — season is ACTIVE, COMPLETED, or ARCHIVED
+        if (season != null && season.getStatus() != null
+                && season.getStatus() != org.example.QuanLyMuaVu.Enums.SeasonStatus.PLANNED
+                && season.getStatus() != org.example.QuanLyMuaVu.Enums.SeasonStatus.CANCELLED) {
+            LocalDateTime tendedAt = season.getStartDate() != null
+                    ? season.getStartDate().plusDays(1).atStartOfDay() : null;
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "TENDED",
+                    tendedAt,
+                    "Crop tended during growing season"));
+        }
+
+        // HARVESTED — from lot.harvest or lot.harvestedAt
+        if (lot != null && lot.getHarvest() != null && lot.getHarvest().getHarvestDate() != null) {
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "HARVESTED",
+                    lot.getHarvest().getHarvestDate().atStartOfDay(),
+                    "Crop harvested — grade: " + (lot.getHarvest().getGrade() != null ? lot.getHarvest().getGrade() : "N/A")));
+        } else if (lot != null && lot.getHarvestedAt() != null) {
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "HARVESTED",
+                    lot.getHarvestedAt().atStartOfDay(),
+                    "Crop harvested"));
+        }
+
+        // STORED — lot received at warehouse
+        if (lot != null && lot.getReceivedAt() != null) {
+            String warehouseName = lot.getWarehouse() != null ? lot.getWarehouse().getName() : "warehouse";
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "STORED",
+                    lot.getReceivedAt(),
+                    "Stored in " + warehouseName));
+        }
+
+        // LISTED — product published on marketplace
+        if (publishedAt != null) {
+            milestones.add(new MarketplaceTraceabilityResponse.TimelineMilestone(
+                    "LISTED",
+                    publishedAt,
+                    "Listed on marketplace"));
+        }
+
+        // Sort chronologically (nulls last)
+        milestones.sort(Comparator.comparing(
+                MarketplaceTraceabilityResponse.TimelineMilestone::date,
+                Comparator.nullsLast(Comparator.naturalOrder())));
+
+        return milestones;
+    }
+
+    private String resolveFarmRegion(Farm farm) {
+        if (farm == null) return null;
+        return farm.getProvince() != null ? farm.getProvince().getName() : null;
+    }
+
+    private String resolveFarmAddress(Farm farm) {
+        if (farm == null) return null;
+        String provinceName = farm.getProvince() != null ? farm.getProvince().getName() : null;
+        String wardName = farm.getWard() != null ? farm.getWard().getName() : null;
+        if (wardName != null && provinceName != null) {
+            return wardName + ", " + provinceName;
+        } else if (provinceName != null) {
+            return provinceName;
+        } else if (wardName != null) {
+            return wardName;
+        }
+        return "Address not available";
+    }
+
     // Keep the old method for backward compatibility with existing tests/code
     @Deprecated
     private MarketplaceTraceabilityResponse buildTraceabilityResponse(
@@ -648,15 +891,13 @@ public class MarketplaceService {
             Object season,
             Object lot,
             LocalDateTime publishedAt) {
-        // This method is deprecated - traceability now uses snapshot fields
-        // Return a simplified response with available data
         return buildTraceabilityResponseFromProduct(productId, traceable, null, publishedAt);
     }
 
     @Transactional(readOnly = true)
     public MarketplaceCartResponse getCart() {
         Long userId = currentUserService.getCurrentUserId();
-        Optional<MarketplaceCart> cartOpt = marketplaceCartRepository.findByUser_Id(userId);
+        Optional<MarketplaceCart> cartOpt = marketplaceCartRepository.findByUserId(userId);
         if (cartOpt.isEmpty()) {
             return emptyCart(userId);
         }
@@ -671,7 +912,7 @@ public class MarketplaceService {
         MarketplaceProduct product = getCartProductOrThrow(request.productId(), request.quantity(), request.quantity());
 
         MarketplaceCartItem item = marketplaceCartItemRepository
-                .findByCart_IdAndProduct_Id(cart.getId(), product.getId())
+                .findByCartIdAndProductId(cart.getId(), product.getId())
                 .orElse(null);
         BigDecimal targetQuantity = request.quantity();
         if (item != null) {
@@ -683,7 +924,12 @@ public class MarketplaceService {
         if (item == null) {
             item = MarketplaceCartItem.builder()
                     .cart(cart)
-                    .product(product)
+                    .productId(product.getId())
+                    .farmerUserId(product.getFarmerUserId())
+                    .productName(product.getName())
+                    .productSlug(product.getSlug())
+                    .imageUrl(product.getImageUrl())
+                    .traceable(product.getTraceable())
                     .quantity(request.quantity())
                     .unitPriceSnapshot(product.getPrice())
                     .build();
@@ -707,7 +953,7 @@ public class MarketplaceService {
         validateCartProductAvailability(product, request.quantity(), request.quantity());
 
         MarketplaceCartItem item = marketplaceCartItemRepository
-                .findByCart_IdAndProduct_Id(cart.getId(), productId)
+                .findByCartIdAndProductId(cart.getId(), productId)
                 .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_CART_ITEM_NOT_FOUND));
         item.setQuantity(request.quantity());
         item.setUnitPriceSnapshot(product.getPrice());
@@ -754,7 +1000,7 @@ public class MarketplaceService {
         for (Map.Entry<Long, BigDecimal> entry : incomingByProductId.entrySet()) {
             MarketplaceProduct product = getCartProductOrThrow(entry.getKey(), entry.getValue(), entry.getValue());
             MarketplaceCartItem existing = marketplaceCartItemRepository
-                    .findByCart_IdAndProduct_Id(cart.getId(), product.getId())
+                    .findByCartIdAndProductId(cart.getId(), product.getId())
                     .orElse(null);
 
             BigDecimal mergedQuantity = entry.getValue();
@@ -766,7 +1012,12 @@ public class MarketplaceService {
             if (existing == null) {
                 existing = MarketplaceCartItem.builder()
                         .cart(cart)
-                        .product(product)
+                        .productId(product.getId())
+                        .farmerUserId(product.getFarmerUserId())
+                        .productName(product.getName())
+                        .productSlug(product.getSlug())
+                        .imageUrl(product.getImageUrl())
+                        .traceable(product.getTraceable())
                         .quantity(entry.getValue())
                         .unitPriceSnapshot(product.getPrice())
                         .build();
@@ -814,7 +1065,7 @@ public class MarketplaceService {
         } else {
             cart = marketplaceCartRepository.findByUserIdForUpdate(buyerUserId)
                     .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_CART_EMPTY));
-            List<MarketplaceCartItem> cartItems = marketplaceCartItemRepository.findByCartIdWithProductForUpdate(cart.getId());
+            List<MarketplaceCartItem> cartItems = marketplaceCartItemRepository.findByCartIdForUpdate(cart.getId());
             if (cartItems.isEmpty()) {
                 throw new AppException(ErrorCode.MARKETPLACE_CART_EMPTY);
             }
@@ -839,7 +1090,7 @@ public class MarketplaceService {
         String requestFingerprint = buildOrderFingerprint(request, creationItems);
 
         Optional<MarketplaceOrderGroup> existingGroupOpt = marketplaceOrderGroupRepository
-                .findByBuyerUser_IdAndIdempotencyKey(buyerUserId, idempotencyKey);
+                .findByBuyerUserIdAndIdempotencyKey(buyerUserId, idempotencyKey);
         if (existingGroupOpt.isPresent()) {
             MarketplaceOrderGroup existingGroup = existingGroupOpt.get();
             if (!Objects.equals(existingGroup.getRequestFingerprint(), requestFingerprint)) {
@@ -936,7 +1187,6 @@ public class MarketplaceService {
                         .lotId(lockedProduct.getLotId())
                         .lotCode(lockedProduct.getLotCode())
                         .cropName(extractCropNameFromCatalogSnapshot(lockedProduct.getCatalogSnapshot()))
-                        .publishedAtSnapshot(lockedProduct.getPublishedAt())
                         .build();
                 orderItems.add(orderItem);
 
@@ -1054,12 +1304,27 @@ public class MarketplaceService {
         } else {
             MarketplaceCart cart = marketplaceCartRepository.findByUserIdForUpdate(buyerUserId)
                     .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_CART_EMPTY));
-            List<MarketplaceCartItem> cartItems = marketplaceCartItemRepository.findByCartIdWithProduct(cart.getId());
+            List<MarketplaceCartItem> cartItems = marketplaceCartItemRepository.findByCartId(cart.getId());
             if (cartItems.isEmpty()) {
                 throw new AppException(ErrorCode.MARKETPLACE_CART_EMPTY);
             }
+            List<Long> productIds = cartItems.stream()
+                    .map(MarketplaceCartItem::getProductId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
+            Map<Long, MarketplaceProduct> productById = productIds.isEmpty()
+                    ? Collections.emptyMap()
+                    : marketplaceProductRepository.findAllById(productIds).stream()
+                            .collect(Collectors.toMap(MarketplaceProduct::getId, p -> p));
             creationItems = cartItems.stream()
-                    .map(ci -> new OrderCreationItem(ci.getProduct(), ci.getQuantity()))
+                    .map(ci -> {
+                        MarketplaceProduct p = productById.get(ci.getProductId());
+                        if (p == null) {
+                            throw new AppException(ErrorCode.MARKETPLACE_PRODUCT_NOT_FOUND);
+                        }
+                        return new OrderCreationItem(p, ci.getQuantity());
+                    })
                     .toList();
         }
 
@@ -1357,7 +1622,7 @@ public class MarketplaceService {
     @Transactional(readOnly = true)
     public List<MarketplaceAddressResponse> listAddresses() {
         Long userId = currentUserService.getCurrentUserId();
-        return marketplaceAddressRepository.findAllByUser_IdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(userId).stream()
+        return marketplaceAddressRepository.findAllByUserIdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(userId).stream()
                 .map(this::toAddressResponse)
                 .toList();
     }
@@ -1365,7 +1630,7 @@ public class MarketplaceService {
     @Transactional
     public MarketplaceAddressResponse createAddress(MarketplaceAddressUpsertRequest request) {
         User user = currentUserService.getCurrentUser();
-        boolean shouldSetDefault = Boolean.TRUE.equals(request.isDefault()) || !marketplaceAddressRepository.existsByUser_IdAndDeletedAtIsNull(user.getId());
+        boolean shouldSetDefault = Boolean.TRUE.equals(request.isDefault()) || !marketplaceAddressRepository.existsByUserIdAndDeletedAtIsNull(user.getId());
         if (shouldSetDefault) {
             marketplaceAddressRepository.clearDefaultByUserId(user.getId());
         }
@@ -1389,7 +1654,7 @@ public class MarketplaceService {
     @Transactional
     public MarketplaceAddressResponse updateAddress(Long addressId, MarketplaceAddressUpsertRequest request) {
         Long userId = currentUserService.getCurrentUserId();
-        MarketplaceAddress address = marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(addressId, userId)
+        MarketplaceAddress address = marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(addressId, userId)
                 .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_ADDRESS_NOT_FOUND));
 
         if (Boolean.TRUE.equals(request.isDefault())) {
@@ -1412,7 +1677,7 @@ public class MarketplaceService {
     @Transactional
     public void deleteAddress(Long addressId) {
         Long userId = currentUserService.getCurrentUserId();
-        MarketplaceAddress address = marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(addressId, userId)
+        MarketplaceAddress address = marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(addressId, userId)
                 .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_ADDRESS_NOT_FOUND));
 
         boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());
@@ -1421,7 +1686,7 @@ public class MarketplaceService {
         marketplaceAddressRepository.save(address);
 
         if (wasDefault) {
-            List<MarketplaceAddress> remaining = marketplaceAddressRepository.findAllByUser_IdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(userId);
+            List<MarketplaceAddress> remaining = marketplaceAddressRepository.findAllByUserIdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(userId);
             if (!remaining.isEmpty()) {
                 MarketplaceAddress first = remaining.getFirst();
                 first.setIsDefault(true);
@@ -1433,7 +1698,7 @@ public class MarketplaceService {
     @Transactional
     public MarketplaceAddressResponse setDefaultAddress(Long addressId) {
         Long userId = currentUserService.getCurrentUserId();
-        MarketplaceAddress address = marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(addressId, userId)
+        MarketplaceAddress address = marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(addressId, userId)
                 .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_ADDRESS_NOT_FOUND));
 
         marketplaceAddressRepository.clearDefaultByUserId(userId);
@@ -1449,11 +1714,11 @@ public class MarketplaceService {
     public MarketplaceFarmerDashboardResponse getFarmerDashboard() {
         Long farmerUserId = currentUserService.getCurrentUserId();
 
-        long totalProducts = marketplaceProductRepository.countByFarmerUser_Id(farmerUserId);
-        long pendingReviewProducts = marketplaceProductRepository.countByFarmerUser_IdAndStatus(
+        long totalProducts = marketplaceProductRepository.countByFarmerUserId(farmerUserId);
+        long pendingReviewProducts = marketplaceProductRepository.countByFarmerUserIdAndStatus(
                 farmerUserId,
                 MarketplaceProductStatus.PENDING_REVIEW);
-        long publishedProducts = marketplaceProductRepository.countByFarmerUser_IdAndStatusIn(
+        long publishedProducts = marketplaceProductRepository.countByFarmerUserIdAndStatusIn(
                 farmerUserId,
                 SELLABLE_PRODUCT_STATUSES);
         long lowStockProducts = productWarehouseLotRepository.countMarketplaceListingsByFarmerAndOnHandLessThanEqual(
@@ -1461,11 +1726,11 @@ public class MarketplaceService {
                 SELLABLE_PRODUCT_STATUSES,
                 LOW_STOCK_THRESHOLD);
 
-        long pendingOrders = marketplaceOrderRepository.countByFarmerUser_IdAndStatus(
+        long pendingOrders = marketplaceOrderRepository.countByFarmerUserIdAndStatus(
                 farmerUserId,
                 MarketplaceOrderStatus.PENDING_PAYMENT);
-        long totalOrders = marketplaceOrderRepository.countByFarmerUser_Id(farmerUserId);
-        long completedOrders = marketplaceOrderRepository.countByFarmerUser_IdAndStatus(
+        long totalOrders = marketplaceOrderRepository.countByFarmerUserId(farmerUserId);
+        long completedOrders = marketplaceOrderRepository.countByFarmerUserIdAndStatus(
                 farmerUserId,
                 MarketplaceOrderStatus.COMPLETED);
         BigDecimal revenueValue = marketplaceOrderRepository.sumTotalAmountByFarmerUserIdAndStatus(
@@ -1580,7 +1845,7 @@ public class MarketplaceService {
         List<String> imageUrls = normalizeImageUrls(request.imageUrls(), request.imageUrl());
         String primaryImage = imageUrls.isEmpty() ? normalizeNullable(request.imageUrl()) : imageUrls.get(0);
 
-        MarketplaceProduct existingProduct = marketplaceProductRepository.findByLot_Id(lot.getId()).orElse(null);
+        MarketplaceProduct existingProduct = marketplaceProductRepository.findByLotId(lot.getId()).orElse(null);
         if (existingProduct != null) {
             if (!Objects.equals(existingProduct.getFarmerUserId(), farmer.getId())) {
                 throw new AppException(ErrorCode.NOT_OWNER);
@@ -1962,10 +2227,10 @@ public class MarketplaceService {
     private ShippingSnapshot resolveShippingSnapshot(Long userId, MarketplaceCreateOrderRequest request) {
         MarketplaceAddress selectedAddress = null;
         if (request.addressId() != null) {
-            selectedAddress = marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(request.addressId(), userId)
+            selectedAddress = marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(request.addressId(), userId)
                     .orElseThrow(() -> new AppException(ErrorCode.MARKETPLACE_ADDRESS_NOT_FOUND));
         } else {
-            selectedAddress = marketplaceAddressRepository.findFirstByUser_IdAndIsDefaultTrueAndDeletedAtIsNullOrderByIdDesc(userId)
+            selectedAddress = marketplaceAddressRepository.findFirstByUserIdAndIsDefaultTrueAndDeletedAtIsNullOrderByIdDesc(userId)
                     .orElse(null);
         }
 
@@ -2043,7 +2308,7 @@ public class MarketplaceService {
     }
 
     private MarketplaceCartResponse buildCartResponse(Long userId, MarketplaceCart cart) {
-        List<MarketplaceCartItem> items = marketplaceCartItemRepository.findByCartIdWithProduct(cart.getId());
+        List<MarketplaceCartItem> items = marketplaceCartItemRepository.findByCartId(cart.getId());
         BigDecimal itemCount = BigDecimal.ZERO;
         BigDecimal subtotal = BigDecimal.ZERO;
 
@@ -2179,8 +2444,8 @@ public class MarketplaceService {
                     productId,
                     product.getStatus(),
                     product.getStockQuantity(),
-                    null, // lotStatus not available with denormalized entity
-                    null, // lotOnHandQuantity not available with denormalized entity
+                    null,
+                    null,
                     requestedQuantity,
                     effectiveQuantity);
             throw new AppException(ErrorCode.PRODUCT_NOT_AVAILABLE);
@@ -2192,24 +2457,65 @@ public class MarketplaceService {
                     productId,
                     product.getStatus(),
                     product.getStockQuantity(),
-                    null, // lotStatus not available with denormalized entity
-                    null, // lotOnHandQuantity not available with denormalized entity
+                    null,
+                    null,
                     requestedQuantity,
                     effectiveQuantity);
             throw new AppException(ErrorCode.PRODUCT_OUT_OF_STOCK);
         }
 
-        // With denormalized entities, we rely on product.stockQuantity as the source of truth
-        // Full lot status validation would require external service call
+        if (product.getLotId() == null) {
+            logCartValidationFailure(
+                    ErrorCode.PRODUCT_LOT_UNAVAILABLE,
+                    productId,
+                    product.getStatus(),
+                    product.getStockQuantity(),
+                    null,
+                    null,
+                    requestedQuantity,
+                    effectiveQuantity);
+            throw new AppException(ErrorCode.PRODUCT_LOT_UNAVAILABLE);
+        }
+
+        ProductWarehouseLot lot = productWarehouseLotRepository.findById(product.getLotId()).orElse(null);
+        if (lot == null || lot.getStatus() != ProductWarehouseLotStatus.IN_STOCK) {
+            logCartValidationFailure(
+                    ErrorCode.PRODUCT_LOT_UNAVAILABLE,
+                    productId,
+                    product.getStatus(),
+                    product.getStockQuantity(),
+                    lot != null ? lot.getStatus() : null,
+                    lot != null ? lot.getOnHandQuantity() : null,
+                    requestedQuantity,
+                    effectiveQuantity);
+            throw new AppException(ErrorCode.PRODUCT_LOT_UNAVAILABLE);
+        }
+
+        if (lot.getOnHandQuantity() == null || lot.getOnHandQuantity().compareTo(ZERO_QUANTITY) <= 0) {
+            logCartValidationFailure(
+                    ErrorCode.PRODUCT_LOT_UNAVAILABLE,
+                    productId,
+                    product.getStatus(),
+                    product.getStockQuantity(),
+                    lot.getStatus(),
+                    lot.getOnHandQuantity(),
+                    requestedQuantity,
+                    effectiveQuantity);
+            throw new AppException(ErrorCode.PRODUCT_LOT_UNAVAILABLE);
+        }
+
         BigDecimal availableQuantity = currentAvailableQuantity(product);
+        if (lot != null && lot.getOnHandQuantity() != null) {
+            availableQuantity = availableQuantity.min(lot.getOnHandQuantity());
+        }
         if (availableQuantity.compareTo(effectiveQuantity) < 0) {
             logCartValidationFailure(
                     ErrorCode.MARKETPLACE_INSUFFICIENT_STOCK,
                     productId,
                     product.getStatus(),
                     product.getStockQuantity(),
-                    null, // lotStatus not available with denormalized entity
-                    null, // lotOnHandQuantity not available with denormalized entity
+                    lot.getStatus(),
+                    lot.getOnHandQuantity(),
                     requestedQuantity,
                     effectiveQuantity);
             throw new AppException(ErrorCode.MARKETPLACE_INSUFFICIENT_STOCK);
@@ -2628,10 +2934,10 @@ public class MarketplaceService {
     }
 
     private Map<Long, Long> loadReviewIdsByProductForOrder(Long orderId, Long buyerUserId) {
-        return marketplaceProductReviewRepository.findByOrder_IdAndBuyerUser_Id(orderId, buyerUserId).stream()
-                .filter(review -> review.getProduct() != null && review.getProduct().getId() != null)
+        return marketplaceProductReviewRepository.findByOrderIdAndBuyerUserId(orderId, buyerUserId).stream()
+                .filter(review -> review.getProductId() != null)
                 .collect(Collectors.toMap(
-                        review -> review.getProduct().getId(),
+                        MarketplaceProductReview::getProductId,
                         MarketplaceProductReview::getId,
                         (left, right) -> left));
     }
@@ -2640,15 +2946,13 @@ public class MarketplaceService {
         if (orderIds == null || orderIds.isEmpty() || buyerUserId == null) {
             return Collections.emptyMap();
         }
-        return marketplaceProductReviewRepository.findByOrder_IdInAndBuyerUser_Id(orderIds, buyerUserId).stream()
-                .filter(review -> review.getOrder() != null
-                        && review.getOrder().getId() != null
-                        && review.getProduct() != null
-                        && review.getProduct().getId() != null)
+        return marketplaceProductReviewRepository.findByOrderIdInAndBuyerUserId(orderIds, buyerUserId).stream()
+                .filter(review -> review.getOrderId() != null
+                        && review.getProductId() != null)
                 .collect(Collectors.groupingBy(
-                        review -> review.getOrder().getId(),
+                        MarketplaceProductReview::getOrderId,
                         Collectors.toMap(
-                                review -> review.getProduct().getId(),
+                                MarketplaceProductReview::getProductId,
                                 MarketplaceProductReview::getId,
                                 (left, right) -> left)));
     }
@@ -2973,7 +3277,7 @@ public class MarketplaceService {
 
         if (changed) {
             product.setStatusChangedAt(LocalDateTime.now());
-            product.setStatusChangedByUser(actor);
+            product.setStatusChangedByUserId(actor != null ? actor.getId() : null);
         }
     }
 

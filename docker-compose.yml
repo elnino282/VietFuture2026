@@ -419,6 +419,34 @@ services:
       identity-service:
         condition: service_started
 
+  admin-reporting-service:
+    build:
+      context: ./admin-reporting-service
+      dockerfile: Dockerfile
+    container_name: admin_reporting_service_quanlymuavu
+    restart: unless-stopped
+    ports:
+      - "8091:8091"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      SERVER_PORT: 8091
+      DB_URL: jdbc:mysql://mysql:3306/admin_reporting_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      DB_USER: ${MYSQL_USER:-springuser}
+      DB_PASS: ${MYSQL_PASSWORD:-springpass}
+      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY:-supersecretkeyplaceholder64characterslongmustbe64byteslongforhs512!}
+      JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-rabbitpass}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -440,6 +468,7 @@ services:
       INCIDENT_SERVICE_URI: http://incident-service:8088
       SUSTAINABILITY_SERVICE_URI: http://sustainability-service:8089
       MARKETPLACE_SERVICE_URI: http://marketplace-service:8090
+      ADMIN_REPORTING_SERVICE_URI: http://admin-reporting-service:8091
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
     depends_on:
       - backend
@@ -453,6 +482,7 @@ services:
       - incident-service
       - sustainability-service
       - marketplace-service
+      - admin-reporting-service
 
   frontend:
     build:

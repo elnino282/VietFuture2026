@@ -171,7 +171,7 @@ class MarketplaceReviewIntegrationTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
         lenient().when(farmRepository.save(any(Farm.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        lenient().when(marketplaceProductReviewRepository.findByOrder_IdAndBuyerUser_Id(anyLong(), anyLong()))
+        lenient().when(marketplaceProductReviewRepository.findByOrderIdAndBuyerUserId(anyLong(), anyLong()))
                 .thenReturn(List.of());
     }
 
@@ -235,7 +235,7 @@ class MarketplaceReviewIntegrationTest {
                     .thenReturn(Optional.of(completedOrder));
             when(marketplaceOrderItemRepository.findByIdAndOrder_Id(1L, 300L))
                     .thenReturn(Optional.of(orderItem));
-            when(marketplaceProductReviewRepository.existsByOrderItem_IdAndBuyerUser_Id(1L, 10L))
+            when(marketplaceProductReviewRepository.existsByOrderItemIdAndBuyerUserId(1L, 10L))
                     .thenReturn(true);
 
             MarketplaceCreateReviewRequest request = new MarketplaceCreateReviewRequest(1L, 4, "Nice");
@@ -253,7 +253,7 @@ class MarketplaceReviewIntegrationTest {
                     .thenReturn(Optional.of(completedOrder));
             when(marketplaceOrderItemRepository.findByIdAndOrder_Id(1L, 300L))
                     .thenReturn(Optional.of(orderItem));
-            when(marketplaceProductReviewRepository.existsByOrderItem_IdAndBuyerUser_Id(1L, 10L))
+            when(marketplaceProductReviewRepository.existsByOrderItemIdAndBuyerUserId(1L, 10L))
                     .thenReturn(false);
 
             MarketplaceProductReview savedReview = MarketplaceProductReview.builder()
@@ -286,7 +286,7 @@ class MarketplaceReviewIntegrationTest {
                     .thenReturn(Optional.of(completedOrder));
             when(marketplaceOrderItemRepository.findByIdAndOrder_Id(1L, 300L))
                     .thenReturn(Optional.of(orderItem));
-            when(marketplaceProductReviewRepository.existsByOrderItem_IdAndBuyerUser_Id(1L, 10L))
+            when(marketplaceProductReviewRepository.existsByOrderItemIdAndBuyerUserId(1L, 10L))
                     .thenReturn(false);
 
             MarketplaceProductReview savedReview = MarketplaceProductReview.builder()
@@ -313,7 +313,7 @@ class MarketplaceReviewIntegrationTest {
                     .thenReturn(Optional.of(completedOrder));
             when(marketplaceOrderItemRepository.findByIdAndOrder_Id(1L, 300L))
                     .thenReturn(Optional.of(orderItem));
-            when(marketplaceProductReviewRepository.existsByOrderItem_IdAndBuyerUser_Id(1L, 10L))
+            when(marketplaceProductReviewRepository.existsByOrderItemIdAndBuyerUserId(1L, 10L))
                     .thenReturn(false);
 
             MarketplaceProductReview savedReview = MarketplaceProductReview.builder()

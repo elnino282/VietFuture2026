@@ -25,8 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
  * Security: {@code /api/v1/admin/**} is restricted to ADMIN role
  * by {@link org.example.QuanLyMuaVu.module.shared.config.SecurityConfig}.
  */
-// @RestController
-// @RequestMapping("/api/v1/admin/marketplace/payment-proofs")
+@RestController
+@RequestMapping("/api/v1/admin/marketplace/payment-proofs")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MarketplaceAdminPaymentProofController {

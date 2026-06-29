@@ -67,7 +67,7 @@ class MarketplaceCheckoutSplitTest {
     void setUp() {
         buyer = User.builder().id(10L).username("buyer").fullName("Buyer").build();
         cart = MarketplaceCart.builder().id(100L).userId(buyer.getId()).build();
-        lenient().when(marketplaceProductReviewRepository.findByOrder_IdAndBuyerUser_Id(anyLong(), anyLong()))
+        lenient().when(marketplaceProductReviewRepository.findByOrderIdAndBuyerUserId(anyLong(), anyLong()))
                 .thenReturn(List.of());
         lenient().when(marketplaceProductRepository.saveAll(any())).thenAnswer(i -> i.getArgument(0));
         lenient().when(productWarehouseTransactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -94,7 +94,7 @@ class MarketplaceCheckoutSplitTest {
         when(currentUserService.getCurrentUser()).thenReturn(buyer);
         when(currentUserService.getCurrentUserId()).thenReturn(10L);
         when(marketplaceCartRepository.findByUserIdForUpdate(10L)).thenReturn(Optional.of(cart));
-        when(marketplaceCartItemRepository.findByCartIdWithProductForUpdate(100L)).thenReturn(List.of(i1, i2, i3));
+        when(marketplaceCartItemRepository.findByCartIdForUpdate(100L)).thenReturn(List.of(i1, i2, i3));
         when(marketplaceOrderGroupRepository.findByBuyerUserIdAndIdempotencyKey(10L, "key")).thenReturn(Optional.empty());
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
         when(marketplaceProductRepository.findAllByIdInForUpdate(any())).thenReturn(List.of(pA1, pA2, pB1));
@@ -126,8 +126,8 @@ class MarketplaceCheckoutSplitTest {
         when(currentUserService.getCurrentUser()).thenReturn(buyer);
         when(currentUserService.getCurrentUserId()).thenReturn(10L);
         when(marketplaceCartRepository.findByUserIdForUpdate(10L)).thenReturn(Optional.of(cart));
-        when(marketplaceCartItemRepository.findByCartIdWithProductForUpdate(100L)).thenReturn(List.of(item));
-        when(marketplaceOrderGroupRepository.findByBuyerUser_IdAndIdempotencyKey(10L, "cod-key")).thenReturn(Optional.empty());
+        when(marketplaceCartItemRepository.findByCartIdForUpdate(100L)).thenReturn(List.of(item));
+        when(marketplaceOrderGroupRepository.findByBuyerUserIdAndIdempotencyKey(10L, "cod-key")).thenReturn(Optional.empty());
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
         when(marketplaceProductRepository.findAllByIdInForUpdate(any())).thenReturn(List.of(product));
         when(productWarehouseLotRepository.findAllByIdInForUpdate(any())).thenReturn(List.of(lot));
@@ -153,8 +153,8 @@ class MarketplaceCheckoutSplitTest {
 
         when(currentUserService.getCurrentUser()).thenReturn(buyer);
         when(marketplaceCartRepository.findByUserIdForUpdate(10L)).thenReturn(Optional.of(cart));
-        when(marketplaceCartItemRepository.findByCartIdWithProductForUpdate(100L)).thenReturn(List.of(item));
-        when(marketplaceOrderGroupRepository.findByBuyerUser_IdAndIdempotencyKey(10L, "fail-key")).thenReturn(Optional.empty());
+        when(marketplaceCartItemRepository.findByCartIdForUpdate(100L)).thenReturn(List.of(item));
+        when(marketplaceOrderGroupRepository.findByBuyerUserIdAndIdempotencyKey(10L, "fail-key")).thenReturn(Optional.empty());
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
         when(marketplaceProductRepository.findAllByIdInForUpdate(any())).thenReturn(List.of(product));
         when(productWarehouseLotRepository.findAllByIdInForUpdate(any())).thenReturn(List.of(lot));

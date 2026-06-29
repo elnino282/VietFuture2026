@@ -151,7 +151,7 @@ class MarketplaceServiceTest {
         lot = buildLot(1, "10");
         product = buildProduct(200L, "rice-bag", "Rice Bag", new BigDecimal("100000"), lot, 20L);
 
-        lenient().when(marketplaceProductReviewRepository.findByOrder_IdAndBuyerUser_Id(anyLong(), anyLong()))
+        lenient().when(marketplaceProductReviewRepository.findByOrderIdAndBuyerUserId(anyLong(), anyLong()))
                 .thenReturn(List.of());
         lenient().when(marketplaceProductRepository.saveAll(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -159,6 +159,22 @@ class MarketplaceServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
         lenient().when(productWarehouseLotRepository.saveAll(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(marketplaceProductRepository.findAllById(any()))
+                .thenAnswer(invocation -> {
+                    Collection<Long> ids = invocation.getArgument(0);
+                    List<MarketplaceProduct> list = new java.util.ArrayList<>();
+                    if (ids.contains(200L)) {
+                        list.add(product);
+                    }
+                    return list;
+                });
+        lenient().when(productWarehouseLotRepository.findById(any())).thenAnswer(invocation -> {
+            Integer id = invocation.getArgument(0);
+            if (id != null && lot != null && id.equals(lot.getId())) {
+                return Optional.of(lot);
+            }
+            return Optional.empty();
+        });
     }
 
     @Nested
@@ -327,7 +343,7 @@ class MarketplaceServiceTest {
         void createOrder_CartEmpty_ThrowsException() {
             when(currentUserService.getCurrentUser()).thenReturn(buyer);
             when(marketplaceCartRepository.findByUserIdForUpdate(10L)).thenReturn(Optional.of(cart));
-            when(marketplaceCartItemRepository.findByCartIdWithProductForUpdate(100L)).thenReturn(List.of());
+            when(marketplaceCartItemRepository.findByCartIdForUpdate(100L)).thenReturn(List.of());
 
             MarketplaceCreateOrderRequest request = new MarketplaceCreateOrderRequest(
                     MarketplacePaymentMethod.COD,
@@ -362,8 +378,8 @@ class MarketplaceServiceTest {
 
             when(currentUserService.getCurrentUser()).thenReturn(buyer);
             when(marketplaceCartRepository.findByUserIdForUpdate(10L)).thenReturn(Optional.of(cart));
-            when(marketplaceCartItemRepository.findByCartIdWithProductForUpdate(100L)).thenReturn(List.of(cartItem));
-            when(marketplaceOrderGroupRepository.findByBuyerUser_IdAndIdempotencyKey(10L, "idem-stock"))
+            when(marketplaceCartItemRepository.findByCartIdForUpdate(100L)).thenReturn(List.of(cartItem));
+            when(marketplaceOrderGroupRepository.findByBuyerUserIdAndIdempotencyKey(10L, "idem-stock"))
                     .thenReturn(Optional.empty());
             when(objectMapper.writeValueAsString(any())).thenReturn("{\"k\":\"v\"}");
             when(marketplaceProductRepository.findAllByIdInForUpdate(List.of(200L))).thenReturn(List.of(lowStockProduct));
@@ -427,8 +443,8 @@ class MarketplaceServiceTest {
             when(currentUserService.getCurrentUser()).thenReturn(buyer);
             when(currentUserService.getCurrentUserId()).thenReturn(10L);
             when(marketplaceCartRepository.findByUserIdForUpdate(10L)).thenReturn(Optional.of(cart));
-            when(marketplaceCartItemRepository.findByCartIdWithProductForUpdate(100L)).thenReturn(List.of(itemA, itemB));
-            when(marketplaceOrderGroupRepository.findByBuyerUser_IdAndIdempotencyKey(10L, "idem-split"))
+            when(marketplaceCartItemRepository.findByCartIdForUpdate(100L)).thenReturn(List.of(itemA, itemB));
+            when(marketplaceOrderGroupRepository.findByBuyerUserIdAndIdempotencyKey(10L, "idem-split"))
                     .thenReturn(Optional.empty());
             when(objectMapper.writeValueAsString(any())).thenReturn("{\"k\":\"v\"}");
             when(marketplaceProductRepository.findAllByIdInForUpdate(List.of(200L, 201L)))
@@ -493,8 +509,8 @@ class MarketplaceServiceTest {
 
             when(currentUserService.getCurrentUser()).thenReturn(buyer);
             when(marketplaceCartRepository.findByUserIdForUpdate(10L)).thenReturn(Optional.of(cart));
-            when(marketplaceCartItemRepository.findByCartIdWithProductForUpdate(100L)).thenReturn(List.of(cartItem));
-            when(marketplaceOrderGroupRepository.findByBuyerUser_IdAndIdempotencyKey(10L, "idem-soldout"))
+            when(marketplaceCartItemRepository.findByCartIdForUpdate(100L)).thenReturn(List.of(cartItem));
+            when(marketplaceOrderGroupRepository.findByBuyerUserIdAndIdempotencyKey(10L, "idem-soldout"))
                     .thenReturn(Optional.empty());
             when(objectMapper.writeValueAsString(any())).thenReturn("{\"k\":\"v\"}");
             when(marketplaceProductRepository.findAllByIdInForUpdate(List.of(200L))).thenReturn(List.of(limitedProduct));
@@ -530,9 +546,9 @@ class MarketplaceServiceTest {
         void addCartItem_PublishedProduct_AddsSuccessfully() {
             product.setStatus(MarketplaceProductStatus.PUBLISHED);
             stubCartProduct(product);
-            when(marketplaceCartItemRepository.findByCart_IdAndProduct_Id(100L, 200L)).thenReturn(Optional.empty());
+            when(marketplaceCartItemRepository.findByCartIdAndProductId(100L, 200L)).thenReturn(Optional.empty());
             when(marketplaceCartItemRepository.save(any(MarketplaceCartItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
-            when(marketplaceCartItemRepository.findByCartIdWithProduct(100L)).thenReturn(List.of(cartItem(product, new BigDecimal("2"))));
+            when(marketplaceCartItemRepository.findByCartId(100L)).thenReturn(List.of(cartItem(product, new BigDecimal("2"))));
 
             MarketplaceCartResponse response = marketplaceService.addCartItem(
                     new MarketplaceAddCartItemRequest(200L, new BigDecimal("2")));
@@ -546,9 +562,9 @@ class MarketplaceServiceTest {
         void addCartItem_ActiveProduct_AddsSuccessfully() {
             product.setStatus(MarketplaceProductStatus.ACTIVE);
             stubCartProduct(product);
-            when(marketplaceCartItemRepository.findByCart_IdAndProduct_Id(100L, 200L)).thenReturn(Optional.empty());
+            when(marketplaceCartItemRepository.findByCartIdAndProductId(100L, 200L)).thenReturn(Optional.empty());
             when(marketplaceCartItemRepository.save(any(MarketplaceCartItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
-            when(marketplaceCartItemRepository.findByCartIdWithProduct(100L)).thenReturn(List.of(cartItem(product, new BigDecimal("1"))));
+            when(marketplaceCartItemRepository.findByCartId(100L)).thenReturn(List.of(cartItem(product, new BigDecimal("1"))));
 
             MarketplaceCartResponse response = marketplaceService.addCartItem(
                     new MarketplaceAddCartItemRequest(200L, new BigDecimal("1")));
@@ -592,7 +608,7 @@ class MarketplaceServiceTest {
 
         @Test
         void addCartItem_MissingLot_ThrowsProductLotUnavailable() {
-            product.setLot(null);
+            product.setLotId(null);
             stubCartProduct(product);
 
             AppException ex = assertThrows(AppException.class, () -> marketplaceService.addCartItem(
@@ -628,7 +644,7 @@ class MarketplaceServiceTest {
             product.setStockQuantity(new BigDecimal("10"));
             lot.setOnHandQuantity(new BigDecimal("5"));
             stubCartProduct(product);
-            when(marketplaceCartItemRepository.findByCart_IdAndProduct_Id(100L, 200L)).thenReturn(Optional.empty());
+            when(marketplaceCartItemRepository.findByCartIdAndProductId(100L, 200L)).thenReturn(Optional.empty());
 
             AppException ex = assertThrows(AppException.class, () -> marketplaceService.addCartItem(
                     new MarketplaceAddCartItemRequest(200L, new BigDecimal("6"))));
@@ -641,9 +657,9 @@ class MarketplaceServiceTest {
         void addCartItem_ExistingItem_ValidatesAndSavesTotalQuantity() {
             stubCartProduct(product);
             MarketplaceCartItem existing = cartItem(product, new BigDecimal("2"));
-            when(marketplaceCartItemRepository.findByCart_IdAndProduct_Id(100L, 200L)).thenReturn(Optional.of(existing));
+            when(marketplaceCartItemRepository.findByCartIdAndProductId(100L, 200L)).thenReturn(Optional.of(existing));
             when(marketplaceCartItemRepository.save(any(MarketplaceCartItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
-            when(marketplaceCartItemRepository.findByCartIdWithProduct(100L)).thenReturn(List.of(cartItem(product, new BigDecimal("5"))));
+            when(marketplaceCartItemRepository.findByCartId(100L)).thenReturn(List.of(cartItem(product, new BigDecimal("5"))));
 
             MarketplaceCartResponse response = marketplaceService.addCartItem(
                     new MarketplaceAddCartItemRequest(200L, new BigDecimal("3")));
@@ -671,7 +687,7 @@ class MarketplaceServiceTest {
         void mergeCart_MergedQuantityGreaterThanAvailableStock_ThrowsInsufficientStock() {
             stubCartProduct(product);
             MarketplaceCartItem existing = cartItem(product, new BigDecimal("8"));
-            when(marketplaceCartItemRepository.findByCart_IdAndProduct_Id(100L, 200L)).thenReturn(Optional.of(existing));
+            when(marketplaceCartItemRepository.findByCartIdAndProductId(100L, 200L)).thenReturn(Optional.of(existing));
 
             MarketplaceMergeCartRequest request = new MarketplaceMergeCartRequest(
                     List.of(new MarketplaceMergeCartRequest.MarketplaceMergeCartItem(200L, new BigDecimal("3"))));
@@ -705,7 +721,7 @@ class MarketplaceServiceTest {
                     .unitPriceSnapshot(product.getPrice())
                     .build();
 
-            when(marketplaceCartItemRepository.findByCart_IdAndProduct_Id(100L, 200L)).thenReturn(Optional.of(existing));
+            when(marketplaceCartItemRepository.findByCartIdAndProductId(100L, 200L)).thenReturn(Optional.of(existing));
             when(marketplaceCartItemRepository.save(any(MarketplaceCartItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             MarketplaceCartItem updated = MarketplaceCartItem.builder()
@@ -720,7 +736,7 @@ class MarketplaceServiceTest {
                     .quantity(new BigDecimal("5"))
                     .unitPriceSnapshot(product.getPrice())
                     .build();
-            when(marketplaceCartItemRepository.findByCartIdWithProduct(100L)).thenReturn(List.of(updated));
+            when(marketplaceCartItemRepository.findByCartId(100L)).thenReturn(List.of(updated));
 
             MarketplaceMergeCartRequest request = new MarketplaceMergeCartRequest(
                     List.of(new MarketplaceMergeCartRequest.MarketplaceMergeCartItem(200L, new BigDecimal("3"))));
@@ -752,7 +768,7 @@ class MarketplaceServiceTest {
                     .quantity(new BigDecimal("8"))
                     .unitPriceSnapshot(product.getPrice())
                     .build();
-            when(marketplaceCartItemRepository.findByCart_IdAndProduct_Id(100L, 200L)).thenReturn(Optional.of(existing));
+            when(marketplaceCartItemRepository.findByCartIdAndProductId(100L, 200L)).thenReturn(Optional.of(existing));
 
             MarketplaceMergeCartRequest request = new MarketplaceMergeCartRequest(
                     List.of(new MarketplaceMergeCartRequest.MarketplaceMergeCartItem(200L, new BigDecimal("3"))));
@@ -850,7 +866,7 @@ class MarketplaceServiceTest {
                     .thenReturn(new PageImpl<>(List.of(2L, 1L), Pageable.ofSize(2).withPage(1), 5));
             when(marketplaceOrderRepository.findByIdsWithResponseGraph(List.of(2L, 1L)))
                     .thenReturn(List.of(orderA, orderB));
-            when(marketplaceProductReviewRepository.findByOrder_IdInAndBuyerUser_Id(List.of(2L, 1L), 10L))
+            when(marketplaceProductReviewRepository.findByOrderIdInAndBuyerUserId(List.of(2L, 1L), 10L))
                     .thenReturn(List.of(review));
 
             var response = marketplaceService.listOrders("PENDING", 1, 2);
@@ -862,7 +878,7 @@ class MarketplaceServiceTest {
             assertEquals(List.of(2L, 1L), response.getItems().stream().map(MarketplaceOrderResponse::id).toList());
 
             MarketplaceOrderResponse first = response.getItems().getFirst();
-            assertEquals("MOG-2", first.orderGroupCode());
+            assertEquals("GROUP-1002", first.orderGroupCode());
             assertEquals(MarketplacePaymentMethod.COD, first.payment().method());
             assertEquals(MarketplacePaymentVerificationStatus.NOT_REQUIRED, first.payment().verificationStatus());
             assertEquals(true, first.canCancel());
@@ -881,7 +897,7 @@ class MarketplaceServiceTest {
                     any(MarketplaceOrderStatus.class),
                     any(Pageable.class));
             verify(marketplaceOrderRepository, never()).findAll(any(Pageable.class));
-            verify(marketplaceProductReviewRepository).findByOrder_IdInAndBuyerUser_Id(List.of(2L, 1L), 10L);
+            verify(marketplaceProductReviewRepository).findByOrderIdInAndBuyerUserId(List.of(2L, 1L), 10L);
         }
 
         @Test
@@ -952,7 +968,7 @@ class MarketplaceServiceTest {
                     20L,
                     ProductWarehouseLotStatus.IN_STOCK,
                     BigDecimal.ZERO)).thenReturn(Optional.of(ownedLot));
-            when(marketplaceProductRepository.findByLot_Id(5)).thenReturn(Optional.empty());
+            when(marketplaceProductRepository.findByLotId(5)).thenReturn(Optional.empty());
             when(marketplaceProductRepository.save(any(MarketplaceProduct.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             MarketplaceFarmerProductUpsertRequest request = new MarketplaceFarmerProductUpsertRequest(
@@ -1157,6 +1173,9 @@ class MarketplaceServiceTest {
         when(currentUserService.getCurrentUser()).thenReturn(buyer);
         when(marketplaceCartRepository.findByUserIdForUpdate(10L)).thenReturn(Optional.of(cart));
         when(marketplaceProductRepository.findByIdWithLotForCartValidation(product.getId())).thenReturn(Optional.of(product));
+        if (product.getLotId() != null) {
+            lenient().when(productWarehouseLotRepository.findById(product.getLotId())).thenReturn(Optional.of(lot));
+        }
     }
 
     private MarketplaceCartItem cartItem(MarketplaceProduct product, BigDecimal quantity) {

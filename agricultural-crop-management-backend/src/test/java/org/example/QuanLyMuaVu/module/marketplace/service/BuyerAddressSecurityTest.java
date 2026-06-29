@@ -26,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Security tests: buyer cannot view/edit/delete another buyer's address.
- * The service layer enforces ownership via findByIdAndUser_Id queries.
+ * The service layer enforces ownership via findByIdAndUserId queries.
  */
 @ExtendWith(MockitoExtension.class)
 class BuyerAddressSecurityTest {
@@ -69,7 +69,7 @@ class BuyerAddressSecurityTest {
         // BuyerA is authenticated
         when(currentUserService.getCurrentUserId()).thenReturn(buyerA.getId());
         // Address 5 belongs to buyerB — query with buyerA's ID returns empty
-        when(marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(5L, buyerA.getId()))
+        when(marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(5L, buyerA.getId()))
                 .thenReturn(Optional.empty());
 
         AppException ex = assertThrows(AppException.class,
@@ -81,7 +81,7 @@ class BuyerAddressSecurityTest {
     @DisplayName("Buyer A cannot delete Buyer B's address")
     void deleteAddress_CrossBuyer_ThrowsNotFound() {
         when(currentUserService.getCurrentUserId()).thenReturn(buyerA.getId());
-        when(marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(5L, buyerA.getId()))
+        when(marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(5L, buyerA.getId()))
                 .thenReturn(Optional.empty());
 
         AppException ex = assertThrows(AppException.class,
@@ -93,7 +93,7 @@ class BuyerAddressSecurityTest {
     @DisplayName("Buyer A cannot set default on Buyer B's address")
     void setDefault_CrossBuyer_ThrowsNotFound() {
         when(currentUserService.getCurrentUserId()).thenReturn(buyerA.getId());
-        when(marketplaceAddressRepository.findByIdAndUser_IdAndDeletedAtIsNull(5L, buyerA.getId()))
+        when(marketplaceAddressRepository.findByIdAndUserIdAndDeletedAtIsNull(5L, buyerA.getId()))
                 .thenReturn(Optional.empty());
 
         AppException ex = assertThrows(AppException.class,
@@ -104,17 +104,17 @@ class BuyerAddressSecurityTest {
     @Test
     @DisplayName("List addresses only returns current user's addresses (implicit isolation)")
     void listAddresses_OnlyCurrentUser() {
-        // BuyerA is authenticated — the service calls findAllByUser_Id with buyerA's ID
+        // BuyerA is authenticated — the service calls findAllByUserId with buyerA's ID
         when(currentUserService.getCurrentUserId()).thenReturn(buyerA.getId());
-        when(marketplaceAddressRepository.findAllByUser_IdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(buyerA.getId()))
+        when(marketplaceAddressRepository.findAllByUserIdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(buyerA.getId()))
                 .thenReturn(java.util.List.of());
 
         var result = marketplaceService.listAddresses();
         assertTrue(result.isEmpty());
 
         // Verify it was called with buyerA's ID, not buyerB's
-        verify(marketplaceAddressRepository).findAllByUser_IdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(buyerA.getId());
+        verify(marketplaceAddressRepository).findAllByUserIdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(buyerA.getId());
         verify(marketplaceAddressRepository, never())
-                .findAllByUser_IdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(buyerB.getId());
+                .findAllByUserIdAndDeletedAtIsNullOrderByIsDefaultDescIdDesc(buyerB.getId());
     }
 }

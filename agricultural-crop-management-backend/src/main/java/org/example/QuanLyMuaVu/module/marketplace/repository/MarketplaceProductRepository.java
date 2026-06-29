@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import org.example.QuanLyMuaVu.module.marketplace.entity.MarketplaceProduct;
 import org.example.QuanLyMuaVu.module.marketplace.model.MarketplaceProductStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -88,25 +89,25 @@ public interface MarketplaceProductRepository extends JpaRepository<MarketplaceP
 
     Optional<MarketplaceProduct> findByIdAndStatus(Long id, MarketplaceProductStatus status);
 
-    Optional<MarketplaceProduct> findByIdAndFarmerUser_Id(Long id, Long farmerUserId);
+    Optional<MarketplaceProduct> findByIdAndFarmerUserId(Long id, Long farmerUserId);
 
-    Optional<MarketplaceProduct> findByLot_Id(Integer lotId);
+    Optional<MarketplaceProduct> findByLotId(Integer lotId);
 
-    List<MarketplaceProduct> findAllByLot_IdIn(Collection<Integer> lotIds);
+    List<MarketplaceProduct> findAllByLotIdIn(Collection<Integer> lotIds);
 
-    boolean existsByLot_Id(Integer lotId);
+    boolean existsByLotId(Integer lotId);
 
-    boolean existsByLot_IdAndIdNot(Integer lotId, Long id);
+    boolean existsByLotIdAndIdNot(Integer lotId, Long id);
 
     boolean existsBySlug(String slug);
 
     boolean existsBySlugAndIdNot(String slug, Long id);
 
-    long countByFarmerUser_Id(Long farmerUserId);
+    long countByFarmerUserId(Long farmerUserId);
 
-    long countByFarmerUser_IdAndStatus(Long farmerUserId, MarketplaceProductStatus status);
+    long countByFarmerUserIdAndStatus(Long farmerUserId, MarketplaceProductStatus status);
 
-    long countByFarmerUser_IdAndStatusIn(Long farmerUserId, Collection<MarketplaceProductStatus> statuses);
+    long countByFarmerUserIdAndStatusIn(Long farmerUserId, Collection<MarketplaceProductStatus> statuses);
 
     long countByStatus(MarketplaceProductStatus status);
 

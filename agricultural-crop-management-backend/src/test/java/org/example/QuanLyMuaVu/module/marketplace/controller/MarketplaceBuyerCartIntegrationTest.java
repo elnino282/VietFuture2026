@@ -311,9 +311,9 @@ class MarketplaceBuyerCartIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value("SUCCESS"));
 
-        MarketplaceCart cart = marketplaceCartRepository.findByUser_Id(buyer.getId()).orElseThrow();
+        MarketplaceCart cart = marketplaceCartRepository.findByUserId(buyer.getId()).orElseThrow();
         MarketplaceCartItem cartItem = marketplaceCartItemRepository
-                .findByCart_IdAndProduct_Id(cart.getId(), product.getId())
+                .findByCartIdAndProductId(cart.getId(), product.getId())
                 .orElseThrow();
 
         assertNotNull(cartItem.getId());

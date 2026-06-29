@@ -32,8 +32,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-// @RestController
-// @RequestMapping("/api/v1/marketplace/farmer")
+@RestController
+@RequestMapping("/api/v1/marketplace/farmer")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MarketplaceFarmerController {

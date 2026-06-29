@@ -99,8 +99,8 @@ public interface ProductWarehouseLotRepository extends JpaRepository<ProductWare
     @Query("""
             select count(p)
             from MarketplaceProduct p
-            join p.lot l
-            where p.farmerUser.id = :farmerUserId
+            join ProductWarehouseLot l on p.lotId = l.id
+            where p.farmerUserId = :farmerUserId
               and p.status in :statuses
               and p.stockQuantity > 0
               and l.onHandQuantity > 0

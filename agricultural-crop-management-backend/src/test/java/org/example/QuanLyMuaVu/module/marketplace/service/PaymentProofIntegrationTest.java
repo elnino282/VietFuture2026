@@ -94,7 +94,7 @@ class PaymentProofIntegrationTest {
         farmer = User.builder().id(20L).username("farmer-1").fullName("Farmer One").build();
         orderGroup = MarketplaceOrderGroup.builder().id(5L).groupCode("MOG-PROOF-TEST").build();
 
-        lenient().when(marketplaceProductReviewRepository.findByOrder_IdAndBuyerUser_Id(anyLong(), anyLong()))
+        lenient().when(marketplaceProductReviewRepository.findByOrderIdAndBuyerUserId(anyLong(), anyLong()))
                 .thenReturn(List.of());
     }
 

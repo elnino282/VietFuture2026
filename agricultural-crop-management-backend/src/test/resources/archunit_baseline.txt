@@ -227,6 +227,7 @@ org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService -> org.exa
 org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService -> org.example.QuanLyMuaVu.module.cropcatalog.entity.Crop
 org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService -> org.example.QuanLyMuaVu.module.cropcatalog.entity.Variety
 org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService -> org.example.QuanLyMuaVu.module.farm.entity.Farm
+org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService -> org.example.QuanLyMuaVu.module.farm.entity.Farm$FarmBuilder
 org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService -> org.example.QuanLyMuaVu.module.farm.entity.Plot
 org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService -> org.example.QuanLyMuaVu.module.farm.entity.Province
 org.example.QuanLyMuaVu.module.marketplace.service.MarketplaceService -> org.example.QuanLyMuaVu.module.farm.entity.Ward

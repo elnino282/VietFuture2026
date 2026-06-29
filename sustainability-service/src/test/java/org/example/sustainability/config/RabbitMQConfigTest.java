@@ -1,6 +1,6 @@
 package org.example.sustainability.config;
 
-import org.example.sustainability.RabbitMQConfig;
+import org.example.sustainability.config.RabbitMQConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.Queue;

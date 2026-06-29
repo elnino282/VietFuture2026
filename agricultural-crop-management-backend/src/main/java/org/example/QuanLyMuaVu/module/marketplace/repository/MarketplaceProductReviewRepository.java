@@ -50,7 +50,8 @@ public interface MarketplaceProductReviewRepository extends JpaRepository<Market
 
     @Query("""
             SELECT r FROM MarketplaceProductReview r
-            WHERE r.farmId = :farmId
+            JOIN MarketplaceProduct p ON r.productId = p.id
+            WHERE p.farmId = :farmId
               AND r.hidden = false
             ORDER BY r.createdAt DESC
             """)
@@ -60,7 +61,8 @@ public interface MarketplaceProductReviewRepository extends JpaRepository<Market
             SELECT COALESCE(AVG(r.rating), 0) AS averageRating,
                    COUNT(r.id) AS ratingCount
             FROM MarketplaceProductReview r
-            WHERE r.farmId = :farmId
+            JOIN MarketplaceProduct p ON r.productId = p.id
+            WHERE p.farmId = :farmId
               AND r.hidden = false
             """)
     SingleProductRatingProjection aggregateRatingByFarmId(@Param("farmId") Integer farmId);
