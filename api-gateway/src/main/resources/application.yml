@@ -75,6 +75,11 @@ spring:
               predicates:
                 - Path=/api/v1/admin/documents, /api/v1/admin/documents/**
                 - Method=GET
+            - id: admin-reporting-reads-route
+              uri: ${ADMIN_REPORTING_SERVICE_URI:http://localhost:8091}
+              predicates:
+                - Path=/api/v1/admin/farms, /api/v1/admin/farms/**, /api/v1/admin/plots, /api/v1/admin/plots/**, /api/v1/admin/seasons, /api/v1/admin/seasons/**, /api/v1/admin/tasks, /api/v1/admin/tasks/**, /api/v1/admin/incidents, /api/v1/admin/incidents/**, /api/v1/admin/users, /api/v1/admin/users/**, /api/v1/admin/inventory, /api/v1/admin/inventory/**
+                - Method=GET
             - id: monolith-route
               uri: ${MONOLITH_URI:http://localhost:8080}
               predicates:

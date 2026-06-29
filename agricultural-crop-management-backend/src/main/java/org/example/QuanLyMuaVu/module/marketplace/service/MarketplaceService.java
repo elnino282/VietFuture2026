@@ -3133,30 +3133,6 @@ public class MarketplaceService {
         return user.getEmail();
     }
 
-    private String resolveFarmRegion(Farm farm) {
-        if (farm == null || farm.getProvince() == null) {
-            return null;
-        }
-        return farm.getProvince().getName();
-    }
-
-    private String resolveFarmAddress(Farm farm) {
-        if (farm == null) {
-            return null;
-        }
-        String wardName = farm.getWard() == null ? null : normalizeNullable(farm.getWard().getName());
-        String provinceName = farm.getProvince() == null ? null : normalizeNullable(farm.getProvince().getName());
-        if (wardName == null && provinceName == null) {
-            return null;
-        }
-        if (wardName == null) {
-            return provinceName;
-        }
-        if (provinceName == null) {
-            return wardName;
-        }
-        return wardName + ", " + provinceName;
-    }
 
     private MarketplaceProduct getOwnedProductForFarmer(Long productId, Long farmerUserId) {
         MarketplaceProduct product = marketplaceProductRepository.findById(productId)

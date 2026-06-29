@@ -147,6 +147,7 @@ public class AdminEventListener {
         FarmSummary summary = FarmSummary.builder()
                 .farmId(dto.getFarmId())
                 .farmName(dto.getFarmName())
+                .active(dto.getActive())
                 .build();
         farmSummaryRepository.save(summary);
     }

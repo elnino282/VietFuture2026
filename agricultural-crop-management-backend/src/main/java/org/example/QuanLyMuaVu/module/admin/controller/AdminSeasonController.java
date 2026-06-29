@@ -32,46 +32,6 @@ public class AdminSeasonController {
 
     AdminSeasonService adminSeasonService;
 
-    @Operation(summary = "List all seasons (Admin)", description = "Get paginated list of all seasons across the system with optional filters")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
-    })
-    @GetMapping
-    public ApiResponse<PageResponse<SeasonResponse>> listAllSeasons(
-            @Parameter(description = "Filter by farm ID") @RequestParam(value = "farmId", required = false) Integer farmId,
-            @Parameter(description = "Filter by status (PLANNED, ACTIVE, COMPLETED, CANCELLED, ARCHIVED)") @RequestParam(value = "status", required = false) String status,
-            @Parameter(description = "Filter by crop ID") @RequestParam(value = "cropId", required = false) Integer cropId,
-            @Parameter(description = "Filter by plot ID") @RequestParam(value = "plotId", required = false) Integer plotId,
-            @Parameter(description = "Page index (0-based)") @RequestParam(value = "page", defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(value = "size", defaultValue = "20") int size) {
-        return ApiResponse.success(adminSeasonService.getAllSeasons(farmId, status, cropId, plotId, page, size));
-    }
-
-    @Operation(summary = "Get season detail (Admin)", description = "Get detailed information about a specific season including tasks, expenses, harvests, incidents")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Season not found")
-    })
-    @GetMapping("/{id}")
-    public ApiResponse<SeasonDetailResponse> getSeasonDetail(@PathVariable Integer id) {
-        return ApiResponse.success(adminSeasonService.getSeasonById(id));
-    }
-
-    @Operation(summary = "Get pending task count (Admin)", description = "Get count of non-DONE tasks for a season. Used for UX warning when completing a season.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
-    })
-    @GetMapping("/{id}/pending-task-count")
-    public ApiResponse<Long> getPendingTaskCount(@PathVariable Integer id) {
-        return ApiResponse.success(adminSeasonService.getPendingTaskCount(id));
-    }
-
     @Operation(summary = "Update season (Admin Intervention)", description = "Update a season. If changing status to COMPLETED, actual_yield and end_date are required. All pending tasks will be auto-cancelled.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),

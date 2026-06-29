@@ -31,35 +31,6 @@ public class AdminTaskController {
 
     AdminTaskService adminTaskService;
 
-    @Operation(summary = "List all tasks (Admin)", description = "Get paginated list of all tasks across all seasons with optional filters")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
-    })
-    @GetMapping
-    public ApiResponse<PageResponse<TaskResponse>> listAllTasks(
-            @Parameter(description = "Filter by farm ID") @RequestParam(value = "farmId", required = false) Integer farmId,
-            @Parameter(description = "Filter by crop ID") @RequestParam(value = "cropId", required = false) Integer cropId,
-            @Parameter(description = "Filter by season ID") @RequestParam(value = "seasonId", required = false) Integer seasonId,
-            @Parameter(description = "Filter by status") @RequestParam(value = "status", required = false) String status,
-            @Parameter(description = "Page index (0-based)") @RequestParam(value = "page", defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(value = "size", defaultValue = "20") int size) {
-        return ApiResponse.success(adminTaskService.getAllTasks(farmId, cropId, seasonId, status, page, size));
-    }
-
-    @Operation(summary = "Get task detail (Admin)", description = "Get detailed information about a specific task")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Task not found")
-    })
-    @GetMapping("/{id}")
-    public ApiResponse<TaskResponse> getTask(@PathVariable Integer id) {
-        return ApiResponse.success(adminTaskService.getTaskById(id));
-    }
-
     @Operation(summary = "Update task (Admin Intervention)", description = "Update a task including status change and user reassignment. User must be the farm owner.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),

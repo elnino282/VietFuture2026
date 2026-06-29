@@ -35,33 +35,6 @@ public class AdminUserController {
         private final AdminUserCommandService adminUserCommandService;
 
         /**
-         * GET /api/v1/admin/users
-         * Returns paginated list of all users
-         */
-        @GetMapping
-        public ResponseEntity<ApiResponse<PageResponse<AdminUserQueryService.AdminUserDto>>> getAllUsers(
-                        @RequestParam(defaultValue = "0") int page,
-                        @RequestParam(defaultValue = "10") int size,
-                        @RequestParam(required = false) String keyword,
-                        @RequestParam(defaultValue = "id") String sortBy,
-                        @RequestParam(defaultValue = "asc") String sortDir) {
-                log.info("Admin requesting all users, page: {}, size: {}", page, size);
-
-                Sort sort = sortDir.equalsIgnoreCase("desc")
-                                ? Sort.by(sortBy).descending()
-                                : Sort.by(sortBy).ascending();
-                Pageable pageable = PageRequest.of(page, size, sort);
-
-                Page<AdminUserQueryService.AdminUserDto> usersPage = keyword != null && !keyword.isBlank()
-                                ? adminUserQueryService.searchUsers(keyword, pageable)
-                                : adminUserQueryService.getAllUsers(pageable);
-
-                PageResponse<AdminUserQueryService.AdminUserDto> response = PageResponse.of(usersPage,
-                                usersPage.getContent());
-                return ResponseEntity.ok(ApiResponse.success("Users retrieved", response));
-        }
-
-        /**
          * GET /api/v1/admin/users/{id}
          * Get user by ID
          */
@@ -153,18 +126,5 @@ public class AdminUserController {
 
                 adminUserCommandService.deleteUser(id);
                 return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
-        }
-
-        /**
-         * GET /api/v1/admin/users/roles
-         * Returns list of all available roles
-         */
-        @GetMapping("/roles")
-        public ResponseEntity<ApiResponse<List<String>>> getAllRoles() {
-                log.info("Admin requesting all roles");
-
-                List<String> roles = adminUserQueryService.getAllRoles();
-
-                return ResponseEntity.ok(ApiResponse.success("Roles retrieved", roles));
         }
 }

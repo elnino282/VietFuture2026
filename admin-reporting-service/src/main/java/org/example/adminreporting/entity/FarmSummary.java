@@ -17,4 +17,7 @@ public class FarmSummary {
 
     @Column(name = "farm_name", nullable = false)
     private String farmName;
+
+    @Column(name = "active")
+    private Boolean active;
 }
