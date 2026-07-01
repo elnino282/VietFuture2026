@@ -184,6 +184,7 @@ public class SeasonService {
                 .currentPlantCount(request.getInitialPlantCount())
                 .expectedYieldKg(request.getExpectedYieldKg())
                 .notes(request.getNotes())
+                .ownerUserId(seasonWorkspaceAccessService.getCurrentUserId())
                 .build();
 
         Season saved = seasonRepository.save(season);

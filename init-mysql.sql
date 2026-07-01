@@ -7,6 +7,7 @@ CREATE DATABASE IF NOT EXISTS marketplace_db;
 CREATE DATABASE IF NOT EXISTS finance_db;
 CREATE DATABASE IF NOT EXISTS incident_db;
 CREATE DATABASE IF NOT EXISTS sustainability_db;
+CREATE DATABASE IF NOT EXISTS admin_reporting_db;
 
 CREATE USER IF NOT EXISTS 'springuser'@'localhost' IDENTIFIED BY 'springpass';
 GRANT ALL PRIVILEGES ON identity_db.* TO 'springuser'@'localhost';
@@ -27,6 +28,8 @@ GRANT ALL PRIVILEGES ON incident_db.* TO 'springuser'@'localhost';
 GRANT ALL PRIVILEGES ON incident_db.* TO 'springuser'@'%';
 GRANT ALL PRIVILEGES ON sustainability_db.* TO 'springuser'@'localhost';
 GRANT ALL PRIVILEGES ON sustainability_db.* TO 'springuser'@'%';
+GRANT ALL PRIVILEGES ON admin_reporting_db.* TO 'springuser'@'localhost';
+GRANT ALL PRIVILEGES ON admin_reporting_db.* TO 'springuser'@'%';
 FLUSH PRIVILEGES;
 
 

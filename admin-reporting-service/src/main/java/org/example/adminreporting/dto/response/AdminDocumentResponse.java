@@ -10,13 +10,30 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AdminDocumentResponse {
-    Long id;
+    // Primary Fields (required by frontend schema)
+    Long documentId;
     String title;
+    String url;
     String description;
-    String documentUrl;
+    
+    // Filtering Fields
+    String crop;
+    String stage;
+    String topic;
     String documentType;
-    String status;
+    
+    // Metadata
+    Integer viewCount;
+    Boolean isPinned;
+    Boolean isActive;
+    
+    // Timestamps
     String createdAt;
     String updatedAt;
+    
+    // User tracking
     Long createdBy;
+    Boolean isFavorited;  // Per-user, defaults to false
+    Boolean isPublic;     // Can be used to control visibility
 }
+

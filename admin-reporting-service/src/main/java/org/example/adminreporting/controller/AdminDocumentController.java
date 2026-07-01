@@ -10,15 +10,92 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/admin/documents")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminDocumentController {
 
     private final AdminDocumentService adminDocumentService;
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<AdminDocumentResponse>>> listDocuments(
+    // ═══════════════════════════════════════════════════════════════
+    // PUBLIC ENDPOINTS (Farmer/Buyer Access)
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * List documents visible to all farmers/buyers
+     * GET /api/v1/documents
+     */
+    @GetMapping("/api/v1/documents")
+    @PreAuthorize("hasAnyRole('FARMER', 'BUYER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<PageResponse<AdminDocumentResponse>>> listPublicDocuments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        PageResponse<AdminDocumentResponse> response = adminDocumentService.listDocuments(page, size, q, type, status, sort);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    /**
+     * Get document meta (filter options)
+     * GET /api/v1/documents/meta
+     */
+    @GetMapping("/api/v1/documents/meta")
+    @PreAuthorize("hasAnyRole('FARMER', 'BUYER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<org.example.adminreporting.dto.response.DocumentMetaResponse>> getDocumentsMeta() {
+        return ResponseEntity.ok(ApiResponse.success(adminDocumentService.getDocumentMeta()));
+    }
+
+    /**
+     * Get single document by ID (public access)
+     * GET /api/v1/documents/{id}
+     */
+    @GetMapping("/api/v1/documents/{id}")
+    @PreAuthorize("hasAnyRole('FARMER', 'BUYER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<AdminDocumentResponse>> getPublicDocument(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.success(adminDocumentService.getDocumentById(id)));
+    }
+
+    /**
+     * Record document open (for Recent tab)
+     * POST /api/v1/documents/{id}/open
+     */
+    @PostMapping("/api/v1/documents/{id}/open")
+    @PreAuthorize("hasAnyRole('FARMER', 'BUYER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> recordDocumentOpen(@PathVariable Integer id) {
+        // TODO: Implement tracking for Recent tab
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    /**
+     * Add document to favorites
+     * POST /api/v1/documents/{id}/favorite
+     */
+    @PostMapping("/api/v1/documents/{id}/favorite")
+    @PreAuthorize("hasAnyRole('FARMER', 'BUYER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> addToFavorite(@PathVariable Integer id) {
+        // TODO: Implement favorite tracking per user
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    /**
+     * Remove document from favorites
+     * DELETE /api/v1/documents/{id}/favorite
+     */
+    @DeleteMapping("/api/v1/documents/{id}/favorite")
+    @PreAuthorize("hasAnyRole('FARMER', 'BUYER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> removeFromFavorite(@PathVariable Integer id) {
+        // TODO: Implement favorite tracking per user
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ADMIN ENDPOINTS (Admin Only)
+    // ═══════════════════════════════════════════════════════════════
+
+    @GetMapping("/api/v1/admin/documents")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<PageResponse<AdminDocumentResponse>>> listAdminDocuments(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String q,

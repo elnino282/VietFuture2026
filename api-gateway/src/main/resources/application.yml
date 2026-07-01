@@ -74,6 +74,10 @@ spring:
               uri: ${ADMIN_REPORTING_SERVICE_URI:http://localhost:8091}
               predicates:
                 - Path=/api/v1/admin/documents, /api/v1/admin/documents/**
+            - id: documents-route
+              uri: ${ADMIN_REPORTING_SERVICE_URI:http://localhost:8091}
+              predicates:
+                - Path=/api/v1/documents, /api/v1/documents/**
             - id: admin-reporting-reads-route
               uri: ${ADMIN_REPORTING_SERVICE_URI:http://localhost:8091}
               predicates:
