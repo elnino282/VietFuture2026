@@ -60,8 +60,8 @@ export function useFloatingChatButton(): UseFloatingChatButtonResult {
   };
 
   return {
-    // Show whenever authenticated and not already on the chat page
-    isVisible: isAuthenticated && !isOnChatPage,
+    // Show whenever authenticated, not already on the chat page, and chat is not disabled
+    isVisible: isAuthenticated && !isOnChatPage && bootstrap.status !== "disabled",
     unreadCount,
     navigateToChat,
   };
