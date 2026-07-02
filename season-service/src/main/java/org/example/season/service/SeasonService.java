@@ -286,6 +286,11 @@ public class SeasonService {
             throw new AppException(ErrorCode.SEASON_HAS_CHILD_RECORDS);
         }
 
+        ExternalServiceClient.PlotInternalDto plot = externalServiceClient.getPlot(season.getPlotId());
+        Integer farmId = plot != null ? plot.getFarmId() : null;
+
         seasonRepository.delete(season);
+
+        domainEventPublisher.publish(new SeasonChangedEvent(season, farmId, SeasonChangedEvent.Action.DELETED));
     }
 }

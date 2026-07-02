@@ -132,17 +132,32 @@ export const RoleUpdateRequestSchema = z.object({
 export type RoleUpdateRequest = z.infer<typeof RoleUpdateRequestSchema>;
 
 // Document Schemas (Admin CRUD - Updated)
-export const AdminDocumentSchema = z.object({
-  id: z.number(),
+export const AdminDocumentSchemaBase = z.object({
+  id: z.number().optional(),
+  documentId: z.number().optional(),
   title: z.string(),
   description: z.string().optional().nullable(),
-  documentUrl: z.string(),
-  documentType: z.string(),
-  status: z.string(),
+  documentUrl: z.string().optional(),
+  url: z.string().optional(),
+  documentType: z.string().optional().nullable(),
+  status: z.string().optional(),
+  isActive: z.boolean().optional(),
   createdAt: z.string().optional().nullable(),
   updatedAt: z.string().optional().nullable(),
   createdBy: z.number().optional().nullable(),
 });
+
+export const AdminDocumentSchema = AdminDocumentSchemaBase.transform((val) => ({
+  id: (val.id ?? val.documentId ?? 0) as number,
+  title: val.title,
+  description: val.description,
+  documentUrl: (val.documentUrl ?? val.url ?? "") as string,
+  documentType: (val.documentType ?? "GUIDE") as string,
+  status: (val.status ?? (val.isActive === false ? "INACTIVE" : "ACTIVE")) as string,
+  createdAt: val.createdAt,
+  updatedAt: val.updatedAt,
+  createdBy: val.createdBy,
+}));
 
 export type AdminDocument = z.infer<typeof AdminDocumentSchema>;
 

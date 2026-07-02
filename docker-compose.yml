@@ -379,7 +379,7 @@ services:
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-rabbitpass}
-      BACKFILL_ENABLED: "false"
+      BACKFILL_ENABLED: "true"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8091/actuator/health"]
       interval: 30s

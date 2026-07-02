@@ -104,6 +104,10 @@ public class AdminEventListener {
             handleSeasonChanged(message);
             return true;
         }
+        if ("season.event.season.deleted".equals(eventType)) {
+            handleSeasonDeleted(message);
+            return true;
+        }
         if ("season.event.harvest.recorded".equals(eventType)) {
             handleHarvestRecorded(message);
             return true;
@@ -227,6 +231,11 @@ public class AdminEventListener {
                 .actualYieldKg(dto.getActualYieldKg())
                 .build();
         seasonSummaryRepository.save(summary);
+    }
+
+    private void handleSeasonDeleted(Message message) throws Exception {
+        SeasonChangedEventDto dto = objectMapper.readValue(message.getBody(), SeasonChangedEventDto.class);
+        seasonSummaryRepository.deleteById(dto.getSeasonId());
     }
 
     private void handleHarvestRecorded(Message message) throws Exception {

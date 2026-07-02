@@ -12,7 +12,8 @@ public class SeasonChangedEvent extends DomainEvent {
         CREATED,
         UPDATED,
         STATUS_CHANGED,
-        COMPLETED
+        COMPLETED,
+        DELETED
     }
 
     private final Action action;
@@ -43,6 +44,8 @@ public class SeasonChangedEvent extends DomainEvent {
                 return "status.changed";
             case COMPLETED:
                 return "completed";
+            case DELETED:
+                return "deleted";
             default:
                 throw new IllegalArgumentException("Unsupported action: " + action);
         }

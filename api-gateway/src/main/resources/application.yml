@@ -9,23 +9,22 @@ spring:
     gateway:
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
-      server:
-        webflux:
-          globalcors:
-            cors-configurations:
-              '[/**]':
-                allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:5174}
-                allowedMethods:
-                  - GET
-                  - POST
-                  - PUT
-                  - DELETE
-                  - PATCH
-                  - OPTIONS
-                allowedHeaders: "*"
-                allowCredentials: true
-                maxAge: 3600
-          routes:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:5174}
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      routes:
             - id: identity-route
               uri: ${IDENTITY_SERVICE_URI:http://localhost:8081}
               predicates:
@@ -57,7 +56,7 @@ spring:
             - id: season-route
               uri: ${SEASON_SERVICE_URI:http://localhost:8085}
               predicates:
-                - Path=/api/v1/seasons, /api/v1/seasons/**, /api/v1/tasks, /api/v1/tasks/**, /api/v1/workspace/tasks, /api/v1/workspace/tasks/**, /api/v1/harvests, /api/v1/harvests/**, /api/v1/field-logs, /api/v1/field-logs/**, /api/v1/disease-records, /api/v1/disease-records/**, /api/v1/disease-treatments, /api/v1/disease-treatments/**, /api/v1/farmer/labor, /api/v1/farmer/labor/**
+                - Path=/api/v1/seasons, /api/v1/seasons/**, /api/v1/tasks, /api/v1/tasks/**, /api/v1/workspace/tasks, /api/v1/workspace/tasks/**, /api/v1/harvests, /api/v1/harvests/**, /api/v1/field-logs, /api/v1/field-logs/**, /api/v1/disease-records, /api/v1/disease-records/**, /api/v1/disease-treatments, /api/v1/disease-treatments/**, /api/v1/farmer/labor, /api/v1/farmer/labor/**, /api/v1/employee, /api/v1/employee/**
             - id: inventory-route
               uri: ${INVENTORY_SERVICE_URI:http://localhost:8086}
               predicates:
