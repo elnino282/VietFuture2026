@@ -40,6 +40,7 @@ export function TaskWorkspace() {
     uniqueAssignees,
     uniquePlots,
     assigneeOptions,
+    workTeamOptions,
     handleTaskMove,
     handleBulkComplete,
     handleDeleteTask,
@@ -136,6 +137,7 @@ export function TaskWorkspace() {
           hideSeasonSelector={true}
           uniquePlots={uniquePlots}
           assigneeOptions={assigneeOptions}
+          workTeamOptions={workTeamOptions}
           isFormDisabled={isSeasonWriteLocked}
           disabledReason={seasonWriteLockReason}
         />

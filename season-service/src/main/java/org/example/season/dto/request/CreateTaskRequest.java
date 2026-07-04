@@ -46,4 +46,19 @@ public class CreateTaskRequest {
      * Optional assignee user ID. If omitted, task is assigned to current farmer.
      */
     Long assigneeUserId;
+
+    /**
+     * Optional plot/zone ID to assign the task to a specific area.
+     */
+    Long plotId;
+
+    /**
+     * Optional work team ID to assign the task to a team.
+     */
+    Long workTeamId;
+
+    /**
+     * Optional estimated number of days to complete the task.
+     */
+    Integer estimatedDays;
 }

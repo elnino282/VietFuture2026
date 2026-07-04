@@ -30,5 +30,8 @@ public class TaskResponse {
     String seasonName;
     Long userId;
     String userName;
+    Long plotId;
+    Long workTeamId;
+    Integer estimatedDays;
     LocalDateTime createdAt;
 }

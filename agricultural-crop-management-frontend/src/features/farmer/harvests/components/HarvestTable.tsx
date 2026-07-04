@@ -8,6 +8,9 @@ import {
   QrCode,
   Trash2,
 } from "lucide-react";
+import { useState } from "react";
+import { differenceInDays } from "date-fns";
+import { ReceiveToWarehouseModal } from "@/pages/farmer/components/ReceiveToWarehouseModal";
 import {
   Card,
   CardContent,
@@ -52,6 +55,7 @@ interface HarvestTableProps {
   getStatusBadge: (status?: HarvestStatus | null) => JSX.Element | null;
   getGradeBadge: (grade?: HarvestGrade | null) => JSX.Element;
   disableMutations?: boolean;
+  onRefetch?: () => void;
 }
 
 export function HarvestTable({
@@ -69,8 +73,21 @@ export function HarvestTable({
   getStatusBadge,
   getGradeBadge,
   disableMutations = false,
+  onRefetch,
 }: HarvestTableProps) {
   const { preferences } = usePreferences();
+  const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
+  const [selectedHarvestForReceive, setSelectedHarvestForReceive] = useState<HarvestBatch | null>(null);
+
+  const handleOpenReceiveModal = (batch: HarvestBatch) => {
+    setSelectedHarvestForReceive(batch);
+    setIsReceiveModalOpen(true);
+  };
+
+  const handleCloseReceiveModal = (open: boolean) => {
+    setIsReceiveModalOpen(open);
+    if (!open) setSelectedHarvestForReceive(null);
+  };
   const { t } = useI18n();
   const unitLabel = getWeightUnitLabel(preferences.weightUnit);
   const selectedVisibleIds = batches
@@ -198,8 +215,22 @@ export function HarvestTable({
                     </TableCell>
                     <TableCell>{getGradeBadge(batch.grade)}</TableCell>
                     <TableCell>
-                      {getStatusBadge(batch.status) ?? (
-                        <span className="text-xs text-muted-foreground">{t("common.notAvailable", "—")}</span>
+                      {batch.status === "PENDING_RECEIPT" ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 w-fit">
+                            Đang chờ Nhập kho
+                          </span>
+                          {batch.postHarvestDelayDays && batch.postHarvestDelayDays > 0 ? (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              Chờ sấy: {batch.postHarvestDelayDays} ngày
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : (
+                        getStatusBadge(batch.status) ?? (
+                          <span className="text-xs text-muted-foreground">{t("common.notAvailable", "—")}</span>
+                        )
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -234,6 +265,40 @@ export function HarvestTable({
                             <Edit className="w-4 h-4 mr-2" />
                             {t("harvests.table.actions.editBatch")}
                           </DropdownMenuItem>
+                          
+                          {/* [FIX] Logic khóa nút Xác nhận Nhập kho */}
+                          {(() => {
+                            const delayDays = batch.postHarvestDelayDays || 0;
+                            const daysElapsed = differenceInDays(new Date(), new Date(batch.date));
+                            const isReceived = batch.status === "RECEIVED";
+                            const isWaiting = !isReceived && daysElapsed < delayDays;
+
+                            let btnText = "Xác nhận Nhập kho";
+                            let isDisabled = false;
+                            let colorClass = "text-green-600";
+
+                            if (isReceived) {
+                              btnText = "Đã nhập kho";
+                              isDisabled = true;
+                              colorClass = "text-muted-foreground";
+                            } else if (isWaiting) {
+                              btnText = `Chờ phơi sấy (${delayDays - daysElapsed} ngày)`;
+                              isDisabled = true;
+                              colorClass = "text-muted-foreground";
+                            }
+
+                            return (
+                              <DropdownMenuItem
+                                onClick={() => !isDisabled && !disableMutations && handleOpenReceiveModal(batch)}
+                                disabled={isDisabled || disableMutations}
+                                className={colorClass}
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                {btnText}
+                              </DropdownMenuItem>
+                            );
+                          })()}
+
                           <DropdownMenuItem>
                             <QrCode className="w-4 h-4 mr-2" />
                             {t("harvests.table.actions.generateQr")}
@@ -261,6 +326,14 @@ export function HarvestTable({
           </Table>
         </div>
       </CardContent>
+
+      {/* [FIX] Render Modal Nhập kho */}
+      <ReceiveToWarehouseModal
+        open={isReceiveModalOpen}
+        onOpenChange={handleCloseReceiveModal}
+        lot={selectedHarvestForReceive}
+        onSuccess={() => onRefetch?.()}
+      />
     </Card>
   );
 }

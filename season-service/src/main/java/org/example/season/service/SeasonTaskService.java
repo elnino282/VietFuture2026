@@ -130,6 +130,9 @@ public class SeasonTaskService {
                 .plannedDate(planned)
                 .dueDate(due)
                 .status(TaskStatus.PENDING)
+                .plotId(request.getPlotId())
+                .workTeamId(request.getWorkTeamId())
+                .estimatedDays(request.getEstimatedDays())
                 .build();
 
         Task saved = taskRepository.save(task);
@@ -384,6 +387,9 @@ public class SeasonTaskService {
                 .actualStartDate(task.getActualStartDate())
                 .actualEndDate(task.getActualEndDate())
                 .notes(task.getNotes())
+                .plotId(task.getPlotId())
+                .workTeamId(task.getWorkTeamId())
+                .estimatedDays(task.getEstimatedDays())
                 .createdAt(task.getCreatedAt())
                 .build();
     }

@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEmployeeAcceptTask,
   useEmployeeReportTaskProgress,
   useEmployeeSeasonPlan,
@@ -31,6 +31,9 @@ import { useI18n } from "@/hooks/useI18n";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+// [FIX] XÓA TOÀN BỘ IMPORTS TỪ REACT-LEAFLET VÀ CSS LEAFLET
+import { MapPin, Clock, Calendar, CheckCircle2 } from "lucide-react";
+
 const getTaskStatusClassName = (status?: string) => {
   switch (status) {
     case "DONE":
@@ -54,6 +57,8 @@ export function EmployeeTasksPage() {
   const [progressPercent, setProgressPercent] = useState<string>("0");
   const [progressNote, setProgressNote] = useState<string>("");
   const [evidenceUrl, setEvidenceUrl] = useState<string>("");
+  
+  // [FIX] XÓA STATE mapGeoData GÂY CRASH
 
   const tasks = taskPageData?.items ?? [];
   const tasksBySeason = useMemo(() => {
@@ -150,18 +155,23 @@ export function EmployeeTasksPage() {
           {isLoading ? (
             <p className="text-sm text-muted-foreground">{t("employee.tasks.loading")}</p>
           ) : tasks.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("employee.tasks.empty")}</p>
+            <p className="text-sm text-muted-foreground flex items-center">
+              <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" />
+              Bạn hiện không có công việc nào cần xử lý.
+            </p>
           ) : (
             <div className="space-y-6">
               {tasksBySeason.map((group) => (
                 <div key={`${group.seasonId ?? "no-season"}-${group.seasonName}`} className="space-y-2">
-                  <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">{group.seasonName}</h3>
+                  <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between bg-muted/30 p-3 rounded-lg">
+                    <h3 className="text-sm font-semibold text-foreground flex items-center">
+                       {group.seasonName}
+                    </h3>
                     {group.seasonId && (
                       <Button
                         type="button"
                         size="sm"
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => setPlanSeasonId(group.seasonId)}
                       >
                         {t("employee.tasks.actions.viewSeasonPlan")}
@@ -169,53 +179,80 @@ export function EmployeeTasksPage() {
                     )}
                   </div>
 
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t("employee.tasks.table.task")}</TableHead>
-                        <TableHead>{t("employee.tasks.table.dueDate")}</TableHead>
-                        <TableHead>{t("employee.tasks.table.status")}</TableHead>
-                        <TableHead className="text-right">{t("employee.tasks.table.actions")}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {group.tasks.map((task) => (
-                        <TableRow key={task.taskId}>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <p className="font-medium">{task.title}</p>
-                              <p className="text-xs text-muted-foreground">{task.description || "-"}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>{task.dueDate || "-"}</TableCell>
-                          <TableCell>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                    {group.tasks.map((task: any) => {
+                      const isOverdue = task.status === "OVERDUE" || (task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "DONE" && task.status !== "CANCELLED");
+                      
+                      return (
+                        <div key={task.taskId} className={`p-4 rounded-xl border ${isOverdue ? 'border-red-300 bg-red-50/40' : 'border-border bg-card hover:border-primary/30 transition-colors'} shadow-sm flex flex-col`}>
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-semibold text-foreground line-clamp-2">{task.title}</h4>
                             <Badge className={getTaskStatusClassName(task.status)}>
                               {getTaskStatusLabel(task.status)}
                             </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="inline-flex flex-wrap justify-end gap-2">
-                              {(task.status === "PENDING" || task.status === "OVERDUE") && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => acceptTaskMutation.mutate(task.taskId)}
-                                  disabled={acceptTaskMutation.isPending}
-                                >
-                                  {t("employee.tasks.actions.acceptTask")}
-                                </Button>
-                              )}
-                              {task.status !== "CANCELLED" && (
-                                <Button size="sm" onClick={() => setProgressTaskId(task.taskId)}>
-                                  {t("employee.tasks.actions.reportProgress")}
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{task.description || "-"}</p>
+                          
+                          <div className="space-y-2.5 mb-4 text-sm flex-1 bg-muted/20 p-3 rounded-md border border-border/50">
+                            {/* [FIX] Hiển thị Plot Name và Diện Tích */}
+                            {(task.plotName || task.plot) && (
+                              <div className="flex items-center text-foreground font-medium">
+                                <MapPin className="w-4 h-4 mr-2 text-primary" />
+                                <span>
+                                  {task.plotName || task.plot}
+                                  {task.plotArea ? (
+                                    <span className="text-muted-foreground font-normal">
+                                      {" "}• {task.plotArea.toLocaleString()} m²
+                                    </span>
+                                  ) : ""}
+                                </span>
+                              </div>
+                            )}
+
+                            {task.estimatedDays && (
+                              <div className="flex items-center text-muted-foreground">
+                                <Clock className="w-4 h-4 mr-2 text-blue-500" />
+                                <span>Dự kiến: <strong>{task.estimatedDays} ngày</strong></span>
+                              </div>
+                            )}
+                            
+                            {(task.dueDate || task.estimatedCompletionDate) && (
+                              <div className={`flex items-center ${isOverdue ? 'text-red-600 font-semibold' : 'text-muted-foreground'}`}>
+                                <Calendar className="w-4 h-4 mr-2" />
+                                <span>Hạn chót: {task.dueDate || task.estimatedCompletionDate}</span>
+                              </div>
+                            )}
+                            
+                            {/* [FIX] XÓA NÚT XEM BẢN ĐỒ GÂY LỖI */}
+                          </div>
+                          
+                          <div className="pt-3 border-t border-border flex justify-end gap-2 mt-auto">
+                            {(task.status === "PENDING" || task.status === "OVERDUE") && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => acceptTaskMutation.mutate(task.taskId)}
+                                disabled={acceptTaskMutation.isPending}
+                                className="w-full sm:w-auto"
+                              >
+                                {t("employee.tasks.actions.acceptTask")}
+                              </Button>
+                            )}
+                            {task.status !== "CANCELLED" && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => setProgressTaskId(task.taskId)}
+                                className="w-full sm:w-auto"
+                              >
+                                {t("employee.tasks.actions.reportProgress")}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               ))}
             </div>
@@ -323,9 +360,8 @@ export function EmployeeTasksPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* [FIX] XÓA TOÀN BỘ MODAL DIALOG BẢN ĐỒ Ở ĐÂY ĐỂ CHỐNG CRASH */}
     </div>
   );
 }
-
-
-

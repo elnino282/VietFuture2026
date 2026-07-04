@@ -56,7 +56,12 @@ const transformApiToFeature = (api: ApiSeason, cropMap: Map<number, string>): Se
 
 export function useSeasonManagement() {
   const { data: apiData, isLoading, error: apiError, refetch } = useSeasons();
-  const { data: cropsData, isLoading: cropsLoading } = useCrops();
+  // Crops data is used only for display name mapping — non-critical.
+  // Don't let a crops API failure block the entire seasons page.
+  const { data: cropsData } = useCrops(undefined, {
+    retry: 1,
+    retryDelay: 2000,
+  });
 
   const cropMap = useMemo(() => {
     const map = new Map<number, string>();
@@ -534,7 +539,7 @@ export function useSeasonManagement() {
     uniqueCrops,
     uniqueYears,
 
-    isLoading: isLoading || cropsLoading,
+    isLoading,
     error: apiError ?? null,
     refetch,
     isCreating: createMutation.isPending,

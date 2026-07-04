@@ -131,4 +131,10 @@ public class ProductWarehouseLot {
     void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    @Column(name = "expiry_date")
+    LocalDate expiryDate;
+
+    @Column(name = "crop_category", length = 50)
+    String cropCategory;
 }

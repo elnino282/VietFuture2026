@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.example.farm.enums.PlotStatus;
+import org.locationtech.jts.geom.Polygon;
 
 @Data
 @Builder
@@ -22,5 +23,7 @@ public class PlotResponse {
     BigDecimal area;
     String soilType;
     String boundaryGeoJson;
+    Integer parentPlotId;
+    Polygon polygon;
     PlotStatus status;
 }

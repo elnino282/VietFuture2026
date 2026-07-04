@@ -25,6 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import org.example.farm.exception.SpatialValidationException;
+import org.locationtech.jts.geom.Polygon;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -77,6 +80,10 @@ public class PlotService {
             throw new AppException(ErrorCode.FARM_INACTIVE);
         }
 
+        if (request.getParentPlotId() != null && request.getArea() != null) {
+            validateAreaRules(request.getParentPlotId(), null, request.getArea());
+        }
+
         String statusCode = (request.getStatus() != null) ? request.getStatus().getCode() : PlotStatus.IDLE.getCode();
 
         Plot plot = Plot.builder()
@@ -86,6 +93,8 @@ public class PlotService {
                 .area(request.getArea())
                 .soilType(request.getSoilType())
                 .boundaryGeoJson(request.getBoundaryGeoJson())
+                .parentPlotId(request.getParentPlotId())
+                .polygon(request.getPolygon())
                 .status(statusCode)
                 .build();
 
@@ -108,6 +117,10 @@ public class PlotService {
         Plot plot = plotRepository.findByIdAndFarmUserId(id, userId)
                 .orElseThrow(() -> new AppException(ErrorCode.PLOT_NOT_FOUND));
 
+        if (request.getParentPlotId() != null && request.getArea() != null) {
+            validateAreaRules(request.getParentPlotId(), id, request.getArea());
+        }
+
         if (request.getPlotName() != null) {
             plot.setPlotName(request.getPlotName());
         }
@@ -120,6 +133,12 @@ public class PlotService {
         if (request.getBoundaryGeoJson() != null) {
             plot.setBoundaryGeoJson(request.getBoundaryGeoJson());
         }
+        if (request.getParentPlotId() != null) {
+            plot.setParentPlotId(request.getParentPlotId());
+        }
+        if (request.getPolygon() != null) {
+            plot.setPolygon(request.getPolygon());
+        }
         if (request.getStatus() != null) {
             plot.setStatus(request.getStatus().getCode());
         }
@@ -127,6 +146,27 @@ public class PlotService {
         Plot savedPlot = plotRepository.save(plot);
         writeOutboxEvent(savedPlot, Action.UPDATED);
         return toResponse(savedPlot);
+    }
+
+    private void validateAreaRules(Integer parentId, Integer currentPlotId, java.math.BigDecimal newArea) {
+        java.math.BigDecimal parentArea = plotRepository.getPlotArea(parentId);
+        if (parentArea == null) {
+            throw new SpatialValidationException("Parent plot không tồn tại hoặc không hợp lệ.");
+        }
+
+        java.math.BigDecimal existingSubZonesArea = plotRepository.getTotalSubZoneArea(parentId);
+        if (existingSubZonesArea == null) existingSubZonesArea = java.math.BigDecimal.ZERO;
+
+        if (currentPlotId != null) {
+            java.math.BigDecimal currentSubZoneArea = plotRepository.getPlotArea(currentPlotId);
+            if (currentSubZoneArea != null) {
+                existingSubZonesArea = existingSubZonesArea.subtract(currentSubZoneArea);
+            }
+        }
+
+        if (existingSubZonesArea.add(newArea).compareTo(parentArea) > 0) {
+            throw new SpatialValidationException("Tổng diện tích vượt quá Plot cha.");
+        }
     }
 
     @Transactional
@@ -198,6 +238,8 @@ public class PlotService {
                 .area(plot.getArea())
                 .soilType(plot.getSoilType())
                 .boundaryGeoJson(plot.getBoundaryGeoJson())
+                .parentPlotId(plot.getParentPlotId())
+                .polygon(plot.getPolygon())
                 .status(PlotStatus.fromCode(plot.getStatus()))
                 .build();
     }

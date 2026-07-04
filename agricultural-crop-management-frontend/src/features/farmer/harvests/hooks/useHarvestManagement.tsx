@@ -443,6 +443,18 @@ export function useHarvestManagement() {
           {t("harvests.status.processing", "Processing")}
         </Badge>
       ),
+      PENDING_RECEIPT: (
+        <Badge className="bg-amber-100 text-amber-800 border-amber-200">
+          <Clock className="w-3 h-3 mr-1" />
+          {t("harvests.status.pending_receipt", "Chờ nhập kho")}
+        </Badge>
+      ),
+      RECEIVED: (
+        <Badge className="bg-green-100 text-green-800 border-green-200">
+          <CheckCircle2 className="w-3 h-3 mr-1" />
+          {t("harvests.status.received", "Đã nhập kho")}
+        </Badge>
+      ),
     };
     return badges[status] ?? null;
   }, [t]);

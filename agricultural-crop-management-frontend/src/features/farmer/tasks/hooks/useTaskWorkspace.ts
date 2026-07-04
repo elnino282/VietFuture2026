@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import httpClient from '@/shared/api/http';
 import { toast } from 'sonner';
 import {
   taskKeys,
@@ -196,6 +197,25 @@ export function useTaskWorkspace() {
     { page: 0, size: 200 },
     { enabled: seasonId > 0 }
   );
+
+  const [workTeams, setWorkTeams] = useState<Array<{ id: number; teamName: string }>>([]);
+
+  useEffect(() => {
+    if (seasonId > 0) {
+      httpClient.get(`/api/v1/farmer/seasons/${seasonId}/teams`)
+        .then(res => {
+          if (res.data) {
+            // Backend returns array directly
+            setWorkTeams(Array.isArray(res.data) ? res.data : (res.data.items ?? []));
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch work teams", err);
+        });
+    } else {
+      setWorkTeams([]);
+    }
+  }, [seasonId]);
 
   const invalidateTaskQueries = useCallback(async () => {
     if (seasonId <= 0) {
@@ -442,9 +462,11 @@ export function useTaskWorkspace() {
     dueDate: string;
     description?: string;
     seasonId?: number;
-    plot?: string;
+    plotId?: number;
     taskType?: string;
     assigneeUserId?: number;
+    workTeamId?: number;
+    estimatedDays?: number;
   }) => {
     // Always use pinned season from workspace context
     const effectiveSeasonId = seasonId;
@@ -472,6 +494,9 @@ export function useTaskWorkspace() {
       dueDate: data.dueDate,
       description: data.description,
       assigneeUserId: data.assigneeUserId,
+      plotId: data.plotId,
+      workTeamId: data.workTeamId,
+      estimatedDays: data.estimatedDays,
     });
   }, [isSeasonWriteLocked, seasonId, seasonWriteLockReason, createMutation]);
 
@@ -501,7 +526,7 @@ export function useTaskWorkspace() {
     searchQuery, setSearchQuery, filters, setFilters, activeFilterCount,
     selectedTasks, setSelectedTasks,
     filterDrawerOpen, setFilterDrawerOpen, createTaskOpen, setCreateTaskOpen, reassignOpen, setReassignOpen, dueDateOpen, setDueDateOpen,
-    tasks, filteredTasks, uniqueAssignees, uniquePlots, assigneeOptions,
+    tasks, filteredTasks, uniqueAssignees, uniquePlots, assigneeOptions, workTeamOptions: workTeams,
     isLoading, error: error ?? null, refetch,
     handleTaskMove, handleBulkComplete, handleDeleteTask, handleSelectAll, handleSelectTask, handleReassign, handleBulkDueDateChange, handleCreateTask,
     isCreating: createMutation.isPending,

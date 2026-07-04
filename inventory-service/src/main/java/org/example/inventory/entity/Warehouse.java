@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import jakarta.persistence.Enumerated;
 
 @Getter
 @Setter
@@ -42,4 +43,20 @@ public class Warehouse {
 
     @Column(name = "ward_id")
     Integer wardId;
+
+    @Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(name = "storage_category")
+    org.example.inventory.enums.StorageCategory storageCategory;
+
+    @Column(name = "temperature_min")
+    java.math.BigDecimal temperatureMin;
+
+    @Column(name = "temperature_max")
+    java.math.BigDecimal temperatureMax;
+
+    @Column(name = "humidity_min")
+    java.math.BigDecimal humidityMin;
+
+    @Column(name = "humidity_max")
+    java.math.BigDecimal humidityMax;
 }

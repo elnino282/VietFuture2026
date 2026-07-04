@@ -585,6 +585,23 @@ export function AddBatchDialog({
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="grossWetWeight" className="text-foreground">
+                  Khối lượng ướt gặt ngoài đồng (kg)
+                </Label>
+                <Input
+                  id="grossWetWeight"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  placeholder="0"
+                  value={formData.grossWetWeight || ""}
+                  onChange={(event) => onFormChange({ ...formData, grossWetWeight: event.target.value })}
+                  className="rounded-xl border-border focus:border-primary bg-blue-50/30"
+                  disabled={isFormDisabled}
+                />
+              </div>
+
               {!isEditing && (
               <div className="space-y-2">
                 <Label htmlFor="warehouse" className="text-foreground">

@@ -23,4 +23,14 @@ public class Crop {
 
     @Column(name = "description")
     String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category")
+    CropCategory category;
+
+    @Column(name = "post_harvest_delay_days")
+    Integer postHarvestDelayDays;
+
+    @Column(name = "shelf_life_days")
+    Integer shelfLifeDays;
 }

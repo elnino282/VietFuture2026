@@ -48,4 +48,13 @@ public class ProductWarehouseLotResponse {
     String createdByName;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
+
+    // === Cảnh báo Kho lạnh ===
+    /** Nhóm nông sản (GRAIN, VEGETABLE, FRUIT, ...) */
+    String cropCategory;
+    /** Cảnh báo nhiệt độ kho vượt ngưỡng cho nhóm nông sản nhạy cảm */
+    Boolean hasTemperatureAlert;
+    /** Ngày hết hạn an toàn của lô hàng */
+    LocalDate expiryDate;
 }
+

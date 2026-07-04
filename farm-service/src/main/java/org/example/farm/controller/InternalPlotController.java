@@ -49,14 +49,44 @@ public class InternalPlotController {
         return ResponseEntity.ok(dto);
     }
 
+    @org.springframework.web.bind.annotation.PostMapping("/plots/bulk")
+    public ResponseEntity<java.util.Map<Long, PlotInternalDto>> getBulkPlots(@org.springframework.web.bind.annotation.RequestBody java.util.List<Long> plotIds) {
+        if (plotIds == null || plotIds.isEmpty()) {
+            return ResponseEntity.ok(java.util.Collections.emptyMap());
+        }
+
+        java.util.List<Integer> intIds = plotIds.stream()
+                .map(Long::intValue)
+                .toList();
+
+        java.util.List<Plot> plots = plotRepository.findAllById(intIds);
+
+        java.util.Map<Long, PlotInternalDto> result = new java.util.HashMap<>();
+        for (Plot plot : plots) {
+            result.put(Long.valueOf(plot.getId()), PlotInternalDto.builder()
+                    .id(plot.getId())
+                    .plotName(plot.getPlotName())
+                    .plotArea(plot.getArea())
+                    .farmId(plot.getFarm() != null ? plot.getFarm().getId() : null)
+                    .farmName(plot.getFarm() != null ? plot.getFarm().getName() : null)
+                    .ownerUserId(plot.getFarm() != null ? plot.getFarm().getUserId() : null)
+                    .farmActive(plot.getFarm() != null ? plot.getFarm().getActive() : null)
+                    .build());
+        }
+        return ResponseEntity.ok(result);
+    }
+
     @Data
     @Builder
     public static class PlotInternalDto {
         private Integer id;
         private String plotName;
+        private java.math.BigDecimal plotArea;
         private Integer farmId;
         private String farmName;
         private Long ownerUserId;
         private Boolean farmActive;
     }
 }
+
+

@@ -85,6 +85,15 @@ public class Task {
     @Column(name = "notes", columnDefinition = "TEXT")
     String notes;
 
+    @Column(name = "plot_id")
+    Long plotId;
+
+    @Column(name = "work_team_id")
+    Long workTeamId;
+
+    @Column(name = "estimated_days")
+    Integer estimatedDays;
+
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     LocalDateTime createdAt;
 
@@ -96,5 +105,13 @@ public class Task {
         if (status == null) {
             status = TaskStatus.PENDING;
         }
+    }
+
+    @jakarta.persistence.Transient
+    public LocalDate getEstimatedCompletionDate() {
+        if (actualStartDate == null || estimatedDays == null) {
+            return null;
+        }
+        return actualStartDate.plusDays(estimatedDays);
     }
 }

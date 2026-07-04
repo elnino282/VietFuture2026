@@ -42,7 +42,7 @@ import {
   SelectValue,
   Textarea,
 } from "@/shared/ui";
-import { Boxes, History, MapPin, PackageCheck } from "lucide-react";
+import { Boxes, History, MapPin, PackageCheck, AlertCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
@@ -823,6 +823,7 @@ export function ProductWarehousePage() {
                         <th>{t("productWarehouse.table.unit")}</th>
                         <th>{t("productWarehouse.table.harvestedAt")}</th>
                         <th>{t("productWarehouse.table.receivedAt")}</th>
+                        <th>Ngày hết hạn</th>
                         <th>{t("productWarehouse.table.farmPlot")}</th>
                         <th>{t("productWarehouse.table.season")}</th>
                         <th>{t("productWarehouse.table.location")}</th>
@@ -833,14 +834,32 @@ export function ProductWarehousePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(lotsData?.items ?? []).map((lot) => (
-                        <tr key={lot.id}>
+                      {(lotsData?.items ?? []).map((lot: any) => {
+                        // Logic kiểm tra kho chuyên biệt
+                        const isSensitive = lot.cropCategory === "VEGETABLE" || lot.cropCategory === "FRUIT";
+                        const hasColdChainAlert = isSensitive && lot.hasTemperatureAlert; // giả lập field có alert
+                        
+                        return (
+                        <tr key={lot.id} className={hasColdChainAlert ? "bg-red-50" : ""}>
                           <td>{lot.lotCode}</td>
-                          <td>{lot.productName}</td>
+                          <td>
+                            <div className="flex items-center gap-2">
+                              {lot.productName}
+                              {hasColdChainAlert && (
+                                <span className="inline-flex items-center gap-1 text-xs text-red-600 font-semibold bg-red-100 px-2 py-0.5 rounded-full" title="Tổn thương do lạnh">
+                                  <AlertCircle className="w-3 h-3" />
+                                  Cảnh báo Lạnh
+                                </span>
+                              )}
+                            </div>
+                          </td>
                           <td>{lot.productVariant || "-"}</td>
                           <td>{lot.unit || "-"}</td>
                           <td>{formatDate(lot.harvestedAt)}</td>
                           <td>{formatDateTime(lot.receivedAt)}</td>
+                          <td className={hasColdChainAlert ? "text-red-600 font-medium" : ""}>
+                            {formatDate(lot.expiryDate)}
+                          </td>
                           <td>{`${lot.farmName || "-"} / ${lot.plotName || "-"}`}</td>
                           <td>{lot.seasonName || "-"}</td>
                           <td>{lot.locationLabel || "-"}</td>
@@ -890,7 +909,8 @@ export function ProductWarehousePage() {
                             </Button>
                           </td>
                         </tr>
-                      ))}
+                      );
+                    })}
                     </tbody>
                   </table>
                 </div>

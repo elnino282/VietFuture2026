@@ -56,7 +56,7 @@ spring:
             - id: season-route
               uri: ${SEASON_SERVICE_URI:http://localhost:8085}
               predicates:
-                - Path=/api/v1/seasons, /api/v1/seasons/**, /api/v1/tasks, /api/v1/tasks/**, /api/v1/workspace/tasks, /api/v1/workspace/tasks/**, /api/v1/harvests, /api/v1/harvests/**, /api/v1/field-logs, /api/v1/field-logs/**, /api/v1/disease-records, /api/v1/disease-records/**, /api/v1/disease-treatments, /api/v1/disease-treatments/**, /api/v1/farmer/labor, /api/v1/farmer/labor/**, /api/v1/employee, /api/v1/employee/**
+                - Path=/api/v1/seasons, /api/v1/seasons/**, /api/v1/tasks, /api/v1/tasks/**, /api/v1/workspace/tasks, /api/v1/workspace/tasks/**, /api/v1/harvests, /api/v1/harvests/**, /api/v1/field-logs, /api/v1/field-logs/**, /api/v1/disease-records, /api/v1/disease-records/**, /api/v1/disease-treatments, /api/v1/disease-treatments/**, /api/v1/farmer/labor, /api/v1/farmer/labor/**, /api/v1/employee, /api/v1/employee/**, /api/v1/farmer/seasons/**, /api/v1/farmer/tasks/**, /api/v1/farmer/dashboard/**
             - id: inventory-route
               uri: ${INVENTORY_SERVICE_URI:http://localhost:8086}
               predicates:

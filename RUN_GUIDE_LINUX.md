@@ -173,7 +173,7 @@ ls -la identity-service/src/main/resources/keys/
 ```bash
 docker compose up -d --build
 ```
-
+mvn clean package -DskipTests
 > **Lần đầu tiên** sẽ mất **5–15 phút** để download Docker images và build Maven (tải dependencies). Các lần sau sẽ nhanh hơn nhiều nhờ Docker cache.
 
 ### 4.2. Theo dõi quá trình khởi động
@@ -183,7 +183,7 @@ docker compose up -d --build
 docker compose ps
 
 # Hoặc theo dõi logs toàn bộ
-docker compose logs -f --tail=50
+docker compose logs season-service -f --tail=50
 ```
 
 Đợi khoảng **60–90 giây** sau khi tất cả containers đã `Started` để các Spring Boot services hoàn tất khởi tạo và Flyway chạy migrations.

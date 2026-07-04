@@ -48,21 +48,7 @@ public class InventoryEventListener {
                 throw new RuntimeException("Failed to deserialize event", e);
             }
             log.info("Received event: {} of type {}", eventId, event.getEventType());
-            ProductWarehouseLot lot = productWarehouseService.receiveFromHarvestEvent(
-                    event.getHarvestId(),
-                    event.getSeasonId(),
-                    event.getSeasonName(),
-                    event.getPlotId(),
-                    event.getFarmId(),
-                    event.getCropName(),
-                    event.getVarietyName(),
-                    event.getHarvestDate(),
-                    event.getQuantity(),
-                    event.getUnit(),
-                    event.getGrade(),
-                    event.getNote(),
-                    event.getActorUserId()
-            );
+            ProductWarehouseLot lot = productWarehouseService.receiveFromHarvestEvent(event);
             log.info("Successfully created product warehouse lot: {}", lot.getId());
 
             // Mark event as processed

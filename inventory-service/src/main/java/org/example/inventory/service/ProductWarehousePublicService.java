@@ -379,6 +379,14 @@ public class ProductWarehousePublicService {
                 ? stockLocationRepository.findById(lot.getLocationId()).orElse(null)
                 : null;
 
+        // Tính hasTemperatureAlert
+        Boolean hasTemperatureAlert = null;
+        if (warehouse != null && warehouse.getTemperatureMin() != null && warehouse.getTemperatureMax() != null) {
+            String category = lot.getCropCategory();
+            hasTemperatureAlert = category != null
+                    && (category.equalsIgnoreCase("VEGETABLE") || category.equalsIgnoreCase("FRUIT"));
+        }
+
         return ProductWarehouseLotResponse.builder()
                 .id(lot.getId())
                 .lotCode(lot.getLotCode())
@@ -409,6 +417,9 @@ public class ProductWarehousePublicService {
                 .createdBy(lot.getCreatedBy())
                 .createdAt(lot.getCreatedAt())
                 .updatedAt(lot.getUpdatedAt())
+                .cropCategory(lot.getCropCategory())
+                .hasTemperatureAlert(hasTemperatureAlert)
+                .expiryDate(lot.getExpiryDate())
                 .build();
     }
 

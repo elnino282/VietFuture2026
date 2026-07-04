@@ -56,6 +56,9 @@ export const TaskSchema = z.object({
     actualStartDate: TaskDateSchema.optional().nullable(),
     actualEndDate: TaskDateSchema.optional().nullable(),
     notes: z.string().optional().nullable(),
+    plotId: z.number().int().positive().optional().nullable(),
+    workTeamId: z.number().int().positive().optional().nullable(),
+    estimatedDays: z.number().int().positive().optional().nullable(),
     createdAt: z.string().optional().nullable(),  // Accept any datetime string or null from backend
 });
 
@@ -73,6 +76,9 @@ export const TaskCreateRequestSchema = z.object({
     dueDate: DateSchema.optional().nullable(),       // Made optional
     notes: z.string().max(4000).optional(),
     assigneeUserId: z.number().int().positive().optional(),
+    plotId: z.number().int().positive().optional(),
+    workTeamId: z.number().int().positive().optional(),
+    estimatedDays: z.number().positive().optional(),
 });
 
 export type TaskCreateRequest = z.infer<typeof TaskCreateRequestSchema>;

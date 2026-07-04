@@ -108,4 +108,16 @@ public interface TaskRepository extends JpaRepository<Task, Integer>,
         boolean existsByIdAndSeasonId(Integer taskId, Integer seasonId);
 
         Optional<Task> findByIdAndSeasonId(Integer taskId, Integer seasonId);
+
+        @Query("SELECT t FROM Task t WHERE t.userId = :userId OR (t.workTeamId IS NOT NULL AND t.workTeamId IN :teamIds)")
+        List<Task> findTasksForEmployee(@Param("userId") Long userId, @Param("teamIds") List<Long> teamIds);
+
+        @Query("SELECT new org.example.season.dto.TeamProgressSummaryResponse(" +
+               "t.workTeamId, wt.teamName, t.plotId, COUNT(t), " +
+               "SUM(CASE WHEN t.status = 'DONE' THEN 1 ELSE 0 END), " +
+               "SUM(CASE WHEN t.status IN ('IN_PROGRESS', 'PENDING') THEN 1 ELSE 0 END)) " +
+               "FROM Task t JOIN WorkTeam wt ON t.workTeamId = wt.id " +
+               "WHERE t.season.id = :seasonId AND t.workTeamId IS NOT NULL " +
+               "GROUP BY t.workTeamId, wt.teamName, t.plotId")
+        List<org.example.season.dto.TeamProgressSummaryResponse> getTeamProgressSummary(@Param("seasonId") Long seasonId);
 }

@@ -35,4 +35,10 @@ public interface PlotRepository extends JpaRepository<Plot, Integer> {
 
     @Query("SELECT COUNT(p) FROM Plot p WHERE p.farm.userId = :ownerId")
     long countByFarmUserId(@Param("ownerId") Long ownerId);
+
+    @Query("SELECT p.area FROM Plot p WHERE p.id = :plotId")
+    java.math.BigDecimal getPlotArea(@Param("plotId") Integer plotId);
+
+    @Query("SELECT COALESCE(SUM(p.area), 0) FROM Plot p WHERE p.parentPlotId = :parentId")
+    java.math.BigDecimal getTotalSubZoneArea(@Param("parentId") Integer parentId);
 }

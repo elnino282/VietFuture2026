@@ -2156,6 +2156,7 @@
     }
   },
   "plots": {
+    "saveError": "Lỗi máy chủ khi lưu thửa ruộng.",
     "title": "Thửa đất",
     "myPlots": "Thửa đất của tôi",
     "subtitle": "Quản lý các thửa đất trong nông trại",

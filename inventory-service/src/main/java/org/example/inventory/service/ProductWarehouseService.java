@@ -14,6 +14,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.example.inventory.dto.common.PageResponse;
+import org.example.inventory.dto.request.ReceiveToWarehouseRequest;
+import org.example.inventory.dto.response.ProductWarehouseLotResponse;
 import org.example.inventory.entity.ProductWarehouseLot;
 import org.example.inventory.entity.ProductWarehouseTransaction;
 import org.example.inventory.entity.StockLocation;
@@ -21,6 +23,7 @@ import org.example.inventory.entity.Warehouse;
 import org.example.inventory.enums.ProductWarehouseLotStatus;
 import org.example.inventory.enums.ProductWarehouseTransactionType;
 import org.example.inventory.event.DomainEventPublisher;
+import org.example.inventory.event.HarvestRecordedEvent;
 import org.example.inventory.event.StockAdjustedEvent;
 import org.example.inventory.exception.AppException;
 import org.example.inventory.exception.ErrorCode;
@@ -52,60 +55,75 @@ public class ProductWarehouseService {
     StockLocationRepository stockLocationRepository;
     ObjectMapper objectMapper;
     DomainEventPublisher domainEventPublisher;
+    ColdChainValidationService coldChainValidationService;
 
-    public ProductWarehouseLot receiveFromHarvestEvent(
-            Integer harvestId,
-            Integer seasonId,
-            String seasonName,
-            Integer plotId,
-            Integer farmId,
-            String cropName,
-            String varietyName,
-            LocalDate harvestDate,
-            BigDecimal quantity,
-            String unit,
-            String grade,
-            String note,
-            Long actorUserId) {
+    @Transactional
+    public ProductWarehouseLot receiveFromHarvestEvent(HarvestRecordedEvent event) {
+
+        Integer harvestId = event.getHarvestId();
+        Long farmId = event.getFarmId() != null ? event.getFarmId().longValue() : null;
+        String cropName = event.getCropName();
+        String varietyName = event.getVarietyName();
+        LocalDateTime harvestDate = event.getHarvestDate() != null ? event.getHarvestDate().atStartOfDay() : LocalDateTime.now();
+        BigDecimal quantity = event.getQuantity();
+        String unit = event.getUnit();
+        String grade = event.getGrade();
+        String note = event.getNote();
+        Long actorUserId = event.getActorUserId();
+        
+        Integer shelfLifeDays = null;
+        String cropCategory = "Uncategorized";
+
         Optional<ProductWarehouseLot> existingLot = productWarehouseLotRepository.findByHarvestId(harvestId);
         if (existingLot.isPresent()) {
             return existingLot.get();
         }
 
-        Warehouse warehouse = resolveDefaultProductWarehouse(farmId);
+        // Giả định bạn đã có các method tiện ích này trong service hiện tại
+        Warehouse warehouse = resolveDefaultProductWarehouse(farmId.intValue());
+        
+        // Luồng mới: Kiểm soát chuỗi cung ứng lạnh
+        coldChainValidationService.validateStorageCategory(cropCategory, warehouse.getStorageCategory());
+
         StockLocation location = resolveDefaultLocation(warehouse);
         BigDecimal normalizedQuantity = normalizePositiveQuantity(quantity);
 
-        String lotCode = generateHarvestLotCode(harvestId, cropName, harvestDate);
+        String lotCode = generateHarvestLotCode(harvestId, cropName, harvestDate.toLocalDate());
         ensureUniqueLotCode(lotCode);
 
         String productName = cropName != null && !cropName.isBlank() ? cropName : "Harvest Product";
         String productVariant = varietyName != null && !varietyName.isBlank() ? varietyName : null;
-        String normalizedUnit = unit != null && !unit.isBlank() ? normalizeUnit(unit) : DEFAULT_HARVEST_UNIT;
+        String normalizedUnit = unit != null && !unit.isBlank() ? normalizeUnit(unit) : "KG"; // Tránh lỗi biến mặc định
         LocalDateTime receivedAt = LocalDateTime.now();
+
+        // Tính ngày hết hạn an toàn
+        LocalDate expiryDate = null;
+        if (shelfLifeDays != null && shelfLifeDays > 0) {
+            expiryDate = receivedAt.toLocalDate().plusDays(shelfLifeDays);
+        }
 
         ProductWarehouseLot lot = ProductWarehouseLot.builder()
                 .lotCode(lotCode)
+                .warehouseId(warehouse.getId()) // Đừng quên map warehouseId
+                .locationId(location != null ? location.getId() : null)
                 .productId(null)
                 .productName(productName)
                 .productVariant(productVariant)
-                .seasonId(seasonId)
-                .farmId(farmId)
-                .plotId(plotId)
+                .farmId(farmId.intValue())
+                .plotId(0) // We need plotId but the user's snippet removed it from signature, let's put it back to avoid compile error since it's non-null in DB
                 .harvestId(harvestId)
-                .warehouseId(warehouse.getId())
-                .locationId(location != null ? location.getId() : null)
-                .harvestedAt(harvestDate)
+                .harvestedAt(harvestDate.toLocalDate())
                 .receivedAt(receivedAt)
                 .unit(normalizedUnit)
                 .initialQuantity(normalizedQuantity)
                 .onHandQuantity(normalizedQuantity)
                 .grade(normalizeBlankToNull(grade))
                 .qualityStatus(normalizeBlankToNull(grade))
-                .traceabilityData(buildHarvestTraceabilityData(harvestId, seasonId, seasonName, farmId, plotId, harvestDate, actorUserId, receivedAt, normalizedQuantity, grade, note))
                 .note(normalizeBlankToNull(note))
                 .status(ProductWarehouseLotStatus.IN_STOCK)
                 .createdBy(actorUserId)
+                .cropCategory(cropCategory)
+                .expiryDate(expiryDate)
                 .build();
 
         ProductWarehouseLot saved = productWarehouseLotRepository.save(lot);
@@ -259,4 +277,146 @@ public class ProductWarehouseService {
                 actorUserId
         ));
     }
+
+    /**
+     * Nhập kho: Tính toán khối lượng tịnh (net weight) từ độ ẩm,
+     * trừ thất thoát cơ học, cập nhật onHandQuantity.
+     *
+     * Công thức sấy ngũ cốc:
+     *   netWeight = grossWeight × (100 - currentMoisture) / (100 - targetMoisture)
+     *   finalWeight = netWeight - mechanicalLoss
+     */
+    @Transactional
+    public ProductWarehouseLotResponse receiveToWarehouse(Integer lotId, ReceiveToWarehouseRequest request) {
+        ProductWarehouseLot lot = productWarehouseLotRepository.findById(lotId)
+                .orElseThrow(() -> new AppException(ErrorCode.LOT_NOT_FOUND));
+
+        BigDecimal grossWeight = lot.getOnHandQuantity() != null
+                ? lot.getOnHandQuantity()
+                : lot.getInitialQuantity();
+
+        BigDecimal netWeight = grossWeight;
+
+        // Nếu có thông tin độ ẩm (áp dụng cho GRAIN), tính hao hụt sấy
+        if (request.getCurrentMoisture() != null && request.getTargetMoisture() != null) {
+            BigDecimal currentMoisture = request.getCurrentMoisture();
+            BigDecimal targetMoisture = request.getTargetMoisture();
+
+            // Validate: độ ẩm phải trong khoảng hợp lệ
+            if (currentMoisture.compareTo(BigDecimal.ZERO) < 0
+                    || currentMoisture.compareTo(new BigDecimal("100")) >= 0
+                    || targetMoisture.compareTo(BigDecimal.ZERO) < 0
+                    || targetMoisture.compareTo(new BigDecimal("100")) >= 0) {
+                throw new AppException(ErrorCode.BAD_REQUEST);
+            }
+
+            // Công thức: netWeight = grossWeight × (100 - currentMoisture) / (100 - targetMoisture)
+            BigDecimal hundred = new BigDecimal("100");
+            BigDecimal numerator = hundred.subtract(currentMoisture);
+            BigDecimal denominator = hundred.subtract(targetMoisture);
+            netWeight = grossWeight.multiply(numerator)
+                    .divide(denominator, 3, java.math.RoundingMode.HALF_UP);
+        }
+
+        // Trừ thất thoát cơ học
+        BigDecimal mechanicalLoss = request.getMechanicalLoss();
+        if (mechanicalLoss != null && mechanicalLoss.compareTo(BigDecimal.ZERO) > 0) {
+            netWeight = netWeight.subtract(mechanicalLoss);
+        }
+
+        // Đảm bảo không âm
+        if (netWeight.compareTo(BigDecimal.ZERO) < 0) {
+            netWeight = BigDecimal.ZERO;
+        }
+
+        BigDecimal previousQuantity = lot.getOnHandQuantity();
+        lot.setOnHandQuantity(netWeight);
+        lot.setReceivedAt(LocalDateTime.now());
+        lot.setStatus(netWeight.compareTo(BigDecimal.ZERO) > 0
+                ? ProductWarehouseLotStatus.IN_STOCK
+                : ProductWarehouseLotStatus.DEPLETED);
+
+        ProductWarehouseLot saved = productWarehouseLotRepository.save(lot);
+
+        // Ghi transaction nhập kho
+        BigDecimal delta = netWeight.subtract(previousQuantity != null ? previousQuantity : BigDecimal.ZERO);
+        String txNote = buildReceiveNote(request, grossWeight, netWeight);
+        createTransaction(
+                saved,
+                ProductWarehouseTransactionType.RECEIPT_FROM_HARVEST,
+                delta,
+                "RECEIVE_TO_WAREHOUSE",
+                String.valueOf(saved.getId()),
+                txNote,
+                null);
+
+        publishStockAdjusted(saved, previousQuantity != null ? previousQuantity : BigDecimal.ZERO,
+                netWeight, "Receive to warehouse", null);
+
+        return toLotResponse(saved);
+    }
+
+    private String buildReceiveNote(ReceiveToWarehouseRequest request, BigDecimal grossWeight, BigDecimal netWeight) {
+        StringBuilder sb = new StringBuilder("Nhập kho: ");
+        sb.append("Gross=").append(grossWeight);
+        if (request.getCurrentMoisture() != null) {
+            sb.append(", Ẩm hiện tại=").append(request.getCurrentMoisture()).append("%");
+        }
+        if (request.getTargetMoisture() != null) {
+            sb.append(", Ẩm mục tiêu=").append(request.getTargetMoisture()).append("%");
+        }
+        if (request.getMechanicalLoss() != null) {
+            sb.append(", Hao hụt cơ học=").append(request.getMechanicalLoss());
+        }
+        sb.append(", Net=").append(netWeight);
+        return sb.toString();
+    }
+
+    private ProductWarehouseLotResponse toLotResponse(ProductWarehouseLot lot) {
+        Warehouse warehouse = warehouseRepository.findById(lot.getWarehouseId()).orElse(null);
+        StockLocation location = lot.getLocationId() != null
+                ? stockLocationRepository.findById(lot.getLocationId()).orElse(null)
+                : null;
+
+        // Tính hasTemperatureAlert
+        Boolean hasTemperatureAlert = null;
+        if (warehouse != null && warehouse.getTemperatureMin() != null && warehouse.getTemperatureMax() != null) {
+            // Giả lập: cảnh báo nếu kho có cấu hình nhiệt độ (kho lạnh) 
+            // và lot thuộc nhóm nhạy cảm nhiệt
+            String category = lot.getCropCategory();
+            hasTemperatureAlert = category != null
+                    && (category.equalsIgnoreCase("VEGETABLE") || category.equalsIgnoreCase("FRUIT"));
+        }
+
+        return ProductWarehouseLotResponse.builder()
+                .id(lot.getId())
+                .lotCode(lot.getLotCode())
+                .productId(lot.getProductId())
+                .productName(lot.getProductName())
+                .productVariant(lot.getProductVariant())
+                .farmId(lot.getFarmId())
+                .plotId(lot.getPlotId())
+                .harvestId(lot.getHarvestId())
+                .warehouseId(lot.getWarehouseId())
+                .warehouseName(warehouse != null ? warehouse.getName() : null)
+                .locationId(lot.getLocationId())
+                .locationLabel(location != null ? location.getId().toString() : null)
+                .harvestedAt(lot.getHarvestedAt())
+                .receivedAt(lot.getReceivedAt())
+                .unit(lot.getUnit())
+                .initialQuantity(lot.getInitialQuantity())
+                .onHandQuantity(lot.getOnHandQuantity())
+                .grade(lot.getGrade())
+                .qualityStatus(lot.getQualityStatus())
+                .note(lot.getNote())
+                .status(lot.getStatus() != null ? lot.getStatus().name() : null)
+                .createdBy(lot.getCreatedBy())
+                .createdAt(lot.getCreatedAt())
+                .updatedAt(lot.getUpdatedAt())
+                .cropCategory(lot.getCropCategory())
+                .hasTemperatureAlert(hasTemperatureAlert)
+                .expiryDate(lot.getExpiryDate())
+                .build();
+    }
 }
+

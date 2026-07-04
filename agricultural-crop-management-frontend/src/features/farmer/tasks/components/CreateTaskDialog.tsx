@@ -32,9 +32,11 @@ interface CreateTaskDialogProps {
     dueDate: string;
     description?: string;
     seasonId?: number;
-    plot?: string;
+    plotId?: number;
     taskType?: string;
     assigneeUserId?: number;
+    workTeamId?: number;
+    estimatedDays?: number;
   }) => void;
   seasonId?: number;
   hideSeasonSelector?: boolean;
@@ -42,6 +44,10 @@ interface CreateTaskDialogProps {
   assigneeOptions: Array<{
     userId: number;
     displayName: string;
+  }>;
+  workTeamOptions?: Array<{
+    id: number;
+    teamName: string;
   }>;
   isFormDisabled?: boolean;
   disabledReason?: string;
@@ -55,6 +61,7 @@ export function CreateTaskDialog({
   hideSeasonSelector = false,
   uniquePlots,
   assigneeOptions,
+  workTeamOptions,
   isFormDisabled = false,
   disabledReason,
 }: CreateTaskDialogProps) {
@@ -69,6 +76,8 @@ export function CreateTaskDialog({
   const [selectedPlot, setSelectedPlot] = useState<string>("");
   const [taskType, setTaskType] = useState("");
   const [assignee, setAssignee] = useState("");
+  const [workTeam, setWorkTeam] = useState("");
+  const [estimatedDays, setEstimatedDays] = useState<number | "">("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const effectiveSeasonId = seasonId ?? selectedSeasonId ?? null;
 
@@ -85,6 +94,8 @@ export function CreateTaskDialog({
       setSelectedPlot("");
       setTaskType("");
       setAssignee("");
+      setWorkTeam("");
+      setEstimatedDays("");
       setErrors({});
     } else {
       // Pre-select the currently active season if available
@@ -125,20 +136,17 @@ export function CreateTaskDialog({
       ? effectiveSeasonId
       : (selectedSeason ? Number(selectedSeason) : effectiveSeasonId);
 
-    // Get plot name from selected plot ID
-    const plotName = selectedPlot 
-      ? availablePlots.find(p => String(p.id) === selectedPlot)?.plotName 
-      : undefined;
-
     onCreateTask({
       title: title.trim(),
       plannedDate: dueDate,
       dueDate,
       description: notes.trim() || undefined,
       seasonId: seasonIdForSubmit ?? undefined,
-      plot: plotName || undefined,
+      plotId: selectedPlot ? Number(selectedPlot) : undefined,
       taskType: taskType || undefined,
       assigneeUserId: assignee ? Number(assignee) : undefined,
+      workTeamId: workTeam ? Number(workTeam) : undefined,
+      estimatedDays: estimatedDays ? Number(estimatedDays) : undefined,
     });
   };
 
@@ -283,6 +291,36 @@ export function CreateTaskDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Work Team */}
+          <div className="space-y-2">
+            <Label htmlFor="task-work-team">{t("tasks.table.workTeam", "Work Team")}</Label>
+            <Select value={workTeam} onValueChange={setWorkTeam}>
+              <SelectTrigger id="task-work-team">
+                <SelectValue placeholder={t("tasks.form.selectWorkTeam", "Select Work Team")} />
+              </SelectTrigger>
+              <SelectContent>
+                {workTeamOptions?.map((team) => (
+                  <SelectItem key={team.id} value={String(team.id)}>
+                    {team.teamName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Estimated Days */}
+          <div className="space-y-2">
+            <Label htmlFor="task-estimated-days">{t("tasks.form.estimatedDays", "Estimated Days")}</Label>
+            <Input
+              id="task-estimated-days"
+              type="number"
+              min={1}
+              value={estimatedDays}
+              onChange={(e) => setEstimatedDays(e.target.value ? Number(e.target.value) : "")}
+              placeholder="e.g., 2"
+            />
           </div>
 
           {/* Due Date */}

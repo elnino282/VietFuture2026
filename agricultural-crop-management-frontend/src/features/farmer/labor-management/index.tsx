@@ -46,8 +46,9 @@ import { Calendar, ExternalLink, RefreshCw, Trash2, UserPlus, Users } from "luci
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { WorkTeamPanel } from "./components/WorkTeamPanel";
 
-const LABOR_WORKSPACE_TABS = ["employees", "assignment", "progress", "payroll"] as const;
+const LABOR_WORKSPACE_TABS = ["teams", "employees", "assignment", "progress", "payroll"] as const;
 type LaborWorkspaceTab = (typeof LABOR_WORKSPACE_TABS)[number];
 
 const formatDate = (value?: string | null, locale = "en-US") => {
@@ -261,7 +262,7 @@ export function LaborManagementPage() {
   const tabParam = searchParams.get("tab");
   const activeTab: LaborWorkspaceTab = LABOR_WORKSPACE_TABS.includes(tabParam as LaborWorkspaceTab)
     ? (tabParam as LaborWorkspaceTab)
-    : "employees";
+    : "teams";
 
   const handleTabChange = (value: string) => {
     setSearchParams((prev) => {
@@ -436,11 +437,16 @@ export function LaborManagementPage() {
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList>
+          <TabsTrigger value="teams">{t("laborWorkspace.tabs.teams", "Đội nhóm")}</TabsTrigger>
           <TabsTrigger value="employees">{t("laborWorkspace.tabs.employees")}</TabsTrigger>
           <TabsTrigger value="assignment">{t("laborWorkspace.tabs.assignment")}</TabsTrigger>
           <TabsTrigger value="progress">{t("laborWorkspace.tabs.progress")}</TabsTrigger>
           <TabsTrigger value="payroll">{t("laborWorkspace.tabs.payroll")}</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="teams" className="space-y-4">
+          <WorkTeamPanel seasonId={seasonId} />
+        </TabsContent>
 
         <TabsContent value="employees" className="space-y-4">
           <Card className="rounded-xl border border-border shadow-sm">

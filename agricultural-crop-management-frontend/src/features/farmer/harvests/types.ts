@@ -1,4 +1,4 @@
-export type HarvestStatus = "stored" | "sold" | "processing";
+export type HarvestStatus = "stored" | "sold" | "processing" | "PENDING_RECEIPT" | "RECEIVED";
 export type HarvestGrade = "A" | "B" | "C" | "Premium";
 export type CropResidueHandling =
     | "RETURNED_TO_SOIL"
@@ -33,12 +33,14 @@ export interface HarvestBatch {
     notes?: string;
     qcMetrics?: QCMetrics;
     photo?: string;
+    postHarvestDelayDays?: number;
 }
 
 export interface HarvestFormData {
     batchId: string;
     date: string;
     quantity: string;
+    grossWetWeight?: string;
     grade: HarvestGrade;
     moisture: string;
     season: string;

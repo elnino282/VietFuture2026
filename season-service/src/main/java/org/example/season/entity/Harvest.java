@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Enumerated;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,6 +20,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.example.season.enums.WarehouseReceiptStatus;
 
 @Getter
 @Setter
@@ -54,6 +56,19 @@ public class Harvest {
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     LocalDateTime createdAt;
+
+    @Column(name = "warehouse_received_date")
+    LocalDate warehouseReceivedDate;
+
+    @Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(name = "warehouse_receipt_status")
+    WarehouseReceiptStatus warehouseReceiptStatus;
+
+    @Column(name = "gross_wet_weight")
+    BigDecimal grossWetWeight;
+
+    @Column(name = "net_dry_weight")
+    BigDecimal netDryWeight;
 
     @PrePersist
     void onCreate() {

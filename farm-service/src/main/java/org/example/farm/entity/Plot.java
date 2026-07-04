@@ -12,6 +12,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import org.locationtech.jts.geom.Polygon;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -55,6 +56,12 @@ public class Plot {
     @Column(name = "status", length = 30, nullable = false)
     @Builder.Default
     String status = "IN_USE";
+
+    @Column(name = "parent_plot_id")
+    Integer parentPlotId;
+
+    @Column(name = "polygon", columnDefinition = "GEOMETRY")
+    Polygon polygon;
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     LocalDateTime createdAt;

@@ -31,6 +31,12 @@ public class PlotController {
                 return ResponseEntity.ok(ApiResponse.success(plotService.createPlotForFarm(farmId, request)));
         }
 
+        @PostMapping("/plots")
+        public ResponseEntity<ApiResponse<PlotResponse>> createPlotForCurrentFarmer(
+                        @Valid @RequestBody PlotRequest request) {
+                return ResponseEntity.ok(ApiResponse.success(plotService.createPlotForCurrentFarmer(request)));
+        }
+
         @GetMapping("/plots")
         public ResponseEntity<ApiResponse<List<PlotResponse>>> listAllPlots() {
                 return ResponseEntity.ok(ApiResponse.success(plotService.listPlotsForCurrentFarmer()));

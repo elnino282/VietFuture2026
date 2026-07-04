@@ -182,6 +182,8 @@ export function PlotManagement() {
             plots={filteredPlots}
             onViewDetails={handleViewPlotDetails}
             onGenerateQR={handleGenerateQR}
+            selectedPlot={selectedPlot}  // [FIX] Truyền selectedPlot để lấy parentPlotId
+            onSaveSuccess={refetch}      // [FIX] Truyền refetch để auto-reload map sau khi lưu
           />
         )}
       </PageContainer>

@@ -49,6 +49,8 @@ public class SeasonHarvestService {
     ExternalServiceClient externalServiceClient;
     SeasonWorkspaceAccessService seasonWorkspaceAccessService;
     DomainEventPublisher domainEventPublisher;
+    org.example.season.client.CropCatalogClient cropCatalogClient;
+    org.example.season.client.InventoryServiceClient inventoryServiceClient;
 
     /**
      * List all harvests for the current farmer's seasons (supports "All Seasons"
@@ -647,5 +649,97 @@ public class SeasonHarvestService {
                 .note(harvest.getNote())
                 .createdAt(harvest.getCreatedAt())
                 .build();
+    }
+
+    /**
+     * Luồng 1: Farmer báo cáo gặt ngoài đồng
+     */
+    @Transactional
+    public Harvest reportFieldHarvest(Integer seasonId, BigDecimal grossWetWeight) {
+        if (grossWetWeight == null || grossWetWeight.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new AppException(ErrorCode.INVALID_SEASON_DATES);
+        }
+
+        Season season = getSeasonForCurrentFarmer(seasonId);
+        ensureSeasonAllowsHarvest(season);
+
+        // [FIX 2] Bắt lỗi cứng, không được swallow exception
+        org.example.season.client.CropCatalogClient.CropDto cropInfo;
+        try {
+            cropInfo = cropCatalogClient.getCropById(season.getCropId());
+        } catch (Exception e) {
+            throw new IllegalStateException("Không thể truy xuất dữ liệu Sinh lý Nông sản từ Catalog Service.");
+        }
+
+        Harvest harvest = Harvest.builder()
+                .season(season)
+                .harvestDate(LocalDate.now())
+                .grossWetWeight(grossWetWeight)
+                .quantity(grossWetWeight)
+                .unit(BigDecimal.ONE)
+                .build();
+
+        // [FIX 1] Phân luồng rõ ràng dựa trên độ trễ
+        if (cropInfo.getPostHarvestDelayDays() != null && cropInfo.getPostHarvestDelayDays() > 0) {
+            // Nhóm Lúa/Ngũ cốc cần phơi sấy
+            harvest.setWarehouseReceiptStatus(org.example.season.enums.WarehouseReceiptStatus.PENDING_RECEIPT);
+        } else {
+            // Nhóm Rau/Quả tươi không cần phơi sấy -> Có thể cho phép RECEIVED ngay hoặc có cờ đặc biệt
+            // Tạm thời vẫn để PENDING_RECEIPT nhưng frontend sẽ cho phép nút "Nhập kho" sáng lên ngay lập tức
+            harvest.setWarehouseReceiptStatus(org.example.season.enums.WarehouseReceiptStatus.PENDING_RECEIPT);
+        }
+
+        return harvestRepository.save(harvest);
+    }
+
+    /**
+     * Luồng 2: Thủ kho xác nhận nhập kho (đã sấy xong hoặc nhập trực tiếp)
+     */
+    @Transactional
+    public Harvest receiveToWarehouse(Integer harvestId, 
+                                      BigDecimal currentMoisture, 
+                                      BigDecimal targetMoisture, 
+                                      BigDecimal mechanicalLossPercentage) {
+        
+        Harvest harvest = harvestRepository.findById(harvestId)
+                .orElseThrow(() -> new AppException(ErrorCode.HARVEST_NOT_FOUND));
+
+        if (org.example.season.enums.WarehouseReceiptStatus.RECEIVED.equals(harvest.getWarehouseReceiptStatus())) {
+            throw new IllegalStateException("Lô thu hoạch này đã được nhập kho trước đó.");
+        }
+
+        if (harvest.getGrossWetWeight() == null) {
+            throw new IllegalStateException("Thiếu dữ liệu khối lượng gặt thực tế ngoài đồng.");
+        }
+
+        // [FIX 3] Nếu không truyền độ ẩm (ví dụ: rau củ), coi độ ẩm bằng 0 để bypass công thức bốc hơi
+        BigDecimal netWeight = GrainMoistureCalculator.calculateNetDryWeight(
+                harvest.getGrossWetWeight(), 
+                currentMoisture != null ? currentMoisture : BigDecimal.ZERO, 
+                targetMoisture != null ? targetMoisture : BigDecimal.ZERO, 
+                mechanicalLossPercentage != null ? mechanicalLossPercentage : BigDecimal.ZERO
+        );
+
+        harvest.setNetDryWeight(netWeight);
+        harvest.setWarehouseReceivedDate(LocalDate.now());
+        harvest.setWarehouseReceiptStatus(org.example.season.enums.WarehouseReceiptStatus.RECEIVED);
+        
+        Harvest savedHarvest = harvestRepository.save(harvest);
+
+        // Gọi đồng bộ tồn kho
+        org.example.season.client.InventoryServiceClient.HarvestSyncDto syncDto = 
+                new org.example.season.client.InventoryServiceClient.HarvestSyncDto(
+                savedHarvest.getId(), 
+                savedHarvest.getSeason().getId(), 
+                netWeight
+        );
+        try {
+            inventoryServiceClient.syncHarvestToInventory(syncDto);
+        } catch (Exception e) {
+            // Trong thực tế, nên dùng Kafka/RabbitMQ thay vì Feign ở đây để đảm bảo Eventually Consistency
+            throw new IllegalStateException("Lỗi đồng bộ dữ liệu sang Kho bãi: " + e.getMessage());
+        }
+
+        return savedHarvest;
     }
 }

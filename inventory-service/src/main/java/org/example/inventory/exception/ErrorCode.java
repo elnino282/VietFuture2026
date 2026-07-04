@@ -30,7 +30,8 @@ public enum ErrorCode {
     PRODUCT_WAREHOUSE_RECEIPT_DUPLICATE("ERR_PRODUCT_WAREHOUSE_RECEIPT_DUPLICATE", "Receipt for harvest already exists", HttpStatus.CONFLICT),
     INSUFFICIENT_STOCK("ERR_INSUFFICIENT_STOCK", "Insufficient stock", HttpStatus.BAD_REQUEST),
     INVENTORY_INSUFFICIENT_STOCK("ERR_INVENTORY_INSUFFICIENT_STOCK", "Insufficient inventory stock", HttpStatus.BAD_REQUEST),
-    ADJUST_NOTE_REQUIRED("ERR_ADJUST_NOTE_REQUIRED", "Adjustment note is required", HttpStatus.BAD_REQUEST);
+    ADJUST_NOTE_REQUIRED("ERR_ADJUST_NOTE_REQUIRED", "Adjustment note is required", HttpStatus.BAD_REQUEST),
+    LOT_NOT_FOUND("ERR_LOT_NOT_FOUND", "Không tìm thấy lô hàng trong kho lạnh", HttpStatus.NOT_FOUND);
 
     ErrorCode(String code, String message, HttpStatus statusCode) {
         this.code = code;
