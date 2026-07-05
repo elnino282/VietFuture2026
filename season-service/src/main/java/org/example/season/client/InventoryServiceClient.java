@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "inventory-service", fallback = InventoryServiceClientFallback.class)
+@FeignClient(name = "inventory-service", url = "${app.inventory-service-url}", fallback = InventoryServiceClientFallback.class)
 public interface InventoryServiceClient {
 
     @PostMapping("/api/v1/inventory/sync-harvest")

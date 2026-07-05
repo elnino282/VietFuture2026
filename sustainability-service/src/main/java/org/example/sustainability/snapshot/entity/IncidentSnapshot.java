@@ -29,7 +29,7 @@ public class IncidentSnapshot {
     @Column(name = "farm_id")
     Integer farmId;
 
-    @Column(name = "reported_by")
+    @Column(name = "reported_by_id")
     Long reportedById;
 
     @Column(name = "incident_type")

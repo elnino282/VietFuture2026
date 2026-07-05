@@ -171,7 +171,7 @@ ls -la identity-service/src/main/resources/keys/
 ### 4.1. Build và khởi động toàn bộ services
 
 ```bash
-docker compose up -d --build
+docker compose up -d --build season-service
 ```
 mvn clean package -DskipTests
 > **Lần đầu tiên** sẽ mất **5–15 phút** để download Docker images và build Maven (tải dependencies). Các lần sau sẽ nhanh hơn nhiều nhờ Docker cache.

@@ -212,7 +212,7 @@ export const suppliesApi = {
     if (params?.size !== undefined) queryParams.size = params.size;
 
     const response = await httpClient.get(
-      `/api/v1/employee/seasons/${seasonId}/supplies/items`,
+      "/api/v1/supplies/items",
       { params: queryParams },
     );
     return parsePageResponse(response.data, SupplyItemSchema);
@@ -234,7 +234,7 @@ export const suppliesApi = {
     if (params?.size !== undefined) queryParams.size = params.size;
 
     const response = await httpClient.get(
-      `/api/v1/employee/seasons/${seasonId}/supplies/lots`,
+      "/api/v1/supplies/lots",
       { params: queryParams },
     );
     return parsePageResponse(response.data, SupplyLotSchema);

@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/supplies")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@PreAuthorize("hasRole('FARMER')")
+@PreAuthorize("hasAnyRole('FARMER', 'EMPLOYEE')")
 public class SuppliesController {
 
     SuppliesPublicService suppliesPublicService;
@@ -52,11 +52,13 @@ public class SuppliesController {
         return ApiResponse.success(suppliesPublicService.getSupplier(id));
     }
 
+    @PreAuthorize("hasRole('FARMER')")
     @PostMapping("/suppliers")
     public ApiResponse<SupplierResponse> createSupplier(@Valid @RequestBody CreateSupplierRequest request) {
         return ApiResponse.success(suppliesPublicService.createSupplier(request));
     }
 
+    @PreAuthorize("hasRole('FARMER')")
     @PutMapping("/suppliers/{id}")
     public ApiResponse<SupplierResponse> updateSupplier(
             @PathVariable Integer id,
@@ -64,6 +66,7 @@ public class SuppliesController {
         return ApiResponse.success(suppliesPublicService.updateSupplier(id, request));
     }
 
+    @PreAuthorize("hasRole('FARMER')")
     @DeleteMapping("/suppliers/{id}")
     public ApiResponse<Void> deleteSupplier(@PathVariable Integer id) {
         suppliesPublicService.deleteSupplier(id);
@@ -80,12 +83,14 @@ public class SuppliesController {
         return ApiResponse.success(suppliesPublicService.getSupplyItems(q, restricted, pageable));
     }
 
+    @PreAuthorize("hasRole('FARMER')")
     @PostMapping("/items")
     public ApiResponse<SupplyItemResponse> createSupplyItem(
             @Valid @RequestBody CreateSupplyItemRequest request) {
         return ApiResponse.success(suppliesPublicService.createSupplyItem(request));
     }
 
+    @PreAuthorize("hasRole('FARMER')")
     @PutMapping("/items/{id}")
     public ApiResponse<SupplyItemResponse> updateSupplyItem(
             @PathVariable Integer id,
@@ -93,6 +98,7 @@ public class SuppliesController {
         return ApiResponse.success(suppliesPublicService.updateSupplyItem(id, request));
     }
 
+    @PreAuthorize("hasRole('FARMER')")
     @DeleteMapping("/items/{id}")
     public ApiResponse<Void> deleteSupplyItem(@PathVariable Integer id) {
         suppliesPublicService.deleteSupplyItem(id);
@@ -116,6 +122,7 @@ public class SuppliesController {
                 pageable));
     }
 
+    @PreAuthorize("hasRole('FARMER')")
     @PostMapping("/stock-in")
     public ApiResponse<StockInResponse> stockIn(@Valid @RequestBody StockInRequest request) {
         return ApiResponse.success(suppliesPublicService.stockIn(request));

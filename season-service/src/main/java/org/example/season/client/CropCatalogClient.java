@@ -6,7 +6,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "crop-catalog-service", fallback = CropCatalogClientFallback.class)
+@FeignClient(name = "crop-catalog-service", url = "${app.crop-catalog-service-url}", fallback = CropCatalogClientFallback.class)
 public interface CropCatalogClient {
     
     @GetMapping("/api/v1/crops/{cropId}")

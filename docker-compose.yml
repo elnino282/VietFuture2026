@@ -75,6 +75,7 @@ services:
     ports:
       - "8081:8081"
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8081
       DB_URL: jdbc:mysql://mysql:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
@@ -115,6 +116,7 @@ services:
     ports:
       - "8082:8082"
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8082
       DB_URL: jdbc:mysql://mysql:3306/crop_catalog_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
@@ -138,6 +140,7 @@ services:
     container_name: ai_service_quanlymuavu
     restart: unless-stopped
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8083
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
@@ -157,6 +160,7 @@ services:
     ports:
       - "8084:8084"
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8084
       DB_URL: jdbc:mysql://mysql:3306/farm_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
@@ -183,6 +187,7 @@ services:
     ports:
       - "8085:8085"
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8085
       DB_URL: jdbc:mysql://mysql:3306/season_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
@@ -215,6 +220,7 @@ services:
     ports:
       - "8086:8086"
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8086
       DB_URL: jdbc:mysql://mysql:3306/inventory_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
@@ -241,6 +247,7 @@ services:
     ports:
       - "8087:8087"
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8087
       DB_URL: jdbc:mysql://mysql:3306/finance_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
@@ -270,6 +277,7 @@ services:
     ports:
       - "8088:8088"
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8088
       DB_URL: jdbc:mysql://mysql:3306/incident_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
@@ -302,6 +310,7 @@ services:
     ports:
       - "8089:8089"
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8089
       DB_URL: jdbc:mysql://mysql:3306/sustainability_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
@@ -341,6 +350,7 @@ services:
     ports:
       - "8090:8090"
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8090
       DB_URL: jdbc:mysql://mysql:3306/marketplace_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
@@ -379,6 +389,7 @@ services:
     ports:
       - "8091:8091"
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SERVER_PORT: 8091
       DB_URL: jdbc:mysql://mysql:3306/admin_reporting_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
@@ -414,6 +425,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       GATEWAY_PORT: 8080
       IDENTITY_SERVICE_URI: http://identity-service:8081
       CROP_CATALOG_SERVICE_URI: http://crop-catalog-service:8082

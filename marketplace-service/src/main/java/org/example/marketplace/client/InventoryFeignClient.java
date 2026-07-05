@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 import java.util.Map;
 
-@FeignClient(name = "inventory-service", fallbackFactory = org.example.marketplace.client.fallback.InventoryFeignClientFallbackFactory.class)
+@FeignClient(name = "inventory-service", url = "${external-services.inventory-service-url:http://inventory-service:8086}", fallbackFactory = org.example.marketplace.client.fallback.InventoryFeignClientFallbackFactory.class)
 public interface InventoryFeignClient {
 
     @GetMapping("/api/v1/product-warehouses/lots/{id}")

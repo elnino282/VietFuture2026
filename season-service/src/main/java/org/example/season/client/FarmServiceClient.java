@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 import java.util.Map;
 
-@FeignClient(name = "farm-service", fallback = FarmServiceClientFallback.class)
+@FeignClient(name = "farm-service", url = "${app.farm-service-url}", fallback = FarmServiceClientFallback.class)
 public interface FarmServiceClient {
     
     @GetMapping("/api/v1/plots/{plotId}/geojson")

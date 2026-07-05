@@ -18,19 +18,19 @@ import type {
 
 export const userApi = {
     getMe: async (): Promise<ProfileResponse> => {
-        const response = await httpClient.get('/api/v1/user/me');
+        const response = await httpClient.get('/api/v1/users/me');
         return parseApiResponse(response.data, ProfileResponseSchema);
     },
 
     updateProfile: async (data: ProfileUpdateRequest): Promise<ProfileResponse> => {
         const validatedPayload = ProfileUpdateRequestSchema.parse(data);
-        const response = await httpClient.put('/api/v1/user/profile', validatedPayload);
+        const response = await httpClient.put('/api/v1/users/profile', validatedPayload);
         return parseApiResponse(response.data, ProfileResponseSchema);
     },
 
     changePassword: async (data: ProfileChangePasswordRequest): Promise<ProfileResponse> => {
         const validatedPayload = ProfileChangePasswordRequestSchema.parse(data);
-        const response = await httpClient.put('/api/v1/user/change-password', validatedPayload);
+        const response = await httpClient.put('/api/v1/users/change-password', validatedPayload);
         return parseApiResponse(response.data, ProfileResponseSchema);
     },
 };

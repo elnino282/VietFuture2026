@@ -4,7 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "identity-service", fallbackFactory = org.example.marketplace.client.fallback.IdentityClientFallbackFactory.class)
+@FeignClient(name = "identity-service", url = "${external-services.identity-service-url:http://identity-service:8081}", fallbackFactory = org.example.marketplace.client.fallback.IdentityClientFallbackFactory.class)
 public interface IdentityClient {
 
     @GetMapping("/api/v1/internal/users/{userId}/display-name")

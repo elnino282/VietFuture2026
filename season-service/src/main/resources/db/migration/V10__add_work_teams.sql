@@ -17,10 +17,49 @@ CREATE TABLE IF NOT EXISTS work_team_members (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Add work_team_id column to tasks table (for assigning tasks to teams)
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS work_team_id BIGINT NULL;
+SET @add_work_team_id = (
+    SELECT IF(
+        COUNT(*) = 0,
+        'ALTER TABLE tasks ADD COLUMN work_team_id BIGINT NULL',
+        'SELECT 1'
+    )
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'tasks'
+      AND COLUMN_NAME = 'work_team_id'
+);
+PREPARE stmt FROM @add_work_team_id;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- Add estimated_days column to tasks table
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS estimated_days INT NULL;
+SET @add_estimated_days = (
+    SELECT IF(
+        COUNT(*) = 0,
+        'ALTER TABLE tasks ADD COLUMN estimated_days INT NULL',
+        'SELECT 1'
+    )
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'tasks'
+      AND COLUMN_NAME = 'estimated_days'
+);
+PREPARE stmt FROM @add_estimated_days;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- Add plot_id column to tasks table (for assigning tasks to specific plots/zones)
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS plot_id BIGINT NULL;
+SET @add_plot_id = (
+    SELECT IF(
+        COUNT(*) = 0,
+        'ALTER TABLE tasks ADD COLUMN plot_id BIGINT NULL',
+        'SELECT 1'
+    )
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'tasks'
+      AND COLUMN_NAME = 'plot_id'
+);
+PREPARE stmt FROM @add_plot_id;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
