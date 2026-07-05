@@ -32,9 +32,6 @@ export {
 // Keys
 export { seasonKeys } from './model/keys';
 
-// API Client
-export { seasonApi } from './api/client';
-
 // Hooks
 export {
     useSeasons,

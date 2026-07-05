@@ -206,7 +206,7 @@ public class ExternalServiceClient {
             return restTemplate.getForObject(url, EmployeePageResponse.class);
         } catch (Exception e) {
             log.error("Failed to search employees", e);
-            return EmployeePageResponse.builder().content(java.util.Collections.emptyList()).build();
+            return EmployeePageResponse.builder().items(java.util.Collections.emptyList()).build();
         }
     }
 
@@ -259,8 +259,8 @@ public class ExternalServiceClient {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class EmployeePageResponse {
-        private java.util.List<UserInternalDto> content;
-        private int number;
+        private java.util.List<UserInternalDto> items;
+        private int page;
         private int size;
         private long totalElements;
         private int totalPages;

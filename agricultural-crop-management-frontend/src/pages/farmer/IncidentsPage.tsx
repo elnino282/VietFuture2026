@@ -443,7 +443,7 @@ export function IncidentsPage() {
                   {mySeasons?.map((season) => (
                     <SelectItem
                       key={season.seasonId}
-                      value={season.seasonId.toString()}
+                      value={season.seasonId?.toString() ?? ''}
                     >
                       {season.seasonName}{" "}
                       {season.status && `(${season.status})`}

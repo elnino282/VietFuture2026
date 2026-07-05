@@ -99,6 +99,7 @@
     "test:fdn:flow": "vitest --run src/features/farmer/dashboard/NutrientInputDashboardRoute.flow.test.tsx src/features/farmer/dashboard/IrrigationSoilDashboardRoute.flow.test.tsx src/features/farmer/season-workspace/SeasonNutrientInputsWorkspace.test.tsx src/features/farmer/season-workspace/SeasonIrrigationWaterAnalysesWorkspace.test.tsx src/features/farmer/season-workspace/SeasonSoilTestsWorkspace.test.tsx src/entities/nutrient-input/api/hooks.flow.test.tsx src/entities/irrigation-water-analysis/api/hooks.flow.test.tsx src/entities/soil-test/api/hooks.flow.test.tsx",
     "test:fdn": "npm run test:fdn:contracts && npm run test:fdn:flow",
     "ci:fdn:frontend": "npm run build && npm run test:fdn",
+    "generate:api": "orval --config orval.config.js",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "lint": "eslint src/",

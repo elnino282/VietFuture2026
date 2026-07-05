@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/template")
+@RequestMapping("/api/v1/templates")
 @RequiredArgsConstructor
 @Tag(name = "Template APIs", description = "Endpoints for managing template records and demonstrating template structure")
 public class TemplateController {

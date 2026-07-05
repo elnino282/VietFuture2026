@@ -77,7 +77,7 @@ public class LaborManagementService {
     @Transactional(readOnly = true)
     public PageResponse<EmployeeDirectoryResponse> listEmployeeDirectory(String keyword, int page, int size) {
         ExternalServiceClient.EmployeePageResponse response = externalServiceClient.searchEmployees(keyword, page, size);
-        List<EmployeeDirectoryResponse> items = response.getContent().stream()
+        List<EmployeeDirectoryResponse> items = response.getItems().stream()
                 .map(user -> EmployeeDirectoryResponse.builder()
                         .userId(user.getId())
                         .username(user.getUsername())
@@ -89,7 +89,7 @@ public class LaborManagementService {
 
         PageResponse<EmployeeDirectoryResponse> pageResponse = new PageResponse<>();
         pageResponse.setItems(items);
-        pageResponse.setPage(response.getNumber());
+        pageResponse.setPage(response.getPage());
         pageResponse.setSize(response.getSize());
         pageResponse.setTotalElements(response.getTotalElements());
         pageResponse.setTotalPages(response.getTotalPages());

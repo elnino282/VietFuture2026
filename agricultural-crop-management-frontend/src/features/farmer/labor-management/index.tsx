@@ -126,7 +126,7 @@ export function LaborManagementPage() {
   useEffect(() => {
     if (isWorkspaceScoped) return;
     if (!isSeasonsLoading && mySeasons && mySeasons.length > 0 && selectedSeasonId === null) {
-      setSelectedSeasonId(mySeasons[0].seasonId);
+      setSelectedSeasonId(mySeasons[0].seasonId ?? null);
     }
   }, [isWorkspaceScoped, isSeasonsLoading, mySeasons, selectedSeasonId]);
 
@@ -413,7 +413,7 @@ export function LaborManagementPage() {
                     {(mySeasons ?? []).map((season) => (
                       <SelectItem
                         key={season.seasonId}
-                        value={season.seasonId.toString()}
+                        value={season.seasonId?.toString() ?? ''}
                       >
                         {season.seasonName}{" "}
                         {season.status && `(${season.status})`}

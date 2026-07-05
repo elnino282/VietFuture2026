@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.identity.entity.User;
 import org.example.identity.enums.UserStatus;
 import org.example.identity.repository.UserRepository;
+import org.example.identity.dto.common.PageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,7 +47,7 @@ public class InternalUserController {
     }
 
     @GetMapping("/users/employees")
-    public ResponseEntity<Page<UserInternalDto>> searchEmployees(
+    public ResponseEntity<PageResponse<UserInternalDto>> searchEmployees(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -57,15 +58,15 @@ public class InternalUserController {
                 keyword,
                 pageable);
 
-        Page<UserInternalDto> dtoPage = users.map(user -> UserInternalDto.builder()
+        List<UserInternalDto> dtoList = users.stream().map(user -> UserInternalDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .phone(user.getPhone())
-                .build());
+                .build()).toList();
 
-        return ResponseEntity.ok(dtoPage);
+        return ResponseEntity.ok(PageResponse.of(users, dtoList));
     }
 
     @GetMapping("/users/employees/{id}/validate")

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.example.farm.entity.Farm;
 import org.example.farm.repository.FarmRepository;
+import org.example.farm.mapper.FarmMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,18 +19,13 @@ import java.util.List;
 public class InternalFarmController {
 
     private final FarmRepository farmRepository;
+    private final FarmMapper farmMapper;
 
     @PostMapping("/batch")
     public ResponseEntity<List<FarmSummaryDto>> getFarmsByIds(@RequestBody List<Integer> farmIds) {
         List<Farm> farms = farmRepository.findAllById(farmIds);
         List<FarmSummaryDto> dtos = farms.stream()
-                .map(farm -> FarmSummaryDto.builder()
-                        .id(farm.getId())
-                        .name(farm.getName())
-                        .provinceName(farm.getProvince() != null ? farm.getProvince().getName() : null)
-                        .wardName(farm.getWard() != null ? farm.getWard().getName() : null)
-                        .area(farm.getArea())
-                        .build())
+                .map(farmMapper::toSummaryDto)
                 .toList();
         return ResponseEntity.ok(dtos);
     }
@@ -37,17 +33,8 @@ public class InternalFarmController {
     @GetMapping("/{farmId}")
     public ResponseEntity<FarmDetailDto> getFarmDetail(@PathVariable Integer farmId) {
         return farmRepository.findById(farmId)
-                .map(farm -> ResponseEntity.ok(FarmDetailDto.builder()
-                        .id(farm.getId())
-                        .name(farm.getName())
-                        .provinceName(farm.getProvince() != null ? farm.getProvince().getName() : null)
-                        .wardName(farm.getWard() != null ? farm.getWard().getName() : null)
-                        .area(farm.getArea())
-                        .latitude(farm.getLatitude())
-                        .longitude(farm.getLongitude())
-                        .averageRating(farm.getAverageRating())
-                        .userId(farm.getUserId())
-                        .build()))
+                .map(farmMapper::toDetailDto)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 

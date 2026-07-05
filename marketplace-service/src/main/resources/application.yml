@@ -65,3 +65,22 @@ minio:
     product-images: ${MINIO_BUCKET_PRODUCT_IMAGES:marketplace-product-images}
     payment-proofs: ${MINIO_BUCKET_PAYMENT_PROOFS:marketplace-payment-proofs}
   public-url: ${MINIO_PUBLIC_URL:http://localhost:9000}
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 1s
+

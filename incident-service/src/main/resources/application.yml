@@ -61,3 +61,22 @@ app:
   identity-service-url: ${APP_IDENTITY_SERVICE_URL:http://identity-service:8081}
   farm-service-url: ${APP_FARM_SERVICE_URL:http://farm-service:8084}
   season-service-url: ${APP_SEASON_SERVICE_URL:http://season-service:8085}
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 1s
+

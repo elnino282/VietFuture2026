@@ -1,5 +1,9 @@
 {
   "dependencies": {
+    "@orval/query": "^8.20.0",
     "firebase": "^12.15.0"
+  },
+  "devDependencies": {
+    "orval": "^8.20.0"
   }
 }

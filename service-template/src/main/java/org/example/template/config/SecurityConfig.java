@@ -20,7 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = {
-            "/api/v1/template/public/**",
+            "/api/v1/templates/public/**",
             "/actuator/health",
             "/actuator/prometheus"
     };

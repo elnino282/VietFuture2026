@@ -79,12 +79,12 @@ export function useSeasonManagement() {
       toast.success(MSG.MSG_7);
       setNewSeasonOpen(false);
     },
-    onError: (err) => toast.error(MSG.MSG_9, { description: err.message }),
+    onError: (err: any) => toast.error(MSG.MSG_9, { description: err.message }),
   });
   const updateMutation = useUpdateSeason({
     // BR107: MSG_7 - "Save data successful."
     onSuccess: () => toast.success(MSG.MSG_7),
-    onError: (err) => toast.error(MSG.MSG_9, { description: err.message }),
+    onError: (err: any) => toast.error(MSG.MSG_9, { description: err.message }),
   });
   const deleteMutation = useDeleteSeason({
     onSuccess: () => {
@@ -92,23 +92,23 @@ export function useSeasonManagement() {
       setDeleteDialogOpen(false);
       setSeasonToDelete(null);
     },
-    onError: (err) => toast.error('Failed to delete season', { description: err.message }),
+    onError: (err: any) => toast.error('Failed to delete season', { description: err.message }),
   });
   const updateStatusMutation = useUpdateSeasonStatus({
     onSuccess: () => toast.success('Season status updated'),
-    onError: (err) => toast.error('Failed to update status', { description: err.message }),
+    onError: (err: any) => toast.error('Failed to update status', { description: err.message }),
   });
   const startMutation = useStartSeason({
     onSuccess: () => toast.success('Season started successfully'),
-    onError: (err) => toast.error('Failed to start season', { description: err.message }),
+    onError: (err: any) => toast.error('Failed to start season', { description: err.message }),
   });
   const completeMutation = useCompleteSeason({
     onSuccess: () => toast.success('Season completed successfully'),
-    onError: (err) => toast.error('Failed to complete season', { description: err.message }),
+    onError: (err: any) => toast.error('Failed to complete season', { description: err.message }),
   });
   const cancelMutation = useCancelSeason({
     onSuccess: () => toast.success('Season cancelled successfully'),
-    onError: (err) => toast.error('Failed to cancel season', { description: err.message }),
+    onError: (err: any) => toast.error('Failed to cancel season', { description: err.message }),
   });
 
   // View state

@@ -1,17 +1,15 @@
 import {
-    useMutation,
-    useQuery,
-    useQueryClient,
     type UseMutationOptions,
     type UseQueryOptions,
+    type UseQueryResult,
+    type UseMutationResult
 } from '@tanstack/react-query';
 import type { PageResponse } from '@/shared/api/types';
 import { seasonKeys } from '../model/keys';
-import { seasonApi } from './client';
 import type {
     SeasonListParams,
     Season,
-    SeasonDetailResponse,
+    SeasonDetailResponse as SeasonDetail,
     SeasonCreateRequest,
     SeasonUpdateRequest,
     SeasonStatusUpdateRequest,
@@ -19,211 +17,212 @@ import type {
     SeasonCompleteRequest,
     SeasonCancelRequest,
 } from '../model/types';
+import type { MySeasonResponse } from '@/api/generated/model';
+
+import {
+    useSearchSeasons,
+    useGetSeason,
+    useCreateSeason as useOrvalCreateSeason,
+    useUpdateSeason as useOrvalUpdateSeason,
+    useUpdateSeasonStatus as useOrvalUpdateSeasonStatus,
+    useStartSeason as useOrvalStartSeason,
+    useCompleteSeason as useOrvalCompleteSeason,
+    useCancelSeason as useOrvalCancelSeason,
+    useDeleteSeason as useOrvalDeleteSeason,
+    useArchiveSeason as useOrvalArchiveSeason,
+    useGetMySeasons,
+    useSearchSeasonsByKeyword as useOrvalSearchSeasonsByKeyword,
+} from '@/api/generated/season-service';
 
 // ═══════════════════════════════════════════════════════════════
-// SEASON REACT QUERY HOOKS
+// ADAPTER HOOKS
+// These wrap the Orval generated hooks to hide the AxiosResponse 
+// and ApiResponse boilerplate from the UI components.
 // ═══════════════════════════════════════════════════════════════
 
-/**
- * Hook to fetch paginated list of seasons with optional filters
- */
 export const useSeasons = (
     params?: SeasonListParams,
-    options?: Omit<UseQueryOptions<PageResponse<Season>, Error>, 'queryKey' | 'queryFn'>
-) => useQuery({
-    queryKey: seasonKeys.list(params),
-    queryFn: () => seasonApi.list(params),
-    staleTime: 5 * 60 * 1000,
-    ...options,
-});
+    options?: Omit<UseQueryOptions<any, any, any>, 'queryKey' | 'queryFn'>
+): UseQueryResult<PageResponse<Season>, Error> => {
+    const query = useSearchSeasons(params as any, {
+        query: {
+            staleTime: 5 * 60 * 1000,
+            ...options
+        }
+    });
 
+    return {
+        ...query,
+        data: query.data?.data?.result ? {
+            items: (query.data.data.result.items || []) as unknown as Season[],
+            page: query.data.data.result.page || 0,
+            size: query.data.data.result.size || 20,
+            totalElements: query.data.data.result.totalElements || 0,
+            totalPages: query.data.data.result.totalPages || 0,
+        } : undefined
+    } as UseQueryResult<PageResponse<Season>, Error>;
+};
 
-/**
- * Hook to fetch seasons filtered by crop ID
- * Used to check if a crop is being used in any seasons
- */
 export const useSeasonsByCrop = (
     cropId: number,
-    options?: Omit<UseQueryOptions<PageResponse<Season>, Error>, 'queryKey' | 'queryFn'>
-) => useSeasons(
-    { cropId, page: 0, size: 100 },
+    options?: Omit<UseQueryOptions<any, any, any>, 'queryKey' | 'queryFn'>
+): UseQueryResult<PageResponse<Season>, Error> => useSeasons(
+    { cropId, page: 0, size: 100 } as any,
     {
         enabled: cropId > 0,
         ...options,
-    }
+    } as any
 );
 
-/**
- * Hook to fetch a single season by ID
- */
 export const useSeasonById = (
     id: number,
-    options?: Omit<UseQueryOptions<SeasonDetailResponse, Error>, 'queryKey' | 'queryFn'>
-) => useQuery({
-    queryKey: seasonKeys.detail(id),
-    queryFn: () => seasonApi.getById(id),
-    enabled: id > 0,
-    staleTime: 5 * 60 * 1000,
-    ...options,
-});
-
-/**
- * Hook to create a new season
- */
-export const useCreateSeason = (
-    options?: UseMutationOptions<SeasonDetailResponse, Error, SeasonCreateRequest>
-) => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: seasonApi.create,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: seasonKeys.lists() });
-        },
-        ...options,
+    options?: Omit<UseQueryOptions<any, any, any>, 'queryKey' | 'queryFn'>
+): UseQueryResult<SeasonDetail, Error> => {
+    const query = useGetSeason(id, {
+        query: {
+            enabled: id > 0,
+            staleTime: 5 * 60 * 1000,
+            ...options
+        }
     });
+
+    return {
+        ...query,
+        data: query.data?.data?.result as unknown as SeasonDetail
+    } as UseQueryResult<SeasonDetail, Error>;
 };
 
-/**
- * Hook to update an existing season
- */
-export const useUpdateSeason = (
-    options?: UseMutationOptions<SeasonDetailResponse, Error, { id: number; data: SeasonUpdateRequest }>
-) => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, data }) => seasonApi.update(id, data),
-        onSuccess: (_, { id }) => {
-            queryClient.invalidateQueries({ queryKey: seasonKeys.detail(id) });
-            queryClient.invalidateQueries({ queryKey: seasonKeys.lists() });
-        },
-        ...options,
+export const useCreateSeason = (options?: any): UseMutationResult<SeasonDetail, Error, SeasonCreateRequest, unknown> => {
+    const mutation = useOrvalCreateSeason({
+        mutation: options
     });
+    return {
+        ...mutation,
+        mutateAsync: async (data: SeasonCreateRequest) => {
+            const res = await mutation.mutateAsync({ data: data as any });
+            return res.data?.result as unknown as SeasonDetail;
+        }
+    } as any;
 };
 
-/**
- * Hook to update season status
- */
-export const useUpdateSeasonStatus = (
-    options?: UseMutationOptions<Season, Error, { id: number; data: SeasonStatusUpdateRequest }>
-) => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, data }) => seasonApi.updateStatus(id, data),
-        onSuccess: (_, { id }) => {
-            queryClient.invalidateQueries({ queryKey: seasonKeys.detail(id) });
-            queryClient.invalidateQueries({ queryKey: seasonKeys.lists() });
-        },
-        ...options,
+export const useUpdateSeason = (options?: any): UseMutationResult<SeasonDetail, Error, { id: number; data: SeasonUpdateRequest }, unknown> => {
+    const mutation = useOrvalUpdateSeason({
+        mutation: options
     });
+    return {
+        ...mutation,
+        mutateAsync: async ({ id, data }: { id: number; data: SeasonUpdateRequest }) => {
+            const res = await mutation.mutateAsync({ id, data: data as any });
+            return res.data?.result as unknown as SeasonDetail;
+        }
+    } as any;
 };
 
-/**
- * Hook to start a planned season
- */
-export const useStartSeason = (
-    options?: UseMutationOptions<Season, Error, { id: number; data?: SeasonStartRequest }>
-) => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, data }) => seasonApi.start(id, data),
-        onSuccess: (_, { id }) => {
-            queryClient.invalidateQueries({ queryKey: seasonKeys.detail(id) });
-            queryClient.invalidateQueries({ queryKey: seasonKeys.lists() });
-        },
-        ...options,
+export const useUpdateSeasonStatus = (options?: any): UseMutationResult<Season, Error, { id: number; data: SeasonStatusUpdateRequest }, unknown> => {
+    const mutation = useOrvalUpdateSeasonStatus({
+        mutation: options
     });
+    return {
+        ...mutation,
+        mutateAsync: async ({ id, data }: { id: number; data: SeasonStatusUpdateRequest }) => {
+            const res = await mutation.mutateAsync({ id, data: data as any });
+            return res.data?.result as unknown as Season;
+        }
+    } as any;
 };
 
-/**
- * Hook to complete an active season
- */
-export const useCompleteSeason = (
-    options?: UseMutationOptions<Season, Error, { id: number; data: SeasonCompleteRequest }>
-) => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, data }) => seasonApi.complete(id, data),
-        onSuccess: (_, { id }) => {
-            queryClient.invalidateQueries({ queryKey: seasonKeys.detail(id) });
-            queryClient.invalidateQueries({ queryKey: seasonKeys.lists() });
-        },
-        ...options,
+export const useStartSeason = (options?: any): UseMutationResult<Season, Error, { id: number; data?: SeasonStartRequest }, unknown> => {
+    const mutation = useOrvalStartSeason({
+        mutation: options
     });
+    return {
+        ...mutation,
+        mutateAsync: async ({ id, data }: { id: number; data?: SeasonStartRequest }) => {
+            const res = await mutation.mutateAsync({ id, data: data as any });
+            return res.data?.result as unknown as Season;
+        }
+    } as any;
 };
 
-/**
- * Hook to cancel a season
- */
-export const useCancelSeason = (
-    options?: UseMutationOptions<Season, Error, { id: number; data?: SeasonCancelRequest }>
-) => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, data }) => seasonApi.cancel(id, data),
-        onSuccess: (_, { id }) => {
-            queryClient.invalidateQueries({ queryKey: seasonKeys.detail(id) });
-            queryClient.invalidateQueries({ queryKey: seasonKeys.lists() });
-        },
-        ...options,
+export const useCompleteSeason = (options?: any): UseMutationResult<Season, Error, { id: number; data: SeasonCompleteRequest }, unknown> => {
+    const mutation = useOrvalCompleteSeason({
+        mutation: options
     });
+    return {
+        ...mutation,
+        mutateAsync: async ({ id, data }: { id: number; data: SeasonCompleteRequest }) => {
+            const res = await mutation.mutateAsync({ id, data: data as any });
+            return res.data?.result as unknown as Season;
+        }
+    } as any;
 };
 
-/**
- * Hook to delete a season
- */
-export const useDeleteSeason = (
-    options?: UseMutationOptions<void, Error, number>
-) => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: seasonApi.delete,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: seasonKeys.lists() });
-        },
-        ...options,
+export const useCancelSeason = (options?: any): UseMutationResult<Season, Error, { id: number; data?: SeasonCancelRequest }, unknown> => {
+    const mutation = useOrvalCancelSeason({
+        mutation: options
     });
+    return {
+        ...mutation,
+        mutateAsync: async ({ id, data }: { id: number; data?: SeasonCancelRequest }) => {
+            const res = await mutation.mutateAsync({ id, data: data as any });
+            return res.data?.result as unknown as Season;
+        }
+    } as any;
 };
 
-/**
- * Hook to fetch minimal seasons for dropdown selectors
- */
-export const useMySeasons = (
-    options?: Omit<UseQueryOptions<import('../model/schemas').MySeason[], Error>, 'queryKey' | 'queryFn'>
-) => useQuery({
-    queryKey: seasonKeys.mySeasons(),
-    queryFn: () => seasonApi.getMySeasons(),
-    staleTime: 5 * 60 * 1000,
-    ...options,
-});
-
-/**
- * BR15: Hook to archive a completed or cancelled season
- */
-export const useArchiveSeason = (
-    options?: UseMutationOptions<Season, Error, number>
-) => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: seasonApi.archive,
-        onSuccess: (_, id) => {
-            queryClient.invalidateQueries({ queryKey: seasonKeys.detail(id) });
-            queryClient.invalidateQueries({ queryKey: seasonKeys.lists() });
-        },
-        ...options,
+export const useDeleteSeason = (options?: any): UseMutationResult<void, Error, number, unknown> => {
+    const mutation = useOrvalDeleteSeason({
+        mutation: options
     });
+    return {
+        ...mutation,
+        mutateAsync: async (id: number) => {
+            await mutation.mutateAsync({ id });
+        }
+    } as any;
 };
 
-/**
- * BR17: Hook to search seasons by keyword
- */
+export const useMySeasons = (options?: Omit<UseQueryOptions<any, any, any>, 'queryKey' | 'queryFn'>): UseQueryResult<MySeasonResponse[], Error> => {
+    const query = useGetMySeasons({
+        query: {
+            staleTime: 5 * 60 * 1000,
+            ...options
+        }
+    });
+
+    return {
+        ...query,
+        data: (query.data?.data?.result || []) as unknown as MySeasonResponse[]
+    } as UseQueryResult<MySeasonResponse[], Error>;
+};
+
+export const useArchiveSeason = (options?: any): UseMutationResult<Season, Error, number, unknown> => {
+    const mutation = useOrvalArchiveSeason({
+        mutation: options
+    });
+    return {
+        ...mutation,
+        mutateAsync: async (id: number) => {
+            const res = await mutation.mutateAsync({ id });
+            return res.data?.result as unknown as Season;
+        }
+    } as any;
+};
+
 export const useSearchSeasonsByKeyword = (
     keyword: string,
-    options?: Omit<UseQueryOptions<Season[], Error>, 'queryKey' | 'queryFn'>
-) => useQuery({
-    queryKey: [...seasonKeys.all, 'search', keyword],
-    queryFn: () => seasonApi.searchByKeyword(keyword),
-    enabled: keyword.length > 0,
-    staleTime: 30 * 1000, // 30 seconds for search results
-    ...options,
-});
+    options?: Omit<UseQueryOptions<any, any, any>, 'queryKey' | 'queryFn'>
+): UseQueryResult<Season[], Error> => {
+    const query = useOrvalSearchSeasonsByKeyword({ q: keyword }, {
+        query: {
+            enabled: keyword.length > 0,
+            staleTime: 30 * 1000,
+            ...options
+        }
+    });
 
+    return {
+        ...query,
+        data: (query.data?.data?.result || []) as unknown as Season[]
+    } as UseQueryResult<Season[], Error>;
+};
