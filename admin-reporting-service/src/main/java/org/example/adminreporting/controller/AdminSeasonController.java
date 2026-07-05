@@ -29,6 +29,7 @@ public class AdminSeasonController {
     private final SeasonSummaryRepository seasonSummaryRepository;
     private final PlotSummaryRepository plotSummaryRepository;
     private final TaskSummaryRepository taskSummaryRepository;
+    private final org.example.adminreporting.mapper.AdminReportingMapper mapper;
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<SeasonResponse>>> listAllSeasons(
@@ -44,7 +45,7 @@ public class AdminSeasonController {
         Pageable pageable = PageRequest.of(page, size, Sort.by("seasonId").descending());
         Page<SeasonSummary> seasonPage = seasonSummaryRepository.findSeasonsWithFilters(farmId, status, cropId, plotId, pageable);
 
-        Page<SeasonResponse> responsePage = seasonPage.map(this::toSeasonResponse);
+        Page<SeasonResponse> responsePage = seasonPage.map(mapper::toSeasonResponse);
         PageResponse<SeasonResponse> pageResponse = PageResponse.of(responsePage, responsePage.getContent());
 
         return ResponseEntity.ok(ApiResponse.success("Seasons retrieved", pageResponse));
@@ -60,20 +61,7 @@ public class AdminSeasonController {
                 .map(PlotSummary::getPlotName)
                 .orElse("Plot " + season.getPlotId());
 
-        SeasonDetailResponse detail = SeasonDetailResponse.builder()
-                .id(season.getSeasonId())
-                .seasonName(season.getSeasonName())
-                .plotId(season.getPlotId())
-                .plotName(plotName)
-                .cropId(season.getCropId())
-                .cropName(season.getCropName())
-                .varietyId(season.getVarietyId())
-                .varietyName(season.getVarietyName())
-                .startDate(season.getStartDate())
-                .status(season.getStatus())
-                .expectedYieldKg(season.getExpectedYieldKg())
-                .actualYieldKg(season.getActualYieldKg())
-                .build();
+        SeasonDetailResponse detail = mapper.toSeasonDetailResponse(season, plotName);
 
         return ResponseEntity.ok(ApiResponse.success("Season detail retrieved", detail));
     }
@@ -85,17 +73,4 @@ public class AdminSeasonController {
         return ResponseEntity.ok(ApiResponse.success("Pending task count retrieved", pendingCount));
     }
 
-    private SeasonResponse toSeasonResponse(SeasonSummary season) {
-        return SeasonResponse.builder()
-                .id(season.getSeasonId())
-                .seasonName(season.getSeasonName())
-                .plotId(season.getPlotId())
-                .cropId(season.getCropId())
-                .varietyId(season.getVarietyId())
-                .startDate(season.getStartDate())
-                .status(season.getStatus())
-                .expectedYieldKg(season.getExpectedYieldKg())
-                .actualYieldKg(season.getActualYieldKg())
-                .build();
-    }
 }

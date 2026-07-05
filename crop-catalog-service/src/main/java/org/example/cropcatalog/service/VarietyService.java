@@ -18,7 +18,7 @@ import org.example.cropcatalog.repository.VarietyRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
+import org.example.cropcatalog.client.SeasonServiceClient;
 
 @Service
 @RequiredArgsConstructor
@@ -30,10 +30,7 @@ public class VarietyService {
     final VarietyRepository varietyRepository;
     final CropRepository cropRepository;
     final VarietyMapper varietyMapper;
-    final RestTemplate restTemplate;
-
-    @Value("${app.backend-url:http://localhost:8080}")
-    String backendUrl;
+    final SeasonServiceClient seasonServiceClient;
 
     public VarietyResponse get(Integer id) {
         Variety variety = varietyRepository.findById(id)
@@ -100,8 +97,7 @@ public class VarietyService {
         // Check if variety is referenced in seasons in monolith via HTTP request
         boolean hasSeasons = false;
         try {
-            String url = backendUrl + "/api/v1/public/seasons/exists-by-variety/" + id;
-            Boolean response = restTemplate.getForObject(url, Boolean.class);
+            Boolean response = seasonServiceClient.existsByVariety(id);
             if (response != null) {
                 hasSeasons = response;
             }

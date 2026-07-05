@@ -33,6 +33,7 @@ public class AdminPlotController {
     private final PlotSummaryRepository plotSummaryRepository;
     private final FarmSummaryRepository farmSummaryRepository;
     private final SeasonSummaryRepository seasonSummaryRepository;
+    private final org.example.adminreporting.mapper.AdminReportingMapper mapper;
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<PlotResponse>>> listAllPlots(
@@ -60,7 +61,7 @@ public class AdminPlotController {
         Map<Integer, String> farmNameMap = farmSummaryRepository.findAllById(farmIds).stream()
                 .collect(Collectors.toMap(FarmSummary::getFarmId, FarmSummary::getFarmName));
 
-        Page<PlotResponse> responsePage = plotPage.map(plot -> toPlotResponse(plot, farmNameMap.get(plot.getFarmId())));
+        Page<PlotResponse> responsePage = plotPage.map(plot -> mapper.toPlotResponse(plot, farmNameMap.get(plot.getFarmId())));
         PageResponse<PlotResponse> pageResponse = PageResponse.of(responsePage, responsePage.getContent());
 
         return ResponseEntity.ok(ApiResponse.success("Plots retrieved", pageResponse));
@@ -76,39 +77,15 @@ public class AdminPlotController {
                 .map(FarmSummary::getFarmName)
                 .orElse("Unknown Farm");
 
-        return ResponseEntity.ok(ApiResponse.success("Plot retrieved", toPlotResponse(plot, farmName)));
+        return ResponseEntity.ok(ApiResponse.success("Plot retrieved", mapper.toPlotResponse(plot, farmName)));
     }
 
     @GetMapping("/{id}/seasons")
     public ResponseEntity<ApiResponse<List<SeasonResponse>>> listPlotSeasons(@PathVariable Integer id) {
         log.info("Admin requesting seasons for plot ID: {}", id);
         List<SeasonSummary> seasons = seasonSummaryRepository.findByPlotId(id);
-        List<SeasonResponse> responseList = seasons.stream().map(this::toSeasonResponse).toList();
+        List<SeasonResponse> responseList = seasons.stream().map(mapper::toSeasonResponse).toList();
         return ResponseEntity.ok(ApiResponse.success("Seasons retrieved", responseList));
     }
 
-    private PlotResponse toPlotResponse(PlotSummary plot, String farmName) {
-        return PlotResponse.builder()
-                .id(plot.getPlotId())
-                .farmId(plot.getFarmId())
-                .farmName(farmName != null ? farmName : "Farm " + plot.getFarmId())
-                .plotName(plot.getPlotName())
-                .area(plot.getArea())
-                .status("ACTIVE") // Default status for reporting view
-                .build();
-    }
-
-    private SeasonResponse toSeasonResponse(SeasonSummary season) {
-        return SeasonResponse.builder()
-                .id(season.getSeasonId())
-                .seasonName(season.getSeasonName())
-                .plotId(season.getPlotId())
-                .cropId(season.getCropId())
-                .varietyId(season.getVarietyId())
-                .startDate(season.getStartDate())
-                .status(season.getStatus())
-                .expectedYieldKg(season.getExpectedYieldKg())
-                .actualYieldKg(season.getActualYieldKg())
-                .build();
-    }
 }

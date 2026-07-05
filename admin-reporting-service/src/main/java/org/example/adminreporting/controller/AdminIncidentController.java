@@ -30,6 +30,7 @@ public class AdminIncidentController {
 
     private final IncidentSummaryRepository incidentSummaryRepository;
     private final SeasonSummaryRepository seasonSummaryRepository;
+    private final org.example.adminreporting.mapper.AdminReportingMapper mapper;
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<IncidentResponse>>> listAllIncidents(
@@ -51,7 +52,7 @@ public class AdminIncidentController {
         Map<Integer, String> seasonNameMap = seasonSummaryRepository.findAllById(seasonIds).stream()
                 .collect(Collectors.toMap(SeasonSummary::getSeasonId, SeasonSummary::getSeasonName));
 
-        Page<IncidentResponse> responsePage = incidentPage.map(incident -> toIncidentResponse(incident, seasonNameMap.get(incident.getSeasonId())));
+        Page<IncidentResponse> responsePage = incidentPage.map(incident -> mapper.toIncidentResponse(incident, seasonNameMap.get(incident.getSeasonId())));
         PageResponse<IncidentResponse> pageResponse = PageResponse.of(responsePage, responsePage.getContent());
 
         return ResponseEntity.ok(ApiResponse.success("Incidents retrieved", pageResponse));
@@ -67,18 +68,7 @@ public class AdminIncidentController {
                 .map(SeasonSummary::getSeasonName)
                 .orElse("Season " + incident.getSeasonId());
 
-        return ResponseEntity.ok(ApiResponse.success("Incident detail retrieved", toIncidentResponse(incident, seasonName)));
+        return ResponseEntity.ok(ApiResponse.success("Incident detail retrieved", mapper.toIncidentResponse(incident, seasonName)));
     }
 
-    private IncidentResponse toIncidentResponse(IncidentSummary incident, String seasonName) {
-        return IncidentResponse.builder()
-                .incidentId(incident.getIncidentId())
-                .seasonId(incident.getSeasonId())
-                .seasonName(seasonName != null ? seasonName : "Season " + incident.getSeasonId())
-                .incidentType("PEST") // Default/Fallback
-                .severity("MEDIUM") // Default/Fallback
-                .status(incident.getStatus())
-                .createdAt(LocalDateTime.now()) // Default/Fallback
-                .build();
-    }
 }

@@ -20,6 +20,8 @@ public class InternalCropController {
 
     private final CropRepository cropRepository;
     private final VarietyRepository varietyRepository;
+    private final org.example.cropcatalog.mapper.CropMapper cropMapper;
+    private final org.example.cropcatalog.mapper.VarietyMapper varietyMapper;
 
     @GetMapping("/crops/{id}")
     public ResponseEntity<CropInternalDto> getCropInternal(@PathVariable Integer id) {
@@ -27,10 +29,7 @@ public class InternalCropController {
         if (crop == null) {
             return ResponseEntity.notFound().build();
         }
-        CropInternalDto dto = CropInternalDto.builder()
-                .id(crop.getId())
-                .cropName(crop.getCropName())
-                .build();
+        CropInternalDto dto = cropMapper.toInternalDto(crop);
         return ResponseEntity.ok(dto);
     }
 
@@ -40,23 +39,17 @@ public class InternalCropController {
         if (variety == null) {
             return ResponseEntity.notFound().build();
         }
-        VarietyInternalDto dto = VarietyInternalDto.builder()
-                .id(variety.getId())
-                .name(variety.getName())
-                .cropId(variety.getCrop() != null ? variety.getCrop().getId() : null)
-                .build();
+        VarietyInternalDto dto = varietyMapper.toInternalDto(variety);
         return ResponseEntity.ok(dto);
     }
 
     @Data
-    @Builder
     public static class CropInternalDto {
         private Integer id;
         private String cropName;
     }
 
     @Data
-    @Builder
     public static class VarietyInternalDto {
         private Integer id;
         private String name;

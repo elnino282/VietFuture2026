@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 import java.util.Map;
 
-@FeignClient(name = "farm-service")
+@FeignClient(name = "farm-service", fallback = FarmServiceClientFallback.class)
 public interface FarmServiceClient {
     
     @GetMapping("/api/v1/plots/{plotId}/geojson")
@@ -18,6 +18,12 @@ public interface FarmServiceClient {
 
     @PostMapping("/api/v1/internal/plots/bulk")
     Map<Long, PlotInternalDto> getBulkPlots(@RequestBody List<Long> plotIds);
+
+    @GetMapping("/api/v1/internal/plots/{plotId}")
+    PlotInternalDto getPlot(@PathVariable("plotId") Integer plotId);
+
+    @GetMapping("/api/v1/internal/users/{userId}/farms/ids")
+    List<Integer> getAccessibleFarmIdsForUser(@PathVariable("userId") Long userId);
 
     @lombok.Data
     class PlotInternalDto {

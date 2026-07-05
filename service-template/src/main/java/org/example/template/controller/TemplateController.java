@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.example.template.dto.TemplateResponse;
+import org.example.template.mapper.TemplateMapper;
+
 @RestController
 @RequestMapping("/api/v1/templates")
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ import java.util.List;
 public class TemplateController {
 
     private final TemplateRecordRepository repository;
+    private final TemplateMapper mapper;
 
     @GetMapping("/public/hello")
     @Operation(summary = "Public endpoint", description = "Demonstrates a public endpoint that does not require authorization header")
@@ -34,21 +38,24 @@ public class TemplateController {
     @PreAuthorize("hasAnyRole('ADMIN', 'FARMER')")
     @Operation(summary = "Create template record", description = "Authorized endpoint to create a new template record. Requires ADMIN or FARMER role.",
                security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<TemplateRecord> createRecord(@Valid @RequestBody CreateRecordRequest request) {
+    public ResponseEntity<TemplateResponse> createRecord(@Valid @RequestBody CreateRecordRequest request) {
         TemplateRecord record = TemplateRecord.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .build();
         TemplateRecord saved = repository.save(record);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponse(saved));
     }
 
     @GetMapping("/records")
     @PreAuthorize("hasAnyRole('ADMIN', 'FARMER', 'EMPLOYEE')")
     @Operation(summary = "List all template records", description = "Authorized endpoint to list all records. Requires ADMIN, FARMER, or EMPLOYEE role.",
                security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<List<TemplateRecord>> listRecords() {
-        return ResponseEntity.ok(repository.findAll());
+    public ResponseEntity<List<TemplateResponse>> listRecords() {
+        List<TemplateResponse> responses = repository.findAll().stream()
+                .map(mapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(responses);
     }
 
     @Data

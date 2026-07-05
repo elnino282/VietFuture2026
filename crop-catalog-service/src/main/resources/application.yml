@@ -5,6 +5,11 @@ spring:
   application:
     name: crop-catalog-service
 
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/crop_catalog_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${DB_USER:springuser}
@@ -55,3 +60,4 @@ springdoc:
     path: /swagger-ui.html
     operationsSorter: method
     tagsSorter: alpha
+

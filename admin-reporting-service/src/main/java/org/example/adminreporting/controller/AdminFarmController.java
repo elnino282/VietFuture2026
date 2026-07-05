@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminFarmController {
 
     private final FarmSummaryRepository farmSummaryRepository;
+    private final org.example.adminreporting.mapper.AdminReportingMapper mapper;
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<FarmResponse>>> getAllFarms(
@@ -49,7 +50,7 @@ public class AdminFarmController {
                 ? farmSummaryRepository.findByFarmNameContainingIgnoreCase(keyword, pageable)
                 : farmSummaryRepository.findAll(pageable);
 
-        Page<FarmResponse> responsePage = farmPage.map(this::toFarmResponse);
+        Page<FarmResponse> responsePage = farmPage.map(mapper::toFarmResponse);
         PageResponse<FarmResponse> pageResponse = PageResponse.of(responsePage, responsePage.getContent());
 
         return ResponseEntity.ok(ApiResponse.success("Farms retrieved", pageResponse));
@@ -65,15 +66,6 @@ public class AdminFarmController {
         FarmStats stats = new FarmStats(activeFarms, inactiveFarms, activeFarms + inactiveFarms);
 
         return ResponseEntity.ok(ApiResponse.success("Farm stats retrieved", stats));
-    }
-
-    private FarmResponse toFarmResponse(FarmSummary summary) {
-        return FarmResponse.builder()
-                .id(summary.getFarmId())
-                .farmName(summary.getFarmName())
-                .name(summary.getFarmName())
-                .active(summary.getActive())
-                .build();
     }
 
     public record FarmStats(long activeFarms, long inactiveFarms, long totalFarms) {

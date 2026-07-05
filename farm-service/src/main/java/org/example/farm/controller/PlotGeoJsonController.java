@@ -27,10 +27,9 @@ import java.util.Map;
 public class PlotGeoJsonController {
 
     private final PlotRepository plotRepository;
-    private final ObjectMapper objectMapper;
+    private final org.example.farm.mapper.PlotMapper plotMapper;
 
     @Data
-    @Builder
     public static class PlotGeoJsonDto {
         private Long plotId;
         private String plotName;
@@ -55,25 +54,8 @@ public class PlotGeoJsonController {
 
         Map<Long, PlotGeoJsonDto> result = new HashMap<>();
         for (Plot plot : plots) {
-            Map<String, Object> boundary = parseBoundaryGeoJson(plot.getBoundaryGeoJson());
-            result.put(Long.valueOf(plot.getId()), PlotGeoJsonDto.builder()
-                    .plotId(Long.valueOf(plot.getId()))
-                    .plotName(plot.getPlotName())
-                    .boundary(boundary)
-                    .build());
+            result.put(Long.valueOf(plot.getId()), plotMapper.toPlotGeoJsonDto(plot));
         }
         return ResponseEntity.ok(result);
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> parseBoundaryGeoJson(String boundaryGeoJson) {
-        if (boundaryGeoJson == null || boundaryGeoJson.isBlank()) {
-            return null;
-        }
-        try {
-            return objectMapper.readValue(boundaryGeoJson, Map.class);
-        } catch (Exception ignored) {
-            return null;
-        }
     }
 }

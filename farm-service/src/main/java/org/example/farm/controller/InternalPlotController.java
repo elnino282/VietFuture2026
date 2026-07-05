@@ -20,6 +20,7 @@ public class InternalPlotController {
 
     private final PlotRepository plotRepository;
     private final FarmRepository farmRepository;
+    private final org.example.farm.mapper.PlotMapper plotMapper;
 
     @GetMapping("/users/{userId}/farms/ids")
     public ResponseEntity<java.util.List<Integer>> getFarmIdsByUserId(@PathVariable Long userId) {
@@ -37,14 +38,7 @@ public class InternalPlotController {
             return ResponseEntity.notFound().build();
         }
         
-        PlotInternalDto dto = PlotInternalDto.builder()
-                .id(plot.getId())
-                .plotName(plot.getPlotName())
-                .farmId(plot.getFarm() != null ? plot.getFarm().getId() : null)
-                .farmName(plot.getFarm() != null ? plot.getFarm().getName() : null)
-                .ownerUserId(plot.getFarm() != null ? plot.getFarm().getUserId() : null)
-                .farmActive(plot.getFarm() != null ? plot.getFarm().getActive() : null)
-                .build();
+        PlotInternalDto dto = plotMapper.toPlotInternalDto(plot);
                 
         return ResponseEntity.ok(dto);
     }
@@ -63,21 +57,12 @@ public class InternalPlotController {
 
         java.util.Map<Long, PlotInternalDto> result = new java.util.HashMap<>();
         for (Plot plot : plots) {
-            result.put(Long.valueOf(plot.getId()), PlotInternalDto.builder()
-                    .id(plot.getId())
-                    .plotName(plot.getPlotName())
-                    .plotArea(plot.getArea())
-                    .farmId(plot.getFarm() != null ? plot.getFarm().getId() : null)
-                    .farmName(plot.getFarm() != null ? plot.getFarm().getName() : null)
-                    .ownerUserId(plot.getFarm() != null ? plot.getFarm().getUserId() : null)
-                    .farmActive(plot.getFarm() != null ? plot.getFarm().getActive() : null)
-                    .build());
+            result.put(Long.valueOf(plot.getId()), plotMapper.toPlotInternalDto(plot));
         }
         return ResponseEntity.ok(result);
     }
 
     @Data
-    @Builder
     public static class PlotInternalDto {
         private Integer id;
         private String plotName;

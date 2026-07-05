@@ -20,10 +20,10 @@ import org.example.farm.repository.FarmRepository;
 import org.example.farm.repository.OutboxEventRepository;
 import org.example.farm.repository.PlotRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.example.farm.client.SeasonServiceClient;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import org.example.farm.exception.SpatialValidationException;
 import org.locationtech.jts.geom.Polygon;
@@ -38,10 +38,7 @@ public class PlotService {
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
     private final CurrentUserService currentUserService;
-    private final RestTemplate restTemplate;
-
-    @Value("${app.backend-url:http://localhost:8080}")
-    private String backendUrl;
+    private final SeasonServiceClient seasonServiceClient;
 
     @Transactional(readOnly = true)
     public List<PlotResponse> listPlotsForCurrentFarmer() {
@@ -177,8 +174,7 @@ public class PlotService {
 
         // Check if there are active seasons on this plot via monolith/season-service
         try {
-            String url = backendUrl + "/api/v1/public/seasons/exists-active-by-plot/" + id;
-            Boolean response = restTemplate.getForObject(url, Boolean.class);
+            Boolean response = seasonServiceClient.existsActiveSeasonsByPlot(id);
             if (response != null && response) {
                 throw new AppException(ErrorCode.PLOT_HAS_ACTIVE_SEASONS);
             }
@@ -191,8 +187,7 @@ public class PlotService {
 
         // Check if there are active tasks on this plot via monolith/season-service
         try {
-            String url = backendUrl + "/api/v1/public/seasons/exists-active-tasks-by-plot/" + id;
-            Boolean response = restTemplate.getForObject(url, Boolean.class);
+            Boolean response = seasonServiceClient.existsActiveTasksByPlot(id);
             if (response != null && response) {
                 throw new AppException(ErrorCode.PLOT_HAS_ACTIVE_TASKS);
             }

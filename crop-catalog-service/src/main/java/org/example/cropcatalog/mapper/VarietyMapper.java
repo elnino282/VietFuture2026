@@ -4,41 +4,29 @@ import org.example.cropcatalog.dto.request.VarietyRequest;
 import org.example.cropcatalog.dto.response.VarietyResponse;
 import org.example.cropcatalog.entity.Crop;
 import org.example.cropcatalog.entity.Variety;
-import org.springframework.stereotype.Component;
+import org.example.cropcatalog.controller.InternalCropController.VarietyInternalDto;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.MappingConstants;
 
-@Component
-public class VarietyMapper {
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+public interface VarietyMapper {
 
-    public Variety toEntity(VarietyRequest request, Crop crop) {
-        if (request == null || crop == null) {
-            return null;
-        }
-        return Variety.builder()
-                .crop(crop)
-                .name(request.getName())
-                .description(request.getDescription())
-                .build();
-    }
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "name", source = "request.name")
+    @Mapping(target = "description", source = "request.description")
+    Variety toEntity(VarietyRequest request, Crop crop);
 
-    public void update(Variety variety, VarietyRequest request, Crop crop) {
-        if (variety == null || request == null || crop == null) {
-            return;
-        }
-        variety.setCrop(crop);
-        variety.setName(request.getName());
-        variety.setDescription(request.getDescription());
-    }
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "name", source = "request.name")
+    @Mapping(target = "description", source = "request.description")
+    void update(@MappingTarget Variety variety, VarietyRequest request, Crop crop);
 
-    public VarietyResponse toResponse(Variety variety) {
-        if (variety == null) {
-            return null;
-        }
-        return VarietyResponse.builder()
-                .id(variety.getId())
-                .cropId(variety.getCrop() != null ? variety.getCrop().getId() : null)
-                .cropName(variety.getCrop() != null ? variety.getCrop().getCropName() : null)
-                .name(variety.getName())
-                .description(variety.getDescription())
-                .build();
-    }
+    @Mapping(target = "cropId", source = "crop.id")
+    @Mapping(target = "cropName", source = "crop.cropName")
+    VarietyResponse toResponse(Variety variety);
+
+    @Mapping(target = "cropId", source = "crop.id")
+    VarietyInternalDto toInternalDto(Variety variety);
 }

@@ -1,5 +1,5 @@
 server:
-  port: ${GATEWAY_PORT:8000}
+  port: ${GATEWAY_PORT:8080}
 
 spring:
   application:
@@ -32,7 +32,7 @@ spring:
             - id: crop-catalog-route
               uri: ${CROP_CATALOG_SERVICE_URI:http://localhost:8082}
               predicates:
-                - Path=/api/v1/crops/**, /api/v1/varieties/**, /api/v1/admin/varieties/**, /api/v1/admin/crops/**, /api/v1/catalog/**
+                - Path=/api/v1/crops/**, /api/v1/varieties/**, /api/v1/admin/varieties/**, /api/v1/admin/crops/**, /api/v1/catalogs/**
             - id: ai-route
               uri: ${AI_SERVICE_URI:http://localhost:8083}
               predicates:
@@ -40,7 +40,7 @@ spring:
             - id: farm-route
               uri: ${FARM_SERVICE_URI:http://localhost:8084}
               predicates:
-                - Path=/api/v1/farms, /api/v1/farms/**, /api/v1/plots, /api/v1/plots/**, /api/v1/address, /api/v1/address/**, /api/v1/locations, /api/v1/locations/**
+                - Path=/api/v1/farms, /api/v1/farms/**, /api/v1/plots, /api/v1/plots/**, /api/v1/addresses, /api/v1/addresses/**, /api/v1/locations, /api/v1/locations/**
             - id: finance-route
               uri: ${FINANCE_SERVICE_URI:http://localhost:8087}
               predicates:

@@ -183,7 +183,7 @@ mvn clean package -DskipTests
 docker compose ps
 
 # Hoặc theo dõi logs toàn bộ
-docker compose logs season-service -f --tail=50
+docker compose logs identity-service -f --tail=50
 ```
 
 Đợi khoảng **60–90 giây** sau khi tất cả containers đã `Started` để các Spring Boot services hoàn tất khởi tạo và Flyway chạy migrations.

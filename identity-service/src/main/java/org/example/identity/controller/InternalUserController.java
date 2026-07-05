@@ -1,6 +1,7 @@
 package org.example.identity.controller;
 
 import lombok.Builder;
+import java.util.List;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.example.identity.entity.User;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class InternalUserController {
 
     private final UserRepository userRepository;
+    private final org.example.identity.mapper.UserMapper userMapper;
 
     @GetMapping("/users/{id}")
     public ResponseEntity<UserInternalDto> getUserInternal(@PathVariable Long id) {
@@ -30,12 +32,7 @@ public class InternalUserController {
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
-        UserInternalDto dto = UserInternalDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .fullName(user.getFullName())
-                .build();
+        UserInternalDto dto = userMapper.toInternalDto(user);
         return ResponseEntity.ok(dto);
     }
 
@@ -58,13 +55,7 @@ public class InternalUserController {
                 keyword,
                 pageable);
 
-        List<UserInternalDto> dtoList = users.stream().map(user -> UserInternalDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .fullName(user.getFullName())
-                .phone(user.getPhone())
-                .build()).toList();
+        List<UserInternalDto> dtoList = users.stream().map(userMapper::toInternalDto).toList();
 
         return ResponseEntity.ok(PageResponse.of(users, dtoList));
     }
@@ -81,7 +72,6 @@ public class InternalUserController {
     }
 
     @Data
-    @Builder
     public static class UserInternalDto {
         private Long id;
         private String username;

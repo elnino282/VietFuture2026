@@ -412,9 +412,9 @@ services:
     container_name: api_gateway_quanlymuavu
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8080:8080"
     environment:
-      GATEWAY_PORT: 8000
+      GATEWAY_PORT: 8080
       IDENTITY_SERVICE_URI: http://identity-service:8081
       CROP_CATALOG_SERVICE_URI: http://crop-catalog-service:8082
       AI_SERVICE_URI: http://ai-service:8083
@@ -446,8 +446,8 @@ services:
 #      context: ./agricultural-crop-management-frontend
 #      dockerfile: Dockerfile
 #      args:
-#        # Route requests to Gateway (port 8000) instead of Backend directly
-#        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+#        # Route requests to Gateway (port 8080) instead of Backend directly
+#        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
 #    container_name: frontend_quanlymuavu
 #    restart: unless-stopped
 #    ports:

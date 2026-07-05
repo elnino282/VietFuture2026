@@ -4,75 +4,42 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.example.finance.client.FarmServiceClient;
+import org.example.finance.client.IdentityServiceClient;
+import org.example.finance.client.SeasonServiceClient;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ExternalServiceClient {
 
-    private final RestTemplate restTemplate = new RestTemplate();
-
-    @Value("${app.identity-service-url:http://localhost:8081}")
-    private String identityServiceUrl;
-
-    @Value("${app.farm-service-url:http://localhost:8084}")
-    private String farmServiceUrl;
-
-    @Value("${app.season-service-url:http://localhost:8085}")
-    private String seasonServiceUrl;
+    private final IdentityServiceClient identityServiceClient;
+    private final FarmServiceClient farmServiceClient;
+    private final SeasonServiceClient seasonServiceClient;
 
     public UserInternalDto getUser(Long userId) {
-        try {
-            String url = identityServiceUrl + "/api/v1/internal/users/" + userId;
-            return restTemplate.getForObject(url, UserInternalDto.class);
-        } catch (Exception e) {
-            log.error("Failed to fetch user {} from identity-service", userId, e);
-            return null;
-        }
+        return identityServiceClient.getUser(userId);
     }
 
     public PlotInternalDto getPlot(Integer plotId) {
-        try {
-            String url = farmServiceUrl + "/api/v1/internal/plots/" + plotId;
-            return restTemplate.getForObject(url, PlotInternalDto.class);
-        } catch (Exception e) {
-            log.error("Failed to fetch plot {} from farm-service", plotId, e);
-            return null;
-        }
+        return farmServiceClient.getPlot(plotId);
     }
 
     public SeasonInternalDto getSeason(Integer seasonId) {
-        try {
-            String url = seasonServiceUrl + "/api/v1/internal/seasons/" + seasonId;
-            return restTemplate.getForObject(url, SeasonInternalDto.class);
-        } catch (Exception e) {
-            log.error("Failed to fetch season {} from season-service", seasonId, e);
-            return null;
-        }
+        return seasonServiceClient.getSeason(seasonId);
     }
 
     public TaskInternalDto getTask(Integer taskId) {
-        try {
-            String url = seasonServiceUrl + "/api/v1/internal/tasks/" + taskId;
-            return restTemplate.getForObject(url, TaskInternalDto.class);
-        } catch (Exception e) {
-            log.error("Failed to fetch task {} from season-service", taskId, e);
-            return null;
-        }
+        return seasonServiceClient.getTask(taskId);
     }
 
-    public java.util.List<Integer> getSeasonIdsByOwnerId(Long ownerId) {
-        try {
-            String url = seasonServiceUrl + "/api/v1/internal/seasons/owner/" + ownerId + "/ids";
-            Integer[] response = restTemplate.getForObject(url, Integer[].class);
-            return response != null ? java.util.Arrays.asList(response) : java.util.Collections.emptyList();
-        } catch (Exception e) {
-            log.error("Failed to fetch season IDs for owner {} from season-service", ownerId, e);
-            return java.util.Collections.emptyList();
-        }
+    public List<Integer> getSeasonIdsByOwnerId(Long ownerId) {
+        return seasonServiceClient.getSeasonIdsByOwnerId(ownerId);
     }
 
     @Data
@@ -128,3 +95,4 @@ public class ExternalServiceClient {
         private String status;
     }
 }
+

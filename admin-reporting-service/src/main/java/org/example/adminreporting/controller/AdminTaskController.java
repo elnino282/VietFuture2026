@@ -29,6 +29,7 @@ public class AdminTaskController {
 
     private final TaskSummaryRepository taskSummaryRepository;
     private final SeasonSummaryRepository seasonSummaryRepository;
+    private final org.example.adminreporting.mapper.AdminReportingMapper mapper;
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<TaskResponse>>> listAllTasks(
@@ -49,7 +50,7 @@ public class AdminTaskController {
         Map<Integer, String> seasonNameMap = seasonSummaryRepository.findAllById(seasonIds).stream()
                 .collect(Collectors.toMap(SeasonSummary::getSeasonId, SeasonSummary::getSeasonName));
 
-        Page<TaskResponse> responsePage = taskPage.map(task -> toTaskResponse(task, seasonNameMap.get(task.getSeasonId())));
+        Page<TaskResponse> responsePage = taskPage.map(task -> mapper.toTaskResponse(task, seasonNameMap.get(task.getSeasonId())));
         PageResponse<TaskResponse> pageResponse = PageResponse.of(responsePage, responsePage.getContent());
 
         return ResponseEntity.ok(ApiResponse.success("Tasks retrieved", pageResponse));
@@ -65,17 +66,7 @@ public class AdminTaskController {
                 .map(SeasonSummary::getSeasonName)
                 .orElse("Season " + task.getSeasonId());
 
-        return ResponseEntity.ok(ApiResponse.success("Task retrieved", toTaskResponse(task, seasonName)));
+        return ResponseEntity.ok(ApiResponse.success("Task retrieved", mapper.toTaskResponse(task, seasonName)));
     }
 
-    private TaskResponse toTaskResponse(TaskSummary task, String seasonName) {
-        return TaskResponse.builder()
-                .taskId(task.getTaskId())
-                .title("Task " + task.getTaskId())
-                .description("Task details for season " + task.getSeasonId())
-                .status(task.getStatus())
-                .seasonId(task.getSeasonId())
-                .seasonName(seasonName != null ? seasonName : "Season " + task.getSeasonId())
-                .build();
-    }
 }
