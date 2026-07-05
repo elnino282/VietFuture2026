@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
-@FeignClient(name = "season-service", fallback = org.example.marketplace.client.fallback.SeasonClientFallback.class)
+@FeignClient(name = "season-service", fallbackFactory = org.example.marketplace.client.fallback.SeasonClientFallbackFactory.class)
 public interface SeasonClient {
 
     @PostMapping("/api/v1/internal/seasons/batch")

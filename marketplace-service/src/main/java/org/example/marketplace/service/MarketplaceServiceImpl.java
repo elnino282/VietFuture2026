@@ -1,6 +1,11 @@
 package org.example.marketplace.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.marketplace.exception.ResourceNotFoundException;
+import org.example.marketplace.exception.BadRequestException;
+import org.example.marketplace.exception.ForbiddenException;
+import org.example.marketplace.exception.ConflictException;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -145,7 +150,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional(readOnly = true)
     public MarketplaceProductDetailResponse getProductBySlug(String slug) {
         MarketplaceProduct product = marketplaceProductRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         return toProductDetail(product);
     }
 
@@ -237,7 +242,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceFarmDetailResponse getFarmDetail(Integer farmId) {
         FarmDetailDto farmDetail = farmClient.getFarmDetail(farmId);
         if (farmDetail == null) {
-            throw new RuntimeException("Farm not found");
+            throw new ResourceNotFoundException("Farm not found");
         }
         String region = farmDetail.provinceName() != null ? farmDetail.provinceName() : "";
         if (farmDetail.wardName() != null) {
@@ -283,7 +288,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional(readOnly = true)
     public MarketplaceTraceabilityResponse getTraceability(Long productId) {
         MarketplaceProduct product = marketplaceProductRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         return buildTraceabilityResponse(product, null);
     }
@@ -295,11 +300,11 @@ public class MarketplaceServiceImpl implements MarketplaceService {
 
         // Verify access to the order
         MarketplaceOrder order = marketplaceOrderRepository.findByIdAndBuyerUserId(orderId, userId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         // Get the order item
         MarketplaceOrderItem item = marketplaceOrderItemRepository.findByIdAndOrderId(itemId, orderId)
-                .orElseThrow(() -> new RuntimeException("Order item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order item not found"));
 
         return buildTraceabilityResponse(null, item);
     }
@@ -311,22 +316,22 @@ public class MarketplaceServiceImpl implements MarketplaceService {
 
         // Get the order item
         MarketplaceOrderItem item = marketplaceOrderItemRepository.findById(request.orderItemId())
-                .orElseThrow(() -> new RuntimeException("Order item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order item not found"));
 
         // Verify buyer owns this order
         if (!item.getOrder().getBuyerUserId().equals(buyerUserId)) {
-            throw new RuntimeException("Forbidden: you can only review your own orders");
+            throw new BadRequestException("Forbidden: you can only review your own orders");
         }
 
         // Verify order is completed
         if (item.getOrder().getStatus() != MarketplaceOrderStatus.COMPLETED) {
-            throw new RuntimeException("Can only review completed orders");
+            throw new BadRequestException("Can only review completed orders");
         }
 
         // Check if review already exists
         marketplaceProductReviewRepository.findByOrderItemIdAndBuyerUserId(request.orderItemId(), buyerUserId)
                 .ifPresent(existing -> {
-                    throw new RuntimeException("You have already reviewed this item");
+                    throw new ConflictException("You have already reviewed this item");
                 });
 
         String buyerDisplayName = identityClient.getUserDisplayName(buyerUserId);
@@ -359,11 +364,11 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional
     public MarketplaceReviewResponse editReview(Long reviewId, MarketplaceUpdateReviewRequest request) {
         MarketplaceProductReview review = marketplaceProductReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
 
         Long userId = currentUserService.getCurrentUserId();
         if (!Objects.equals(review.getBuyerUserId(), userId)) {
-            throw new RuntimeException("Forbidden");
+            throw new ForbiddenException("Forbidden");
         }
 
         if (request.rating() != null) {
@@ -381,11 +386,11 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional
     public void deleteReview(Long reviewId) {
         MarketplaceProductReview review = marketplaceProductReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
 
         Long userId = currentUserService.getCurrentUserId();
         if (!Objects.equals(review.getBuyerUserId(), userId)) {
-            throw new RuntimeException("Forbidden");
+            throw new ForbiddenException("Forbidden");
         }
 
         marketplaceProductReviewRepository.delete(review);
@@ -395,7 +400,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional
     public MarketplaceReviewResponse adminHideReview(Long reviewId) {
         MarketplaceProductReview review = marketplaceProductReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
         review.setHidden(true);
         review = marketplaceProductReviewRepository.save(review);
         return toReviewResponse(review);
@@ -425,7 +430,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         MarketplaceCart cart = getOrCreateCart(userId);
 
         MarketplaceProduct product = marketplaceProductRepository.findById(request.productId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         Optional<MarketplaceCartItem> existingItem = marketplaceCartItemRepository
                 .findByCartIdAndProductId(cart.getId(), product.getId());
@@ -452,11 +457,11 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceCartResponse updateCartItem(Long productId, MarketplaceUpdateCartItemRequest request) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceCart cart = marketplaceCartRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
         MarketplaceCartItem item = marketplaceCartItemRepository
                 .findByCartIdAndProductId(cart.getId(), productId)
-                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
 
         item.setQuantity(request.quantity());
         marketplaceCartItemRepository.save(item);
@@ -469,7 +474,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceCartResponse removeCartItem(Long productId) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceCart cart = marketplaceCartRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
         marketplaceCartItemRepository.deleteByCartIdAndProductId(cart.getId(), productId);
 
@@ -484,7 +489,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
 
         for (MarketplaceMergeCartRequest.MarketplaceMergeCartItem mergeItem : request.items()) {
             MarketplaceProduct product = marketplaceProductRepository.findById(mergeItem.productId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
             Optional<MarketplaceCartItem> existingItem = marketplaceCartItemRepository
                     .findByCartIdAndProductId(cart.getId(), product.getId());
@@ -525,7 +530,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
 
         // Get cart items
         MarketplaceCart cart = marketplaceCartRepository.findByUserIdWithItems(buyerUserId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
         List<MarketplaceCartItem> cartItems = cart.getItems();
         if (cartItems.isEmpty()) {
@@ -637,7 +642,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceCreateOrderResultResponse createOrder(MarketplaceCreateOrderRequest request, String idempotencyKey) {
         // Validate idempotency key
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            throw new RuntimeException("X-Idempotency-Key header is required for checkout");
+            throw new BadRequestException("X-Idempotency-Key header is required for checkout");
         }
 
         String endpoint = "/api/v1/marketplace/orders";
@@ -652,7 +657,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
 
         // Try to acquire lock for this idempotency key
         if (!idempotencyService.tryAcquireLock(idempotencyKey, endpoint)) {
-            throw new RuntimeException("Order is already being processed. Please wait and try again.");
+            throw new ConflictException("Order is already being processed. Please wait and try again.");
         }
 
         try {
@@ -669,11 +674,11 @@ public class MarketplaceServiceImpl implements MarketplaceService {
 
         // 1. Get cart items and group by farmer
         MarketplaceCart cart = marketplaceCartRepository.findByUserIdWithItems(buyerUserId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
         List<MarketplaceCartItem> cartItems = cart.getItems();
         if (cartItems.isEmpty()) {
-            throw new RuntimeException("Cart is empty");
+            throw new BadRequestException("Cart is empty");
         }
 
         // 2. Group items by farmer
@@ -804,7 +809,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
             }
             orderGroup.setStatus("REJECTED");
             marketplaceOrderGroupRepository.save(orderGroup);
-            throw new RuntimeException("Failed to reserve stock: " + reservationFailureMessage);
+            throw new ConflictException("Failed to reserve stock: " + reservationFailureMessage);
         }
 
         // 6. Reservation successful - update to PENDING_PAYMENT
@@ -884,7 +889,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceOrderResponse uploadPaymentProof(Long orderId, MultipartFile file) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceOrder order = marketplaceOrderRepository.findByIdAndBuyerUserId(orderId, userId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         // Upload payment proof to MinIO
         String paymentProofUrl = storageService.storePaymentProof(file, orderId, userId);
@@ -949,7 +954,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceOrderResponse getOrderDetail(Long orderId) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceOrder order = marketplaceOrderRepository.findByIdAndBuyerUserId(orderId, userId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         return toOrderResponse(order);
     }
 
@@ -958,7 +963,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceOrderResponse cancelOrder(Long orderId) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceOrder order = marketplaceOrderRepository.findByIdAndBuyerUserId(orderId, userId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         // Release inventory reservations for this order
         InventoryClient.ReservationResult releaseResult = inventoryClient.releaseReservation(
@@ -1012,7 +1017,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceOrderResponse getFarmerOrderDetail(Long orderId) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceOrder order = marketplaceOrderRepository.findByIdAndFarmerUserId(orderId, userId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         return toOrderResponse(order);
     }
 
@@ -1021,7 +1026,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceOrderResponse updateFarmerOrderStatus(Long orderId, MarketplaceUpdateOrderStatusRequest request) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceOrder order = marketplaceOrderRepository.findByIdAndFarmerUserId(orderId, userId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         order.setStatus(request.status());
         order = marketplaceOrderRepository.save(order);
@@ -1078,7 +1083,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional(readOnly = true)
     public MarketplaceOrderResponse getAdminOrderDetail(Long orderId) {
         MarketplaceOrder order = marketplaceOrderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         return toOrderResponse(order);
     }
 
@@ -1086,7 +1091,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional
     public MarketplaceOrderResponse updateAdminOrderStatus(Long orderId, MarketplaceUpdateOrderStatusRequest request) {
         MarketplaceOrder order = marketplaceOrderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         order.setStatus(request.status());
         order = marketplaceOrderRepository.save(order);
@@ -1104,7 +1109,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional
     public MarketplaceOrderResponse updateAdminPaymentVerification(Long orderId, MarketplaceUpdatePaymentVerificationRequest request) {
         MarketplaceOrder order = marketplaceOrderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         order.setPaymentVerificationStatus(request.verificationStatus());
         if (request.verificationNote() != null) {
@@ -1211,7 +1216,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplacePaymentProofResponse getPaymentProof(Long orderId) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceOrder order = marketplaceOrderRepository.findByIdAndBuyerUserId(orderId, userId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         return toPaymentProofResponse(order);
     }
 
@@ -1219,7 +1224,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional
     public MarketplacePaymentProofResponse verifyAdminPaymentProof(Long orderId) {
         MarketplaceOrder order = marketplaceOrderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         order.setPaymentVerificationStatus(MarketplacePaymentVerificationStatus.VERIFIED);
         order = marketplaceOrderRepository.save(order);
 
@@ -1249,7 +1254,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional
     public MarketplacePaymentProofResponse rejectAdminPaymentProof(Long orderId, MarketplaceRejectPaymentProofRequest request) {
         MarketplaceOrder order = marketplaceOrderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         order.setPaymentVerificationStatus(MarketplacePaymentVerificationStatus.REJECTED);
         order.setPaymentVerificationNote(request.reason());
         order = marketplaceOrderRepository.save(order);
@@ -1293,7 +1298,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceAddressResponse updateAddress(Long addressId, MarketplaceAddressUpsertRequest request) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceAddress address = marketplaceAddressRepository.findByIdAndUserId(addressId, userId)
-                .orElseThrow(() -> new RuntimeException("Address not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
         address.setFullName(request.fullName());
         address.setPhone(request.phone());
@@ -1323,7 +1328,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         marketplaceAddressRepository.saveAll(addresses);
 
         MarketplaceAddress address = marketplaceAddressRepository.findById(addressId)
-                .orElseThrow(() -> new RuntimeException("Address not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
         return toAddressResponse(address);
     }
 
@@ -1505,7 +1510,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceProductDetailResponse getFarmerProductDetail(Long productId) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceProduct product = marketplaceProductRepository.findByIdAndFarmerUserId(productId, userId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         return toProductDetail(product);
     }
 
@@ -1541,7 +1546,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceProductDetailResponse updateFarmerProduct(Long productId, MarketplaceFarmerProductUpsertRequest request) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceProduct product = marketplaceProductRepository.findByIdAndFarmerUserId(productId, userId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         product.setName(request.name());
         product.setCategory(request.category());
@@ -1614,7 +1619,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     public MarketplaceProductDetailResponse updateFarmerProductStatus(Long productId, MarketplaceUpdateProductStatusRequest request) {
         Long userId = currentUserService.getCurrentUserId();
         MarketplaceProduct product = marketplaceProductRepository.findByIdAndFarmerUserId(productId, userId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         product.setStatus(request.status());
         if (request.statusReason() != null) {
@@ -1646,7 +1651,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional(readOnly = true)
     public MarketplaceProductDetailResponse getAdminProductDetail(Long productId) {
         MarketplaceProduct product = marketplaceProductRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         return toProductDetail(product);
     }
 
@@ -1654,7 +1659,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional
     public MarketplaceProductDetailResponse updateAdminProductStatus(Long productId, MarketplaceUpdateProductStatusRequest request) {
         MarketplaceProduct product = marketplaceProductRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         product.setStatus(request.status());
         if (request.statusReason() != null) {
