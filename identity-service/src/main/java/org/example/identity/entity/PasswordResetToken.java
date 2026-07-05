@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
@@ -24,7 +24,10 @@ import lombok.experimental.FieldDefaults;
         @Index(name = "idx_password_reset_token_hash", columnList = "token_hash"),
         @Index(name = "idx_password_reset_user", columnList = "user_id")
 })
-@Data
+@Getter
+@Setter
+@ToString(exclude = "user")
+@EqualsAndHashCode(exclude = "user")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

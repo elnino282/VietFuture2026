@@ -42,6 +42,7 @@ public class MarketplaceCart {
     Long userId;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     List<MarketplaceCartItem> items = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false)

@@ -7,7 +7,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "work_team_members")
-@Data
+@Getter
+@Setter
+@ToString(exclude = "workTeam")
+@EqualsAndHashCode(exclude = "workTeam")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

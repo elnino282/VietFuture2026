@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.example.marketplace.client.impl.FarmClientFallback;
-
 @FeignClient(name = "farm-service", url = "${external-services.farm-service-url:http://farm-service:8084}", fallbackFactory = org.example.marketplace.client.impl.FarmClientFallbackFactory.class)
 public interface FarmClient {
     @PostMapping("/api/v1/internal/farms/batch")

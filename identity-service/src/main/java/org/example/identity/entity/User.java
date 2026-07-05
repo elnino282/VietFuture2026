@@ -13,7 +13,8 @@ import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,7 +23,8 @@ import org.example.identity.enums.UserStatus;
 
 @Entity
 @Table(name = "users")
-@Data
+@ToString(exclude = "roles")
+@EqualsAndHashCode(exclude = "roles")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

@@ -2,6 +2,7 @@ package org.example.cropcatalog.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import feign.FeignException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -80,5 +81,26 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ErrorResponse> handleFeignException(FeignException ex, HttpServletRequest request) {
+        int upstreamStatus = ex.status();
+        log.error("Upstream call failed [{}], status={}, body={}",
+                request.getRequestURI(), upstreamStatus, ex.contentUTF8());
+
+        HttpStatus resolved = HttpStatus.resolve(upstreamStatus);
+        HttpStatus finalStatus = (resolved == null || resolved.is5xxServerError())
+                ? HttpStatus.BAD_GATEWAY   // service con thực sự sập -> 502, không phải lỗi của service này
+                : resolved;                // 4xx thật -> giữ nguyên cho FE
+
+        return ResponseEntity.status(finalStatus).body(
+            ErrorResponse.builder()
+                .status(finalStatus.value())
+                .error(finalStatus.getReasonPhrase())
+                .message("Dịch vụ phụ thuộc phản hồi lỗi, vui lòng thử lại sau")
+                .path(request.getRequestURI())
+                .timestamp(LocalDateTime.now())
+                .build());
     }
 }
