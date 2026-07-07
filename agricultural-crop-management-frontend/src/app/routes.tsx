@@ -101,7 +101,7 @@ const FarmerPortalWithShell = lazy(() =>
   import('@/features/farmer/portal').then((m) => ({ default: m.FarmerPortalWithShell }))
 );
 const FarmerDashboard = lazy(() =>
-  import('@/features/farmer/dashboard').then((m) => ({ default: m.FarmerDashboard }))
+  import('@/pages/farmer/FarmerDashboardPage').then((m) => ({ default: m.FarmerDashboardPage }))
 );
 const CropManagement = lazy(() =>
   import('@/features/farmer/crops').then((m) => ({ default: m.CropManagement }))
@@ -238,6 +238,11 @@ const MarketplaceSellerOrdersPage = lazy(() =>
 const MarketplaceSellerOrderDetailPage = lazy(() =>
   import('@/pages/marketplace').then((m) => ({
     default: m.SellerOrderDetailPage,
+  }))
+);
+const MarketplaceSellerDeliveriesPage = lazy(() =>
+  import('@/pages/marketplace').then((m) => ({
+    default: m.SellerDeliveriesPage,
   }))
 );
 
@@ -479,6 +484,7 @@ export function AppRoutes() {
           <Route path="marketplace-products/:id/edit" element={<MarketplaceSellerProductFormPage />} />
           <Route path="marketplace-orders" element={<MarketplaceSellerOrdersPage />} />
           <Route path="marketplace-orders/:id" element={<MarketplaceSellerOrderDetailPage />} />
+          <Route path="marketplace-deliveries" element={<MarketplaceSellerDeliveriesPage />} />
           <Route path="search" element={<FarmerSearchPage />} />
 
           {/* Farm Management */}

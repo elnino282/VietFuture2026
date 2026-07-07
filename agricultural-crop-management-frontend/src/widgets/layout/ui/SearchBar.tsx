@@ -3,23 +3,21 @@ import {
   type SearchEntityType,
   type SearchResultItem,
 } from "@/entities/search";
-import { useI18n } from "@/hooks/useI18n";
+import { useTranslation } from "react-i18next";
 import { useDebounce } from "@/shared/lib";
-import { Badge, Input, ScrollArea } from "@/shared/ui";
-import { Loader2, Search } from "lucide-react";
+import { Badge, Input, Dialog, DialogContent, DialogTitle } from "@/shared/ui";
+import { Loader2, Search, ArrowRight, CornerDownLeft, Sparkles } from "lucide-react";
 import {
   useEffect,
   useMemo,
-  useRef,
   useState,
-  type KeyboardEvent,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import type { SearchBarProps } from "../model/types";
 
 type PortalKind = "admin" | "farmer";
 
-const DEFAULT_LIMIT = 5;
+const DEFAULT_LIMIT = 6;
 
 const TYPE_LABEL_KEYS: Record<SearchEntityType, string> = {
   FARM: "search.types.farms",
@@ -33,7 +31,7 @@ const TYPE_LABEL_KEYS: Record<SearchEntityType, string> = {
 
 const TYPE_ORDER: Record<PortalKind, SearchEntityType[]> = {
   admin: ["FARM", "PLOT", "SEASON", "DOCUMENT", "USER"],
-  farmer: ["PLOT", "SEASON", "TASK", "EXPENSE", "DOCUMENT"],
+  farmer: ["TASK", "SEASON", "DOCUMENT", "PLOT", "EXPENSE"],
 };
 
 const QUICK_LINKS: Record<
@@ -43,49 +41,44 @@ const QUICK_LINKS: Record<
   admin: [
     {
       labelKey: "search.global.quickLinks.admin.inventoryRisks",
-      fallback: "Inventory Risks",
+      fallback: "Cảnh báo Kho hàng",
       route: "/admin/inventory?status=RISK",
     },
     {
       labelKey: "search.global.quickLinks.admin.incidents",
-      fallback: "Incidents",
+      fallback: "Nhật ký Sự cố",
       route: "/admin/incidents",
     },
     {
       labelKey: "search.global.quickLinks.admin.alertsCenter",
-      fallback: "Alerts Center",
+      fallback: "Trung tâm Cảnh báo",
       route: "/admin/alerts",
     },
     {
       labelKey: "search.global.quickLinks.admin.farmsPlots",
-      fallback: "Farms & Plots",
+      fallback: "Nông trại & Thửa đất",
       route: "/admin/farms-plots",
-    },
-    {
-      labelKey: "search.global.quickLinks.admin.documents",
-      fallback: "Documents",
-      route: "/admin/documents",
     },
   ],
   farmer: [
     {
       labelKey: "search.global.quickLinks.farmer.tasksWorkspace",
-      fallback: "Tasks Workspace",
+      fallback: "Không gian Công việc",
       route: "/farmer/tasks",
     },
     {
       labelKey: "search.global.quickLinks.farmer.expenses",
-      fallback: "Expenses",
+      fallback: "Quản lý Chi phí",
       route: "/farmer/expenses",
     },
     {
       labelKey: "search.global.quickLinks.farmer.documents",
-      fallback: "Documents",
+      fallback: "Tài liệu Nông nghiệp",
       route: "/farmer/documents",
     },
     {
       labelKey: "search.global.quickLinks.farmer.inventory",
-      fallback: "Inventory",
+      fallback: "Vật tư & Kho hàng",
       route: "/farmer/inventory",
     },
   ],
@@ -102,9 +95,8 @@ export function GlobalSearchBar({
   portal,
   placeholder,
 }: SearchBarProps) {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const containerRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -116,12 +108,24 @@ export function GlobalSearchBar({
     placeholder ??
     t(
       "search.global.placeholder",
-      "Search plots, seasons, tasks, docs...",
+      "Tìm kiếm nhanh công việc, mùa vụ, tài liệu... (Ctrl+K)"
     );
+
+  // Global hotkey Ctrl+K / Cmd+K listener
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
   const { data, isFetching, isError } = useGlobalSearch(
     { q: normalizedQuery, limit: DEFAULT_LIMIT },
-    { enabled: canSearch, staleTime: 10_000 },
+    { enabled: canSearch, staleTime: 5000 }
   );
 
   const resultGroups = useMemo(() => {
@@ -142,7 +146,7 @@ export function GlobalSearchBar({
     const order = TYPE_ORDER[portal];
     const known = new Set(order);
     const extras = Object.keys(resultGroups).filter(
-      (type) => !known.has(type as SearchEntityType),
+      (type) => !known.has(type as SearchEntityType)
     );
     return [...order, ...(extras as SearchEntityType[])];
   }, [portal, resultGroups]);
@@ -170,7 +174,7 @@ export function GlobalSearchBar({
         route: link.route,
         title: t(link.labelKey, link.fallback),
       })),
-    [quickLinks, t],
+    [quickLinks, t]
   );
 
   const navigationItems = canSearch
@@ -180,21 +184,6 @@ export function GlobalSearchBar({
       : [];
 
   useEffect(() => {
-    if (!open) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setOpen(false);
-        setHighlightedIndex(-1);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
-
-  useEffect(() => {
     setHighlightedIndex(-1);
   }, [normalizedQuery, open, flatResults.length]);
 
@@ -202,18 +191,14 @@ export function GlobalSearchBar({
     if (!route) return;
     navigate(route);
     setOpen(false);
+    setQuery("");
     setHighlightedIndex(-1);
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") {
       setOpen(false);
       setHighlightedIndex(-1);
-      return;
-    }
-
-    if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
-      setOpen(true);
       return;
     }
 
@@ -222,14 +207,14 @@ export function GlobalSearchBar({
       setHighlightedIndex((prev) =>
         navigationItems.length === 0
           ? -1
-          : Math.min(prev + 1, navigationItems.length - 1),
+          : Math.min(prev + 1, navigationItems.length - 1)
       );
     }
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
       setHighlightedIndex((prev) =>
-        navigationItems.length === 0 ? -1 : Math.max(prev - 1, 0),
+        navigationItems.length === 0 ? -1 : Math.max(prev - 1, 0)
       );
     }
 
@@ -242,168 +227,167 @@ export function GlobalSearchBar({
       if (canSearch) {
         navigate(`/${portal}/search?q=${encodeURIComponent(normalizedQuery)}`);
         setOpen(false);
+        setQuery("");
       }
     }
   };
 
-  const renderEmptyState = () => {
-    if (normalizedQuery.length === 1) {
-      return (
-        <div className="px-3 py-2 text-xs text-muted-foreground">
-          {t(
-            "search.global.minChars",
-            "Type at least 2 characters to search.",
-          )}
-        </div>
-      );
-    }
-
-    if (canSearch && !isFetching && flatResults.length === 0) {
-      return (
-        <div className="px-3 py-2 text-xs text-muted-foreground">
-          {t("search.global.noResults", "No results found.")}
-        </div>
-      );
-    }
-
-    if (normalizedQuery.length === 0) {
-      return (
-        <div className="space-y-2">
-          <div className="px-3 pt-2 text-xs font-medium text-muted-foreground">
-            {t("search.global.quickLinks.title", "Quick links")}
-          </div>
-          {quickLinkItems.map((link, index) => (
-            <button
-              key={link.route}
-              type="button"
-              className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors ${
-                highlightedIndex === index
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
-              }`}
-              onMouseEnter={() => setHighlightedIndex(index)}
-              onClick={() => navigateTo(link.route)}
-              role="option"
-              aria-selected={highlightedIndex === index}
-              id={`search-option-${index}`}
-            >
-              {link.title}
-            </button>
-          ))}
-        </div>
-      );
-    }
-
-    return null;
-  };
-
   return (
-    <div ref={containerRef} className="relative hidden md:block w-64 lg:w-96">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
-      <Input
-        type="search"
-        placeholder={resolvedPlaceholder}
-        value={query}
-        onChange={(event) => {
-          setQuery(event.target.value);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        onKeyDown={handleKeyDown}
-        role="combobox"
-        aria-expanded={open}
-        aria-controls="global-search-listbox"
-        aria-activedescendant={
-          highlightedIndex >= 0
-            ? `search-option-${highlightedIndex}`
-            : undefined
-        }
-        className="border-white/40 bg-white/10 pl-9 text-white placeholder:text-white/50 focus:border-white/80 focus:bg-white/15 focus:ring-white/25 focus-visible:border-white/80 focus-visible:ring-white/25"
-      />
+    <>
+      {/* Clickable Header Button */}
+      <div 
+        onClick={() => setOpen(true)}
+        className="relative cursor-pointer hidden md:flex items-center w-64 lg:w-96 h-10 border border-white/30 hover:border-white/60 bg-white/10 hover:bg-white/15 px-3 rounded-full text-white/70 select-none transition-all duration-200"
+      >
+        <Search className="w-4 h-4 mr-2.5 text-white/80" />
+        <span className="text-sm truncate">
+          {resolvedPlaceholder}
+        </span>
+        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 select-none items-center gap-0.5 rounded border border-white/20 bg-white/10 px-1.5 font-mono text-[9px] font-medium text-white/95 opacity-80 shrink-0">
+          Ctrl+K
+        </kbd>
+      </div>
 
-      {open && (
-        <div className="absolute left-0 right-0 mt-2 rounded-xl border border-border bg-card shadow-lg z-50">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-border text-xs text-muted-foreground">
-            <span>{t("search.global.title", "Global search")}</span>
+      {/* Dialog Command Palette */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-[620px] p-0 overflow-hidden border border-border shadow-2xl rounded-2xl bg-card">
+          {/* Top Search Input */}
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border/80 bg-muted/20">
+            <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+            <DialogTitle className="sr-only">Tìm kiếm hệ thống</DialogTitle>
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Tìm kiếm công việc, tài liệu, vật tư... (Mũi tên để chọn, Enter để mở)"
+              className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 h-9 text-base text-foreground placeholder:text-muted-foreground w-full"
+              autoFocus
+            />
+            <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-0.5 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 shrink-0">
+              <span className="text-xs">ESC</span>
+            </kbd>
+          </div>
+
+          {/* Results List */}
+          <div className="max-h-[380px] overflow-y-auto p-3 space-y-2">
             {isFetching && (
-              <span className="inline-flex items-center gap-1">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                {t("search.global.loading", "Loading")}
-              </span>
+              <div className="flex flex-col items-center justify-center py-10 gap-3 text-muted-foreground">
+                <Loader2 className="w-7 h-7 animate-spin text-primary" />
+                <span className="text-xs">Đang tìm kiếm thông tin...</span>
+              </div>
+            )}
+
+            {isError && (
+              <div className="px-3 py-4 text-sm text-destructive text-center">
+                {t("search.global.error", "Tìm kiếm thất bại. Vui lòng thử lại sau.")}
+              </div>
+            )}
+
+            {!isFetching && !isError && (
+              <>
+                {/* Empty State / Min Chars warning */}
+                {normalizedQuery.length === 1 && (
+                  <div className="px-3 py-4 text-sm text-muted-foreground text-center">
+                    {t("search.global.minChars", "Nhập ít nhất 2 ký tự để bắt đầu tìm kiếm.")}
+                  </div>
+                )}
+
+                {canSearch && flatResults.length === 0 && (
+                  <div className="px-3 py-6 text-sm text-muted-foreground text-center">
+                    {t("search.global.noResults", "Không tìm thấy kết quả phù hợp.")}
+                  </div>
+                )}
+
+                {/* Quick Links (when input is empty) */}
+                {normalizedQuery.length === 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-muted-foreground px-2 py-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-primary" />
+                      {t("search.global.quickLinks.title", "Truy cập nhanh")}
+                    </p>
+                    {quickLinkItems.map((link, index) => {
+                      const isActive = index === highlightedIndex;
+                      return (
+                        <div
+                          key={link.route}
+                          onClick={() => navigateTo(link.route)}
+                          className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
+                            isActive
+                              ? "bg-primary/5 text-foreground font-medium"
+                              : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                          }`}
+                          onMouseEnter={() => setHighlightedIndex(index)}
+                        >
+                          <span className="text-sm">{link.title}</span>
+                          <ArrowRight className={`w-4 h-4 opacity-60 transition-transform ${isActive ? "translate-x-1 opacity-100 text-primary" : ""}`} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Grouped Search Results */}
+                {canSearch && flatResults.length > 0 && (
+                  <div className="space-y-3">
+                    {orderedGroups.map((type) => {
+                      const items = resultGroups[type] ?? [];
+                      if (!items.length) return null;
+
+                      const groupStartIndex = flatResults.findIndex(
+                        (item) => item.type === type
+                      );
+
+                      return (
+                        <div key={type} className="space-y-1">
+                          <div className="flex items-center justify-between px-2 py-1">
+                            <span className="text-xs font-bold text-muted-foreground/80 uppercase tracking-wider">
+                              {t(TYPE_LABEL_KEYS[type], type)}
+                            </span>
+                            <Badge variant="secondary" className="text-[10px] scale-90">
+                              {items.length}
+                            </Badge>
+                          </div>
+                          <div className="space-y-0.5">
+                            {items.map((item, index) => {
+                              const flatIndex = groupStartIndex + index;
+                              const isActive = flatIndex === highlightedIndex;
+                              return (
+                                <div
+                                  key={`${type}-${item.id}-${index}`}
+                                  onClick={() => navigateTo(item.route || "")}
+                                  className={`flex items-center justify-between p-2 rounded-xl cursor-pointer border border-transparent transition-all duration-150 ${
+                                    isActive
+                                      ? "bg-primary/5 border-primary/25 shadow-sm"
+                                      : "hover:bg-muted/40"
+                                  }`}
+                                  onMouseEnter={() => setHighlightedIndex(flatIndex)}
+                                >
+                                  <div className="min-w-0">
+                                    <div className="text-sm font-semibold text-foreground truncate">
+                                      {item.title}
+                                    </div>
+                                    {item.subtitle && (
+                                      <div className="text-xs text-muted-foreground truncate">
+                                        {item.subtitle}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <CornerDownLeft className={`w-3.5 h-3.5 text-muted-foreground/60 transition-opacity ${isActive ? "opacity-100 text-primary" : "opacity-0"}`} />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </div>
-
-          <ScrollArea className="max-h-[320px]">
-            <div className="py-1" role="listbox" id="global-search-listbox">
-              {isError && (
-                <div className="px-3 py-2 text-xs text-destructive">
-                  {t("search.global.error", "Search failed. Please try again.")}
-                </div>
-              )}
-
-              {canSearch && flatResults.length > 0 && (
-                <div className="space-y-2">
-                  {orderedGroups.map((type) => {
-                    const items = resultGroups[type] ?? [];
-                    if (!items.length) return null;
-
-                    const groupStartIndex = flatResults.findIndex(
-                      (item) => item.type === type,
-                    );
-
-                    return (
-                      <div key={type}>
-                        <div className="flex items-center justify-between px-3 pt-2 text-xs font-medium text-muted-foreground">
-                          <span>{t(TYPE_LABEL_KEYS[type], type)}</span>
-                          <Badge variant="secondary" className="text-[10px]">
-                            {items.length}
-                          </Badge>
-                        </div>
-                        <div className="mt-1">
-                          {items.map((item, index) => {
-                            const flatIndex = groupStartIndex + index;
-                            const isActive = flatIndex === highlightedIndex;
-                            return (
-                              <button
-                                key={`${type}-${item.id}-${index}`}
-                                type="button"
-                                className={`w-full px-3 py-2 text-left transition-colors ${
-                                  isActive
-                                    ? "bg-muted text-foreground"
-                                    : "text-foreground hover:bg-muted/70"
-                                }`}
-                                onMouseEnter={() =>
-                                  setHighlightedIndex(flatIndex)
-                                }
-                                onClick={() => navigateTo(item.route || "")}
-                                role="option"
-                                aria-selected={isActive}
-                                id={`search-option-${flatIndex}`}
-                              >
-                                <div className="text-sm font-medium">
-                                  {item.title}
-                                </div>
-                                {item.subtitle && (
-                                  <div className="text-xs text-muted-foreground">
-                                    {item.subtitle}
-                                  </div>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {!isError && renderEmptyState()}
-            </div>
-          </ScrollArea>
-        </div>
-      )}
-    </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
-import { CreditCard, FileCheck, MapPin, Phone, Upload } from "lucide-react";
+import { CreditCard, FileCheck, MapPin, Phone, Upload, Truck } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input } from "@/shared/ui";
 import { BackButton } from "@/shared/ui/back-button";
+import { deliveryApi } from "@/shared/api";
 import {
   useMarketplaceCancelOrderMutation,
   useMarketplaceCreateReviewMutation,
@@ -50,10 +52,25 @@ function StarInput({
   );
 }
 
+function getProviderName(providerId: number): string {
+  switch (providerId) {
+    case 1:
+      return "Giao hàng tiết kiệm (GHTK)";
+    case 2:
+      return "Giao hàng nhanh (GHN)";
+    case 3:
+      return "Ninja Van";
+    case 4:
+      return "J&T Express";
+    default:
+      return "Đối tác vận chuyển";
+  }
+}
+
 function statusVariant(status: string) {
-  if (status === "COMPLETED") return "success" as const;
-  if (status === "CANCELLED") return "destructive" as const;
-  if (status === "PENDING_PAYMENT" || status === "PENDING") return "warning" as const;
+  if (status === "COMPLETED" || status === "DELIVERED") return "success" as const;
+  if (status === "CANCELLED" || status === "RETURNED") return "destructive" as const;
+  if (status === "PENDING_PAYMENT" || status === "PENDING" || status === "PICKUP_SCHEDULED") return "warning" as const;
   return "secondary" as const;
 }
 
@@ -65,6 +82,11 @@ export function OrderDetailPage() {
   const [reviewDrafts, setReviewDrafts] = useState<Record<number, ReviewDraft>>({});
 
   const orderQuery = useMarketplaceOrderDetail(orderId);
+  const deliveryOrdersQuery = useQuery({
+    queryKey: ["deliveryOrders", orderId],
+    queryFn: () => deliveryApi.getDeliveryOrdersByMarketplaceId(orderId),
+    enabled: !!orderId,
+  });
   const cancelMutation = useMarketplaceCancelOrderMutation(orderId);
   const paymentProofMutation = useMarketplaceUploadPaymentProofMutation(orderId);
   const reviewMutation = useMarketplaceCreateReviewMutation();
@@ -232,6 +254,36 @@ export function OrderDetailPage() {
         </div>
 
         <div className="space-y-6">
+          {deliveryOrdersQuery.data && deliveryOrdersQuery.data.length > 0 && (
+            <Card className="border-border/50 shadow-sm rounded-xl overflow-hidden bg-emerald-50/20">
+              <CardHeader className="border-b border-border/50 pb-4">
+                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <Truck className="h-4 w-4 text-primary animate-bounce" />
+                  <span>Theo dõi vận đơn (Delivery Tracking)</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-5 text-sm">
+                {deliveryOrdersQuery.data.map((dOrder) => (
+                  <div key={dOrder.id} className="space-y-2 pb-3 last:pb-0 last:border-0 border-b border-border/40">
+                    <div className="flex items-center justify-between font-semibold">
+                      <span className="text-foreground">Mã vận đơn: {dOrder.trackingNumber || "N/A"}</span>
+                      <Badge variant={statusVariant(dOrder.status)} className="text-[10px] capitalize">
+                        {dOrder.status}
+                      </Badge>
+                    </div>
+                    <div className="text-xs space-y-1 text-muted-foreground">
+                      <p>Nhà vận chuyển: {getProviderName(dOrder.providerId)}</p>
+                      <p>Cân nặng: {dOrder.weightKg} kg</p>
+                      {dOrder.requiresColdChain && (
+                        <Badge className="bg-blue-100 text-blue-800 text-[10px] hover:bg-blue-100 mt-1">Chuỗi lạnh (Cold chain)</Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="border-border/50 shadow-sm rounded-xl overflow-hidden">
             <CardHeader className="border-b border-border/50 pb-4">
               <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">

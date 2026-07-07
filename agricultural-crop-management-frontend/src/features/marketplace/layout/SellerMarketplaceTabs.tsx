@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Truck } from "lucide-react";
 import { NavLink } from "react-router-dom";
 // eslint-disable-next-line no-restricted-imports
 import { useI18n } from "@/hooks/useI18n";
@@ -29,6 +29,14 @@ const sellerTabs = [
     descriptionFallback: "Buyer orders",
     icon: ShoppingBag,
   },
+  {
+    to: "/farmer/marketplace-deliveries",
+    labelKey: "marketplaceSeller.tabs.items.deliveries.label",
+    labelFallback: "Vận chuyển",
+    descriptionKey: "marketplaceSeller.tabs.items.deliveries.description",
+    descriptionFallback: "Fulfillment logs",
+    icon: Truck,
+  },
 ] as const;
 
 export function SellerMarketplaceTabs() {
@@ -39,7 +47,7 @@ export function SellerMarketplaceTabs() {
       className="rounded-lg border border-border bg-card p-2 shadow-sm"
       aria-label={t("marketplaceSeller.tabs.ariaLabel", "Marketplace seller tabs")}
     >
-      <div className="grid gap-2 md:grid-cols-3">
+      <div className="grid gap-2 md:grid-cols-4">
         {sellerTabs.map((tab) => {
           const Icon = tab.icon;
 

@@ -52,3 +52,6 @@ export * from './vietnamAddressApi';
 
 // Marketplace API (adapter-first integration)
 export * from './marketplace';
+
+// Delivery API
+export * from './deliveryApi';
