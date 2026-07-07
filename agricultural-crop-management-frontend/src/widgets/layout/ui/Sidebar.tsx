@@ -18,6 +18,7 @@ const navTranslationKeys: Record<string, string> = {
     'inventory': 'nav.inventory',
     'product-warehouse': 'nav.productWarehouse',
     'documents': 'nav.documents',
+    'farm-documents': 'nav.farmDocuments',
 
     'notifications': 'nav.notifications',
     'ai-assistant': 'nav.aiAssistant',

@@ -137,6 +137,81 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseString"
+  /api/v1/plots:
+    get:
+      tags:
+      - plot-controller
+      operationId: listAllPlots
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPlotResponse"
+    post:
+      tags:
+      - plot-controller
+      operationId: createPlotForCurrentFarmer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlotRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePlotResponse"
+  /api/v1/plots/bulk-geojson:
+    post:
+      tags:
+      - plot-geo-json-controller
+      operationId: getBulkPlotGeoJson
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: int64
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: "#/components/schemas/PlotGeoJsonDto"
+  /api/v1/internal/plots/bulk:
+    post:
+      tags:
+      - internal-plot-controller
+      operationId: getBulkPlots
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: int64
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: "#/components/schemas/PlotInternalDto"
   /api/v1/internal/farms/batch:
     post:
       tags:
@@ -255,18 +330,91 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponsePlotResponse"
-  /api/v1/plots:
+  /api/v1/farms/{farmId}/documents:
     get:
       tags:
-      - plot-controller
-      operationId: listAllPlots
+      - farm-document-controller
+      operationId: list
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
       responses:
         "200":
           description: OK
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/ApiResponseListPlotResponse"
+                $ref: "#/components/schemas/ApiResponseListFarmDocumentResponse"
+    post:
+      tags:
+      - farm-document-controller
+      operationId: create
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FarmDocumentCreateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFarmDocumentResponse"
+  /api/v1/farms/{farmId}/documents/upload:
+    post:
+      tags:
+      - farm-document-controller
+      operationId: upload
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseString"
   /api/v1/locations/wards:
     get:
       tags:
@@ -362,7 +510,26 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/FarmDetailDto"
-  /api/v1/address/wards/{id}:
+  /api/v1/farms/{farmId}/documents/expiring:
+    get:
+      tags:
+      - farm-document-controller
+      operationId: expiring
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListFarmDocumentResponse"
+  /api/v1/addresses/wards/{id}:
     get:
       tags:
       - Address
@@ -389,7 +556,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseWardResponse"
-  /api/v1/address/stats:
+  /api/v1/addresses/stats:
     get:
       tags:
       - Address
@@ -403,7 +570,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseAddressStats"
-  /api/v1/address/provinces:
+  /api/v1/addresses/provinces:
     get:
       tags:
       - Address
@@ -430,7 +597,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListProvinceResponse"
-  /api/v1/address/provinces/{provinceId}/wards:
+  /api/v1/addresses/provinces/{provinceId}/wards:
     get:
       tags:
       - Address
@@ -463,7 +630,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListWardResponse"
-  /api/v1/address/provinces/{id}:
+  /api/v1/addresses/provinces/{id}:
     get:
       tags:
       - Address
@@ -490,8 +657,224 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseProvinceResponse"
+  /api/v1/farms/{farmId}/documents/{id}:
+    delete:
+      tags:
+      - farm-document-controller
+      operationId: delete
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
 components:
   schemas:
+    Coordinate:
+      type: object
+      properties:
+        x:
+          type: number
+          format: double
+        "y":
+          type: number
+          format: double
+        z:
+          type: number
+          format: double
+        valid:
+          type: boolean
+        m:
+          type: number
+          format: double
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
+    CoordinateSequence:
+      type: object
+      properties:
+        dimension:
+          type: integer
+          format: int32
+        measures:
+          type: integer
+          format: int32
+    CoordinateSequenceFactory:
+      type: object
+    Envelope:
+      type: object
+      properties:
+        "null":
+          type: boolean
+        width:
+          type: number
+          format: double
+        area:
+          type: number
+          format: double
+        minX:
+          type: number
+          format: double
+        minY:
+          type: number
+          format: double
+        maxX:
+          type: number
+          format: double
+        maxY:
+          type: number
+          format: double
+        height:
+          type: number
+          format: double
+        diameter:
+          type: number
+          format: double
+    Geometry:
+      type: object
+      properties:
+        envelope:
+          $ref: "#/components/schemas/Geometry"
+        factory:
+          $ref: "#/components/schemas/GeometryFactory"
+        userData:
+          type: object
+        length:
+          type: number
+          format: double
+        empty:
+          type: boolean
+        valid:
+          type: boolean
+        geometryType:
+          type: string
+        simple:
+          type: boolean
+        area:
+          type: number
+          format: double
+        numGeometries:
+          type: integer
+          format: int32
+        dimension:
+          type: integer
+          format: int32
+        rectangle:
+          type: boolean
+        boundary:
+          $ref: "#/components/schemas/Geometry"
+        precisionModel:
+          $ref: "#/components/schemas/PrecisionModel"
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
+        interiorPoint:
+          $ref: "#/components/schemas/Point"
+        centroid:
+          $ref: "#/components/schemas/Point"
+        coordinates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Coordinate"
+        numPoints:
+          type: integer
+          format: int32
+        srid:
+          type: integer
+          format: int32
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
+        boundaryDimension:
+          type: integer
+          format: int32
+    GeometryFactory:
+      type: object
+      properties:
+        precisionModel:
+          $ref: "#/components/schemas/PrecisionModel"
+        coordinateSequenceFactory:
+          $ref: "#/components/schemas/CoordinateSequenceFactory"
+        srid:
+          type: integer
+          format: int32
+    LinearRing:
+      type: object
+      properties:
+        envelope:
+          $ref: "#/components/schemas/Geometry"
+        factory:
+          $ref: "#/components/schemas/GeometryFactory"
+        userData:
+          type: object
+        closed:
+          type: boolean
+        geometryType:
+          type: string
+        boundaryDimension:
+          type: integer
+          format: int32
+        length:
+          type: number
+          format: double
+        empty:
+          type: boolean
+        dimension:
+          type: integer
+          format: int32
+        boundary:
+          $ref: "#/components/schemas/Geometry"
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
+        endPoint:
+          $ref: "#/components/schemas/Point"
+        coordinates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Coordinate"
+        startPoint:
+          $ref: "#/components/schemas/Point"
+        numPoints:
+          type: integer
+          format: int32
+        ring:
+          type: boolean
+        coordinateSequence:
+          $ref: "#/components/schemas/CoordinateSequence"
+        valid:
+          type: boolean
+        simple:
+          type: boolean
+        area:
+          type: number
+          format: double
+        numGeometries:
+          type: integer
+          format: int32
+        rectangle:
+          type: boolean
+        precisionModel:
+          $ref: "#/components/schemas/PrecisionModel"
+        interiorPoint:
+          $ref: "#/components/schemas/Point"
+        centroid:
+          $ref: "#/components/schemas/Point"
+        srid:
+          type: integer
+          format: int32
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
     PlotRequest:
       type: object
       properties:
@@ -510,6 +893,11 @@ components:
           type: string
         boundaryGeoJson:
           type: string
+        parentPlotId:
+          type: integer
+          format: int32
+        polygon:
+          $ref: "#/components/schemas/Polygon"
         status:
           type: string
           enum:
@@ -520,6 +908,152 @@ components:
           - MAINTENANCE
       required:
       - plotName
+    Point:
+      type: object
+      properties:
+        envelope:
+          $ref: "#/components/schemas/Geometry"
+        factory:
+          $ref: "#/components/schemas/GeometryFactory"
+        userData:
+          type: object
+        coordinates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Coordinate"
+        empty:
+          type: boolean
+        "y":
+          type: number
+          format: double
+        x:
+          type: number
+          format: double
+        geometryType:
+          type: string
+        simple:
+          type: boolean
+        dimension:
+          type: integer
+          format: int32
+        boundary:
+          $ref: "#/components/schemas/Geometry"
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
+        numPoints:
+          type: integer
+          format: int32
+        coordinateSequence:
+          $ref: "#/components/schemas/CoordinateSequence"
+        boundaryDimension:
+          type: integer
+          format: int32
+        length:
+          type: number
+          format: double
+        valid:
+          type: boolean
+        area:
+          type: number
+          format: double
+        numGeometries:
+          type: integer
+          format: int32
+        rectangle:
+          type: boolean
+        precisionModel:
+          $ref: "#/components/schemas/PrecisionModel"
+        interiorPoint:
+          $ref: "#/components/schemas/Point"
+        centroid:
+          $ref: "#/components/schemas/Point"
+        srid:
+          type: integer
+          format: int32
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
+    Polygon:
+      type: object
+      properties:
+        envelope:
+          $ref: "#/components/schemas/Geometry"
+        factory:
+          $ref: "#/components/schemas/GeometryFactory"
+        userData:
+          type: object
+        length:
+          type: number
+          format: double
+        empty:
+          type: boolean
+        geometryType:
+          type: string
+        area:
+          type: number
+          format: double
+        exteriorRing:
+          $ref: "#/components/schemas/LinearRing"
+        dimension:
+          type: integer
+          format: int32
+        numInteriorRing:
+          type: integer
+          format: int32
+        rectangle:
+          type: boolean
+        boundary:
+          $ref: "#/components/schemas/Geometry"
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
+        coordinates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Coordinate"
+        numPoints:
+          type: integer
+          format: int32
+        boundaryDimension:
+          type: integer
+          format: int32
+        valid:
+          type: boolean
+        simple:
+          type: boolean
+        numGeometries:
+          type: integer
+          format: int32
+        precisionModel:
+          $ref: "#/components/schemas/PrecisionModel"
+        interiorPoint:
+          $ref: "#/components/schemas/Point"
+        centroid:
+          $ref: "#/components/schemas/Point"
+        srid:
+          type: integer
+          format: int32
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
+    PrecisionModel:
+      type: object
+      properties:
+        scale:
+          type: number
+          format: double
+        type:
+          $ref: "#/components/schemas/Type"
+        floating:
+          type: boolean
+        offsetY:
+          type: number
+          format: double
+        offsetX:
+          type: number
+          format: double
+        maximumSignificantDigits:
+          type: integer
+          format: int32
+    Type:
+      type: object
     ApiResponsePlotResponse:
       type: object
       properties:
@@ -555,6 +1089,11 @@ components:
           type: string
         boundaryGeoJson:
           type: string
+        parentPlotId:
+          type: integer
+          format: int32
+        polygon:
+          $ref: "#/components/schemas/Polygon"
         status:
           type: string
           enum:
@@ -636,6 +1175,38 @@ components:
           type: number
         active:
           type: boolean
+    PlotGeoJsonDto:
+      type: object
+      properties:
+        plotId:
+          type: integer
+          format: int64
+        plotName:
+          type: string
+        boundary:
+          type: object
+          additionalProperties:
+            type: object
+    PlotInternalDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        plotName:
+          type: string
+        plotArea:
+          type: number
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        ownerUserId:
+          type: integer
+          format: int64
+        farmActive:
+          type: boolean
     FarmSummaryDto:
       type: object
       properties:
@@ -679,6 +1250,97 @@ components:
       - farmName
       - provinceId
       - wardId
+    FarmDocumentCreateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        documentType:
+          type: string
+        description:
+          type: string
+        fileUrl:
+          type: string
+        issuedDate:
+          type: string
+          format: date
+        expiryDate:
+          type: string
+          format: date
+      required:
+      - documentType
+      - title
+    ApiResponseFarmDocumentResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/FarmDocumentResponse"
+        data:
+          $ref: "#/components/schemas/FarmDocumentResponse"
+        generatedAt:
+          type: string
+    FarmDocumentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        farmId:
+          type: integer
+          format: int32
+        documentType:
+          type: string
+        documentTypeLabel:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        fileUrl:
+          type: string
+        issuedDate:
+          type: string
+          format: date
+        expiryDate:
+          type: string
+          format: date
+        isExpired:
+          type: boolean
+        isExpiringSoon:
+          type: boolean
+        verificationStatus:
+          type: string
+        verifiedByName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ApiResponseString:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: string
+        data:
+          type: string
+        generatedAt:
+          type: string
     ApiResponseListPlotResponse:
       type: object
       properties:
@@ -730,24 +1392,6 @@ components:
           type: string
         nameWithType:
           type: string
-    PlotInternalDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        plotName:
-          type: string
-        farmId:
-          type: integer
-          format: int32
-        farmName:
-          type: string
-        ownerUserId:
-          type: integer
-          format: int64
-        farmActive:
-          type: boolean
     FarmDetailDto:
       type: object
       properties:
@@ -786,6 +1430,26 @@ components:
           type: object
         data:
           type: object
+        generatedAt:
+          type: string
+    ApiResponseListFarmDocumentResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/FarmDocumentResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/FarmDocumentResponse"
         generatedAt:
           type: string
     ApiResponseWardResponse:
@@ -899,22 +1563,6 @@ components:
           type: object
         data:
           type: object
-        generatedAt:
-          type: string
-    ApiResponseString:
-      type: object
-      properties:
-        status:
-          type: integer
-          format: int32
-        code:
-          type: string
-        message:
-          type: string
-        result:
-          type: string
-        data:
-          type: string
         generatedAt:
           type: string
   securitySchemes:

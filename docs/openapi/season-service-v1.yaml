@@ -659,6 +659,37 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseVoid"
+  /api/v1/farmer/tasks/{taskId}/assign:
+    put:
+      tags:
+      - farmer-team-controller
+      operationId: assignTask
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: workTeamId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: plotId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
   /api/v1/disease-treatments/{id}:
     put:
       tags:
@@ -1130,6 +1161,95 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseTaskResponse"
+  /api/v1/seasons/{seasonId}/phi/records:
+    get:
+      tags:
+      - pesticide-record-controller
+      summary: Get all pesticide records
+      description: Get all pesticide application records for a season
+      operationId: getRecords
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPesticideRecordResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPesticideRecordResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPesticideRecordResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPesticideRecordResponse"
+    post:
+      tags:
+      - pesticide-record-controller
+      summary: Create pesticide record
+      description: Create a pesticide record for a season with safety PHI lookup
+      operationId: createRecord
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePesticideRecordRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePesticideRecordResponse"
+        "400":
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePesticideRecordResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePesticideRecordResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePesticideRecordResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePesticideRecordResponse"
   /api/v1/seasons/{seasonId}/harvests:
     get:
       tags:
@@ -1639,6 +1759,63 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+  /api/v1/farmer/seasons/{seasonId}/teams:
+    get:
+      tags:
+      - farmer-team-controller
+      operationId: getTeamsBySeason
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+    post:
+      tags:
+      - farmer-team-controller
+      operationId: createTeam
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: teamName
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: leaderId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: int64
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
   /api/v1/farmer/labor/seasons/{seasonId}/payroll/recalculate:
     post:
       tags:
@@ -1750,6 +1927,31 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListSeasonEmployeeResponse"
+  /api/v1/employee/tasks/{taskId}/progress:
+    post:
+      tags:
+      - employee-portal-controller
+      operationId: reportTaskProgress
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeTaskProgressRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskProgressLogResponse"
   /api/v1/disease-records/{id}/treatments:
     get:
       tags:
@@ -2217,6 +2419,25 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseSeasonEmployeeResponse"
+  /api/v1/employee/tasks/{taskId}/accept:
+    patch:
+      tags:
+      - employee-portal-controller
+      operationId: acceptTask
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
   /api/v1/workspace/tasks/seasons:
     get:
       tags:
@@ -2237,6 +2458,46 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListSeasonMinimalResponse"
+  /api/v1/seasons/{seasonId}/phi/active:
+    get:
+      tags:
+      - pesticide-record-controller
+      summary: Get active PHI safety records
+      description: List all pesticide records currently within their pre-harvest quarantine
+        interval
+      operationId: getActivePHI
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPesticideRecordResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPesticideRecordResponse"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPesticideRecordResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPesticideRecordResponse"
   /api/v1/seasons/{seasonId}/harvests/stock-context:
     get:
       tags:
@@ -2609,6 +2870,302 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponsePageResponseEmployeeDirectoryResponse"
+  /api/v1/farmer/dashboard/team-progress:
+    get:
+      tags:
+      - farmer-team-controller
+      operationId: getTeamProgressSummary
+      parameters:
+      - name: seasonId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamProgressSummaryResponse"
+  /api/v1/employee/tasks:
+    get:
+      tags:
+      - employee-portal-controller
+      operationId: listAssignedTasksForCurrentEmployee
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: seasonId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseTaskResponse"
+  /api/v1/employee/tasks/my-tasks:
+    get:
+      tags:
+      - employee-portal-controller
+      operationId: getMyTasks
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+  /api/v1/employee/seasons:
+    get:
+      tags:
+      - employee-portal-controller
+      operationId: listAssignedSeasonsForCurrentEmployee
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListMySeasonResponse"
+  /api/v1/employee/seasons/{seasonId}/plan:
+    get:
+      tags:
+      - employee-portal-controller
+      operationId: getSeasonPlanForCurrentEmployee
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListTaskResponse"
+  /api/v1/employee/seasons/{seasonId}/field-logs:
+    get:
+      tags:
+      - employee-portal-controller
+      operationId: listFieldLogsForSeason
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseFieldLogResponse"
+  /api/v1/employee/seasons/{seasonId}/disease-records:
+    get:
+      tags:
+      - employee-portal-controller
+      operationId: listDiseaseRecordsForSeason
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: severity
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: fromDetectedAt
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: toDetectedAt
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseDiseaseRecordResponse"
+  /api/v1/employee/progress:
+    get:
+      tags:
+      - employee-portal-controller
+      operationId: listMyProgress
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponseTaskProgressLogResponse"
+  /api/v1/employee/payroll:
+    get:
+      tags:
+      - employee-portal-controller
+      operationId: listMyPayroll
+      parameters:
+      - name: seasonId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePageResponsePayrollRecordResponse"
+  /api/v1/employee/payroll/{payrollRecordId}:
+    get:
+      tags:
+      - employee-portal-controller
+      operationId: getMyPayrollDetail
+      parameters:
+      - name: payrollRecordId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePayrollRecordResponse"
 components:
   schemas:
     UpdateTaskRequest:
@@ -2692,6 +3249,15 @@ components:
           format: int64
         userName:
           type: string
+        plotId:
+          type: integer
+          format: int64
+        workTeamId:
+          type: integer
+          format: int64
+        estimatedDays:
+          type: integer
+          format: int32
         createdAt:
           type: string
           format: date-time
@@ -3209,6 +3775,15 @@ components:
         assigneeUserId:
           type: integer
           format: int64
+        plotId:
+          type: integer
+          format: int64
+        workTeamId:
+          type: integer
+          format: int64
+        estimatedDays:
+          type: integer
+          format: int32
       required:
       - title
     CreateSeasonRequest:
@@ -3251,6 +3826,91 @@ components:
       - plotId
       - seasonName
       - startDate
+    CreatePesticideRecordRequest:
+      type: object
+      properties:
+        pesticideName:
+          type: string
+        activeIngredient:
+          type: string
+        phiDays:
+          type: integer
+          format: int32
+        applicationDate:
+          type: string
+          format: date
+        applicationMethod:
+          type: string
+        dosage:
+          type: string
+        targetPest:
+          type: string
+        note:
+          type: string
+      required:
+      - applicationDate
+      - pesticideName
+    ApiResponsePesticideRecordResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/PesticideRecordResponse"
+        data:
+          $ref: "#/components/schemas/PesticideRecordResponse"
+        generatedAt:
+          type: string
+    PesticideRecordResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        seasonId:
+          type: integer
+          format: int32
+        plotId:
+          type: integer
+          format: int32
+        fieldLogId:
+          type: integer
+          format: int32
+        pesticideName:
+          type: string
+        activeIngredient:
+          type: string
+        phiDays:
+          type: integer
+          format: int32
+        harvestAllowedDate:
+          type: string
+          format: date
+        applicationDate:
+          type: string
+          format: date
+        applicationMethod:
+          type: string
+        dosage:
+          type: string
+        targetPest:
+          type: string
+        note:
+          type: string
+        createdBy:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     CreateHarvestDetailRequest:
       type: object
       properties:
@@ -3610,6 +4270,71 @@ components:
             $ref: "#/components/schemas/SeasonEmployeeResponse"
         generatedAt:
           type: string
+    EmployeeTaskProgressRequest:
+      type: object
+      properties:
+        progressPercent:
+          type: integer
+          format: int32
+          maximum: 100
+          minimum: 0
+        note:
+          type: string
+          maxLength: 4000
+          minLength: 0
+        evidenceUrl:
+          type: string
+          maxLength: 1000
+          minLength: 0
+      required:
+      - progressPercent
+    ApiResponseTaskProgressLogResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/TaskProgressLogResponse"
+        data:
+          $ref: "#/components/schemas/TaskProgressLogResponse"
+        generatedAt:
+          type: string
+    TaskProgressLogResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        taskId:
+          type: integer
+          format: int32
+        taskTitle:
+          type: string
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        employeeUserId:
+          type: integer
+          format: int64
+        employeeName:
+          type: string
+        progressPercent:
+          type: integer
+          format: int32
+        note:
+          type: string
+        evidenceUrl:
+          type: string
+        loggedAt:
+          type: string
+          format: date-time
     CreateDiseaseTreatmentRequest:
       type: object
       properties:
@@ -3857,6 +4582,26 @@ components:
         totalPages:
           type: integer
           format: int32
+    ApiResponseListPesticideRecordResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/PesticideRecordResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PesticideRecordResponse"
+        generatedAt:
+          type: string
     ApiResponsePageResponseHarvestResponse:
       type: object
       properties:
@@ -4185,37 +4930,6 @@ components:
         totalPages:
           type: integer
           format: int32
-    TaskProgressLogResponse:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        taskId:
-          type: integer
-          format: int32
-        taskTitle:
-          type: string
-        seasonId:
-          type: integer
-          format: int32
-        seasonName:
-          type: string
-        employeeUserId:
-          type: integer
-          format: int64
-        employeeName:
-          type: string
-        progressPercent:
-          type: integer
-          format: int32
-        note:
-          type: string
-        evidenceUrl:
-          type: string
-        loggedAt:
-          type: string
-          format: date-time
     ApiResponsePageResponsePayrollRecordResponse:
       type: object
       properties:
@@ -4335,6 +5049,49 @@ components:
         totalPages:
           type: integer
           format: int32
+    TeamProgressSummaryResponse:
+      type: object
+      properties:
+        workTeamId:
+          type: integer
+          format: int64
+        teamName:
+          type: string
+        plotId:
+          type: integer
+          format: int64
+        totalTasks:
+          type: integer
+          format: int64
+        completedTasks:
+          type: integer
+          format: int64
+        inProgressTasks:
+          type: integer
+          format: int64
+        completionRate:
+          type: number
+          format: double
+    ApiResponseListTaskResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskResponse"
+        generatedAt:
+          type: string
     ApiResponseDiseaseRecordDetailResponse:
       type: object
       properties:
@@ -4422,5 +5179,6 @@ components:
   securitySchemes:
     bearerAuth:
       type: http
+      name: bearerAuth
       scheme: bearer
       bearerFormat: JWT

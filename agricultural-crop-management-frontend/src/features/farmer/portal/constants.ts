@@ -125,6 +125,12 @@ export const FARMER_VIEW_CONFIG: Record<FarmerView, FarmerViewTextConfig> = {
     titleKey: "farmerPortal.views.documents.title",
     breadcrumbKey: "farmerPortal.views.documents.breadcrumb",
   },
+  "farm-documents": {
+    title: "VietGAP Documents",
+    breadcrumbLabel: "VietGAP Documents",
+    titleKey: "farmerPortal.views.farmDocuments.title",
+    breadcrumbKey: "farmerPortal.views.farmDocuments.breadcrumb",
+  },
   incidents: {
     title: "Incidents",
     breadcrumbLabel: "Incidents",

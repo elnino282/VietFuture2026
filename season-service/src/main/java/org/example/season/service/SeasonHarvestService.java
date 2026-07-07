@@ -51,6 +51,7 @@ public class SeasonHarvestService {
     DomainEventPublisher domainEventPublisher;
     org.example.season.client.CropCatalogClient cropCatalogClient;
     org.example.season.client.InventoryServiceClient inventoryServiceClient;
+    PHIHarvestValidationService phiValidationService;
 
     /**
      * List all harvests for the current farmer's seasons (supports "All Seasons"
@@ -307,6 +308,22 @@ public class SeasonHarvestService {
         Season season = getSeasonForCurrentFarmer(seasonId);
         ensureSeasonAllowsHarvest(season);
 
+        // 1. Validate PHI trước
+        PHIHarvestValidationService.HarvestValidationResult phiResult =
+                phiValidationService.validateHarvest(seasonId, request.getHarvestDate());
+
+        if (phiResult.isBlocked()) {
+            String detail = phiResult.violations().stream()
+                    .map(v -> v.pesticideName() + " (cách ly đến " + v.harvestAllowedDate() + ")")
+                    .collect(Collectors.joining(", "));
+
+            throw new IllegalArgumentException(
+                    "THU HOẠCH BỊ CHẶN: Còn " + phiResult.violations().size() +
+                    " thuốc BVTV đang trong thời gian cách ly. " +
+                    "Danh sách: " + detail + ". " +
+                    "Ngày thu hoạch an toàn gần nhất: " + phiResult.nearestSafeDate());
+        }
+
         validateHarvestDateWithinSeason(season, request.getHarvestDate());
 
         Harvest harvest = Harvest.builder()
@@ -426,6 +443,22 @@ public class SeasonHarvestService {
         ProductWarehouseLotDto linkedLot = harvest.getId() != null
                 ? externalServiceClient.findLotByHarvestId(harvest.getId())
                 : null;
+
+        // 1. Validate PHI trước
+        PHIHarvestValidationService.HarvestValidationResult phiResult =
+                phiValidationService.validateHarvest(harvest.getSeason().getId(), request.getHarvestDate());
+
+        if (phiResult.isBlocked()) {
+            String detail = phiResult.violations().stream()
+                    .map(v -> v.pesticideName() + " (cách ly đến " + v.harvestAllowedDate() + ")")
+                    .collect(Collectors.joining(", "));
+
+            throw new IllegalArgumentException(
+                    "THU HOẠCH BỊ CHẶN: Còn " + phiResult.violations().size() +
+                    " thuốc BVTV đang trong thời gian cách ly. " +
+                    "Danh sách: " + detail + ". " +
+                    "Ngày thu hoạch an toàn gần nhất: " + phiResult.nearestSafeDate());
+        }
 
         validateHarvestDateWithinSeason(harvest.getSeason(), request.getHarvestDate());
         validateLinkedLotQuantityUpdate(linkedLot, request.getQuantity());

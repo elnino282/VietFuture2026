@@ -54,4 +54,9 @@ export const seasonsApi = {
     const response = await httpClient.post<ApiResponse<Season>>(`/api/v1/seasons/${id}/cancel`, data);
     return response.data.result;
   },
+
+  async getActivePHI(seasonId: number): Promise<any[]> {
+    const response = await httpClient.get<ApiResponse<any[]>>(`/api/v1/seasons/${seasonId}/phi/active`);
+    return response.data.result;
+  },
 };

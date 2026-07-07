@@ -115,6 +115,9 @@ const SeasonManagement = lazy(() =>
 const Documents = lazy(() =>
   import('@/features/farmer/documents').then((m) => ({ default: m.Documents }))
 );
+const FarmDocumentsPage = lazy(() =>
+  import('@/pages/farmer/FarmDocumentsPage').then((m) => ({ default: m.default }))
+);
 const ExpenseManagement = lazy(() =>
   import('@/features/farmer/expense-management').then((m) => ({
     default: m.ExpenseManagement,
@@ -505,6 +508,7 @@ export function AppRoutes() {
           <Route path="labor-management" element={<LegacySeasonModuleRedirect modulePath="labor-management" />} />
           <Route path="reports" element={<LegacySeasonModuleRedirect modulePath="reports" />} />
           <Route path="documents" element={<Documents />} />
+          <Route path="farm-documents" element={<FarmDocumentsPage />} />
           <Route path="field-logs" element={<LegacySeasonModuleRedirect modulePath="field-logs" />} />
           <Route path="inventory" element={<Navigate to="/farmer/suppliers-supplies" replace />} />
           <Route path="product-warehouse" element={<ProductWarehousePage />} />

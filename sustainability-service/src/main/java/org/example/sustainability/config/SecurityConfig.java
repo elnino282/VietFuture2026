@@ -22,6 +22,8 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = {
+            "/api/v1/public/**",
+            "/api/v1/internal/**",
             "/actuator/health",
             "/actuator/prometheus"
     };

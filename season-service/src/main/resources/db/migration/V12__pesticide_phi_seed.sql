@@ -1,0 +1,22 @@
+-- Seed ~30 hoạt chất phổ biến tại Việt Nam
+INSERT INTO pesticide_phi_reference (active_ingredient, pesticide_name, phi_days, crop_type) VALUES
+('Carbendazim', 'Carbenzim 50WP, Bavistin 50WP', 14, 'general'),
+('Chlorpyrifos', 'Dursban 5G,Lorsban 150EC', 21, 'general'),
+('Cypermethrin', 'Sherpa 25EC, Cypersect 25EC', 7, 'general'),
+('Mancozeb', 'Manzate 80WP, Dithane M-45', 14, 'vegetable'),
+('Metalaxyl', 'Ridomil Gold 68WG', 7, 'vegetable'),
+('Imidacloprid', 'Confidor 100SL, Admire 50SC', 14, 'fruit'),
+('Abamectin', 'Vertimec 1.8EC', 14, 'vegetable'),
+('Bethecypermethrin', 'Bets 10EC', 7, 'general'),
+('Fenobucarb', 'Bassa 50EC', 14, 'rice'),
+('Cartap', 'Padan 95SP', 7, 'rice'),
+('Carbofuran', 'Furadan 3G', 60, 'general'),
+('Fenitrothion', 'Sumithion 50EC', 14, 'general'),
+('Carbaryl', 'Sevin 85WP', 7, 'fruit'),
+('Copper hydroxide', 'Kocide 77WP', 0, 'general'),
+('Bacillus thuringiensis', 'Dipel 6.4DF', 0, 'vegetable'),
+('Spinosad', 'Tracer 48SC', 1, 'vegetable'),
+('Emamectin benzoate', 'Proclaim 5SG', 7, 'vegetable'),
+('Hexaconazole', 'Anvil 5SC', 14, 'fruit'),
+('Propiconazole', 'Tilt 250EC', 14, 'fruit'),
+('Difenoconazole', 'Score 250EC', 14, 'vegetable');
