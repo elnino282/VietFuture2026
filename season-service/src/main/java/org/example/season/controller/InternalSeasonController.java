@@ -7,11 +7,15 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.example.season.entity.Season;
 import org.example.season.entity.Task;
+import org.example.season.entity.PesticideRecord;
 import org.example.season.repository.SeasonRepository;
 import org.example.season.repository.TaskRepository;
+import org.example.season.repository.PesticideRecordRepository;
+import org.example.season.repository.FieldLogRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -21,6 +25,8 @@ public class InternalSeasonController {
 
     private final SeasonRepository seasonRepository;
     private final TaskRepository taskRepository;
+    private final PesticideRecordRepository pesticideRecordRepository;
+    private final FieldLogRepository fieldLogRepository;
 
     @PostMapping("/seasons/batch")
     public ResponseEntity<List<SeasonSummaryDto>> getSeasonsByIds(@RequestBody List<Integer> seasonIds) {
@@ -86,6 +92,81 @@ public class InternalSeasonController {
         seasonRepository.findAllByFarmUserId(ownerId).forEach(s -> ids.add(s.getId()));
         seasonRepository.findAllByPlotUserId(ownerId).forEach(s -> ids.add(s.getId()));
         return ResponseEntity.ok(ids.stream().distinct().toList());
+    }
+
+    @GetMapping("/plots/{plotId}/seasons")
+    public ResponseEntity<List<SeasonSummaryDto>> getSeasonsByPlotId(@PathVariable Integer plotId) {
+        List<Season> seasons = seasonRepository.findAllByPlotIdOrderByStartDateDesc(plotId);
+        List<SeasonSummaryDto> dtos = seasons.stream()
+                .map(season -> SeasonSummaryDto.builder()
+                        .id(season.getId())
+                        .seasonName(season.getSeasonName())
+                        .plotId(season.getPlotId())
+                        .cropId(season.getCropId())
+                        .status(season.getStatus() != null ? season.getStatus().name() : null)
+                        .startDate(season.getStartDate())
+                        .plannedHarvestDate(season.getPlannedHarvestDate())
+                        .endDate(season.getEndDate())
+                        .build())
+                .toList();
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/seasons/{seasonId}/phi/active")
+    public ResponseEntity<List<PesticideRecordInternalDto>> getActivePHIInternal(@PathVariable Integer seasonId) {
+        List<PesticideRecord> records = pesticideRecordRepository.findActivePHIBySeason(seasonId, LocalDate.now());
+        List<PesticideRecordInternalDto> dtos = records.stream()
+                .map(r -> PesticideRecordInternalDto.builder()
+                        .id(r.getId())
+                        .seasonId(r.getSeasonId())
+                        .pesticideName(r.getPesticideName())
+                        .activeIngredient(r.getActiveIngredient())
+                        .phiDays(r.getPhiDays())
+                        .harvestAllowedDate(r.getHarvestAllowedDate() != null ? r.getHarvestAllowedDate() : (r.getApplicationDate() != null ? r.getApplicationDate().plusDays(r.getPhiDays()) : null))
+                        .applicationDate(r.getApplicationDate())
+                        .build())
+                .toList();
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/seasons/{seasonId}/phi/all")
+    public ResponseEntity<List<PesticideRecordInternalDto>> getAllPHIInternal(@PathVariable Integer seasonId) {
+        List<PesticideRecord> records = pesticideRecordRepository.findBySeasonId(seasonId);
+        List<PesticideRecordInternalDto> dtos = records.stream()
+                .map(r -> PesticideRecordInternalDto.builder()
+                        .id(r.getId())
+                        .seasonId(r.getSeasonId())
+                        .pesticideName(r.getPesticideName())
+                        .activeIngredient(r.getActiveIngredient())
+                        .phiDays(r.getPhiDays())
+                        .harvestAllowedDate(r.getHarvestAllowedDate() != null ? r.getHarvestAllowedDate() : (r.getApplicationDate() != null ? r.getApplicationDate().plusDays(r.getPhiDays()) : null))
+                        .applicationDate(r.getApplicationDate())
+                        .build())
+                .toList();
+        return ResponseEntity.ok(dtos);
+    }
+
+
+    @GetMapping("/seasons/{seasonId}/logs/count")
+    public ResponseEntity<Long> countFieldLogsByTypeInternal(
+            @PathVariable Integer seasonId,
+            @RequestParam String logType) {
+        long count = fieldLogRepository.countBySeasonIdAndLogTypeIgnoreCase(seasonId, logType);
+        return ResponseEntity.ok(count);
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PesticideRecordInternalDto {
+        private Integer id;
+        private Integer seasonId;
+        private String pesticideName;
+        private String activeIngredient;
+        private Integer phiDays;
+        private java.time.LocalDate harvestAllowedDate;
+        private java.time.LocalDate applicationDate;
     }
 
     @Data

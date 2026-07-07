@@ -35,6 +35,7 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BuyerAiAssistantContext, type BuyerAiAssistantOpenInput } from "../ai/BuyerAiAssistantContext";
 import { BuyerAiAssistantDrawer } from "../ai/BuyerAiAssistantDrawer";
+import { SearchWindow } from "../search";
 import "./MarketplacePublicLayout.css";
 
 function resolvePortalRoute(role: string | undefined): string {
@@ -241,39 +242,31 @@ function MarketplaceNavLink({
   );
 }
 
-function MarketplaceSearchBar({ className = "" }: { className?: string }) {
-  const [query, setQuery] = useState("");
-  const navigate = useNavigate();
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const trimmed = query.trim();
-    if (!trimmed) {
-      return;
-    }
-
-    navigate(`/marketplace/products?q=${encodeURIComponent(trimmed)}`);
-  }
-
+function MarketplaceSearchBar({ className = "", onSearchClick }: { className?: string; onSearchClick?: () => void }) {
   return (
-    <form onSubmit={handleSubmit} className={`relative ${className}`}>
+    <div 
+      onClick={onSearchClick}
+      className={`relative cursor-pointer ${className}`}
+    >
       <Search
         className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
         style={{ color: "rgba(6, 95, 70, 0.62)" }}
       />
       <input
-        type="search"
-        placeholder="Tìm kiếm nông sản, nông trại..."
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        className="fb-search-input w-full rounded-full border py-2.5 pl-10 pr-4 text-sm outline-none transition focus:ring-2 focus:ring-white/30"
+        type="text"
+        readOnly
+        placeholder="Tìm kiếm nông sản... (Ctrl+K)"
+        className="fb-search-input w-full cursor-pointer rounded-full border py-2.5 pl-10 pr-12 text-sm outline-none transition focus:ring-2 focus:ring-white/30"
         style={{
           backgroundColor: "#F8FAF5",
           borderColor: "#DDE7D8",
           color: "#334155",
         }}
       />
-    </form>
+      <kbd className="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 select-none items-center gap-0.5 rounded border border-border bg-muted px-1.5 font-mono text-[9px] font-medium text-muted-foreground opacity-80">
+        Ctrl+K
+      </kbd>
+    </div>
   );
 }
 
@@ -374,6 +367,7 @@ function MobileMenu({
   userRole,
   cartCount,
   onLogout,
+  onSearchClick,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -382,6 +376,7 @@ function MobileMenu({
   userRole?: string;
   cartCount: number;
   onLogout: () => void;
+  onSearchClick: () => void;
 }) {
   if (!isOpen) {
     return null;
@@ -396,7 +391,7 @@ function MobileMenu({
       style={{ backgroundColor: "#065F46" }}
     >
       <div className="space-y-4 px-4 py-4">
-        <MarketplaceSearchBar className="w-full" />
+        <MarketplaceSearchBar className="w-full" onSearchClick={onSearchClick} />
 
         <nav className="flex flex-col gap-3">
           <Link
@@ -504,6 +499,7 @@ export function MarketplacePublicLayout() {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [buyerAiOpen, setBuyerAiOpen] = useState(false);
   const [buyerAiContext, setBuyerAiContext] = useState("");
   const [buyerAiInitialPrompt, setBuyerAiInitialPrompt] = useState("");
@@ -572,7 +568,7 @@ export function MarketplacePublicLayout() {
           </div>
 
           <div className="marketplace-header__desktop-search">
-            <MarketplaceSearchBar />
+            <MarketplaceSearchBar onSearchClick={() => setSearchOpen(true)} />
           </div>
 
           <div className="marketplace-header__right">
@@ -734,6 +730,10 @@ export function MarketplacePublicLayout() {
           onLogout={() => {
             void handleLogout();
           }}
+          onSearchClick={() => {
+            setSearchOpen(true);
+            setMobileMenuOpen(false);
+          }}
         />
       </header>
 
@@ -742,6 +742,8 @@ export function MarketplacePublicLayout() {
         </main>
 
         <MarketplaceFooter />
+
+        <SearchWindow open={searchOpen} onOpenChange={setSearchOpen} />
 
         {showBuyerAiAssistant && (
           <>

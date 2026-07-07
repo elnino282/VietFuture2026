@@ -3,10 +3,12 @@ import { I18nProvider } from '@/providers/I18nProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { ErrorBoundary, Toaster } from '@/shared/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { AppRoutes } from './app/routes';
 import { AuthProvider } from './features/auth/context/AuthContext';
 import { AccountLockedModal } from './shared/components/AccountLockedModal';
+import { SearchWindow } from './shared/components';
 import { PreferencesProvider } from './shared/contexts';
 
 /**
@@ -37,6 +39,32 @@ const queryClient = new QueryClient({
   },
 });
 
+function GlobalSearchTrigger() {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  return (
+    <SearchWindow
+      open={searchOpen}
+      onOpenChange={setSearchOpen}
+      onSelect={(result) => {
+        navigate(result.route);
+      }}
+    />
+  );
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -49,6 +77,7 @@ export default function App() {
                   <AppRoutes />
                   <Toaster />
                   <AccountLockedModal />
+                  <GlobalSearchTrigger />
                   {/* Global floating chat button — shown on all authenticated pages except /chat */}
                   <Suspense fallback={null}>
                     <FloatingChatButton />

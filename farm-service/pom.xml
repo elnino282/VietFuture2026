@@ -109,6 +109,13 @@
             <version>${springdoc.version}</version>
         </dependency>
 
+        <!-- MinIO Storage -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.9</version>
+        </dependency>
+
         <!-- Utilities -->
         <dependency>
             <groupId>org.projectlombok</groupId>

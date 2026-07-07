@@ -68,6 +68,10 @@ spring:
               uri: ${MARKETPLACE_SERVICE_URI:http://localhost:8090}
               predicates:
                 - Path=/api/v1/marketplace/**, /api/v1/marketplace/farmer/**, /api/v1/marketplace/admin/**, /api/v1/buyer/**, /api/v1/farmer/orders/**, /api/v1/buyer/addresses/**, /api/v1/buyer/marketplace/image-search/**, /api/v1/admin/marketplace/**
+            - id: delivery-route
+              uri: ${DELIVERY_SERVICE_URI:http://localhost:8092}
+              predicates:
+                - Path=/api/v1/delivery/**
             - id: admin-reporting-route
               uri: ${ADMIN_REPORTING_SERVICE_URI:http://localhost:8091}
               predicates:

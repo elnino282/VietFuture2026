@@ -12,6 +12,8 @@ import {
 } from "@/entities/harvest";
 import { useOptionalSeason } from "@/shared/contexts";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
+import { useQuery } from "@tanstack/react-query";
+import { seasonsApi } from "@/api/seasonsApi";
 import type {
   CropResidueHandling,
   HarvestBatch,
@@ -254,6 +256,12 @@ export function useHarvestManagement() {
   } = useAllFarmerHarvests(harvestParams);
 
   const { data: summaryData } = useHarvestSummary(effectiveSeasonId);
+
+  const { data: activePHI } = useQuery({
+    queryKey: ["season-phi", effectiveSeasonId],
+    queryFn: () => seasonsApi.getActivePHI(effectiveSeasonId!),
+    enabled: !!effectiveSeasonId,
+  });
 
   const resetForm = useCallback(() => {
     setFormData(INITIAL_FORM_DATA);
@@ -506,6 +514,33 @@ export function useHarvestManagement() {
       return;
     }
 
+    // Client-side PHI validation
+    if (activePHI && activePHI.length > 0 && formData.date) {
+      const selectedDate = new Date(formData.date);
+      selectedDate.setHours(0, 0, 0, 0);
+
+      const violations = activePHI.filter((record: any) => {
+        if (!record.harvestAllowedDate) return false;
+        const allowedDate = new Date(record.harvestAllowedDate);
+        allowedDate.setHours(0, 0, 0, 0);
+        return selectedDate < allowedDate;
+      });
+
+      if (violations.length > 0) {
+        const detail = violations
+          .map((v: any) => `${v.pesticideName} (cách ly đến ${v.harvestAllowedDate})`)
+          .join(", ");
+
+        toast.error(
+          "THU HOẠCH BỊ CHẶN: Chưa hết thời gian cách ly",
+          {
+            description: `Còn ${violations.length} thuốc BVTV chưa hết cách ly. Danh sách: ${detail}`,
+          }
+        );
+        return;
+      }
+    }
+
     const seasonId = isEditing
       ? parseSeasonId(editingBatch?.seasonId ?? effectiveSeasonId)
       : resolveSubmitSeasonId();
@@ -675,6 +710,7 @@ export function useHarvestManagement() {
     seasonContext?.seasons,
     t,
     updateMutation,
+    activePHI,
   ]);
 
   const handleDeleteBatch = useCallback(

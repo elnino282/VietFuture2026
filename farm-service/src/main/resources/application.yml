@@ -62,3 +62,11 @@ springdoc:
     operationsSorter: method
     tagsSorter: alpha
 
+minio:
+  url: ${MINIO_URL:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket:
+    farm-documents: ${MINIO_BUCKET_FARM_DOCUMENTS:farm-documents}
+  public-url: ${MINIO_PUBLIC_URL:http://localhost:9000}
+

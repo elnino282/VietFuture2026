@@ -37,12 +37,138 @@ import {
     useQuery,
     useQueryClient,
 } from "@tanstack/react-query";
-import { Calendar, Plus, Search } from "lucide-react";
-import { useState } from "react";
+import { Calendar, Plus, Search, CheckCircle2, AlertCircle, Award, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { farmsApi } from "../../api/farmsApi";
 import { seasonsApi } from "../../api/seasonsApi";
 import type { SeasonSearchParams } from "../../types/Season";
+
+function SeasonHarvestSafetyBadge({ seasonId }: { seasonId: number }) {
+  const { data: activePHI } = useQuery({
+    queryKey: ["season-phi", seasonId],
+    queryFn: () => seasonsApi.getActivePHI(seasonId),
+  });
+
+  if (!activePHI) return null;
+
+  const hasActivePHI = activePHI.length > 0;
+  if (hasActivePHI) {
+    return (
+      <Badge className="bg-amber-100 text-amber-800 border border-amber-200 text-[10px] py-0 px-1.5 rounded">
+        Cách ly BVTV ({activePHI.length})
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] py-0 px-1.5 rounded">
+      An toàn thu hoạch
+    </Badge>
+  );
+}
+
+function HarvestSafetyWidget({ seasons }: { seasons: any[] }) {
+  const activeSeasons = seasons.filter(s => s.status === "ACTIVE");
+  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(
+    activeSeasons.length > 0 ? activeSeasons[0].id : null
+  );
+
+  useEffect(() => {
+    if (activeSeasons.length > 0 && !selectedSeasonId) {
+      setSelectedSeasonId(activeSeasons[0].id);
+    }
+  }, [activeSeasons, selectedSeasonId]);
+
+  const { data: activePHI, isLoading } = useQuery({
+    queryKey: ['season-phi', selectedSeasonId],
+    queryFn: () => seasonsApi.getActivePHI(selectedSeasonId!),
+    enabled: !!selectedSeasonId,
+  });
+
+  if (activeSeasons.length === 0) return null;
+
+  const currentSeason = activeSeasons.find(s => s.id === selectedSeasonId);
+  const hasActivePHI = activePHI && activePHI.length > 0;
+
+  return (
+    <Card className="mb-6 border border-border rounded-xl shadow-sm overflow-hidden bg-gradient-to-r from-emerald-50/10 via-teal-50/5 to-white">
+      <CardContent className="p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-3">
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+              <Award className="w-4.5 h-4.5 text-emerald-600" />
+              Giám sát An toàn Thu hoạch (PHI Safety)
+            </h3>
+            <p className="text-[11px] text-slate-500">Kiểm tra thời gian cách ly thuốc BVTV trước khi thu hoạch</p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-semibold text-slate-600">Chọn vụ mùa active:</span>
+            <select
+              className="text-[11px] border border-slate-200 rounded-lg p-1.5 bg-white font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              value={selectedSeasonId || ""}
+              onChange={(e) => setSelectedSeasonId(Number(e.target.value))}
+            >
+              {activeSeasons.map(s => (
+                <option key={s.id} value={s.id}>{s.seasonName}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-slate-500 text-xs py-2">
+            <RefreshCw className="w-3.5 h-3.5 animate-spin text-slate-400" /> Đang tải thông tin cách ly...
+          </div>
+        ) : !selectedSeasonId ? (
+          <div className="text-xs text-slate-500">Chưa chọn vụ mùa nào.</div>
+        ) : !hasActivePHI ? (
+          <div className="flex items-start gap-3 bg-emerald-50/50 border border-emerald-100 p-4.5 rounded-xl text-emerald-950">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-xs font-bold text-emerald-800">Đã hết thời gian cách ly - An toàn thu hoạch</h4>
+              <p className="text-[11px] text-emerald-700 mt-1 leading-relaxed">
+                Vụ mùa <strong className="font-semibold">{currentSeason?.seasonName}</strong> không còn thuốc BVTV nào trong thời gian cách ly. Bạn có thể tiến hành thu hoạch bình thường và đảm bảo VietGAP.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3 bg-amber-50/30 border border-amber-100 p-4.5 rounded-xl text-amber-950">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold text-amber-800">Cảnh báo: Đang trong thời gian cách ly (PHI)</h4>
+                <p className="text-[11px] text-amber-700 mt-1 leading-relaxed">
+                  Vụ mùa <strong className="font-semibold">{currentSeason?.seasonName}</strong> còn {activePHI.length} hoạt chất thuốc BVTV chưa hết thời gian cách ly bắt buộc.
+                </p>
+              </div>
+            </div>
+            
+            <div className="border-t border-amber-100/50 pt-3 mt-1 sm:pl-8 space-y-2">
+              <div className="text-[11px] text-amber-800 font-semibold">
+                Danh sách hoạt chất đang cách ly:
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {activePHI.map((phi: any, idx: number) => (
+                  <div key={idx} className="bg-white p-2 rounded-lg border border-amber-100/60 text-xs flex justify-between items-center shadow-sm">
+                    <div>
+                      <span className="font-semibold text-slate-700 block">{phi.pesticideName || phi.activeIngredient}</span>
+                      <span className="text-[10px] text-slate-500">Hoạt chất: {phi.activeIngredient}</span>
+                    </div>
+                    <span className="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded text-[10px] border border-rose-100">
+                      Đến {phi.harvestAllowedDate}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export function SeasonsPage() {
   const { t } = useI18n();
@@ -279,6 +405,8 @@ export function SeasonsPage() {
         </CardContent>
       </Card>
 
+      <HarvestSafetyWidget seasons={seasons} />
+
       {/* Filters */}
       <Card className="mb-6 border border-border rounded-xl shadow-sm">
         <CardContent className="px-6 py-4">
@@ -386,7 +514,14 @@ export function SeasonsPage() {
                         {season.plotName || `Plot ${season.plotId}`}
                       </TableCell>
                       <TableCell>{season.startDate}</TableCell>
-                      <TableCell>{getStatusBadge(season.status)}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1.5 items-start">
+                          {getStatusBadge(season.status)}
+                          {season.status === "ACTIVE" && (
+                            <SeasonHarvestSafetyBadge seasonId={season.id} />
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         {formatYieldValue(season.expectedYieldKg)}
                       </TableCell>

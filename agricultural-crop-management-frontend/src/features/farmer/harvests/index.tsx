@@ -23,6 +23,8 @@ import { useMyWarehouses } from "@/entities/inventory";
 import { useSeasons } from "@/entities/season";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { seasonsApi } from "@/api/seasonsApi";
 
 export function HarvestManagement() {
   const { t } = useI18n();
@@ -123,6 +125,66 @@ export function HarvestManagement() {
       })
     : undefined;
 
+  const seasonIdToUse = isWorkspaceScoped
+    ? workspaceSeasonId
+    : selectedSeason === "all"
+    ? (effectiveSeasonId ?? undefined)
+    : Number(selectedSeason);
+
+  const { data: activePHI } = useQuery({
+    queryKey: ["season-phi", seasonIdToUse],
+    queryFn: () => seasonsApi.getActivePHI(seasonIdToUse!),
+    enabled: !!seasonIdToUse,
+  });
+
+  const phiBadge = useMemo(() => {
+    if (!seasonIdToUse) return null;
+    const hasActivePHI = activePHI && activePHI.length > 0;
+
+    let daysRemaining = 0;
+    if (hasActivePHI && activePHI) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let maxAllowedDate: Date | null = null;
+      activePHI.forEach((record: any) => {
+        if (record.harvestAllowedDate) {
+          const allowedDate = new Date(record.harvestAllowedDate);
+          allowedDate.setHours(0, 0, 0, 0);
+          if (!maxAllowedDate || allowedDate > maxAllowedDate) {
+            maxAllowedDate = allowedDate;
+          }
+        }
+      });
+      if (maxAllowedDate) {
+        const diffTime = (maxAllowedDate as Date).getTime() - today.getTime();
+        daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }
+    }
+
+    if (!hasActivePHI) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          An toàn
+        </span>
+      );
+    } else if (daysRemaining <= 3) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+          Sắp hết cách ly ({daysRemaining} ngày)
+        </span>
+      );
+    } else {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-600 border border-red-500/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          Cách ly ({daysRemaining} ngày)
+        </span>
+      );
+    }
+  }, [seasonIdToUse, activePHI]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const warehouseListHref = useMemo(() => {
     const scopedSeasonId = isWorkspaceScoped ? workspaceSeasonId : effectiveSeasonId;
@@ -219,6 +281,7 @@ export function HarvestManagement() {
           }}
           addDisabled={isHarvestWriteLocked}
           lockMessage={seasonWriteLockReason}
+          phiBadge={phiBadge}
         />
 
         <Card className="mb-6 border border-border rounded-xl shadow-sm">

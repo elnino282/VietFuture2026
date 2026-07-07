@@ -36,6 +36,7 @@ public class FieldLogService {
     SeasonRepository seasonRepository;
     ExternalServiceClient externalServiceClient;
     SeasonWorkspaceAccessService seasonWorkspaceAccessService;
+    PesticideRecordService pesticideRecordService;
 
     public PageResponse<FieldLogResponse> listFieldLogsForSeason(
             Integer seasonId,
@@ -139,6 +140,12 @@ public class FieldLogService {
                 .build();
 
         FieldLog saved = fieldLogRepository.save(log);
+
+        if (request.getLogType().equalsIgnoreCase("PESTICIDE_APPLICATION")
+                || request.getLogType().equalsIgnoreCase("SPRAY")) {
+            pesticideRecordService.createFromFieldLog(saved.getId(), currentUser != null ? currentUser.getId() : null);
+        }
+
         return toResponse(saved);
     }
 
@@ -175,6 +182,14 @@ public class FieldLogService {
         log.setNotes(request.getNotes());
 
         FieldLog saved = fieldLogRepository.save(log);
+
+        if (request.getLogType().equalsIgnoreCase("PESTICIDE_APPLICATION")
+                || request.getLogType().equalsIgnoreCase("SPRAY")) {
+            pesticideRecordService.createFromFieldLog(saved.getId(), saved.getCreatedByUserId());
+        } else {
+            pesticideRecordService.deleteByFieldLogId(saved.getId());
+        }
+
         return toResponse(saved);
     }
 
@@ -192,6 +207,7 @@ public class FieldLogService {
     private void deleteResolvedFieldLog(FieldLog log) {
         ensureSeasonOpenForLogs(log.getSeason(), false);
 
+        pesticideRecordService.deleteByFieldLogId(log.getId());
         fieldLogRepository.delete(log);
     }
 

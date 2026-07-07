@@ -42,6 +42,7 @@ export {
   useMarketplaceProducts,
   useMarketplaceRemoveCartItemMutation,
   useMarketplaceTraceability,
+  useMarketplacePublicTraceability,
   useSearchMarketplaceByImageMutation,
   useMarketplaceUpdateAdminOrderPaymentVerificationMutation,
   useMarketplaceUpdateAdminOrderStatusMutation,

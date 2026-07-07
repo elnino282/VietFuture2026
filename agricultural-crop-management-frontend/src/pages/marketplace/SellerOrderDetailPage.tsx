@@ -1,10 +1,12 @@
 import { useMemo } from "react";
 import { CreditCard, MapPin, Phone, Truck } from "lucide-react";
 import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import type { MarketplaceOrderStatus } from "@/shared/api";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
 import { BackButton } from "@/shared/ui/back-button";
 import { useI18n } from "@/hooks/useI18n";
+import { deliveryApi } from "@/shared/api";
 import {
   useMarketplaceFarmerOrderDetail,
   useMarketplaceUpdateFarmerOrderStatusMutation,
@@ -67,6 +69,39 @@ function statusBadge(status: MarketplaceOrderStatus, t: Translator) {
   return <Badge variant={statusBadgeVariant(status)}>{sellerOrderStatusLabel(status, t)}</Badge>;
 }
 
+function getProviderName(providerId: number): string {
+  switch (providerId) {
+    case 1:
+      return "Giao hàng tiết kiệm (GHTK)";
+    case 2:
+      return "Giao hàng nhanh (GHN)";
+    case 3:
+      return "Ninja Van";
+    case 4:
+      return "J&T Express";
+    default:
+      return "Đối tác vận chuyển";
+  }
+}
+
+function dStatusBadgeVariant(status: string) {
+  switch (status) {
+    case "PENDING":
+      return "warning" as const;
+    case "PICKUP_SCHEDULED":
+    case "IN_TRANSIT":
+    case "OUT_FOR_DELIVERY":
+      return "info" as const;
+    case "DELIVERED":
+      return "success" as const;
+    case "RETURNED":
+    case "CANCELLED":
+      return "destructive" as const;
+    default:
+      return "secondary" as const;
+  }
+}
+
 function paymentMethodLabel(method: string, t: Translator) {
   switch (method) {
     case "COD":
@@ -100,6 +135,11 @@ export function SellerOrderDetailPage() {
   const { id } = useParams();
   const orderId = Number(id ?? 0);
   const orderQuery = useMarketplaceFarmerOrderDetail(orderId);
+  const deliveryOrdersQuery = useQuery({
+    queryKey: ["deliveryOrders", orderId],
+    queryFn: () => deliveryApi.getDeliveryOrdersByMarketplaceId(orderId),
+    enabled: !!orderId,
+  });
   const statusMutation = useMarketplaceUpdateFarmerOrderStatusMutation(orderId);
 
   const actions = useMemo(
@@ -242,6 +282,36 @@ export function SellerOrderDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {deliveryOrdersQuery.data && deliveryOrdersQuery.data.length > 0 && (
+            <Card className="border-border shadow-sm bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm uppercase tracking-[0.18em] text-muted-foreground flex items-center gap-2">
+                  <Truck size={16} className="text-primary animate-pulse" />
+                  <span>Chi tiết giao hàng</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                {deliveryOrdersQuery.data.map((dOrder) => (
+                  <div key={dOrder.id} className="space-y-2 pb-3 last:pb-0 last:border-0 border-b border-border/40">
+                    <div className="flex items-center justify-between font-semibold">
+                      <span className="text-foreground">Vận đơn: {dOrder.trackingNumber || "N/A"}</span>
+                      <Badge variant={dStatusBadgeVariant(dOrder.status)} className="text-[10px] capitalize">
+                        {dOrder.status}
+                      </Badge>
+                    </div>
+                    <div className="text-xs space-y-1 text-muted-foreground">
+                      <p>Đối tác: {getProviderName(dOrder.providerId)}</p>
+                      <p>Cân nặng: {dOrder.weightKg} kg</p>
+                      {dOrder.requiresColdChain && (
+                        <Badge className="bg-blue-100 text-blue-800 text-[10px] hover:bg-blue-100 mt-1">Chuỗi lạnh (Cold chain)</Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="border-border shadow-sm">
             <CardHeader className="pb-3">

@@ -122,6 +122,22 @@ public class MarketplaceController {
         return ApiResponse.success(marketplaceService.getTraceability(productId));
     }
 
+    @GetMapping("/products/{productId}/public-trace")
+    public ResponseEntity<ApiResponse<MarketplaceTraceabilityResponse>> getPublicTrace(@PathVariable String productId) {
+        // Không cần @AuthenticationPrincipal — endpoint public
+        return ResponseEntity.ok(ApiResponse.success(marketplaceService.getPublicTraceability(productId)));
+    }
+
+    @GetMapping(value = "/products/{productId}/qr-code", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getProductQRCode(
+            @PathVariable Long productId,
+            @RequestParam(value = "width", defaultValue = "250") int width) {
+        byte[] qrImage = marketplaceService.getProductQRCode(productId, width);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(qrImage);
+    }
+
     /**
      * @deprecated Use GET /api/v1/marketplace/products/{productId}/traceability instead.
      * Kept temporarily for backward compatibility.

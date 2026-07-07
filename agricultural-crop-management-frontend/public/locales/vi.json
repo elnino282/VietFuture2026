@@ -100,6 +100,7 @@
     "inventory": "Kho vật tư",
     "productWarehouse": "Kho sản phẩm",
     "documents": "Tài liệu",
+    "farmDocuments": "Tài liệu VietGAP",
     "incidents": "Sự cố",
     "notifications": "Thông báo",
     "aiAssistant": "Trợ lý AI",
@@ -247,6 +248,10 @@
       "documents": {
         "title": "Tài liệu",
         "breadcrumb": "Tài liệu"
+      },
+      "farmDocuments": {
+        "title": "Tài liệu VietGAP",
+        "breadcrumb": "Tài liệu VietGAP"
       },
       "incidents": {
         "title": "Sự cố",

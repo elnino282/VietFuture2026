@@ -11,6 +11,7 @@ public enum LogType {
     FERTILIZE("Apply fertilizer"),
     PEST("Pest observation/treatment"),
     SPRAY("Spray pesticide/herbicide"),
+    PESTICIDE_APPLICATION("Pesticide application"),
     IRRIGATE("Irrigation activity"),
     WEED("Weeding activity"),
     HARVEST("Harvest activity"),

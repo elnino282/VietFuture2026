@@ -6,12 +6,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.example.farm.entity.Farm;
+import org.example.farm.entity.CertificationRecord;
+import org.example.farm.entity.CertificationStandard;
 import org.example.farm.repository.FarmRepository;
+import org.example.farm.repository.CertificationRecordRepository;
+import org.example.farm.repository.CertificationStandardRepository;
 import org.example.farm.mapper.FarmMapper;
+import org.example.farm.dto.response.CertificationInfoDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/internal/farms")
@@ -20,6 +26,8 @@ public class InternalFarmController {
 
     private final FarmRepository farmRepository;
     private final FarmMapper farmMapper;
+    private final CertificationRecordRepository certificationRecordRepository;
+    private final CertificationStandardRepository certificationStandardRepository;
 
     @PostMapping("/batch")
     public ResponseEntity<List<FarmSummaryDto>> getFarmsByIds(@RequestBody List<Integer> farmIds) {
@@ -36,6 +44,37 @@ public class InternalFarmController {
                 .map(farmMapper::toDetailDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{farmId}/certification")
+    public ResponseEntity<CertificationInfoDto> getFarmCertification(@PathVariable Integer farmId) {
+        Optional<CertificationStandard> standardOpt = certificationStandardRepository.findByCode("VIETGAP-PLANTING-2024");
+        if (standardOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        CertificationStandard standard = standardOpt.get();
+        Optional<CertificationRecord> recordOpt = certificationRecordRepository.findByFarmIdAndStandardId(farmId, standard.getId());
+        
+        if (recordOpt.isEmpty()) {
+            // Trả về đối tượng trống với trạng thái IN_PROGRESS hoặc PENDING để frontend hiển thị sạch
+            return ResponseEntity.ok(CertificationInfoDto.builder()
+                    .certificationName(standard.getName())
+                    .certificationType(standard.getType())
+                    .status("IN_PROGRESS")
+                    .complianceScore(java.math.BigDecimal.ZERO)
+                    .build());
+        }
+
+        CertificationRecord record = recordOpt.get();
+        return ResponseEntity.ok(CertificationInfoDto.builder()
+                .certificationName(standard.getName())
+                .certificationType(standard.getType())
+                .status(record.getStatus())
+                .issuedDate(record.getCertifiedAt() != null ? record.getCertifiedAt().toLocalDate() : null)
+                .expiryDate(record.getExpiryDate())
+                .complianceScore(record.getComplianceScore())
+                .build());
     }
 
     @Data

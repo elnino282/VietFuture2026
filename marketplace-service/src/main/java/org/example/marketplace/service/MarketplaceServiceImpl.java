@@ -50,6 +50,13 @@ import org.example.marketplace.dto.response.MarketplaceProductDetailResponse;
 import org.example.marketplace.dto.response.MarketplaceProductSummaryResponse;
 import org.example.marketplace.dto.response.MarketplaceReviewResponse;
 import org.example.marketplace.dto.response.MarketplaceTraceabilityResponse;
+import org.example.marketplace.dto.client.FarmCertificationDto;
+import org.example.marketplace.dto.client.PesticideRecordDto;
+import org.example.marketplace.dto.response.MarketplaceTraceabilityResponse.CertificationInfo;
+import org.example.marketplace.dto.response.MarketplaceTraceabilityResponse.PHISafetyInfo;
+import org.example.marketplace.dto.response.MarketplaceTraceabilityResponse.PHISafetyInfo.PesticideUsageItem;
+import java.time.LocalDate;
+import org.example.marketplace.util.QRCodeGenerator;
 import org.example.marketplace.entity.MarketplaceAddress;
 import org.example.marketplace.entity.MarketplaceCart;
 import org.example.marketplace.entity.MarketplaceCartItem;
@@ -127,6 +134,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     ObjectMapper objectMapper;
     IdempotencyService idempotencyService;
     MarketplaceStorageService storageService;
+    QRCodeGenerator qrCodeGenerator;
     DomainEventPublisher domainEventPublisher;
 
     @Override
@@ -291,6 +299,123 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         return buildTraceabilityResponse(product, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MarketplaceTraceabilityResponse getPublicTraceability(String productIdOrSlug) {
+        MarketplaceProduct product = null;
+        try {
+            Long productId = Long.parseLong(productIdOrSlug);
+            product = marketplaceProductRepository.findById(productId).orElse(null);
+        } catch (NumberFormatException e) {
+            // Not a number, try by slug
+        }
+
+        if (product == null) {
+            product = marketplaceProductRepository.findBySlug(productIdOrSlug)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id or slug: " + productIdOrSlug));
+        }
+
+        MarketplaceTraceabilityResponse base = buildTraceabilityResponse(product, null);
+
+        CertificationInfo certInfo = null;
+        if (product.getFarmId() != null) {
+            try {
+                FarmCertificationDto certDto = farmClient.getFarmCertification(product.getFarmId());
+                if (certDto != null) {
+                    certInfo = new CertificationInfo(
+                            certDto.certificationName(),
+                            certDto.certificationType(),
+                            certDto.status(),
+                            certDto.issuedDate(),
+                            certDto.expiryDate(),
+                            certDto.complianceScore()
+                    );
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch certification info for farmId={}: {}", product.getFarmId(), e.getMessage());
+            }
+        }
+
+        PHISafetyInfo phiInfo = null;
+        if (product.getSeasonId() != null) {
+            try {
+                List<PesticideRecordDto> pesticideRecords = seasonClient.getSeasonPesticideRecords(product.getSeasonId());
+                if (pesticideRecords != null) {
+                    int totalPesticidesUsed = pesticideRecords.size();
+                    LocalDate today = LocalDate.now();
+                    int safePesticides = 0;
+                    int cautionPesticides = 0;
+                    boolean isSafe = true;
+                    List<PesticideUsageItem> usageItems = new java.util.ArrayList<>();
+
+                    for (PesticideRecordDto record : pesticideRecords) {
+                        LocalDate allowedDate = record.harvestAllowedDate();
+                        if (allowedDate == null && record.applicationDate() != null) {
+                            allowedDate = record.applicationDate().plusDays(record.phiDays());
+                        }
+
+                        String status = "SAFE";
+                        if (allowedDate != null) {
+                            if (today.isBefore(allowedDate)) {
+                                isSafe = false;
+                                long daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(today, allowedDate);
+                                if (daysRemaining <= 3) {
+                                    status = "CAUTION";
+                                    cautionPesticides++;
+                                } else {
+                                    status = "BLOCKED";
+                                }
+                            } else {
+                                safePesticides++;
+                            }
+                        }
+
+                        usageItems.add(new PesticideUsageItem(
+                                record.pesticideName(),
+                                record.applicationDate(),
+                                allowedDate,
+                                status
+                        ));
+                    }
+
+                    phiInfo = new PHISafetyInfo(
+                            isSafe,
+                            totalPesticidesUsed,
+                            safePesticides,
+                            cautionPesticides,
+                            usageItems
+                    );
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch PHI safety info for seasonId={}: {}", product.getSeasonId(), e.getMessage());
+            }
+        }
+
+        return new MarketplaceTraceabilityResponse(
+                base.productId(),
+                base.traceable(),
+                base.farm(),
+                base.plot(),
+                base.season(),
+                base.harvest(),
+                base.productLot(),
+                base.timeline(),
+                base.validatedAt(),
+                certInfo,
+                phiInfo,
+                null // nutritionClaim (phase sau)
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] getProductQRCode(Long productId, int width) {
+        MarketplaceProduct product = marketplaceProductRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        String url = qrCodeGenerator.generateTraceUrl(product.getId(), product.getSlug());
+        return qrCodeGenerator.generateQRImage(url, width);
     }
 
     @Override
@@ -2032,7 +2157,10 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 harvest,
                 productLot,
                 timeline,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                null,
+                null,
+                null
         );
     }
 

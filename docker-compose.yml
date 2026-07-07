@@ -416,6 +416,29 @@ services:
       identity-service:
         condition: service_started
 
+  delivery-service:
+    build:
+      context: ./delivery-service
+      dockerfile: Dockerfile
+    container_name: delivery_service_quanlymuavu
+    restart: unless-stopped
+    ports:
+      - "8092:8092"
+    environment:
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      SERVER_PORT: 8092
+      DB_URL: jdbc:mysql://mysql:3306/delivery_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      DB_USER: ${MYSQL_USER:-springuser}
+      DB_PASS: ${MYSQL_PASSWORD:-springpass}
+      JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
+      MANAGEMENT_OTLP_TRACING_EXPORT_ENABLED: "false"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -438,6 +461,7 @@ services:
       SUSTAINABILITY_SERVICE_URI: http://sustainability-service:8089
       MARKETPLACE_SERVICE_URI: http://marketplace-service:8090
       ADMIN_REPORTING_SERVICE_URI: http://admin-reporting-service:8091
+      DELIVERY_SERVICE_URI: http://delivery-service:8092
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
       MANAGEMENT_OTLP_TRACING_EXPORT_ENABLED: "false"
     depends_on:
@@ -452,6 +476,7 @@ services:
       - sustainability-service
       - marketplace-service
       - admin-reporting-service
+      - delivery-service
 
 #  frontend:
 #    build:

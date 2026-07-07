@@ -61,6 +61,9 @@ const MarketplacePublicLayout = lazy(() =>
 const MarketHomePage = lazy(() =>
   import('@/pages/marketplace').then((m) => ({ default: m.MarketHomePage }))
 );
+const PublicTracePage = lazy(() =>
+  import('@/pages/public/PublicTracePage').then((m) => ({ default: m.PublicTracePage }))
+);
 const MarketplaceProductListPage = lazy(() =>
   import('@/pages/marketplace').then((m) => ({ default: m.ProductListPage }))
 );
@@ -98,7 +101,7 @@ const FarmerPortalWithShell = lazy(() =>
   import('@/features/farmer/portal').then((m) => ({ default: m.FarmerPortalWithShell }))
 );
 const FarmerDashboard = lazy(() =>
-  import('@/features/farmer/dashboard').then((m) => ({ default: m.FarmerDashboard }))
+  import('@/pages/farmer/FarmerDashboardPage').then((m) => ({ default: m.FarmerDashboardPage }))
 );
 const CropManagement = lazy(() =>
   import('@/features/farmer/crops').then((m) => ({ default: m.CropManagement }))
@@ -114,6 +117,9 @@ const SeasonManagement = lazy(() =>
 );
 const Documents = lazy(() =>
   import('@/features/farmer/documents').then((m) => ({ default: m.Documents }))
+);
+const FarmDocumentsPage = lazy(() =>
+  import('@/pages/farmer/FarmDocumentsPage').then((m) => ({ default: m.default }))
 );
 const ExpenseManagement = lazy(() =>
   import('@/features/farmer/expense-management').then((m) => ({
@@ -166,6 +172,9 @@ const NotificationsPage = lazy(() =>
 );
 const FarmerSearchPage = lazy(() =>
   import('@/pages/farmer/FarmerSearchPage').then((m) => ({ default: m.FarmerSearchPage }))
+);
+const CertificationPage = lazy(() =>
+  import('@/pages/farmer/CertificationPage').then((m) => ({ default: m.default }))
 );
 
 // Farmer season workspace
@@ -229,6 +238,11 @@ const MarketplaceSellerOrdersPage = lazy(() =>
 const MarketplaceSellerOrderDetailPage = lazy(() =>
   import('@/pages/marketplace').then((m) => ({
     default: m.SellerOrderDetailPage,
+  }))
+);
+const MarketplaceSellerDeliveriesPage = lazy(() =>
+  import('@/pages/marketplace').then((m) => ({
+    default: m.SellerDeliveriesPage,
   }))
 );
 
@@ -379,6 +393,7 @@ export function AppRoutes() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/signin" element={<Navigate to="/sign-in" replace />} />
         <Route path="/signup" element={<Navigate to="/sign-up" replace />} />
+        <Route path="/trace/:slug" element={<PublicTracePage />} />
         <Route
           path="/chat"
           element={(
@@ -469,12 +484,14 @@ export function AppRoutes() {
           <Route path="marketplace-products/:id/edit" element={<MarketplaceSellerProductFormPage />} />
           <Route path="marketplace-orders" element={<MarketplaceSellerOrdersPage />} />
           <Route path="marketplace-orders/:id" element={<MarketplaceSellerOrderDetailPage />} />
+          <Route path="marketplace-deliveries" element={<MarketplaceSellerDeliveriesPage />} />
           <Route path="search" element={<FarmerSearchPage />} />
 
           {/* Farm Management */}
           <Route path="farms">
             <Route index element={<FarmsListPage />} />
             <Route path=":id" element={<FarmDetailPage />} />
+            <Route path=":farmId/certification" element={<CertificationPage />} />
           </Route>
 
           {/* Season Workspace */}
@@ -505,6 +522,7 @@ export function AppRoutes() {
           <Route path="labor-management" element={<LegacySeasonModuleRedirect modulePath="labor-management" />} />
           <Route path="reports" element={<LegacySeasonModuleRedirect modulePath="reports" />} />
           <Route path="documents" element={<Documents />} />
+          <Route path="farm-documents" element={<FarmDocumentsPage />} />
           <Route path="field-logs" element={<LegacySeasonModuleRedirect modulePath="field-logs" />} />
           <Route path="inventory" element={<Navigate to="/farmer/suppliers-supplies" replace />} />
           <Route path="product-warehouse" element={<ProductWarehousePage />} />

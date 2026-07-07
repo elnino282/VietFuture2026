@@ -277,6 +277,17 @@ export function useMarketplaceTraceability(productId?: number | null) {
   });
 }
 
+export function useMarketplacePublicTraceability(productIdOrSlug?: string | null) {
+  return useQuery({
+    queryKey: [...marketplaceQueryKeys.root, "public-traceability", productIdOrSlug ?? ""] as const,
+    enabled: Boolean(productIdOrSlug),
+    queryFn: async () => {
+      const response = await marketplaceApi.getPublicTraceability(productIdOrSlug ?? "");
+      return response.result;
+    },
+  });
+}
+
 export function useMarketplaceCart(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: marketplaceQueryKeys.cart(),

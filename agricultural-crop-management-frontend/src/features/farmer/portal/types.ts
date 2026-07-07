@@ -23,6 +23,7 @@ export type FarmerView =
   | 'marketplace-products'
   | 'marketplace-orders'
   | 'documents'
+  | 'farm-documents'
   | 'incidents'
   | 'notifications'
   | 'ai-assistant'

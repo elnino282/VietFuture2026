@@ -59,6 +59,10 @@ public interface MarketplaceService {
     // Traceability
     MarketplaceTraceabilityResponse getTraceability(Long productId);
 
+    MarketplaceTraceabilityResponse getPublicTraceability(String productIdOrSlug);
+
+    byte[] getProductQRCode(Long productId, int width);
+
     MarketplaceTraceabilityResponse getOrderItemTraceability(Long orderId, Long itemId);
 
     // Reviews (Buyer)

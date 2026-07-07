@@ -44,6 +44,7 @@ export const portalConfig: Record<PortalType, PortalConfig> = {
             { id: 'suppliers-supplies', label: 'Suppliers & Supplies', icon: Package },
             { id: 'product-warehouse', label: 'Product Warehouse', icon: Package },
             { id: 'documents', label: 'Documents', icon: FileText },
+            { id: 'farm-documents', label: 'VietGAP Documents', icon: FileText },
             { id: 'ai-assistant', label: 'AI Assistant', icon: Sprout },
             { id: 'chat', label: 'Chat', icon: MessageSquare },
             { id: 'notifications', label: 'Notifications', icon: Bell },

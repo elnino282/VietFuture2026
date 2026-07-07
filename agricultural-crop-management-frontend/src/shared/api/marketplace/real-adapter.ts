@@ -183,6 +183,12 @@ export function createMarketplaceRealAdapter(): MarketplaceApiAdapter {
       );
     },
 
+    getPublicTraceability(productIdOrSlug: string) {
+      return requestEnvelope<MarketplaceTraceability>(() =>
+        httpClient.get(`${MARKETPLACE_API_PREFIX}/products/${productIdOrSlug}/public-trace`),
+      );
+    },
+
     getCart() {
       return requestEnvelope<MarketplaceCart>(() =>
         httpClient.get(`${MARKETPLACE_API_PREFIX}/cart`),

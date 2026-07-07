@@ -5,13 +5,16 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib";
 import { BackButton, Button, Card, CardContent, CardHeader, CardTitle, Input } from "@/shared/ui";
+import { useQuery } from "@tanstack/react-query";
 import type {
   MarketplaceAddress,
   MarketplaceAddressUpsertRequest,
   MarketplacePaymentMethod,
   MarketplaceCart,
   MarketplaceCartItem,
+  ShippingOption,
 } from "@/shared/api";
+import { deliveryApi } from "@/shared/api";
 import {
   useCheckoutValidation,
   useMarketplaceAddresses,
@@ -147,6 +150,7 @@ export function CheckoutPage() {
   const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
   const [addressForm, setAddressForm] = useState<AddressFormState>(() => emptyAddressForm());
   const [addressFormMessage, setAddressFormMessage] = useState<string | null>(null);
+  const [selectedShippingOption, setSelectedShippingOption] = useState<ShippingOption | null>(null);
 
   const mockCart = useMemo<MarketplaceCart | undefined>(() => {
     if (!buyNowItem) return undefined;
@@ -237,6 +241,49 @@ export function CheckoutPage() {
     );
   }, [addressesQuery.data, defaultAddress, selectedAddressId]);
 
+  // Dynamic shipping calculations
+  const totalWeight = useMemo(() => {
+    if (!cart) return 0;
+    return cart.items.reduce((sum, item) => sum + item.quantity * 0.5, 0);
+  }, [cart]);
+
+  const requiresColdChain = useMemo(() => {
+    if (!cart) return false;
+    const keywords = ["rau", "củ", "quả", "thịt", "cá", "sữa", "fresh", "perishable", "tươi", "lạnh"];
+    return cart.items.some((item) =>
+      keywords.some((kw) => item.name.toLowerCase().includes(kw))
+    );
+  }, [cart]);
+
+  const senderProvince = "Lâm Đồng";
+  const recipientProvince = addressMode === "new" ? addressForm.province : selectedAddress?.province;
+
+  const { data: shippingOptions, isLoading: isShippingLoading } = useQuery({
+    queryKey: ["shippingOptions", senderProvince, recipientProvince, totalWeight, requiresColdChain],
+    queryFn: () =>
+      deliveryApi.calculate({
+        senderProvince,
+        recipientProvince: recipientProvince ?? "",
+        weightKg: totalWeight,
+        requiresColdChain,
+        prefersSameDay: false,
+      }),
+    enabled: !!recipientProvince && totalWeight > 0,
+  });
+
+  useEffect(() => {
+    if (shippingOptions && shippingOptions.length > 0) {
+      const exists = shippingOptions.find(
+        (o) => o.providerId === selectedShippingOption?.providerId && o.type === selectedShippingOption?.type
+      );
+      if (!exists) {
+        setSelectedShippingOption(shippingOptions[0]);
+      }
+    } else {
+      setSelectedShippingOption(null);
+    }
+  }, [shippingOptions]);
+
   const currentAddressMutation =
     editingAddressId == null ? createAddressMutation : updateAddressMutation;
 
@@ -311,7 +358,7 @@ export function CheckoutPage() {
     );
   }
 
-  const shippingFee = 20000;
+  const shippingFee = selectedShippingOption ? selectedShippingOption.shippingFeeVnd : 0;
   const total = cart.subtotal + shippingFee;
   const submitErrorMessage =
     createOrderMutation.error instanceof Error
@@ -654,6 +701,60 @@ export function CheckoutPage() {
                 />
               </div>
 
+              {/* Shipping Options Selector */}
+              {isShippingLoading && (
+                <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center text-sm text-muted-foreground animate-pulse">
+                  Đang tính toán phí vận chuyển...
+                </div>
+              )}
+
+              {recipientProvince && !isShippingLoading && (!shippingOptions || shippingOptions.length === 0) && (
+                <div className="rounded-lg border border-dashed border-destructive/20 bg-destructive/5 p-4 text-center text-sm text-destructive">
+                  Không tìm thấy đơn vị vận chuyển phù hợp cho tuyến đường này.
+                </div>
+              )}
+
+              {shippingOptions && shippingOptions.length > 0 && (
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-foreground">Phương thức vận chuyển</label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {shippingOptions.map((option) => {
+                      const isSelected =
+                        selectedShippingOption?.providerId === option.providerId &&
+                        selectedShippingOption?.type === option.type;
+                      return (
+                        <div
+                          key={`${option.providerId}-${option.type}`}
+                          onClick={() => setSelectedShippingOption(option)}
+                          className={cn(
+                            "flex cursor-pointer flex-col gap-1.5 rounded-lg border-2 p-4 transition-all duration-200",
+                            isSelected
+                              ? "border-emerald-600 bg-emerald-50/50 shadow-sm"
+                              : "border-border bg-card hover:border-border/80 hover:bg-muted/30"
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-foreground">{option.providerName}</span>
+                            <span className="text-sm font-bold text-primary">{formatVnd(option.shippingFeeVnd)}</span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span className="rounded bg-muted px-1.5 py-0.5 capitalize">
+                              {option.type === "same_day" ? "Giao trong ngày" : "Giao hàng tiêu chuẩn"}
+                            </span>
+                            {option.isColdChain && (
+                              <span className="rounded bg-blue-100 text-blue-800 px-1.5 py-0.5">
+                                Chuỗi lạnh (Cold chain)
+                              </span>
+                            )}
+                            <span>Dự kiến: {option.estimatedHours}h</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground">Ghi chú</label>
                 <Input
@@ -830,6 +931,28 @@ export function CheckoutPage() {
                       idempotencyKey: checkoutIdempotencyKey,
                       items: buyNowItem ? [{ productId: buyNowItem.productId, quantity: buyNowItem.quantity }] : undefined,
                     });
+
+                    // Register delivery orders for each split order
+                    if (selectedShippingOption && result.orders && result.orders.length > 0) {
+                      for (const order of result.orders) {
+                        try {
+                          await deliveryApi.createDeliveryOrder({
+                            marketplaceOrderId: order.id,
+                            providerId: selectedShippingOption.providerId,
+                            shippingFeeVnd: selectedShippingOption.shippingFeeVnd,
+                            isPerishable: requiresColdChain,
+                            requiresColdChain: requiresColdChain,
+                            recipientName: effectiveRecipientName,
+                            recipientPhone: effectivePhone,
+                            recipientAddress: effectiveShippingAddressLine ?? '',
+                            recipientProvince: recipientProvince ?? '',
+                            weightKg: totalWeight,
+                          });
+                        } catch (err) {
+                          console.error("Failed to register delivery order in delivery-service", err);
+                        }
+                      }
+                    }
 
                     toast.success('Đặt hàng thành công.');
                     const firstOrderId = result.orders[0]?.id;

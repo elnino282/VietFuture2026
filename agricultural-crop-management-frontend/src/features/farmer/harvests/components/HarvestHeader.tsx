@@ -8,12 +8,14 @@ interface HarvestHeaderProps {
     onAddBatch: () => void;
     addDisabled?: boolean;
     lockMessage?: string;
+    phiBadge?: React.ReactNode;
 }
 
 export function HarvestHeader({
     onAddBatch,
     addDisabled = false,
     lockMessage,
+    phiBadge,
 }: HarvestHeaderProps) {
     const { t } = useI18n();
     
@@ -26,15 +28,18 @@ export function HarvestHeader({
                     title={t('harvests.title')}
                     subtitle={t('harvests.subtitle')}
                     actions={
-                        <Button
-                            onClick={onAddBatch}
-                            variant="default"
-                            disabled={addDisabled}
-                            title={addDisabled ? lockMessage : undefined}
-                        >
-                            <Plus className="w-4 h-4 mr-2" />
-                            {t('harvests.createButton')}
-                        </Button>
+                        <div className="flex items-center gap-3">
+                            {phiBadge}
+                            <Button
+                                onClick={onAddBatch}
+                                variant="default"
+                                disabled={addDisabled}
+                                title={addDisabled ? lockMessage : undefined}
+                            >
+                                <Plus className="w-4 h-4 mr-2" />
+                                {t('harvests.createButton')}
+                            </Button>
+                        </div>
                     }
                 />
             </CardContent>
