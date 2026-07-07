@@ -5,7 +5,9 @@ WORKDIR /build
 COPY pom.xml ./
 COPY src src
 
-RUN mvn package -DskipTests -B
+RUN mkdir -p /root/.m2 && printf '<?xml version="1.0" encoding="UTF-8"?><settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"><mirrors><mirror><id>aliyun</id><name>aliyun</name><url>https://maven.aliyun.com/repository/public</url><mirrorOf>central</mirrorOf></mirror></mirrors></settings>' > /root/.m2/settings.xml
+
+ RUN mvn package -s /root/.m2/settings.xml -DskipTests -B
 
 FROM eclipse-temurin:23-jre-alpine AS runtime
 
