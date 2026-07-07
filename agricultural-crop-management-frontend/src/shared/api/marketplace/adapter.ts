@@ -80,6 +80,10 @@ export interface MarketplaceApiAdapter {
     productId: number,
   ): Promise<MarketplaceApiResponse<MarketplaceTraceability>>;
 
+  getPublicTraceability(
+    productIdOrSlug: string,
+  ): Promise<MarketplaceApiResponse<MarketplaceTraceability>>;
+
   getCart(): Promise<MarketplaceApiResponse<MarketplaceCart>>;
 
   addCartItem(

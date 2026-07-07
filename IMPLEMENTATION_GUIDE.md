@@ -1409,11 +1409,11 @@ export function PublicTracePage() {
 
 ### Checklist test Module 3.4
 
-- [ ] `GET /products/1/public-trace` → **200** (không cần auth token)
-- [ ] Response chứa `certification` và `phiSafety`
-- [ ] QR code generation → file PNG hợp lệ
-- [ ] Public Trace Page responsive trên mobile
-- [ ] Không có internal cost/notes/personal data trong response public
+- [x] `GET /products/1/public-trace` → **200** (không cần auth token)
+- [x] Response chứa `certification` và `phiSafety`
+- [x] QR code generation → file PNG hợp lệ
+- [x] Public Trace Page responsive trên mobile
+- [x] Không có internal cost/notes/personal data trong response public
 
 ---
 

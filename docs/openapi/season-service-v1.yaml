@@ -2613,6 +2613,73 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/TaskInternalDto"
+  /api/v1/internal/seasons/{seasonId}/phi/all:
+    get:
+      tags:
+      - internal-season-controller
+      operationId: getAllPHIInternal
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PesticideRecordInternalDto"
+  /api/v1/internal/seasons/{seasonId}/phi/active:
+    get:
+      tags:
+      - internal-season-controller
+      operationId: getActivePHIInternal
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PesticideRecordInternalDto"
+  /api/v1/internal/seasons/{seasonId}/logs/count:
+    get:
+      tags:
+      - internal-season-controller
+      operationId: countFieldLogsByTypeInternal
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: logType
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: integer
+                format: int64
   /api/v1/internal/seasons/{id}:
     get:
       tags:
@@ -2654,6 +2721,27 @@ paths:
                 items:
                   type: integer
                   format: int32
+  /api/v1/internal/plots/{plotId}/seasons:
+    get:
+      tags:
+      - internal-season-controller
+      operationId: getSeasonsByPlotId
+      parameters:
+      - name: plotId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SeasonSummaryDto"
   /api/v1/harvests:
     get:
       tags:
@@ -4792,6 +4880,28 @@ components:
           format: int64
         status:
           type: string
+    PesticideRecordInternalDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        seasonId:
+          type: integer
+          format: int32
+        pesticideName:
+          type: string
+        activeIngredient:
+          type: string
+        phiDays:
+          type: integer
+          format: int32
+        harvestAllowedDate:
+          type: string
+          format: date
+        applicationDate:
+          type: string
+          format: date
     SeasonInternalDto:
       type: object
       properties:

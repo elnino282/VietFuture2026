@@ -24,7 +24,13 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
             "/api/v1/internal/**",
             "/actuator/health",
-            "/actuator/prometheus"
+            "/actuator/prometheus",
+            "/api/v1/marketplace/products/*/public-trace",
+            "/api/v1/marketplace/products/*/qr-code",
+            "/api/v1/marketplace/products/{id}/traceability",
+            "/api/v1/marketplace/products/**",
+            "/api/v1/marketplace/farms/**",
+            "/api/v1/marketplace/product-images/**"
     };
 
     private final String[] SWAGGER_ENDPOINTS = {

@@ -18,14 +18,11 @@ public record MarketplaceTraceabilityResponse(
         HarvestTraceability harvest,
         ProductLotTraceability productLot,
         List<TimelineMilestone> timeline,
-        LocalDateTime validatedAt) {
+        LocalDateTime validatedAt,
+        CertificationInfo certification,
+        PHISafetyInfo phiSafety,
+        NutritionClaim nutritionClaim) {
 
-    /**
-     * Public-safe farm info. Never exposes internal costs, notes, or personal farmer data.
-     *
-     * @param certificationInfo TODO: Currently null — will be populated when the certification
-     *                          feature is properly scoped and a DB column is added to the farms table.
-     */
     public record FarmTraceability(
             Integer id,
             String name,
@@ -49,10 +46,6 @@ public record MarketplaceTraceabilityResponse(
             LocalDate harvestDate) {
     }
 
-    /**
-     * Harvest-lot level traceability. Uses {@code grade} for quality notes
-     * (never the internal {@code note} field which may contain sensitive data).
-     */
     public record HarvestTraceability(
             Integer id,
             LocalDate harvestDate,
@@ -72,13 +65,39 @@ public record MarketplaceTraceabilityResponse(
             String storageLocation) {
     }
 
-    /**
-     * A single milestone in the product lifecycle timeline.
-     * Sorted chronologically for easy frontend rendering.
-     */
     public record TimelineMilestone(
             String milestone,
             LocalDateTime date,
             String description) {
     }
+
+    public record CertificationInfo(
+            String certificationName,   // "VietGAP Trồng trọt 2024"
+            String certificationType,   // "VIETGAP_PLANTING"
+            String status,              // "ACTIVE", "PENDING", "EXPIRED"
+            LocalDate issuedDate,
+            LocalDate expiryDate,
+            BigDecimal complianceScore  // % compliance khi apply
+    ) {}
+
+    public record PHISafetyInfo(
+            boolean isSafe,             // true nếu không có vi phạm PHI
+            int totalPesticidesUsed,
+            int safePesticides,         // đã hết cách ly
+            int cautionPesticides,      // sắp hết cách ly (≤3 ngày)
+            List<PesticideUsageItem> usage
+    ) {
+        public record PesticideUsageItem(
+                String pesticideName,
+                LocalDate applicationDate,
+                LocalDate harvestAllowedDate,
+                String status  // SAFE, CAUTION, BLOCKED
+        ) {}
+    }
+
+    public record NutritionClaim(
+            String soilOrganicMatter,
+            String soilPH,
+            String nitrogenLevel
+    ) {}
 }

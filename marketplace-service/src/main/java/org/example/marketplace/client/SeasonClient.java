@@ -19,4 +19,7 @@ public interface SeasonClient {
 
     @GetMapping("/api/v1/internal/seasons/owner/{ownerId}/ids")
     List<Integer> getSeasonIdsByOwnerId(@PathVariable("ownerId") Long ownerId);
+
+    @GetMapping("/api/v1/internal/seasons/{seasonId}/phi/all")
+    List<org.example.marketplace.dto.client.PesticideRecordDto> getSeasonPesticideRecords(@PathVariable("seasonId") Integer seasonId);
 }

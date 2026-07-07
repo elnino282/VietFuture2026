@@ -19,4 +19,7 @@ public interface FarmClient {
     
     @GetMapping("/api/v1/internal/users/{userId}/farms/ids")
     List<Integer> getFarmIdsByUserId(@PathVariable("userId") Long userId);
+
+    @GetMapping("/api/v1/internal/farms/{farmId}/certification")
+    org.example.marketplace.dto.client.FarmCertificationDto getFarmCertification(@PathVariable("farmId") Integer farmId);
 }

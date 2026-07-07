@@ -4,17 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.farm.dto.request.UpdateCertificationItemRequest;
 import org.example.farm.dto.response.CertificationDetailsResponse;
-import org.example.farm.entity.CertificationChecklistItem;
-import org.example.farm.entity.CertificationItemStatus;
-import org.example.farm.entity.CertificationRecord;
-import org.example.farm.entity.CertificationStandard;
+import org.example.farm.dto.response.CertificationDetailsResponse.CertificationItemDetail;
+import org.example.farm.entity.*;
 import org.example.farm.exception.AppException;
 import org.example.farm.exception.ErrorCode;
-import org.example.farm.repository.CertificationChecklistItemRepository;
-import org.example.farm.repository.CertificationItemStatusRepository;
-import org.example.farm.repository.CertificationRecordRepository;
-import org.example.farm.repository.CertificationStandardRepository;
-import org.example.farm.repository.FarmRepository;
+import org.example.farm.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +16,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 @Transactional
+@Slf4j
 public class CertificationService {
 
     private final CertificationStandardRepository standardRepository;
@@ -36,155 +31,25 @@ public class CertificationService {
     private final CertificationScoringService scoringService;
     private final FarmRepository farmRepository;
 
-    private static final BigDecimal ELIGIBILITY_THRESHOLD = new BigDecimal("80.00");
-
-    /**
-     * Lấy hoặc khởi tạo certification record cho farm + standard.
-     * Nếu chưa có record → tự động tạo record + item statuses.
-     */
-    public CertificationDetailsResponse getOrInitCertification(Integer farmId, String standardCode, Long userId) {
+    public CertificationRecord getOrCreateRecord(Integer farmId) {
+        // Kiểm tra farm có tồn tại không
         farmRepository.findById(farmId)
                 .orElseThrow(() -> new AppException(ErrorCode.FARM_NOT_FOUND));
 
-        CertificationStandard standard = standardRepository.findByCode(standardCode)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
+        CertificationStandard standard = standardRepository.findByCode("VIETGAP-PLANTING-2024")
+                .orElseThrow(() -> new AppException(ErrorCode.BAD_REQUEST));
 
-        CertificationRecord record = recordRepository.findByFarmIdAndStandardId(farmId, standard.getId())
-                .orElseGet(() -> initCertificationRecord(farmId, standard));
-
-        List<CertificationChecklistItem> items = checklistItemRepository.findByStandardId(standard.getId());
-        List<CertificationItemStatus> statuses = itemStatusRepository.findByRecordId(record.getId());
-
-        return buildResponse(record, standard, items, statuses);
-    }
-
-    /**
-     * Auto-fill checklist items từ dữ liệu hệ thống (soil tests, water tests, field logs, PHI).
-     */
-    public CertificationDetailsResponse autoPopulate(Integer farmId, String standardCode, Long userId) {
-        farmRepository.findById(farmId)
-                .orElseThrow(() -> new AppException(ErrorCode.FARM_NOT_FOUND));
-
-        CertificationStandard standard = standardRepository.findByCode(standardCode)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
-
-        CertificationRecord record = recordRepository.findByFarmIdAndStandardId(farmId, standard.getId())
-                .orElseGet(() -> initCertificationRecord(farmId, standard));
-
-        List<CertificationChecklistItem> items = checklistItemRepository.findByStandardId(standard.getId());
-        List<CertificationItemStatus> statuses = itemStatusRepository.findByRecordId(record.getId());
-
-        // Auto-populate từ field logs, soil tests, water tests, PHI check
-        scoringService.autoPopulateFromFieldLogs(farmId, statuses, items);
-
-        // Save updated statuses
-        itemStatusRepository.saveAll(statuses);
-
-        // Recalculate score
-        BigDecimal score = scoringService.calculateScore(statuses, items);
-        record.setComplianceScore(score);
-
-        // Update status nếu đủ điều kiện
-        if (score.compareTo(ELIGIBILITY_THRESHOLD) >= 0 && "IN_PROGRESS".equals(record.getStatus())) {
-            record.setStatus("READY_TO_APPLY");
+        Optional<CertificationRecord> recordOpt = recordRepository.findByFarmIdAndStandardId(farmId, standard.getId());
+        if (recordOpt.isPresent()) {
+            return recordOpt.get();
         }
 
-        recordRepository.save(record);
-
-        return buildResponse(record, standard, items, statuses);
-    }
-
-    /**
-     * Cập nhật manual override cho một checklist item.
-     */
-    public CertificationDetailsResponse updateItemStatus(
-            Integer farmId, String standardCode, Integer itemId,
-            UpdateCertificationItemRequest request, Long userId) {
-
-        farmRepository.findById(farmId)
-                .orElseThrow(() -> new AppException(ErrorCode.FARM_NOT_FOUND));
-
-        CertificationStandard standard = standardRepository.findByCode(standardCode)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
-
-        CertificationRecord record = recordRepository.findByFarmIdAndStandardId(farmId, standard.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
-
-        CertificationItemStatus itemStatus = itemStatusRepository
-                .findByRecordIdAndChecklistItemId(record.getId(), itemId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
-
-        // Update fields
-        if (request.getStatus() != null) {
-            itemStatus.setStatus(request.getStatus());
-        }
-        if (request.getEvidenceUrl() != null) {
-            itemStatus.setEvidenceUrl(request.getEvidenceUrl());
-        }
-        if (request.getNotes() != null) {
-            itemStatus.setNotes(request.getNotes());
-        }
-        itemStatus.setCheckedAt(LocalDateTime.now());
-        itemStatus.setCheckedBy(userId);
-
-        itemStatusRepository.save(itemStatus);
-
-        // Recalculate score
-        List<CertificationChecklistItem> items = checklistItemRepository.findByStandardId(standard.getId());
-        List<CertificationItemStatus> statuses = itemStatusRepository.findByRecordId(record.getId());
-        BigDecimal score = scoringService.calculateScore(statuses, items);
-        record.setComplianceScore(score);
-
-        if (score.compareTo(ELIGIBILITY_THRESHOLD) >= 0 && "IN_PROGRESS".equals(record.getStatus())) {
-            record.setStatus("READY_TO_APPLY");
-        } else if (score.compareTo(ELIGIBILITY_THRESHOLD) < 0 && "READY_TO_APPLY".equals(record.getStatus())) {
-            record.setStatus("IN_PROGRESS");
-        }
-
-        recordRepository.save(record);
-
-        return buildResponse(record, standard, items, statuses);
-    }
-
-    /**
-     * Nộp đơn xin chứng nhận — chỉ cho phép khi score ≥ 80%.
-     */
-    public CertificationDetailsResponse applyCertification(Integer farmId, String standardCode, Long userId) {
-        farmRepository.findById(farmId)
-                .orElseThrow(() -> new AppException(ErrorCode.FARM_NOT_FOUND));
-
-        CertificationStandard standard = standardRepository.findByCode(standardCode)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
-
-        CertificationRecord record = recordRepository.findByFarmIdAndStandardId(farmId, standard.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
-
-        List<CertificationChecklistItem> items = checklistItemRepository.findByStandardId(standard.getId());
-        List<CertificationItemStatus> statuses = itemStatusRepository.findByRecordId(record.getId());
-        BigDecimal score = scoringService.calculateScore(statuses, items);
-
-        if (score.compareTo(ELIGIBILITY_THRESHOLD) < 0) {
-            throw new IllegalArgumentException(
-                    "Compliance score (" + score + "%) chưa đạt ngưỡng 80%. " +
-                    "Vui lòng hoàn thành thêm các tiêu chí VietGAP.");
-        }
-
-        record.setStatus("APPLIED");
-        record.setAppliedAt(LocalDateTime.now());
-        record.setComplianceScore(score);
-        recordRepository.save(record);
-
-        return buildResponse(record, standard, items, statuses);
-    }
-
-    // ─── Helpers ───
-
-    private CertificationRecord initCertificationRecord(Integer farmId, CertificationStandard standard) {
+        // Tạo bản ghi chứng nhận mới
         CertificationRecord record = CertificationRecord.builder()
                 .farmId(farmId)
                 .standardId(standard.getId())
-                .status("IN_PROGRESS")
                 .complianceScore(BigDecimal.ZERO)
+                .status("IN_PROGRESS")
                 .build();
         record = recordRepository.save(record);
 
@@ -192,60 +57,124 @@ public class CertificationService {
         List<CertificationChecklistItem> items = checklistItemRepository.findByStandardId(standard.getId());
         List<CertificationItemStatus> statuses = new ArrayList<>();
         for (CertificationChecklistItem item : items) {
-            statuses.add(CertificationItemStatus.builder()
+            CertificationItemStatus status = CertificationItemStatus.builder()
                     .recordId(record.getId())
                     .checklistItemId(item.getId())
                     .status("PENDING")
-                    .build());
+                    .build();
+            statuses.add(status);
         }
         itemStatusRepository.saveAll(statuses);
+
         return record;
     }
 
-    private CertificationDetailsResponse buildResponse(
-            CertificationRecord record,
-            CertificationStandard standard,
-            List<CertificationChecklistItem> items,
-            List<CertificationItemStatus> statuses) {
+    public CertificationDetailsResponse getCertificationDetails(Integer farmId) {
+        CertificationRecord record = getOrCreateRecord(farmId);
+        List<CertificationItemStatus> statuses = itemStatusRepository.findByRecordId(record.getId());
+        List<CertificationChecklistItem> items = checklistItemRepository.findByStandardId(record.getStandardId());
 
-        List<CertificationDetailsResponse.CertificationItemDetail> itemDetails = items.stream()
-                .map(item -> {
-                    CertificationItemStatus status = statuses.stream()
-                            .filter(s -> s.getChecklistItemId().equals(item.getId()))
-                            .findFirst().orElse(null);
+        // Tự động điền (auto-populate) từ logs, tests, PHI check
+        scoringService.autoPopulateFromFieldLogs(farmId, statuses, items);
+        itemStatusRepository.saveAll(statuses);
 
-                    return CertificationDetailsResponse.CertificationItemDetail.builder()
-                            .id(item.getId())
-                            .itemCode(item.getItemCode())
-                            .category(item.getCategory())
-                            .description(item.getDescription())
-                            .isMandatory(item.getIsMandatory())
-                            .weightPct(item.getWeightPct())
-                            .dataSourceType(item.getDataSourceType())
-                            .dataSourceQuery(item.getDataSourceQuery())
-                            .status(status != null ? status.getStatus() : "PENDING")
-                            .evidenceUrl(status != null ? status.getEvidenceUrl() : null)
-                            .notes(status != null ? status.getNotes() : null)
-                            .checkedAt(status != null ? status.getCheckedAt() : null)
-                            .build();
-                })
-                .toList();
+        // Tính toán lại compliance score
+        BigDecimal score = scoringService.calculateScore(statuses, items);
+        record.setComplianceScore(score);
 
-        BigDecimal score = record.getComplianceScore() != null ? record.getComplianceScore() : BigDecimal.ZERO;
+        // Cập nhật trạng thái tự động dựa trên score
+        if (score.compareTo(BigDecimal.valueOf(80)) >= 0 && "IN_PROGRESS".equals(record.getStatus())) {
+            record.setStatus("READY_TO_APPLY");
+        } else if (score.compareTo(BigDecimal.valueOf(80)) < 0 && "READY_TO_APPLY".equals(record.getStatus())) {
+            record.setStatus("IN_PROGRESS");
+        }
+        recordRepository.save(record);
+
+        CertificationStandard standard = standardRepository.findById(record.getStandardId()).orElse(null);
+
+        List<CertificationItemDetail> itemDetails = new ArrayList<>();
+        for (CertificationChecklistItem item : items) {
+            CertificationItemStatus status = statuses.stream()
+                    .filter(s -> s.getChecklistItemId().equals(item.getId()))
+                    .findFirst().orElse(null);
+
+            itemDetails.add(CertificationItemDetail.builder()
+                    .id(item.getId())
+                    .itemCode(item.getItemCode())
+                    .category(item.getCategory())
+                    .description(item.getDescription())
+                    .isMandatory(item.getIsMandatory())
+                    .weightPct(item.getWeightPct())
+                    .dataSourceType(item.getDataSourceType())
+                    .dataSourceQuery(item.getDataSourceQuery())
+                    .status(status != null ? status.getStatus() : "PENDING")
+                    .evidenceUrl(status != null ? status.getEvidenceUrl() : null)
+                    .notes(status != null ? status.getNotes() : null)
+                    .checkedAt(status != null ? status.getCheckedAt() : null)
+                    .build());
+        }
 
         return CertificationDetailsResponse.builder()
                 .recordId(record.getId())
                 .farmId(record.getFarmId())
-                .standardCode(standard.getCode())
-                .standardName(standard.getName())
-                .complianceScore(score)
+                .standardCode(standard != null ? standard.getCode() : "")
+                .standardName(standard != null ? standard.getName() : "")
+                .complianceScore(record.getComplianceScore())
                 .status(record.getStatus())
                 .appliedAt(record.getAppliedAt())
                 .certifiedAt(record.getCertifiedAt())
                 .expiryDate(record.getExpiryDate())
                 .auditorNotes(record.getAuditorNotes())
                 .items(itemDetails)
-                .isEligible(score.compareTo(ELIGIBILITY_THRESHOLD) >= 0)
+                .isEligible(record.getComplianceScore().compareTo(BigDecimal.valueOf(80)) >= 0)
                 .build();
+    }
+
+    public void updateItemStatus(Integer farmId, Integer itemId, UpdateCertificationItemRequest req) {
+        CertificationRecord record = getOrCreateRecord(farmId);
+        CertificationItemStatus status = itemStatusRepository.findByRecordIdAndChecklistItemId(record.getId(), itemId)
+                .orElseThrow(() -> new AppException(ErrorCode.BAD_REQUEST));
+
+        if (req.getStatus() != null) {
+            status.setStatus(req.getStatus().toUpperCase());
+        }
+        if (req.getEvidenceUrl() != null) {
+            status.setEvidenceUrl(req.getEvidenceUrl());
+        }
+        if (req.getNotes() != null) {
+            status.setNotes(req.getNotes());
+        }
+        status.setCheckedAt(LocalDateTime.now());
+        itemStatusRepository.save(status);
+
+        // Tính toán lại điểm số
+        List<CertificationItemStatus> statuses = itemStatusRepository.findByRecordId(record.getId());
+        List<CertificationChecklistItem> items = checklistItemRepository.findByStandardId(record.getStandardId());
+        BigDecimal score = scoringService.calculateScore(statuses, items);
+        record.setComplianceScore(score);
+
+        if (score.compareTo(BigDecimal.valueOf(80)) >= 0 && "IN_PROGRESS".equals(record.getStatus())) {
+            record.setStatus("READY_TO_APPLY");
+        } else if (score.compareTo(BigDecimal.valueOf(80)) < 0 && "READY_TO_APPLY".equals(record.getStatus())) {
+            record.setStatus("IN_PROGRESS");
+        }
+        recordRepository.save(record);
+    }
+
+    public void apply(Integer farmId) {
+        CertificationRecord record = getOrCreateRecord(farmId);
+
+        // Lấy score hiện tại
+        List<CertificationItemStatus> statuses = itemStatusRepository.findByRecordId(record.getId());
+        List<CertificationChecklistItem> items = checklistItemRepository.findByStandardId(record.getStandardId());
+        BigDecimal score = scoringService.calculateScore(statuses, items);
+
+        if (score.compareTo(BigDecimal.valueOf(80)) < 0) {
+            throw new IllegalArgumentException("Không đủ điều kiện: Điểm VietGAP phải đạt ít nhất 80%.");
+        }
+
+        record.setStatus("APPLIED");
+        record.setAppliedAt(LocalDateTime.now());
+        recordRepository.save(record);
     }
 }

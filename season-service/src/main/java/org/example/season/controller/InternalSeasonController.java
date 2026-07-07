@@ -129,6 +129,24 @@ public class InternalSeasonController {
         return ResponseEntity.ok(dtos);
     }
 
+    @GetMapping("/seasons/{seasonId}/phi/all")
+    public ResponseEntity<List<PesticideRecordInternalDto>> getAllPHIInternal(@PathVariable Integer seasonId) {
+        List<PesticideRecord> records = pesticideRecordRepository.findBySeasonId(seasonId);
+        List<PesticideRecordInternalDto> dtos = records.stream()
+                .map(r -> PesticideRecordInternalDto.builder()
+                        .id(r.getId())
+                        .seasonId(r.getSeasonId())
+                        .pesticideName(r.getPesticideName())
+                        .activeIngredient(r.getActiveIngredient())
+                        .phiDays(r.getPhiDays())
+                        .harvestAllowedDate(r.getHarvestAllowedDate() != null ? r.getHarvestAllowedDate() : (r.getApplicationDate() != null ? r.getApplicationDate().plusDays(r.getPhiDays()) : null))
+                        .applicationDate(r.getApplicationDate())
+                        .build())
+                .toList();
+        return ResponseEntity.ok(dtos);
+    }
+
+
     @GetMapping("/seasons/{seasonId}/logs/count")
     public ResponseEntity<Long> countFieldLogsByTypeInternal(
             @PathVariable Integer seasonId,

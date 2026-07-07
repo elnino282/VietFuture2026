@@ -305,7 +305,7 @@ export default function FarmDocumentsPage() {
     if (!dateStr) return "N/A";
     try {
       const date = new Date(dateStr);
-      return date.toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US", {
+      return date.toLocaleDateString(locale === "vi-VN" ? "vi-VN" : "en-US", {
         year: "numeric",
         month: "long",
         day: "numeric"
@@ -365,9 +365,9 @@ export default function FarmDocumentsPage() {
               <PageHeader
                 className="mb-0 p-0"
                 icon={<FileText className="w-9 h-9 text-emerald-700" />}
-                title={locale === "vi" ? "Quản lý Tài liệu VietGAP" : "VietGAP Farm Documents"}
+                title={locale === "vi-VN" ? "Quản lý Tài liệu VietGAP" : "VietGAP Farm Documents"}
                 subtitle={
-                  locale === "vi"
+                  locale === "vi-VN"
                     ? "Lưu trữ và theo dõi hồ sơ pháp lý, báo cáo phân tích phục vụ chứng nhận VietGAP"
                     : "Manage and audit certifications, soil/water reports, and harvest logs for VietGAP"
                 }
@@ -387,7 +387,7 @@ export default function FarmDocumentsPage() {
                   <SelectContent className="rounded-xl border border-slate-100 shadow-md">
                     {farms.map((f) => (
                       <SelectItem key={f.id} value={f.id.toString()} className="font-medium text-slate-700">
-                        {f.name}
+                        {f.farmName}
                       </SelectItem>
                     ))}
                   </SelectContent>

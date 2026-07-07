@@ -137,6 +137,37 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseString"
+  /api/v1/farms/{farmId}/certification/items/{itemId}:
+    put:
+      tags:
+      - certification-controller
+      operationId: updateItemStatus
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCertificationItemRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseString"
   /api/v1/plots:
     get:
       tags:
@@ -415,6 +446,25 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseString"
+  /api/v1/farms/{farmId}/certification/apply:
+    post:
+      tags:
+      - certification-controller
+      operationId: applyCertification
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseString"
   /api/v1/locations/wards:
     get:
       tags:
@@ -510,6 +560,25 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/FarmDetailDto"
+  /api/v1/internal/farms/{farmId}/certification:
+    get:
+      tags:
+      - internal-farm-controller
+      operationId: getFarmCertification
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CertificationInfoDto"
   /api/v1/farms/{farmId}/documents/expiring:
     get:
       tags:
@@ -529,6 +598,25 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListFarmDocumentResponse"
+  /api/v1/farms/{farmId}/certification:
+    get:
+      tags:
+      - certification-controller
+      operationId: getCertificationDetails
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCertificationDetailsResponse"
   /api/v1/addresses/wards/{id}:
     get:
       tags:
@@ -725,22 +813,22 @@ components:
         area:
           type: number
           format: double
-        minX:
+        height:
           type: number
           format: double
-        minY:
+        diameter:
           type: number
           format: double
         maxX:
           type: number
           format: double
+        minX:
+          type: number
+          format: double
         maxY:
           type: number
           format: double
-        height:
-          type: number
-          format: double
-        diameter:
+        minY:
           type: number
           format: double
     Geometry:
@@ -759,27 +847,21 @@ components:
           type: boolean
         valid:
           type: boolean
-        geometryType:
-          type: string
         simple:
           type: boolean
-        area:
-          type: number
-          format: double
-        numGeometries:
-          type: integer
-          format: int32
+        precisionModel:
+          $ref: "#/components/schemas/PrecisionModel"
         dimension:
           type: integer
           format: int32
-        rectangle:
-          type: boolean
+        numGeometries:
+          type: integer
+          format: int32
+        numPoints:
+          type: integer
+          format: int32
         boundary:
           $ref: "#/components/schemas/Geometry"
-        precisionModel:
-          $ref: "#/components/schemas/PrecisionModel"
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
         interiorPoint:
           $ref: "#/components/schemas/Point"
         centroid:
@@ -788,15 +870,21 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Coordinate"
-        numPoints:
-          type: integer
-          format: int32
-        srid:
-          type: integer
-          format: int32
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
+        rectangle:
+          type: boolean
+        area:
+          type: number
+          format: double
         envelopeInternal:
           $ref: "#/components/schemas/Envelope"
         boundaryDimension:
+          type: integer
+          format: int32
+        geometryType:
+          type: string
+        srid:
           type: integer
           format: int32
     GeometryFactory:
@@ -820,11 +908,11 @@ components:
           type: object
         closed:
           type: boolean
-        geometryType:
-          type: string
         boundaryDimension:
           type: integer
           format: int32
+        geometryType:
+          type: string
         length:
           type: number
           format: double
@@ -833,48 +921,48 @@ components:
         dimension:
           type: integer
           format: int32
+        endPoint:
+          $ref: "#/components/schemas/Point"
+        numPoints:
+          type: integer
+          format: int32
         boundary:
           $ref: "#/components/schemas/Geometry"
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
-        endPoint:
+        startPoint:
           $ref: "#/components/schemas/Point"
         coordinates:
           type: array
           items:
             $ref: "#/components/schemas/Coordinate"
-        startPoint:
-          $ref: "#/components/schemas/Point"
-        numPoints:
-          type: integer
-          format: int32
-        ring:
-          type: boolean
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
         coordinateSequence:
           $ref: "#/components/schemas/CoordinateSequence"
+        ring:
+          type: boolean
         valid:
           type: boolean
         simple:
           type: boolean
-        area:
-          type: number
-          format: double
+        precisionModel:
+          $ref: "#/components/schemas/PrecisionModel"
         numGeometries:
           type: integer
           format: int32
-        rectangle:
-          type: boolean
-        precisionModel:
-          $ref: "#/components/schemas/PrecisionModel"
         interiorPoint:
           $ref: "#/components/schemas/Point"
         centroid:
           $ref: "#/components/schemas/Point"
+        rectangle:
+          type: boolean
+        area:
+          type: number
+          format: double
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
         srid:
           type: integer
           format: int32
-        envelopeInternal:
-          $ref: "#/components/schemas/Envelope"
     PlotRequest:
       type: object
       properties:
@@ -923,55 +1011,55 @@ components:
             $ref: "#/components/schemas/Coordinate"
         empty:
           type: boolean
+        simple:
+          type: boolean
         "y":
           type: number
           format: double
         x:
           type: number
           format: double
-        geometryType:
-          type: string
-        simple:
-          type: boolean
         dimension:
+          type: integer
+          format: int32
+        numPoints:
           type: integer
           format: int32
         boundary:
           $ref: "#/components/schemas/Geometry"
         coordinate:
           $ref: "#/components/schemas/Coordinate"
-        numPoints:
-          type: integer
-          format: int32
         coordinateSequence:
           $ref: "#/components/schemas/CoordinateSequence"
         boundaryDimension:
           type: integer
           format: int32
+        geometryType:
+          type: string
         length:
           type: number
           format: double
         valid:
           type: boolean
-        area:
-          type: number
-          format: double
+        precisionModel:
+          $ref: "#/components/schemas/PrecisionModel"
         numGeometries:
           type: integer
           format: int32
-        rectangle:
-          type: boolean
-        precisionModel:
-          $ref: "#/components/schemas/PrecisionModel"
         interiorPoint:
           $ref: "#/components/schemas/Point"
         centroid:
           $ref: "#/components/schemas/Point"
+        rectangle:
+          type: boolean
+        area:
+          type: number
+          format: double
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
         srid:
           type: integer
           format: int32
-        envelopeInternal:
-          $ref: "#/components/schemas/Envelope"
     Polygon:
       type: object
       properties:
@@ -986,53 +1074,53 @@ components:
           format: double
         empty:
           type: boolean
-        geometryType:
-          type: string
-        area:
-          type: number
-          format: double
-        exteriorRing:
-          $ref: "#/components/schemas/LinearRing"
         dimension:
           type: integer
           format: int32
+        exteriorRing:
+          $ref: "#/components/schemas/LinearRing"
         numInteriorRing:
           type: integer
           format: int32
-        rectangle:
-          type: boolean
+        numPoints:
+          type: integer
+          format: int32
         boundary:
           $ref: "#/components/schemas/Geometry"
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
         coordinates:
           type: array
           items:
             $ref: "#/components/schemas/Coordinate"
-        numPoints:
-          type: integer
-          format: int32
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
+        rectangle:
+          type: boolean
+        area:
+          type: number
+          format: double
         boundaryDimension:
           type: integer
           format: int32
+        geometryType:
+          type: string
         valid:
           type: boolean
         simple:
           type: boolean
+        precisionModel:
+          $ref: "#/components/schemas/PrecisionModel"
         numGeometries:
           type: integer
           format: int32
-        precisionModel:
-          $ref: "#/components/schemas/PrecisionModel"
         interiorPoint:
           $ref: "#/components/schemas/Point"
         centroid:
           $ref: "#/components/schemas/Point"
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
         srid:
           type: integer
           format: int32
-        envelopeInternal:
-          $ref: "#/components/schemas/Envelope"
     PrecisionModel:
       type: object
       properties:
@@ -1175,6 +1263,31 @@ components:
           type: number
         active:
           type: boolean
+    UpdateCertificationItemRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        evidenceUrl:
+          type: string
+        notes:
+          type: string
+    ApiResponseString:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: string
+        data:
+          type: string
+        generatedAt:
+          type: string
     PlotGeoJsonDto:
       type: object
       properties:
@@ -1325,22 +1438,6 @@ components:
         updatedAt:
           type: string
           format: date-time
-    ApiResponseString:
-      type: object
-      properties:
-        status:
-          type: integer
-          format: int32
-        code:
-          type: string
-        message:
-          type: string
-        result:
-          type: string
-        data:
-          type: string
-        generatedAt:
-          type: string
     ApiResponseListPlotResponse:
       type: object
       properties:
@@ -1416,6 +1513,23 @@ components:
         userId:
           type: integer
           format: int64
+    CertificationInfoDto:
+      type: object
+      properties:
+        certificationName:
+          type: string
+        certificationType:
+          type: string
+        status:
+          type: string
+        issuedDate:
+          type: string
+          format: date
+        expiryDate:
+          type: string
+          format: date
+        complianceScore:
+          type: number
     ApiResponseObject:
       type: object
       properties:
@@ -1452,6 +1566,85 @@ components:
             $ref: "#/components/schemas/FarmDocumentResponse"
         generatedAt:
           type: string
+    ApiResponseCertificationDetailsResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/CertificationDetailsResponse"
+        data:
+          $ref: "#/components/schemas/CertificationDetailsResponse"
+        generatedAt:
+          type: string
+    CertificationDetailsResponse:
+      type: object
+      properties:
+        recordId:
+          type: integer
+          format: int32
+        farmId:
+          type: integer
+          format: int32
+        standardCode:
+          type: string
+        standardName:
+          type: string
+        complianceScore:
+          type: number
+        status:
+          type: string
+        appliedAt:
+          type: string
+          format: date-time
+        certifiedAt:
+          type: string
+          format: date-time
+        expiryDate:
+          type: string
+          format: date
+        auditorNotes:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertificationItemDetail"
+        isEligible:
+          type: boolean
+    CertificationItemDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        itemCode:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        isMandatory:
+          type: boolean
+        weightPct:
+          type: number
+        dataSourceType:
+          type: string
+        dataSourceQuery:
+          type: string
+        status:
+          type: string
+        evidenceUrl:
+          type: string
+        notes:
+          type: string
+        checkedAt:
+          type: string
+          format: date-time
     ApiResponseWardResponse:
       type: object
       properties:

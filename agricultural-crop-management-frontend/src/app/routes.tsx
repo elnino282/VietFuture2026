@@ -61,6 +61,9 @@ const MarketplacePublicLayout = lazy(() =>
 const MarketHomePage = lazy(() =>
   import('@/pages/marketplace').then((m) => ({ default: m.MarketHomePage }))
 );
+const PublicTracePage = lazy(() =>
+  import('@/pages/public/PublicTracePage').then((m) => ({ default: m.PublicTracePage }))
+);
 const MarketplaceProductListPage = lazy(() =>
   import('@/pages/marketplace').then((m) => ({ default: m.ProductListPage }))
 );
@@ -169,6 +172,9 @@ const NotificationsPage = lazy(() =>
 );
 const FarmerSearchPage = lazy(() =>
   import('@/pages/farmer/FarmerSearchPage').then((m) => ({ default: m.FarmerSearchPage }))
+);
+const CertificationPage = lazy(() =>
+  import('@/pages/farmer/CertificationPage').then((m) => ({ default: m.default }))
 );
 
 // Farmer season workspace
@@ -382,6 +388,7 @@ export function AppRoutes() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/signin" element={<Navigate to="/sign-in" replace />} />
         <Route path="/signup" element={<Navigate to="/sign-up" replace />} />
+        <Route path="/trace/:slug" element={<PublicTracePage />} />
         <Route
           path="/chat"
           element={(
@@ -478,6 +485,7 @@ export function AppRoutes() {
           <Route path="farms">
             <Route index element={<FarmsListPage />} />
             <Route path=":id" element={<FarmDetailPage />} />
+            <Route path=":farmId/certification" element={<CertificationPage />} />
           </Route>
 
           {/* Season Workspace */}

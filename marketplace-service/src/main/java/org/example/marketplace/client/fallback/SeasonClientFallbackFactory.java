@@ -37,6 +37,12 @@ public class SeasonClientFallbackFactory implements FallbackFactory<SeasonClient
                 log.error("season-service lỗi khi lấy season IDs cho ownerId={}: {}", ownerId, cause.toString());
                 return Collections.emptyList();
             }
+
+            @Override
+            public List<org.example.marketplace.dto.client.PesticideRecordDto> getSeasonPesticideRecords(Integer seasonId) {
+                log.error("season-service lỗi khi lấy PesticideRecords cho seasonId={}: {}", seasonId, cause.toString());
+                return Collections.emptyList();
+            }
         };
     }
 }
