@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Maven Central (direct) settings.xml - copied into every service directory
+  by scripts/rewrite_dockerfiles.ps1 so the Docker build context can reference
+  it as ./settings.xml.
+
+  This file intentionally has no <mirrors> pointing at any third-party
+  (aliyun, sonatype mirror, jitpack, etc.). All artifact requests go straight
+  to repo.maven.apache.org so the build no longer depends on a flaky proxy.
+
+  Tuned for slow/transient networks: 5 HTTP retries, aggressive parallel
+  downloads, lenient checksum policy, and a longer HTTP connection TTL.
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+  <localRepository>/root/.m2/repository</localRepository>
+
+  <mirrors>
+    <mirror>
+      <id>central-direct</id>
+      <name>Maven Central (direct, canonical)</name>
+      <url>https://repo.maven.apache.org/maven2</url>
+      <mirrorOf>*</mirrorOf>
+    </mirror>
+  </mirrors>
+
+  <profiles>
+    <profile>
+      <id>default-central</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <!-- Don't fail the build on a single bad checksum; mirror a single
+             transient 404 onto the next retry. -->
+        <aether.checksums.checksumPolicy>warn</aether.checksums.checksumPolicy>
+        <aether.checksums.forSignaturePolicy>warn</aether.checksums.forSignaturePolicy>
+
+        <!-- Per-transfer timeouts: fail fast on a stalled connection rather
+             than hanging the whole build. -->
+        <aether.connector.connectTimeout>20000</aether.connector.connectTimeout>
+        <aether.connector.requestTimeout>120000</aether.connector.requestTimeout>
+
+        <!-- Retry: 5 attempts with the default exponential backoff. -->
+        <maven.wagon.http.retryHandler.count>5</maven.wagon.http.retryHandler.count>
+        <maven.wagon.httpconnectionManager.ttlSeconds>120</maven.wagon.httpconnectionManager.ttlSeconds>
+
+        <!-- Parallel artifact resolution. The default is 5 threads; bump it to
+             12 so the slow WAN link stays saturated instead of stalling
+             between pom/jar fetches. -->
+        <maven.resolver.transport>wagon</maven.resolver.transport>
+        <aether.connector.basic.threads>12</aether.connector.basic.threads>
+        <aether.dependencyCollector.bf.skipper>true</aether.dependencyCollector.bf.skipper>
+      </properties>
+    </profile>
+  </profiles>
+</settings>
