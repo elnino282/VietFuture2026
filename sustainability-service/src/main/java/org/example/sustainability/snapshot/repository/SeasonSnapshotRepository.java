@@ -49,7 +49,7 @@ public interface SeasonSnapshotRepository extends JpaRepository<SeasonSnapshot, 
             ) latest ON ss.season_id = latest.season_id AND ss.snapshot_at = latest.max_at
             WHERE ss.status = 'ACTIVE'
             AND ss.farm_id IN (
-                SELECT farm_id FROM farm_snapshots fs
+                SELECT fs.farm_id FROM farm_snapshots fs
                 INNER JOIN (
                     SELECT farm_id, MAX(snapshot_at) AS max_at FROM farm_snapshots WHERE user_id = :userId GROUP BY farm_id
                 ) f ON fs.farm_id = f.farm_id AND fs.snapshot_at = f.max_at

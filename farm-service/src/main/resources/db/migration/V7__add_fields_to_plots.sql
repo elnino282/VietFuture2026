@@ -1,0 +1,3 @@
+ALTER TABLE plots
+ADD COLUMN parent_plot_id INT NULL,
+ADD COLUMN polygon GEOMETRY NULL;
