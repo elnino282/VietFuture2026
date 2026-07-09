@@ -167,6 +167,10 @@ services:
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
+      MINIO_URL: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_PUBLIC_URL: http://localhost:9000
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}

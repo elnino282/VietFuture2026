@@ -96,19 +96,24 @@ public class PesticideRecordService {
                 .orElseThrow(() -> new AppException(ErrorCode.FIELD_LOG_NOT_FOUND));
 
         // Parse thuốc từ notes hoặc dedicated field
-        String pesticideName = extractPesticideName(log.getNotes());
+        final String pesticideName = extractPesticideName(log.getNotes());
 
         // Lookup PHI từ reference table
-        Integer phiDays = pesticidePhiReferenceRepo
-                .findByPesticideNameContainingIgnoreCase(pesticideName)
-                .map(PesticidePHIReference::getPhiDays)
-                .orElseGet(() -> {
-                    return pesticidePhiReferenceRepo.findByActiveIngredientContainingIgnoreCase(pesticideName)
-                            .map(PesticidePHIReference::getPhiDays)
-                            .orElseThrow(() -> new IllegalArgumentException(
-                                    "Không tìm thấy thông tin PHI cho thuốc: " + pesticideName +
-                                    ". Vui lòng nhập số ngày cách ly thủ công."));
-                });
+        Integer phiDays = 0;
+        if (pesticideName != null && !pesticideName.isBlank()) {
+            phiDays = pesticidePhiReferenceRepo
+                    .findByPesticideNameContainingIgnoreCase(pesticideName)
+                    .map(PesticidePHIReference::getPhiDays)
+                    .orElseGet(() -> {
+                        return pesticidePhiReferenceRepo.findByActiveIngredientContainingIgnoreCase(pesticideName)
+                                .map(PesticidePHIReference::getPhiDays)
+                                .orElse(0); // Default to 0 if not found in reference table
+                    });
+        }
+
+        final String recordPesticideName = (pesticideName != null && !pesticideName.isBlank())
+                ? pesticideName
+                : "Unknown/General Pesticide";
 
         // Xóa bản ghi cũ nếu có để tránh trùng lặp khi update field log
         repository.findByFieldLogId(fieldLogId).ifPresent(repository::delete);
@@ -117,8 +122,8 @@ public class PesticideRecordService {
                 .seasonId(log.getSeason().getId())
                 .plotId(log.getSeason().getPlotId() != null ? log.getSeason().getPlotId() : 0)
                 .fieldLogId(fieldLogId)
-                .pesticideName(pesticideName)
-                .activeIngredient(pesticideName)
+                .pesticideName(recordPesticideName)
+                .activeIngredient(recordPesticideName)
                 .applicationDate(log.getLogDate())
                 .phiDays(phiDays)
                 .createdBy(userId)

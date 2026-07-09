@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.example.farm.enums.PlotStatus;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.Geometry;
 
 @Data
 @Builder
@@ -33,7 +33,7 @@ public class PlotRequest {
 
     Integer parentPlotId;
 
-    Polygon polygon;
+    Geometry polygon;
 
     PlotStatus status;
 }

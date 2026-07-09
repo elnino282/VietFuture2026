@@ -141,7 +141,7 @@ def import_admin_reporting_db():
     # Data for admin_task_summary
     query_admin_task_summary = "INSERT INTO `admin_task_summary` (`task_id`, `season_id`, `status`) VALUES (%s, %s, %s)"
     data_admin_task_summary = [
-        (1, 1, 'COMPLETED'),
+        (1, 1, 'DONE'),
         (2, 1, 'IN_PROGRESS')
     ]
     cursor.executemany(query_admin_task_summary, data_admin_task_summary)
@@ -244,30 +244,47 @@ def import_farm_db():
     # Data for certification_standards
     query_certification_standards = "INSERT INTO `certification_standards` (`code`, `name`, `type`, `version`, `description`, `is_active`, `created_at`) VALUES (%s, %s, %s, %s, %s, %s, %s)"
     data_certification_standards = [
-        ('VIETGAP', 'Tiêu chuẩn VietGAP Trồng Trọt', 'NATIONAL', 'TCVN 11892-1:2017', 'Thực hành nông nghiệp tốt tại Việt Nam', 1, date(2026, 1, 1)),
-        ('GLOBALGAP', 'Tiêu chuẩn GlobalGAP IFA', 'INTERNATIONAL', 'V6.0', 'Thực hành nông nghiệp tốt toàn cầu', 1, date(2026, 1, 1))
+        ('VIETGAP-PLANTING-2024', 'VietGAP Trồng trọt 2024', 'VIETGAP_PLANTING', 'TCVN 11892-1:2017', 'Thực hành nông nghiệp tốt cho trồng trọt theo TCVN 11892-1:2017', 1, date(2026, 1, 1)),
+        ('GLOBALGAP', 'Tiêu chuẩn GlobalGAP IFA', 'GLOBALGAP', 'V6.0', 'Thực hành nông nghiệp tốt toàn cầu', 1, date(2026, 1, 1))
     ]
     cursor.executemany(query_certification_standards, data_certification_standards)
 
     # Data for certification_checklist_items
     query_certification_checklist_items = "INSERT INTO `certification_checklist_items` (`standard_id`, `item_code`, `category`, `description`, `is_mandatory`, `weight_pct`, `data_source_type`, `data_source_query`, `created_at`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
     data_certification_checklist_items = [
-        (1, 'VG-01', 'Quản lý đất và nước', 'Đánh giá nguy cơ ô nhiễm từ nguồn nước tưới', 1, 15, 'DOCUMENT', 'Báo cáo thử nghiệm mẫu nước', date(2026, 1, 1)),
-        (1, 'VG-02', 'Bảo vệ thực vật', 'Ghi chép đầy đủ nhật ký sử dụng thuốc BVTV', 1, 20, 'SYSTEM_LOG', 'SELECT * FROM pesticide_records', date(2026, 1, 1))
+        (1, 'PA-001', 'PRODUCTION_AREA', 'Đất sản xuất không bị ô nhiễm, có kết quả phân tích đất trong vòng 12 tháng', 1, 5.00, 'SOIL_TEST', '{"seasonId": null, "freshnessDays": 365}', date(2026, 1, 1)),
+        (1, 'PA-002', 'PRODUCTION_AREA', 'Nguồn nước tưới đạt QCVN 08-MT:2015/BTNMT', 1, 5.00, 'WATER_TEST', '{"seasonId": null, "freshnessDays": 365}', date(2026, 1, 1)),
+        (1, 'PA-003', 'PRODUCTION_AREA', 'Vùng sản xuất có sơ đồ mặt bằng rõ ràng', 1, 3.00, 'MANUAL', None, date(2026, 1, 1)),
+        (1, 'SE-001', 'SEED', 'Sử dụng giống có nguồn gốc rõ ràng, có giấy chứng nhận nguồn giống', 1, 4.00, 'FIELD_LOG', '{"logType": "SEEDING"}', date(2026, 1, 1)),
+        (1, 'SE-002', 'SEED', 'Ghi chép ngày gieo trồng và nguồn giống', 1, 2.00, 'FIELD_LOG', '{"logType": "SEEDING"}', date(2026, 1, 1)),
+        (1, 'CU-001', 'CULTIVATION', 'Ghi chép đầy đủ phân bón đã sử dụng (loại, lượng, ngày)', 1, 5.00, 'FIELD_LOG', '{"logType": "FERTILIZER_APPLICATION"}', date(2026, 1, 1)),
+        (1, 'CU-002', 'CULTIVATION', 'Ghi chép đầy đủ thuốc BVTV đã sử dụng (tên, ngày phun, PHI)', 1, 5.00, 'FIELD_LOG', '{"logType": "PESTICIDE_APPLICATION"}', date(2026, 1, 1)),
+        (1, 'CU-003', 'CULTIVATION', 'Tuân thủ thời gian cách ly (PHI) trước thu hoạch', 1, 5.00, 'PHI_CHECK', None, date(2026, 1, 1)),
+        (1, 'HV-001', 'HARVEST', 'Thu hoạch đúng thời điểm, có nhật ký thu hoạch', 1, 3.00, 'FIELD_LOG', '{"logType": "HARVEST"}', date(2026, 1, 1)),
+        (1, 'HV-002', 'HARVEST', 'Sản phẩm sau thu hoạch được bảo quản đúng cách, có hồ sơ kho', 1, 2.00, 'MANUAL', None, date(2026, 1, 1))
     ]
     cursor.executemany(query_certification_checklist_items, data_certification_checklist_items)
     
     # Data for certification_records
     query_certification_records = "INSERT INTO `certification_records` (`farm_id`, `standard_id`, `compliance_score`, `status`, `applied_at`, `certified_at`, `expiry_date`, `auditor_notes`, `created_at`, `updated_at`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     data_certification_records = [
-        (1, 1, 95.5, 'CERTIFIED', date(2025, 12, 1), date(2026, 1, 10), date(2028, 1, 10), 'Nông trại duy trì tốt sổ nhật ký canh tác điện tử', date(2026, 1, 1), date(2026, 1, 10))
+        (1, 1, 100.0, 'CERTIFIED', date(2025, 12, 1), date(2026, 1, 10), date(2028, 1, 10), 'Nông trại duy trì tốt sổ nhật ký canh tác điện tử', date(2026, 1, 1), date(2026, 1, 10))
     ]
     cursor.executemany(query_certification_records, data_certification_records)
 
     # Data for certification_item_statuses
     query_certification_item_statuses = "INSERT INTO `certification_item_statuses` (`record_id`, `checklist_item_id`, `status`, `evidence_url`, `notes`, `checked_at`, `checked_by`, `created_at`, `updated_at`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
     data_certification_item_statuses = [
-        (1, 1, 'PASSED', 'http://example.com/evidence/water_test.pdf', 'Kết quả nước đạt chuẩn QCVN 08-MT:2015/BTNMT', date(2026, 1, 5), 1, date(2026, 1, 5), date(2026, 1, 5))
+        (1, 1, 'PASS', 'http://example.com/evidence/soil_test.pdf', 'Kết quả đất đạt chuẩn', date(2026, 1, 5), 1, date(2026, 1, 5), date(2026, 1, 5)),
+        (1, 2, 'PASS', 'http://example.com/evidence/water_test.pdf', 'Kết quả nước đạt chuẩn QCVN 08-MT:2015/BTNMT', date(2026, 1, 5), 1, date(2026, 1, 5), date(2026, 1, 5)),
+        (1, 3, 'PASS', None, 'Có sơ đồ mặt bằng', date(2026, 1, 5), 1, date(2026, 1, 5), date(2026, 1, 5)),
+        (1, 4, 'PASS', None, 'Sử dụng giống ST25 có chứng nhận', date(2026, 1, 5), 1, date(2026, 1, 5), date(2026, 1, 5)),
+        (1, 5, 'PASS', None, 'Ghi chép đầy đủ', date(2026, 1, 5), 1, date(2026, 1, 5), date(2026, 1, 5)),
+        (1, 6, 'PASS', None, 'Ghi chép phân bón đầy đủ', date(2026, 1, 5), 1, date(2026, 1, 5), date(2026, 1, 5)),
+        (1, 7, 'PASS', None, 'Ghi chép thuốc BVTV đầy đủ', date(2026, 1, 5), 1, date(2026, 1, 5), date(2026, 1, 5)),
+        (1, 8, 'PASS', None, 'Tuân thủ thời gian cách ly', date(2026, 1, 5), 1, date(2026, 1, 5), date(2026, 1, 5)),
+        (1, 9, 'PASS', None, 'Có nhật ký thu hoạch', date(2026, 1, 5), 1, date(2026, 1, 5), date(2026, 1, 5)),
+        (1, 10, 'PASS', None, 'Bảo quản đúng quy trình', date(2026, 1, 5), 1, date(2026, 1, 5), date(2026, 1, 5))
     ]
     cursor.executemany(query_certification_item_statuses, data_certification_item_statuses)
 
@@ -467,6 +484,33 @@ def import_season_db():
     conn = get_connection('season_db')
     cursor = conn.cursor()
     cursor.execute('SET FOREIGN_KEY_CHECKS = 0;')
+
+    # Data for pesticide_phi_reference
+    query_pesticide_phi_reference = "INSERT INTO `pesticide_phi_reference` (`active_ingredient`, `pesticide_name`, `phi_days`, `crop_type`) VALUES (%s, %s, %s, %s)"
+    data_pesticide_phi_reference = [
+        ('Carbendazim', 'Carbenzim 50WP, Bavistin 50WP', 14, 'general'),
+        ('Chlorpyrifos', 'Dursban 5G,Lorsban 150EC', 21, 'general'),
+        ('Cypermethrin', 'Sherpa 25EC, Cypersect 25EC', 7, 'general'),
+        ('Mancozeb', 'Manzate 80WP, Dithane M-45', 14, 'vegetable'),
+        ('Metalaxyl', 'Ridomil Gold 68WG', 7, 'vegetable'),
+        ('Imidacloprid', 'Confidor 100SL, Admire 50SC', 14, 'fruit'),
+        ('Abamectin', 'Vertimec 1.8EC', 14, 'vegetable'),
+        ('Bethecypermethrin', 'Bets 10EC', 7, 'general'),
+        ('Fenobucarb', 'Bassa 50EC', 14, 'rice'),
+        ('Cartap', 'Padan 95SP', 7, 'rice'),
+        ('Carbofuran', 'Furadan 3G', 60, 'general'),
+        ('Fenitrothion', 'Sumithion 50EC', 14, 'general'),
+        ('Carbaryl', 'Sevin 85WP', 7, 'fruit'),
+        ('Copper hydroxide', 'Kocide 77WP', 0, 'general'),
+        ('Bacillus thuringiensis', 'Dipel 6.4DF', 0, 'vegetable'),
+        ('Spinosad', 'Tracer 48SC', 1, 'vegetable'),
+        ('Emamectin benzoate', 'Proclaim 5SG', 7, 'vegetable'),
+        ('Hexaconazole', 'Anvil 5SC', 14, 'fruit'),
+        ('Propiconazole', 'Tilt 250EC', 14, 'fruit'),
+        ('Difenoconazole', 'Score 250EC, Score', 14, 'vegetable'),
+        ('Azoxystrobin', 'Amistar Top 325SC, Amistar', 14, 'general')
+    ]
+    cursor.executemany(query_pesticide_phi_reference, data_pesticide_phi_reference)
     
     # Data for seasons
     query_seasons = "INSERT INTO `seasons` (`season_name`, `plot_id`, `crop_id`, `variety_id`, `start_date`, `planned_harvest_date`, `end_date`, `status`, `initial_plant_count`, `current_plant_count`, `expected_yield_kg`, `actual_yield_kg`, `budget_amount`, `notes`, `created_at`, `owner_user_id`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
@@ -478,8 +522,8 @@ def import_season_db():
     # Data for tasks
     query_tasks = "INSERT INTO `tasks` (`user_id`, `season_id`, `title`, `description`, `planned_date`, `due_date`, `status`, `actual_start_date`, `actual_end_date`, `notes`, `created_at`, `assignee_name`, `plot_name`, `estimated_days`, `plot_id`, `work_team_id`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     data_tasks = [
-        (2, 1, 'Làm đất và Gieo sạ', 'Cày ải, bừa trục và gieo sạ bằng máy', date(2025, 11, 15), date(2025, 11, 17), 'COMPLETED', date(2025, 11, 15), date(2025, 11, 16), 'Mật độ sạ 100kg/ha', date(2025, 11, 14), 'Đội máy cày', 'Lô A1', 2, 1, 1),
-        (2, 1, 'Bón phân thúc đợt 1 (7-10 NSS)', 'Bón Ure và Lân', date(2025, 11, 24), date(2025, 11, 25), 'COMPLETED', date(2025, 11, 24), date(2025, 11, 24), 'Điều kiện nước săm sắp', date(2025, 11, 14), 'Đội nông vụ', 'Lô A1', 1, 1, 1)
+        (2, 1, 'Làm đất và Gieo sạ', 'Cày ải, bừa trục và gieo sạ bằng máy', date(2025, 11, 15), date(2025, 11, 17), 'DONE', date(2025, 11, 15), date(2025, 11, 16), 'Mật độ sạ 100kg/ha', date(2025, 11, 14), 'Đội máy cày', 'Lô A1', 2, 1, 1),
+        (2, 1, 'Bón phân thúc đợt 1 (7-10 NSS)', 'Bón Ure và Lân', date(2025, 11, 24), date(2025, 11, 25), 'DONE', date(2025, 11, 24), date(2025, 11, 24), 'Điều kiện nước săm sắp', date(2025, 11, 14), 'Đội nông vụ', 'Lô A1', 1, 1, 1)
     ]
     cursor.executemany(query_tasks, data_tasks)
 
