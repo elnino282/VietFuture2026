@@ -33,5 +33,8 @@ public class TaskResponse {
     Long plotId;
     Long workTeamId;
     Integer estimatedDays;
+    LocalDate estimatedCompletionDate;
+    String plotName;
+    java.math.BigDecimal plotArea;
     LocalDateTime createdAt;
 }

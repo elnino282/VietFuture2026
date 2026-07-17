@@ -24,4 +24,22 @@ public class HarvestResponse {
     String note;
     String status;
     LocalDateTime createdAt;
+
+    // === Quality Grading ===
+    String qualityGrade;
+    String qualityNotes;
+    BigDecimal subStandardQuantity;
+    String subStandardDisposition;
+
+    // === Packaging & Processing ===
+    String packagingType;
+    Integer packagingCount;
+    String processingType;
+
+    // === Crop Info ===
+    String cropCategory;
+    BigDecimal grossWetWeight;
+    BigDecimal netDryWeight;
+    String warehouseReceiptStatus;
+    Integer postHarvestDelayDays;
 }

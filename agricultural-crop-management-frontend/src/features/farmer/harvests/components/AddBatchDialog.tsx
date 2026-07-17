@@ -27,8 +27,8 @@ import {
   AccordionTrigger,
 } from "@/shared/ui/accordion";
 import { Badge } from "@/shared/ui/badge";
-import type { CropResidueHandling, HarvestFormData, HarvestGrade } from "../types";
-import { GRADE_OPTIONS } from "../constants";
+import type { CropResidueHandling, HarvestFormData, HarvestGrade, QualityGrade, SubStandardDisposition, PackagingType, ProcessingType } from "../types";
+import { GRADE_OPTIONS, QUALITY_GRADE_OPTIONS, SUBSTANDARD_DISPOSITION_OPTIONS, PACKAGING_TYPE_OPTIONS, PROCESSING_TYPE_OPTIONS } from "../constants";
 import { useSeasons } from "@/entities/season";
 import { useMyWarehouses, useLocations } from "@/entities/inventory";
 import { useHarvestStockContext } from "@/entities/harvest";
@@ -629,27 +629,70 @@ export function AddBatchDialog({
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="grade" className="text-foreground">
-                  {t("harvests.addBatch.fields.grade", "Grade")}
+                <Label htmlFor="qualityGrade" className="text-foreground">
+                  {t("harvests.addBatch.fields.qualityGrade", "Quality Grade")} <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  value={formData.grade}
-                  onValueChange={(value: HarvestGrade) => onFormChange({ ...formData, grade: value })}
+                  value={formData.qualityGrade}
+                  onValueChange={(value: QualityGrade) => onFormChange({ ...formData, qualityGrade: value, subStandardQuantity: "", subStandardDisposition: "" })}
                   disabled={isFormDisabled}
                 >
                   <SelectTrigger className="rounded-xl border-border">
-                    <SelectValue />
+                    <SelectValue placeholder="Chọn chất lượng" />
                   </SelectTrigger>
                   <SelectContent>
-                    {GRADE_OPTIONS.map((option) => (
+                    {QUALITY_GRADE_OPTIONS.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
-                        {gradeLabels[option.value as HarvestGrade]}
+                        {option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
+
+            {formData.qualityGrade === "SUBSTANDARD" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 p-4 border border-destructive/20 rounded-xl bg-destructive/5">
+                <div className="space-y-2">
+                  <Label htmlFor="subStandardQuantity" className="text-foreground">
+                    Khối lượng không đạt (kg) <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="subStandardQuantity"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    placeholder="VD: 500"
+                    value={formData.subStandardQuantity || ""}
+                    onChange={(event) => onFormChange({ ...formData, subStandardQuantity: event.target.value })}
+                    className="rounded-xl border-border focus:border-destructive"
+                    disabled={isFormDisabled}
+                  />
+                  <p className="text-xs text-muted-foreground">Sẽ được trừ vào khối lượng đạt chuẩn</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="subStandardDisposition" className="text-foreground">
+                    Hướng xử lý phụ phẩm <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={formData.subStandardDisposition}
+                    onValueChange={(value: SubStandardDisposition) => onFormChange({ ...formData, subStandardDisposition: value })}
+                    disabled={isFormDisabled}
+                  >
+                    <SelectTrigger className="rounded-xl border-border">
+                      <SelectValue placeholder="Chọn hướng xử lý" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SUBSTANDARD_DISPOSITION_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
@@ -666,6 +709,75 @@ export function AddBatchDialog({
                 />
               </div>
             </div>
+
+            {/* Packaging & Processing Section (Conditional on Crop Type) */}
+            {(() => {
+              const cropNameStr = (formData.productName || selectedSeason?.cropName || "").toLowerCase();
+              const isGrain = cropNameStr.includes("lúa") || cropNameStr.includes("grain") || cropNameStr.includes("gạo") || cropNameStr.includes("ngô");
+              const showPackaging = !isGrain; // Rau củ quả hiện form đóng gói
+
+              if (!showPackaging) return null;
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 p-4 border border-primary/20 rounded-xl bg-primary/5">
+                  <div className="col-span-1 md:col-span-3">
+                    <h4 className="text-sm font-semibold text-primary">Quy trình đóng gói & sơ chế (Rau/Quả)</h4>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="packagingType" className="text-foreground">Loại đóng gói</Label>
+                    <Select
+                      value={formData.packagingType || ""}
+                      onValueChange={(value: PackagingType) => onFormChange({ ...formData, packagingType: value })}
+                      disabled={isFormDisabled}
+                    >
+                      <SelectTrigger className="rounded-xl border-border">
+                        <SelectValue placeholder="Không đóng gói" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PACKAGING_TYPE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="packagingCount" className="text-foreground">Số lượng kiện</Label>
+                    <Input
+                      id="packagingCount"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="VD: 50"
+                      value={formData.packagingCount || ""}
+                      onChange={(event) => onFormChange({ ...formData, packagingCount: event.target.value })}
+                      className="rounded-xl border-border focus:border-primary"
+                      disabled={isFormDisabled || !formData.packagingType || formData.packagingType === "NONE"}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="processingType" className="text-foreground">Quy trình sơ chế</Label>
+                    <Select
+                      value={formData.processingType || ""}
+                      onValueChange={(value: ProcessingType) => onFormChange({ ...formData, processingType: value })}
+                      disabled={isFormDisabled}
+                    >
+                      <SelectTrigger className="rounded-xl border-border">
+                        <SelectValue placeholder="Chưa sơ chế" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROCESSING_TYPE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           <Accordion

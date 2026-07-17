@@ -16,5 +16,8 @@ export interface SeasonEmployeeResponse {
   employeeEmail?: string;
   wagePerTask?: number;
   active?: boolean;
+  isTrained?: boolean;
+  trainedAt?: string;
+  trainingNotes?: string;
   createdAt?: string;
 }

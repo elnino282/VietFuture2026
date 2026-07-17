@@ -89,6 +89,21 @@ export const laborApi = {
     return parseApiResponse(response.data, TaskSchema);
   },
 
+  approveTask: async (taskId: number): Promise<Task> => {
+    const response = await httpClient.patch(`/api/v1/farmer/labor/tasks/${taskId}/approve`);
+    return parseApiResponse(response.data, TaskSchema);
+  },
+
+  rejectTask: async (taskId: number, data: { rejectReason: string }): Promise<Task> => {
+    const response = await httpClient.post(`/api/v1/farmer/labor/tasks/${taskId}/reject`, data);
+    return parseApiResponse(response.data, TaskSchema);
+  },
+
+  getTaskProgressLogs: async (taskId: number): Promise<TaskProgressLog[]> => {
+    const response = await httpClient.get(`/api/v1/farmer/labor/tasks/${taskId}/progress-logs`);
+    return parseApiResponse(response.data, z.array(TaskProgressLogSchema));
+  },
+
   listSeasonProgress: async (
     seasonId: number,
     params?: { employeeUserId?: number; taskId?: number; page?: number; size?: number }

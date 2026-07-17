@@ -13,6 +13,11 @@ export interface QCMetrics {
     brokenGrains: number;
 }
 
+export type QualityGrade = "PASSED" | "SUBSTANDARD" | "REJECTED";
+export type SubStandardDisposition = "SELL_LIVESTOCK_FEED" | "COMPOSTING" | "DISCARDED" | "SELL_DISCOUNT";
+export type PackagingType = "NONE" | "BULK_BAG" | "CRATE" | "PALLET_BOX" | "BASKET" | "CARTON" | "NET_BAG" | "VACUUM_BAG" | "PUNNET" | "DRUM";
+export type ProcessingType = "NONE" | "WASHED" | "TRIMMED" | "SORTED" | "CURED" | "FUMIGATED";
+
 export interface HarvestBatch {
     id: string;
     batchId: string;
@@ -34,6 +39,19 @@ export interface HarvestBatch {
     qcMetrics?: QCMetrics;
     photo?: string;
     postHarvestDelayDays?: number;
+
+    // === Backend fields ===
+    qualityGrade?: QualityGrade;
+    qualityNotes?: string;
+    subStandardQuantity?: number;
+    subStandardDisposition?: SubStandardDisposition;
+    packagingType?: PackagingType;
+    packagingCount?: number;
+    processingType?: ProcessingType;
+    cropCategory?: string;
+    grossWetWeight?: number;
+    netDryWeight?: number;
+    warehouseReceiptStatus?: string;
 }
 
 export interface HarvestFormData {
@@ -61,6 +79,17 @@ export interface HarvestFormData {
     brokenGrains: string;
     harvestLoss: string;
     cropResidueHandling: CropResidueHandling | "";
+
+    // === Quality Grading ===
+    qualityGrade: QualityGrade;
+    qualityNotes?: string;
+    subStandardQuantity?: string;
+    subStandardDisposition?: SubStandardDisposition | "";
+
+    // === Packaging & Processing ===
+    packagingType?: PackagingType | "";
+    packagingCount?: string;
+    processingType?: ProcessingType | "";
 }
 
 export interface ChartDataPoint {

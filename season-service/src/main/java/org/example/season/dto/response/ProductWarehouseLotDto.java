@@ -29,4 +29,11 @@ public class ProductWarehouseLotDto {
     private String qualityStatus;
     private String note;
     private ProductWarehouseLotStatus status;
+
+    // === Crop-specific & Packaging ===
+    private String cropCategory;
+    private LocalDate expiryDate;
+    private String packagingType;
+    private Integer packagingCount;
+    private String processingType;
 }

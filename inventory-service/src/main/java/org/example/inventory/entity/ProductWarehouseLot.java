@@ -137,4 +137,14 @@ public class ProductWarehouseLot {
 
     @Column(name = "crop_category", length = 50)
     String cropCategory;
+
+    // === Packaging & Processing ===
+    @Column(name = "packaging_type", length = 30)
+    String packagingType;
+
+    @Column(name = "packaging_count")
+    Integer packagingCount;
+
+    @Column(name = "processing_type", length = 30)
+    String processingType;
 }

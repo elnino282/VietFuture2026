@@ -47,6 +47,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { SubStandardDisposalModal } from "./components/SubStandardDisposalModal";
 import "./ProductWarehousePage.css";
 
 type ProductWarehouseTab = "on-hand" | "transactions" | "traceability";
@@ -100,17 +101,13 @@ export function ProductWarehousePage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [harvestedFrom, setHarvestedFrom] = useState("");
   const [harvestedTo, setHarvestedTo] = useState("");
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState<string>("");
   const [lotPage, setLotPage] = useState(0);
   const [transactionPage, setTransactionPage] = useState(0);
-  const [selectedTraceLotId, setSelectedTraceLotId] = useState<
-    number | undefined
-  >();
-  const [adjustingLot, setAdjustingLot] = useState<ProductWarehouseLot | null>(
-    null,
-  );
-  const [stockingOutLot, setStockingOutLot] =
-    useState<ProductWarehouseLot | null>(null);
+  const [selectedTraceLotId, setSelectedTraceLotId] = useState<number | null>(null);
+  const [adjustingLot, setAdjustingLot] = useState<ProductWarehouseLot | null>(null);
+  const [stockingOutLot, setStockingOutLot] = useState<ProductWarehouseLot | null>(null);
+  const [subStandardLot, setSubStandardLot] = useState<ProductWarehouseLot | null>(null);
   const [adjustQuantityInput, setAdjustQuantityInput] = useState("");
   const [adjustNoteInput, setAdjustNoteInput] = useState("");
   const [adjustDialogError, setAdjustDialogError] = useState("");
@@ -820,6 +817,7 @@ export function ProductWarehousePage() {
                         <th>{t("productWarehouse.table.lotCode")}</th>
                         <th>{t("productWarehouse.table.productName")}</th>
                         <th>{t("productWarehouse.table.variant")}</th>
+                        <th>Đóng gói</th>
                         <th>{t("productWarehouse.table.unit")}</th>
                         <th>{t("productWarehouse.table.harvestedAt")}</th>
                         <th>{t("productWarehouse.table.receivedAt")}</th>
@@ -854,6 +852,11 @@ export function ProductWarehousePage() {
                             </div>
                           </td>
                           <td>{lot.productVariant || "-"}</td>
+                          <td>
+                            {lot.packagingType && lot.packagingType !== "NONE" 
+                              ? `${lot.packagingType} (${lot.packagingCount || 0})` 
+                              : "-"}
+                          </td>
                           <td>{lot.unit || "-"}</td>
                           <td>{formatDate(lot.harvestedAt)}</td>
                           <td>{formatDateTime(lot.receivedAt)}</td>
@@ -907,6 +910,15 @@ export function ProductWarehousePage() {
                             >
                               {t("productWarehouse.actions.stockOut")}
                             </Button>
+                            {lot.qualityStatus === "SUBSTANDARD" && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => setSubStandardLot(lot)}
+                              >
+                                Xuất kho Không đạt chuẩn
+                              </Button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -1411,6 +1423,20 @@ export function ProductWarehousePage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <SubStandardDisposalModal
+        open={!!subStandardLot}
+        onOpenChange={(open) => {
+          if (!open) setSubStandardLot(null);
+        }}
+        lot={subStandardLot}
+        onSuccess={() => {
+          setSubStandardLot(null);
+          // Refetch data - queryClient.invalidateQueries doesn't have an exact hook here, 
+          // so triggering state change or reload
+          window.location.reload();
+        }}
+      />
     </PageContainer>
   );
 }

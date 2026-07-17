@@ -64,10 +64,10 @@ export function ReceiveToWarehouseModal({ open, onOpenChange, lot, onSuccess }: 
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
-          {isGrain && (
+          {isGrain ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="currentMoisture" required>Độ ẩm hiện tại (%)</Label>
+                <Label htmlFor="currentMoisture">Độ ẩm hiện tại (%) <span className="text-destructive">*</span></Label>
                 <Input
                   id="currentMoisture"
                   type="number"
@@ -84,7 +84,7 @@ export function ReceiveToWarehouseModal({ open, onOpenChange, lot, onSuccess }: 
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="targetMoisture" required>Độ ẩm mục tiêu (%)</Label>
+                <Label htmlFor="targetMoisture">Độ ẩm mục tiêu (%) <span className="text-destructive">*</span></Label>
                 <Input
                   id="targetMoisture"
                   type="number"
@@ -96,21 +96,53 @@ export function ReceiveToWarehouseModal({ open, onOpenChange, lot, onSuccess }: 
                   onChange={(e) => setTargetMoisture(e.target.value)}
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mechanicalLoss">Thất thoát cơ học (kg) - Nếu có</Label>
+                <Input
+                  id="mechanicalLoss"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="0"
+                  value={mechanicalLoss}
+                  onChange={(e) => setMechanicalLoss(e.target.value)}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+                <p className="text-sm font-medium text-blue-800">
+                  Phân loại: Rau củ / Trái cây tươi
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Bỏ qua quy trình sấy. Lô hàng sẽ được nhập trực tiếp vào kho lạnh.
+                  {lot.expiryDate && (
+                    <span className="block mt-1 font-semibold text-orange-600">
+                      Cảnh báo: Ngày hết hạn dự kiến {new Date(lot.expiryDate).toLocaleDateString("vi-VN")}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mechanicalLoss">% Hao hụt sơ chế</Label>
+                <Input
+                  id="mechanicalLoss"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  placeholder="VD: 5"
+                  value={mechanicalLoss}
+                  onChange={(e) => setMechanicalLoss(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Tỉ lệ hao hụt do loại bỏ phần hư hỏng, vỏ, cuống... trong quá trình sơ chế.
+                </p>
+              </div>
             </>
           )}
-
-          <div className="space-y-2">
-            <Label htmlFor="mechanicalLoss">Thất thoát cơ học (kg) - Nếu có</Label>
-            <Input
-              id="mechanicalLoss"
-              type="number"
-              step="0.1"
-              min="0"
-              placeholder="0"
-              value={mechanicalLoss}
-              onChange={(e) => setMechanicalLoss(e.target.value)}
-            />
-          </div>
         </div>
 
         <DialogFooter>

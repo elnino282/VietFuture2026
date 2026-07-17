@@ -21,5 +21,11 @@ public class UpdateSeasonEmployeeRequest {
     BigDecimal wagePerTask;
 
     Boolean active;
+    
+    Boolean isTrained;
+    
+    java.time.LocalDateTime trainedAt;
+    
+    String trainingNotes;
 }
 

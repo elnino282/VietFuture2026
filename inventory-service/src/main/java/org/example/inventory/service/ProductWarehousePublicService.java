@@ -265,6 +265,66 @@ public class ProductWarehousePublicService {
         return toLotResponse(saved);
     }
 
+    @Transactional
+    public ProductWarehouseLotResponse disposeSubStandardLot(Integer id, org.example.inventory.dto.request.SubStandardDispositionRequest request) {
+        ProductWarehouseLot lot = getLotForUpdate(id);
+        
+        // Validate must be SUBSTANDARD
+        if (!"SUBSTANDARD".equalsIgnoreCase(lot.getQualityStatus())) {
+            throw new IllegalStateException("Chỉ được xuất kho thanh lý đối với lô hàng Không đạt chuẩn (SUBSTANDARD).");
+        }
+
+        BigDecimal quantity = normalizePositiveQuantity(request.getQuantity());
+        BigDecimal current = lot.getOnHandQuantity() != null ? lot.getOnHandQuantity() : BigDecimal.ZERO;
+        if (current.compareTo(quantity) < 0) {
+            throw new AppException(ErrorCode.BAD_REQUEST); // Không đủ tồn kho
+        }
+
+        lot.setOnHandQuantity(current.subtract(quantity));
+        applyAutoStatus(lot);
+        ProductWarehouseLot saved = productWarehouseLotRepository.save(lot);
+
+        Long actorUserId = resolveCurrentUserId();
+
+        // Determine exact transaction type based on disposition
+        ProductWarehouseTransactionType txType = ProductWarehouseTransactionType.STOCK_OUT_SUBSTANDARD;
+        if (request.getDisposition() != null) {
+            switch (request.getDisposition().toUpperCase()) {
+                case "SELL_LIVESTOCK_FEED":
+                    txType = ProductWarehouseTransactionType.SOLD_LIVESTOCK_FEED;
+                    break;
+                case "COMPOSTING":
+                    txType = ProductWarehouseTransactionType.COMPOSTED;
+                    break;
+                case "DISCARDED":
+                    txType = ProductWarehouseTransactionType.DISCARDED;
+                    break;
+                case "SELL_DISCOUNT":
+                    txType = ProductWarehouseTransactionType.STOCK_OUT_SUBSTANDARD; // Hoặc thêm SOLD_DISCOUNT
+                    break;
+                default:
+                    txType = ProductWarehouseTransactionType.STOCK_OUT_SUBSTANDARD;
+            }
+        }
+
+        String note = request.getNote() != null ? request.getNote() : "";
+        if (request.getBuyerName() != null && !request.getBuyerName().isBlank()) {
+            note = "Bán cho: " + request.getBuyerName() + (request.getBuyerContact() != null ? " (" + request.getBuyerContact() + ")" : "") + ". " + note;
+        }
+
+        createTransaction(
+                saved,
+                txType,
+                quantity,
+                "DISPOSITION",
+                request.getDisposition(),
+                note,
+                actorUserId);
+
+        publishStockAdjusted(saved, quantity.negate(), "Xuất kho hàng lỗi: " + request.getDisposition());
+        return toLotResponse(saved);
+    }
+
     @Transactional(readOnly = true)
     public PageResponse<ProductWarehouseTransactionResponse> listTransactions(
             Integer lotId,

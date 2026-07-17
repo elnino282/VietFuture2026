@@ -10,4 +10,7 @@ export interface UpdateSeasonEmployeeRequest {
   /** @minimum 0 */
   wagePerTask?: number;
   active?: boolean;
+  isTrained?: boolean;
+  trainedAt?: string;
+  trainingNotes?: string;
 }

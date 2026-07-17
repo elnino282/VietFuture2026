@@ -73,9 +73,14 @@ public class TaskWorkspaceService {
 
         // Populate denormalized fields for DashboardTaskView (avoids cross-schema JOINs)
         String plotName = null;
+        java.math.BigDecimal plotArea = null;
         if (season != null && season.getPlotId() != null) {
             try {
-                plotName = externalServiceClient.getPlot(season.getPlotId()).getPlotName();
+                ExternalServiceClient.PlotInternalDto plotDto = externalServiceClient.getPlot(season.getPlotId());
+                if (plotDto != null) {
+                    plotName = plotDto.getPlotName();
+                    plotArea = plotDto.getPlotArea();
+                }
             } catch (Exception ignored) {
             }
         }
@@ -85,6 +90,7 @@ public class TaskWorkspaceService {
                 .userId(assignee.getId())
                 .assigneeName(assignee.getFullName())
                 .plotName(plotName)
+                .plotArea(plotArea)
                 .season(season)
                 .title(request.getTitle())
                 .description(request.getDescription())

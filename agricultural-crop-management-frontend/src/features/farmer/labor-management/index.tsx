@@ -8,6 +8,7 @@ import {
   useSeasonEmployees,
   useSeasonPayrollRecords,
   useSeasonProgressLogs,
+  useUpdateSeasonEmployee,
 } from "@/entities/labor";
 import { useTasksBySeason } from "@/entities/task";
 import { useMySeasons } from "@/entities/season/api/hooks";
@@ -40,13 +41,19 @@ import {
   TabsTrigger,
   PageContainer,
   PageHeader,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
 } from "@/shared/ui";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
-import { Calendar, ExternalLink, RefreshCw, Trash2, UserPlus, Users } from "lucide-react";
+import { Calendar, ExternalLink, RefreshCw, Trash2, UserPlus, Users, BookOpen, Filter } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { WorkTeamPanel } from "./components/WorkTeamPanel";
+import { UpdateTrainingDialog } from "./components/UpdateTrainingDialog";
+import { SeasonEmployeeResponse, UpdateSeasonEmployeeRequest } from "@/api/generated/model";
 
 const LABOR_WORKSPACE_TABS = ["teams", "employees", "assignment", "progress", "payroll"] as const;
 type LaborWorkspaceTab = (typeof LABOR_WORKSPACE_TABS)[number];
@@ -162,6 +169,10 @@ export function LaborManagementPage() {
   const [selectedBulkEmployeeIds, setSelectedBulkEmployeeIds] = useState<number[]>([]);
   const [wagePerTask, setWagePerTask] = useState<string>("");
   const [taskAssigneeDraft, setTaskAssigneeDraft] = useState<Record<number, string>>({});
+  
+  const [trainingDialogEmployee, setTrainingDialogEmployee] = useState<SeasonEmployeeResponse | null>(null);
+  const [isTrainingDialogOpen, setIsTrainingDialogOpen] = useState(false);
+  const [trainingFilter, setTrainingFilter] = useState<"all" | "trained" | "untrained">("all");
 
   const { data: employeeDirectoryData, isLoading: isEmployeeDirectoryLoading } = useEmployeeDirectory(
     { page: 0, size: 200 },
@@ -220,12 +231,27 @@ export function LaborManagementPage() {
     onError: (error) => toast.error(error.message || t("laborWorkspace.toast.assignTaskError")),
   });
 
+  const updateSeasonEmployeeMutation = useUpdateSeasonEmployee(seasonId, {
+    onSuccess: () => {
+      toast.success(t("laborWorkspace.toast.updateEmployeeSuccess", "Cập nhật thành công"));
+      setIsTrainingDialogOpen(false);
+      setTrainingDialogEmployee(null);
+    },
+    onError: (error) => toast.error(error.message || t("laborWorkspace.toast.updateEmployeeError", "Có lỗi xảy ra")),
+  });
+
   const recalculatePayrollMutation = useRecalculateSeasonPayroll(seasonId, {
     onSuccess: () => toast.success(t("laborWorkspace.toast.recalculatePayrollSuccess")),
     onError: (error) => toast.error(error.message || t("laborWorkspace.toast.recalculatePayrollError")),
   });
 
-  const seasonEmployees = seasonEmployeesData?.items ?? [];
+  const seasonEmployeesAll = seasonEmployeesData?.items ?? [];
+  const seasonEmployees = useMemo(() => {
+    if (trainingFilter === "trained") return seasonEmployeesAll.filter(e => e.isTrained);
+    if (trainingFilter === "untrained") return seasonEmployeesAll.filter(e => !e.isTrained);
+    return seasonEmployeesAll;
+  }, [seasonEmployeesAll, trainingFilter]);
+
   const tasks = tasksData?.items ?? [];
   const progressLogs = progressData?.items ?? [];
   const payrollRecords = payrollData?.items ?? [];
@@ -587,8 +613,21 @@ export function LaborManagementPage() {
           </Card>
 
           <Card className="rounded-xl border border-border shadow-sm">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">{t("laborWorkspace.sections.seasonEmployees.title")}</CardTitle>
+              <Select value={trainingFilter} onValueChange={(val: any) => setTrainingFilter(val)}>
+                <SelectTrigger className="w-[160px] h-8">
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    <SelectValue placeholder="Lọc trạng thái" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("laborWorkspace.filter.all", "Tất cả")}</SelectItem>
+                  <SelectItem value="trained">{t("laborWorkspace.filter.trained", "Đã Train")}</SelectItem>
+                  <SelectItem value="untrained">{t("laborWorkspace.filter.untrained", "Chưa Train")}</SelectItem>
+                </SelectContent>
+              </Select>
             </CardHeader>
             <CardContent>
               {isLoadingBase ? (
@@ -603,6 +642,7 @@ export function LaborManagementPage() {
                       <TableHead>{t("laborWorkspace.table.email")}</TableHead>
                       <TableHead>{t("laborWorkspace.table.wagePerTask")}</TableHead>
                       <TableHead>{t("laborWorkspace.table.status")}</TableHead>
+                      <TableHead>{t("laborWorkspace.table.training", "Đào tạo")}</TableHead>
                       <TableHead className="text-right">{t("laborWorkspace.table.actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -625,16 +665,58 @@ export function LaborManagementPage() {
                             {employee.active === false ? t("laborWorkspace.status.inactive") : t("laborWorkspace.status.active")}
                           </Badge>
                         </TableCell>
+                        <TableCell>
+                          {employee.isTrained && employee.trainingNotes ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge
+                                    className="bg-emerald-100 text-emerald-700 border-emerald-200 cursor-help"
+                                  >
+                                    {t("laborWorkspace.status.trained", "Đã Train")}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="max-w-[200px] text-sm break-words whitespace-pre-wrap">{employee.trainingNotes}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <Badge
+                              className={
+                                employee.isTrained
+                                  ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                  : "bg-muted text-muted-foreground border-border"
+                              }
+                            >
+                              {employee.isTrained ? t("laborWorkspace.status.trained", "Đã Train") : t("laborWorkspace.status.untrained", "Chưa Train")}
+                            </Badge>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRemoveSeasonEmployee(employee.employeeUserId)}
-                            disabled={!canMutateSeason || removeSeasonEmployeeMutation.isPending}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            {t("common.delete")}
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setTrainingDialogEmployee(employee as SeasonEmployeeResponse);
+                                setIsTrainingDialogOpen(true);
+                              }}
+                              disabled={!canMutateSeason || updateSeasonEmployeeMutation.isPending}
+                            >
+                              <BookOpen className="w-4 h-4 mr-2" />
+                              {t("laborWorkspace.actions.updateTraining", "Cập nhật đào tạo")}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleRemoveSeasonEmployee(employee.employeeUserId as number)}
+                              disabled={!canMutateSeason || removeSeasonEmployeeMutation.isPending}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              {t("common.delete")}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -833,6 +915,14 @@ export function LaborManagementPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <UpdateTrainingDialog
+        open={isTrainingDialogOpen}
+        onOpenChange={setIsTrainingDialogOpen}
+        employee={trainingDialogEmployee}
+        onSave={(employeeUserId, data) => updateSeasonEmployeeMutation.mutate({ employeeUserId, data })}
+        isPending={updateSeasonEmployeeMutation.isPending}
+      />
     </PageContainer>
   );
 }

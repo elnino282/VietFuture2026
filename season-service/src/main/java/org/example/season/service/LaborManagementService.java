@@ -189,6 +189,26 @@ public class LaborManagementService {
         if (request.getActive() != null) {
             seasonEmployee.setActive(request.getActive());
         }
+        if (request.getIsTrained() != null) {
+            boolean wasTrained = Boolean.TRUE.equals(seasonEmployee.getIsTrained());
+            seasonEmployee.setIsTrained(request.getIsTrained());
+            if (Boolean.TRUE.equals(request.getIsTrained())) {
+                if (!wasTrained && request.getTrainedAt() == null && seasonEmployee.getTrainedAt() == null) {
+                    seasonEmployee.setTrainedAt(LocalDateTime.now());
+                }
+            } else {
+                seasonEmployee.setTrainedAt(null);
+                seasonEmployee.setTrainingNotes(null);
+            }
+        }
+        if (Boolean.TRUE.equals(seasonEmployee.getIsTrained())) {
+            if (request.getTrainedAt() != null) {
+                seasonEmployee.setTrainedAt(request.getTrainedAt());
+            }
+            if (request.getTrainingNotes() != null) {
+                seasonEmployee.setTrainingNotes(request.getTrainingNotes());
+            }
+        }
 
         SeasonEmployee saved = seasonEmployeeRepository.save(seasonEmployee);
 
@@ -464,19 +484,17 @@ public class LaborManagementService {
         }
 
         if (request.getProgressPercent() >= 100) {
-            task.setStatus(TaskStatus.DONE);
-            task.setActualEndDate(LocalDate.now());
+            task.setStatus(TaskStatus.REVIEWING);
+            // Actual end date is set only when DONE (approved), but we can set it now or later.
+            // Let's set it when approved. But we'll leave actualStartDate check here.
             if (task.getActualStartDate() == null) {
                 task.setActualStartDate(LocalDate.now());
             }
-        } else if (task.getStatus() != TaskStatus.DONE) {
+        } else if (task.getStatus() != TaskStatus.DONE && task.getStatus() != TaskStatus.REVIEWING) {
             task.setStatus(TaskStatus.IN_PROGRESS);
         }
 
         taskRepository.save(task);
-        if (previousStatus != TaskStatus.DONE && task.getStatus() == TaskStatus.DONE) {
-            domainEventPublisher.publish(new TaskCompletedEvent(task, previousStatus));
-        }
 
         TaskProgressLog logEntry = TaskProgressLog.builder()
                 .task(task)
@@ -507,6 +525,52 @@ public class LaborManagementService {
         return toTaskProgressLogResponse(saved);
     }
 
+    public TaskResponse approveTask(Integer taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new AppException(ErrorCode.TASK_NOT_FOUND));
+        ensureSeasonOpenForLabor(task.getSeason());
+        seasonWorkspaceAccessService.assertCurrentUserCanAccessSeason(task.getSeason());
+
+        if (task.getStatus() != TaskStatus.REVIEWING) {
+            throw new AppException(ErrorCode.INVALID_OPERATION);
+        }
+
+        TaskStatus previousStatus = task.getStatus();
+        task.setStatus(TaskStatus.DONE);
+        task.setActualEndDate(LocalDate.now());
+        Task saved = taskRepository.save(task);
+
+        domainEventPublisher.publish(new TaskCompletedEvent(task, previousStatus));
+        return toTaskResponse(saved);
+    }
+
+    public TaskResponse rejectTask(Integer taskId, org.example.season.dto.request.RejectTaskRequest request) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new AppException(ErrorCode.TASK_NOT_FOUND));
+        ensureSeasonOpenForLabor(task.getSeason());
+        seasonWorkspaceAccessService.assertCurrentUserCanAccessSeason(task.getSeason());
+
+        if (task.getStatus() != TaskStatus.REVIEWING) {
+            throw new AppException(ErrorCode.INVALID_OPERATION);
+        }
+
+        task.setStatus(TaskStatus.IN_PROGRESS);
+        Task saved = taskRepository.save(task);
+
+        ExternalServiceClient.UserInternalDto currentUser = seasonWorkspaceAccessService.getCurrentUser();
+
+        TaskProgressLog logEntry = TaskProgressLog.builder()
+                .task(task)
+                .employeeUserId(task.getUserId()) // It's a rejection log, we can attach to the employee's timeline
+                .progressPercent(0) // or keep previous
+                .note("Bị từ chối nghiệm thu: " + request.getRejectReason())
+                .loggedAt(LocalDateTime.now())
+                .build();
+        taskProgressLogRepository.save(logEntry);
+
+        return toTaskResponse(saved);
+    }
+
     @Transactional(readOnly = true)
     public PageResponse<TaskProgressLogResponse> listMyProgress(int page, int size) {
         ExternalServiceClient.UserInternalDto currentEmployee = seasonWorkspaceAccessService.getCurrentUser();
@@ -516,6 +580,17 @@ public class LaborManagementService {
                 .map(this::toTaskProgressLogResponse)
                 .toList();
         return PageResponse.of(logs, items);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskProgressLogResponse> getTaskProgressLogs(Integer taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new AppException(ErrorCode.TASK_NOT_FOUND));
+        ensureSeasonOpenForLabor(task.getSeason());
+        seasonWorkspaceAccessService.assertCurrentUserCanAccessSeason(task.getSeason());
+
+        List<TaskProgressLog> logs = taskProgressLogRepository.findByTaskIdOrderByLoggedAtDesc(taskId);
+        return logs.stream().map(this::toTaskProgressLogResponse).toList();
     }
 
     @Transactional(readOnly = true)
@@ -759,6 +834,9 @@ public class LaborManagementService {
                 .employeeEmail(employeeEmail)
                 .wagePerTask(seasonEmployee.getWagePerTask())
                 .active(seasonEmployee.getActive())
+                .isTrained(seasonEmployee.getIsTrained())
+                .trainedAt(seasonEmployee.getTrainedAt())
+                .trainingNotes(seasonEmployee.getTrainingNotes())
                 .createdAt(seasonEmployee.getCreatedAt())
                 .build();
     }
@@ -835,6 +913,10 @@ public class LaborManagementService {
                 .actualStartDate(task.getActualStartDate())
                 .actualEndDate(task.getActualEndDate())
                 .notes(task.getNotes())
+                .estimatedDays(task.getEstimatedDays())
+                .estimatedCompletionDate(task.getEstimatedCompletionDate())
+                .plotName(task.getPlotName())
+                .plotArea(task.getPlotArea())
                 .createdAt(task.getCreatedAt())
                 .build();
     }

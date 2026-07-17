@@ -1,5 +1,6 @@
 import type { TaskListParams } from '@/entities/task';
 import { taskApi, taskKeys } from '@/entities/task';
+import { useApproveTask, useRejectTask, useTaskProgressLogs } from '@/entities/labor';
 import { useI18n } from '@/hooks/useI18n';
 import { useDebounce } from '@/shared/lib';
 import {
@@ -32,9 +33,10 @@ import {
     TableHead,
     TableHeader,
     TableRow,
+    Textarea,
 } from '@/shared/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Calendar, ClipboardList, Plus, Search } from 'lucide-react';
+import { Calendar, ClipboardList, Plus, Search, CheckCircle, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -53,10 +55,17 @@ export function TasksWorkspacePage() {
   // Dialog states
   const [startConfirmOpen, setStartConfirmOpen] = useState(false);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [completionDate, setCompletionDate] = useState(
     new Date().toISOString().split('T')[0]
   );
+
+  const approveTaskMutation = useApproveTask();
+  const rejectTaskMutation = useRejectTask();
+  const { data: progressLogs, isLoading: isProgressLoading } = useTaskProgressLogs(reviewDialogOpen ? selectedTaskId : null);
+
 
   // Fetch tasks using workspace API (no seasonId filter by default)
   const {
@@ -102,14 +111,15 @@ export function TasksWorkspacePage() {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       PENDING: 'outline',
       IN_PROGRESS: 'default',
+      REVIEWING: 'default', // Using default with custom styling maybe? Or just default
       DONE: 'secondary',
       CANCELLED: 'destructive',
       OVERDUE: 'destructive',
     };
 
     return (
-      <Badge variant={variants[status] || 'default'}>
-        {status.replace('_', ' ')}
+      <Badge variant={variants[status] || 'default'} className={status === 'REVIEWING' ? 'bg-orange-500 hover:bg-orange-600' : ''}>
+        {status === 'REVIEWING' ? 'CHỜ NGHIỆM THU' : status.replace('_', ' ')}
       </Badge>
     );
   };
@@ -137,6 +147,40 @@ export function TasksWorkspacePage() {
         id: selectedTaskId,
         data: { actualEndDate: completionDate },
       });
+    }
+  };
+
+  const handleOpenReviewDialog = (id: number) => {
+    setSelectedTaskId(id);
+    setRejectReason('');
+    setReviewDialogOpen(true);
+  };
+
+  const handleApproveTask = () => {
+    if (selectedTaskId) {
+      approveTaskMutation.mutate(selectedTaskId, {
+        onSuccess: () => {
+          toast.success("Nghiệm thu thành công");
+          setReviewDialogOpen(false);
+          setSelectedTaskId(null);
+        },
+        onError: () => toast.error("Có lỗi xảy ra")
+      });
+    }
+  };
+
+  const handleRejectTask = () => {
+    if (selectedTaskId && rejectReason) {
+      rejectTaskMutation.mutate({ taskId: selectedTaskId, rejectReason }, {
+        onSuccess: () => {
+          toast.success("Đã từ chối nghiệm thu");
+          setReviewDialogOpen(false);
+          setSelectedTaskId(null);
+        },
+        onError: () => toast.error("Có lỗi xảy ra")
+      });
+    } else {
+      toast.error("Vui lòng nhập lý do từ chối");
     }
   };
 
@@ -194,6 +238,7 @@ export function TasksWorkspacePage() {
                 <SelectItem value="all">{t('tasks.filters.allStatuses')}</SelectItem>
                 <SelectItem value="PENDING">{t('tasks.status.pending')}</SelectItem>
                 <SelectItem value="IN_PROGRESS">{t('tasks.status.inProgress')}</SelectItem>
+                <SelectItem value="REVIEWING">Chờ nghiệm thu</SelectItem>
                 <SelectItem value="DONE">{t('tasks.status.done')}</SelectItem>
                 <SelectItem value="OVERDUE">{t('tasks.status.overdue')}</SelectItem>
               </SelectContent>
@@ -260,6 +305,15 @@ export function TasksWorkspacePage() {
                               disabled={completeTaskMutation.isPending}
                             >
                               {t('tasks.actions.complete')}
+                            </Button>
+                          )}
+                          {task.status === 'REVIEWING' && (
+                            <Button
+                              size="sm"
+                              className="bg-orange-500 hover:bg-orange-600"
+                              onClick={() => handleOpenReviewDialog(task.taskId)}
+                            >
+                              Nghiệm thu
                             </Button>
                           )}
                         </div>
@@ -334,6 +388,60 @@ export function TasksWorkspacePage() {
               disabled={completeTaskMutation.isPending || !completionDate}
             >
               {completeTaskMutation.isPending ? t('tasks.dialog.completing') : t('tasks.dialog.completeConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Review Task Dialog */}
+      <Dialog open={reviewDialogOpen} onOpenChange={(open) => !open && setReviewDialogOpen(false)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+          <DialogHeader>
+            <BackButton onClick={() => setReviewDialogOpen(false)} className="w-fit" />
+            <DialogTitle>Nghiệm thu công việc</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto py-4 space-y-4">
+            {isProgressLoading ? (
+              <div className="flex justify-center p-8">Đang tải lịch sử báo cáo...</div>
+            ) : progressLogs && progressLogs.length > 0 ? (
+              <div className="space-y-6">
+                {progressLogs.map((log) => (
+                  <div key={log.id} className="border p-4 rounded-lg bg-gray-50 space-y-2">
+                    <div className="flex justify-between items-center text-sm mb-2 border-b pb-2">
+                      <span className="font-semibold text-gray-700">{log.employeeName}</span>
+                      <span className="text-gray-500">{new Date(log.loggedAt!).toLocaleString()}</span>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <Badge variant="outline">{log.progressPercent}%</Badge>
+                      <span className="text-sm text-gray-700">{log.note || "Không có ghi chú"}</span>
+                    </div>
+                    {log.evidenceUrl && (
+                      <div className="mt-3 relative w-full max-w-sm rounded-md overflow-hidden border bg-white">
+                        <img src={log.evidenceUrl} alt="Evidence" className="w-full h-auto object-cover" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-8">Chưa có báo cáo nào.</div>
+            )}
+            
+            <div className="border-t pt-4 mt-4 space-y-3">
+              <Label>Lý do từ chối (Nếu có)</Label>
+              <Textarea 
+                placeholder="Nhập lý do bắt làm lại..." 
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter className="mt-4 shrink-0">
+            <Button variant="destructive" onClick={handleRejectTask} disabled={rejectTaskMutation.isPending || !rejectReason}>
+              <XCircle className="w-4 h-4 mr-2" /> Từ chối
+            </Button>
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleApproveTask} disabled={approveTaskMutation.isPending}>
+              <CheckCircle className="w-4 h-4 mr-2" /> Duyệt
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -57,7 +57,7 @@ public class ApplicationInitConfig {
     ApplicationRunner applicationRunner(
             UserRepository userRepository,
             RoleRepository roleRepository,
-            @org.springframework.beans.factory.annotation.Value("${dev.bootstrap-admin.enabled:false}") boolean bootstrapAdminEnabled) {
+            @org.springframework.beans.factory.annotation.Value("${dev.bootstrap-admin.enabled:true}") boolean bootstrapAdminEnabled) {
         log.info("Dang khoi tao vai tro he thong mac dinh...");
         return args -> {
             // 1. Ensure default roles exist

@@ -18,7 +18,7 @@ python -m venv venv
 2. Kích hoạt môi trường ảo:
 
 Bash
-source venv/bin/activate
+.\venv\Scripts\activate
 (Bạn sẽ thấy chữ (venv) xuất hiện ở đầu dòng lệnh terminal của Zsh).
 
 3. Cài đặt thư viện an toàn:
@@ -41,7 +41,7 @@ python import_all_data.py
 
 check data 
 
-docker exec -it mysql_quanlymuavu mysql -u root -p
+docker exec -it mysql_quanlymuavu mysql -uroot -prootpass
 
 USE identity_db;
 

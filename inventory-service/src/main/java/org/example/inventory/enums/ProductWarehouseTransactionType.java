@@ -8,7 +8,12 @@ public enum ProductWarehouseTransactionType {
     RETURN,
     MARKETPLACE_ORDER_RESERVED,
     MARKETPLACE_ORDER_RELEASED,
-    MARKETPLACE_ORDER_SOLD;
+    MARKETPLACE_ORDER_SOLD,
+    // === Substandard Disposal ===
+    STOCK_OUT_SUBSTANDARD,
+    SOLD_LIVESTOCK_FEED,
+    COMPOSTED,
+    DISCARDED;
 
     public static ProductWarehouseTransactionType fromCode(String code) {
         if (code == null || code.isBlank()) {

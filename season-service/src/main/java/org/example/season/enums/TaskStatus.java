@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum TaskStatus {
     PENDING("PENDING", "Pending"),
     IN_PROGRESS("IN_PROGRESS", "In progress"),
+    REVIEWING("REVIEWING", "Reviewing"),
     DONE("DONE", "Done"),
     OVERDUE("OVERDUE", "Overdue"),
     CANCELLED("CANCELLED", "Cancelled");

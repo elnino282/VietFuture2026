@@ -314,3 +314,48 @@ export const useEmployeeReportTaskProgress = (
     },
   });
 };
+
+export const useApproveTask = (
+  options?: UseMutationOptions<Task, Error, number>
+) => {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options ?? {};
+  return useMutation({
+    mutationFn: (taskId: number) => laborApi.approveTask(taskId),
+    ...mutationOptions,
+    onSuccess: (data, variables, onMutateResult, context) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.listWorkspace(), exact: false });
+      queryClient.invalidateQueries({ queryKey: laborKeys.seasonProgressBase(data.seasonId ?? 0), exact: false });
+      onSuccess?.(data, variables, onMutateResult, context);
+    },
+  });
+};
+
+export const useRejectTask = (
+  options?: UseMutationOptions<Task, Error, { taskId: number; rejectReason: string }>
+) => {
+  const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options ?? {};
+  return useMutation({
+    mutationFn: ({ taskId, rejectReason }) => laborApi.rejectTask(taskId, { rejectReason }),
+    ...mutationOptions,
+    onSuccess: (data, variables, onMutateResult, context) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.listWorkspace(), exact: false });
+      queryClient.invalidateQueries({ queryKey: laborKeys.seasonProgressBase(data.seasonId ?? 0), exact: false });
+      onSuccess?.(data, variables, onMutateResult, context);
+    },
+  });
+};
+
+export const useTaskProgressLogs = (
+  taskId: number | null | undefined,
+  options?: Omit<UseQueryOptions<TaskProgressLog[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery({
+    queryKey: ['taskProgressLogs', taskId],
+    queryFn: () => laborApi.getTaskProgressLogs(taskId!),
+    enabled: !!taskId && taskId > 0,
+    staleTime: 60 * 1000,
+    ...options,
+  });
+

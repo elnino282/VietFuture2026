@@ -119,6 +119,10 @@ export function EmployeeTasksPage() {
       toast.error(t("employee.tasks.validation.progressRange"));
       return;
     }
+    if (parsedPercent === 100 && !evidenceUrl.trim()) {
+      toast.error("Vui lòng tải lên hình ảnh nghiệm thu khi báo cáo 100%");
+      return;
+    }
     reportProgressMutation.mutate({
       taskId: progressTaskId,
       data: {
@@ -291,12 +295,32 @@ export function EmployeeTasksPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>{t("employee.tasks.progressDialog.evidenceUrl")}</Label>
-              <Input
-                value={evidenceUrl}
-                onChange={(event) => setEvidenceUrl(event.target.value)}
-                placeholder="https://..."
-              />
+              <Label>{t("employee.tasks.progressDialog.evidenceUrl", "Hình ảnh nghiệm thu (Bắt buộc khi 100%)")}</Label>
+              <div className="flex flex-col gap-3">
+                {evidenceUrl && (
+                  <div className="relative w-full max-w-sm rounded-md overflow-hidden border">
+                    <img src={evidenceUrl} alt="Preview" className="w-full h-auto object-cover" />
+                  </div>
+                )}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      // Tạo preview (trong thực tế có thể dùng URL.createObjectURL để view local, 
+                      // nhưng yêu cầu dùng Dummy URL cho payload)
+                      // Gán cứng Dummy URL để test
+                      setEvidenceUrl("https://dummyimage.com/600x400/000/fff&text=Nghiem+Thu");
+                      toast.info("Đã giả lập tải ảnh lên thành công!");
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Chụp ảnh thửa ruộng sau khi hoàn thành.
+                </p>
+              </div>
             </div>
           </div>
           <DialogFooter>

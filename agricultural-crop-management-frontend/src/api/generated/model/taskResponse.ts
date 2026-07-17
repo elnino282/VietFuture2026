@@ -21,4 +21,8 @@ export interface TaskResponse {
   userId?: number;
   userName?: string;
   createdAt?: string;
+  plotName?: string;
+  plotArea?: number;
+  estimatedDays?: number;
+  estimatedCompletionDate?: string;
 }

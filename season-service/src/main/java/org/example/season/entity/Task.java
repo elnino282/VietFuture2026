@@ -88,6 +88,12 @@ public class Task {
     @Column(name = "plot_id")
     Long plotId;
 
+    @Column(name = "plot_name")
+    String plotName;
+
+    @Column(name = "plot_area")
+    BigDecimal plotArea;
+
     @Column(name = "work_team_id")
     Long workTeamId;
 

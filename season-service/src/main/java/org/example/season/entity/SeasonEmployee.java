@@ -72,6 +72,16 @@ public class SeasonEmployee {
     @Column(name = "active", nullable = false)
     Boolean active = true;
 
+    @Builder.Default
+    @Column(name = "is_trained", nullable = false)
+    Boolean isTrained = false;
+
+    @Column(name = "trained_at")
+    LocalDateTime trainedAt;
+
+    @Column(name = "training_notes", columnDefinition = "TEXT")
+    String trainingNotes;
+
     @Column(name = "created_at")
     LocalDateTime createdAt;
 

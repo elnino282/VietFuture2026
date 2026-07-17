@@ -32,4 +32,15 @@ public class UpdateHarvestDetailRequest {
     String grade;
 
     String note;
+
+    // === Quality Grading ===
+    String qualityGrade;
+    String qualityNotes;
+    BigDecimal subStandardQuantity;
+    String subStandardDisposition;
+
+    // === Packaging & Processing ===
+    String packagingType;
+    Integer packagingCount;
+    String processingType;
 }

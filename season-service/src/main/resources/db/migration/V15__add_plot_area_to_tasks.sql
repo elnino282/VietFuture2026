@@ -1,0 +1,1 @@
+ALTER TABLE tasks ADD COLUMN plot_area DECIMAL(10, 2);

@@ -152,6 +152,12 @@ public class ProductWarehouseBridgeService {
                 .note(normalizeBlankToNull(request.getNote()))
                 .status(ProductWarehouseLotStatus.IN_STOCK)
                 .createdBy(actorUserId)
+                // === Crop & Packaging Fields ===
+                .cropCategory(normalizeBlankToNull(request.getCropCategory()))
+                .expiryDate(request.getExpiryDate())
+                .packagingType(normalizeBlankToNull(request.getPackagingType()))
+                .packagingCount(request.getPackagingCount())
+                .processingType(normalizeBlankToNull(request.getProcessingType()))
                 .build();
 
         ProductWarehouseLot saved = productWarehouseLotRepository.save(lot);
@@ -295,10 +301,34 @@ public class ProductWarehouseBridgeService {
             return warehouse;
         }
 
-        List<Warehouse> warehouses = warehouseRepository.findAllByFarmId(request.getFarmId());
+        List<Warehouse> warehouses = warehouseRepository.findByFarmId(request.getFarmId());
         if (warehouses.isEmpty()) {
             throw new AppException(ErrorCode.RESOURCE_NOT_FOUND);
         }
+
+        // Ưu tiên theo loại storage (COLD cho Rau/Quả, DRY cho Lúa/Củ)
+        String category = request.getCropCategory();
+        String preferredStorage = null;
+        if (category != null) {
+            if (category.equalsIgnoreCase("VEGETABLE") || category.equalsIgnoreCase("FRUIT")) {
+                preferredStorage = "COLD";
+            } else if (category.equalsIgnoreCase("GRAIN") || category.equalsIgnoreCase("TUBER") || category.equalsIgnoreCase("HERB")) {
+                preferredStorage = "DRY";
+            }
+        }
+
+        // Thử tìm kho theo preferredStorage
+        if (preferredStorage != null) {
+            final String targetStorage = preferredStorage;
+            var matchedStorage = warehouses.stream()
+                    .filter(w -> w.getStorageConditions() != null && targetStorage.equalsIgnoreCase(w.getStorageConditions()))
+                    .findFirst();
+            if (matchedStorage.isPresent()) {
+                return matchedStorage.get();
+            }
+        }
+
+        // Fallback về loại PRODUCT (OUTPUT_WAREHOUSE_TYPE)
         return warehouses.stream()
                 .filter(warehouse -> warehouse.getType() != null && OUTPUT_WAREHOUSE_TYPE.equalsIgnoreCase(warehouse.getType()))
                 .findFirst()

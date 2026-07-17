@@ -26,6 +26,9 @@ public class SeasonEmployeeResponse {
     String employeeEmail;
     BigDecimal wagePerTask;
     Boolean active;
+    Boolean isTrained;
+    LocalDateTime trainedAt;
+    String trainingNotes;
     LocalDateTime createdAt;
 }
 

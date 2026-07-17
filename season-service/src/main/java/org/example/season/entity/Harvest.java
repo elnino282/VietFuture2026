@@ -70,6 +70,36 @@ public class Harvest {
     @Column(name = "net_dry_weight")
     BigDecimal netDryWeight;
 
+    // === Quality Grading ===
+    @Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(name = "quality_grade", length = 20)
+    org.example.season.enums.QualityGrade qualityGrade;
+
+    @Column(name = "quality_notes", columnDefinition = "TEXT")
+    String qualityNotes;
+
+    @Column(name = "sub_standard_quantity", precision = 19, scale = 3)
+    BigDecimal subStandardQuantity;
+
+    @Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(name = "sub_standard_disposition", length = 30)
+    org.example.season.enums.SubStandardDisposition subStandardDisposition;
+
+    // === Packaging & Processing ===
+    @Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(name = "packaging_type", length = 30)
+    org.example.season.enums.PackagingType packagingType;
+
+    @Column(name = "packaging_count")
+    Integer packagingCount;
+
+    @Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(name = "processing_type", length = 30)
+    org.example.season.enums.ProcessingType processingType;
+
+    @Column(name = "crop_category", length = 30)
+    String cropCategory;
+
     @PrePersist
     void onCreate() {
         if (createdAt == null) {

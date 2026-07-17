@@ -32,4 +32,6 @@ public interface TaskProgressLogRepository extends JpaRepository<TaskProgressLog
             ORDER BY l.loggedAt DESC, l.id DESC
             """)
     List<TaskProgressLog> findRecentByOwnerId(@Param("ownerId") Long ownerId, Pageable pageable);
+
+    List<TaskProgressLog> findByTaskIdOrderByLoggedAtDesc(Integer taskId);
 }

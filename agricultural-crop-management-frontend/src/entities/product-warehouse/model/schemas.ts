@@ -41,9 +41,28 @@ export const ProductWarehouseLotSchema = z.object({
   createdByName: z.string().nullable().optional(),
   createdAt: z.string().nullable().optional(),
   updatedAt: z.string().nullable().optional(),
+
+  // === Packaging & Processing ===
+  cropCategory: z.string().nullable().optional(),
+  hasTemperatureAlert: z.boolean().nullable().optional(),
+  expiryDate: DateSchema.nullable().optional(),
+  packagingType: z.string().nullable().optional(),
+  packagingCount: z.number().nullable().optional(),
+  processingType: z.string().nullable().optional(),
 });
 
 export type ProductWarehouseLot = z.infer<typeof ProductWarehouseLotSchema>;
+
+export const SubStandardDispositionRequestSchema = z.object({
+  quantity: z.number().positive(),
+  disposition: z.string(),
+  note: z.string().optional(),
+  buyerName: z.string().optional(),
+  buyerContact: z.string().optional(),
+  salePricePerKg: z.number().optional(),
+});
+
+export type SubStandardDispositionRequest = z.infer<typeof SubStandardDispositionRequestSchema>;
 
 export const ProductWarehouseTransactionSchema = z.object({
   id: z.number().int().positive(),

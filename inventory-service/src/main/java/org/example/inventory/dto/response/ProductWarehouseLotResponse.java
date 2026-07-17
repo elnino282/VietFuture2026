@@ -56,5 +56,9 @@ public class ProductWarehouseLotResponse {
     Boolean hasTemperatureAlert;
     /** Ngày hết hạn an toàn của lô hàng */
     LocalDate expiryDate;
-}
 
+    // === Packaging & Processing ===
+    String packagingType;
+    Integer packagingCount;
+    String processingType;
+}

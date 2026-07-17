@@ -1,0 +1,4 @@
+ALTER TABLE season_employees
+ADD COLUMN is_trained BOOLEAN DEFAULT FALSE,
+ADD COLUMN trained_at TIMESTAMP NULL,
+ADD COLUMN training_notes TEXT NULL;

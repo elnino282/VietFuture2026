@@ -79,11 +79,10 @@ public class FarmerLaborManagementController {
         return ApiResponse.success(laborManagementService.updateSeasonEmployee(seasonId, employeeUserId, request));
     }
 
-    @DeleteMapping("/seasons/{seasonId}/employees/{employeeUserId}")
-    public ApiResponse<Void> removeSeasonEmployee(
-            @PathVariable Integer seasonId,
-            @PathVariable Long employeeUserId) {
-        laborManagementService.removeSeasonEmployee(seasonId, employeeUserId);
+    @DeleteMapping("/seasons/{seasonId}/employees/{seasonEmployeeId}")
+    public ApiResponse<Void> removeSeasonEmployee(@PathVariable Integer seasonId,
+            @PathVariable Integer seasonEmployeeId) {
+        laborManagementService.removeSeasonEmployee(seasonId, seasonEmployeeId);
         return ApiResponse.success(null);
     }
 
@@ -139,5 +138,21 @@ public class FarmerLaborManagementController {
                 payload.getEmployeeUserId(),
                 payload.getPeriodStart(),
                 payload.getPeriodEnd()));
+    }
+
+    @PatchMapping("/tasks/{taskId}/approve")
+    public ApiResponse<TaskResponse> approveTask(@PathVariable Integer taskId) {
+        return ApiResponse.success(laborManagementService.approveTask(taskId));
+    }
+
+    @PostMapping("/tasks/{taskId}/reject")
+    public ApiResponse<TaskResponse> rejectTask(@PathVariable Integer taskId,
+            @Valid @RequestBody org.example.season.dto.request.RejectTaskRequest request) {
+        return ApiResponse.success(laborManagementService.rejectTask(taskId, request));
+    }
+
+    @GetMapping("/tasks/{taskId}/progress-logs")
+    public ApiResponse<List<TaskProgressLogResponse>> getTaskProgressLogs(@PathVariable Integer taskId) {
+        return ApiResponse.success(laborManagementService.getTaskProgressLogs(taskId));
     }
 }

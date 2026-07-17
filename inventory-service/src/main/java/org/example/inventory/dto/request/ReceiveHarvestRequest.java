@@ -36,4 +36,12 @@ public class ReceiveHarvestRequest {
     String lotCode;
     String unit;
     String note;
+
+    // === Crop-specific & Quality ===
+    String cropCategory;
+    LocalDate expiryDate;
+    String qualityGrade;
+    String packagingType;
+    Integer packagingCount;
+    String processingType;
 }

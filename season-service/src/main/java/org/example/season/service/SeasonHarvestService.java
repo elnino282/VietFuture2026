@@ -333,11 +333,22 @@ public class SeasonHarvestService {
                 .unit(request.getUnit())
                 .grade(request.getGrade())
                 .note(request.getNote())
+                // === Quality ===
+                .qualityGrade(parseQualityGrade(request.getQualityGrade()))
+                .qualityNotes(request.getQualityNotes())
+                .subStandardQuantity(request.getSubStandardQuantity())
+                .subStandardDisposition(parseSubStandardDisposition(request.getSubStandardDisposition()))
+                // === Packaging ===
+                .packagingType(parsePackagingType(request.getPackagingType()))
+                .packagingCount(request.getPackagingCount())
+                .processingType(parseProcessingType(request.getProcessingType()))
+                // === Crop ===
+                .cropCategory(crop != null ? crop.getCategory() : null)
+                .grossWetWeight(request.getGrossWetWeight())
                 .build();
 
         Harvest saved = harvestRepository.save(harvest);
         ExternalServiceClient.PlotInternalDto plot = resolvePlotForHarvestReceipt(season);
-        ExternalServiceClient.CropInternalDto crop = resolveCropForHarvestReceipt(season);
         ExternalServiceClient.VarietyInternalDto variety = resolveVarietyForHarvestReceipt(season);
         ProductWarehouseLotDto receivedLot = externalServiceClient.receiveFromHarvest(
                 saved.getId(),
@@ -364,6 +375,13 @@ public class SeasonHarvestService {
                         .lotCode(request.getLotCode())
                         .unit(request.getInventoryUnit())
                         .note(request.getNote())
+                        // === Quality & Crop Info for Inventory ===
+                        .cropCategory(saved.getCropCategory())
+                        .qualityGrade(request.getQualityGrade())
+                        .packagingType(request.getPackagingType())
+                        .packagingCount(request.getPackagingCount())
+                        .processingType(request.getProcessingType())
+                        // Note: expiryDate is normally set by inventory service using shelfLifeDays if needed
                         .build());
         recomputeSeasonActualYield(season);
         domainEventPublisher.publish(new HarvestRecordedEvent(
@@ -681,14 +699,43 @@ public class SeasonHarvestService {
                 .revenue(qty.multiply(unitPrice))
                 .note(harvest.getNote())
                 .createdAt(harvest.getCreatedAt())
+                // === Quality Grading ===
+                .qualityGrade(harvest.getQualityGrade() != null ? harvest.getQualityGrade().name() : null)
+                .qualityNotes(harvest.getQualityNotes())
+                .subStandardQuantity(harvest.getSubStandardQuantity())
+                .subStandardDisposition(harvest.getSubStandardDisposition() != null ? harvest.getSubStandardDisposition().name() : null)
+                // === Packaging & Processing ===
+                .packagingType(harvest.getPackagingType() != null ? harvest.getPackagingType().name() : null)
+                .packagingCount(harvest.getPackagingCount())
+                .processingType(harvest.getProcessingType() != null ? harvest.getProcessingType().name() : null)
+                // === Crop Info ===
+                .cropCategory(harvest.getCropCategory())
+                .grossWetWeight(harvest.getGrossWetWeight())
+                .netDryWeight(harvest.getNetDryWeight())
+                .warehouseReceiptStatus(harvest.getWarehouseReceiptStatus() != null ? harvest.getWarehouseReceiptStatus().name() : null)
                 .build();
     }
 
     /**
      * Luồng 1: Farmer báo cáo gặt ngoài đồng
+     * Hỗ trợ: phân loại chất lượng, tách lô SUBSTANDARD, phân luồng theo nhóm cây.
+     *
+     * @param qualityGrade       PASSED / SUBSTANDARD / REJECTED (nullable = mặc định PASSED)
+     * @param subStandardQty     Khối lượng phần không đạt (chỉ khi SUBSTANDARD)
+     * @param subStandardDisp    Hướng xử lý phần không đạt
+     * @param packagingType      Loại đóng gói
+     * @param packagingCount     Số kiện
+     * @param processingType     Loại sơ chế
      */
     @Transactional
-    public Harvest reportFieldHarvest(Integer seasonId, BigDecimal grossWetWeight) {
+    public List<Harvest> reportFieldHarvest(Integer seasonId,
+                                            BigDecimal grossWetWeight,
+                                            String qualityGrade,
+                                            BigDecimal subStandardQty,
+                                            String subStandardDisp,
+                                            String packagingType,
+                                            Integer packagingCount,
+                                            String processingType) {
         if (grossWetWeight == null || grossWetWeight.compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(ErrorCode.INVALID_SEASON_DATES);
         }
@@ -696,7 +743,7 @@ public class SeasonHarvestService {
         Season season = getSeasonForCurrentFarmer(seasonId);
         ensureSeasonAllowsHarvest(season);
 
-        // [FIX 2] Bắt lỗi cứng, không được swallow exception
+        // Lấy thông tin cây trồng từ Crop Catalog
         org.example.season.client.CropCatalogClient.CropDto cropInfo;
         try {
             cropInfo = cropCatalogClient.getCropById(season.getCropId());
@@ -704,25 +751,102 @@ public class SeasonHarvestService {
             throw new IllegalStateException("Không thể truy xuất dữ liệu Sinh lý Nông sản từ Catalog Service.");
         }
 
-        Harvest harvest = Harvest.builder()
+        String cropCategory = cropInfo.getCategory();
+        org.example.season.enums.QualityGrade grade = parseQualityGrade(qualityGrade);
+        org.example.season.enums.PackagingType pkgType = parsePackagingType(packagingType);
+        org.example.season.enums.ProcessingType procType = parseProcessingType(processingType);
+
+        // Xác định khối lượng đạt chuẩn
+        BigDecimal passedQty = grossWetWeight;
+        if (grade == org.example.season.enums.QualityGrade.SUBSTANDARD
+                && subStandardQty != null
+                && subStandardQty.compareTo(BigDecimal.ZERO) > 0) {
+            passedQty = grossWetWeight.subtract(subStandardQty);
+            if (passedQty.compareTo(BigDecimal.ZERO) < 0) {
+                passedQty = BigDecimal.ZERO;
+            }
+        }
+
+        // --- Lô chính (PASSED) ---
+        Harvest mainHarvest = Harvest.builder()
                 .season(season)
                 .harvestDate(LocalDate.now())
                 .grossWetWeight(grossWetWeight)
-                .quantity(grossWetWeight)
+                .quantity(passedQty)
                 .unit(BigDecimal.ONE)
+                .qualityGrade(grade != org.example.season.enums.QualityGrade.SUBSTANDARD ? grade : org.example.season.enums.QualityGrade.PASSED)
+                .subStandardQuantity(subStandardQty)
+                .subStandardDisposition(parseSubStandardDisposition(subStandardDisp))
+                .packagingType(pkgType)
+                .packagingCount(packagingCount)
+                .processingType(procType)
+                .cropCategory(cropCategory)
                 .build();
 
-        // [FIX 1] Phân luồng rõ ràng dựa trên độ trễ
-        if (cropInfo.getPostHarvestDelayDays() != null && cropInfo.getPostHarvestDelayDays() > 0) {
-            // Nhóm Lúa/Ngũ cốc cần phơi sấy
-            harvest.setWarehouseReceiptStatus(org.example.season.enums.WarehouseReceiptStatus.PENDING_RECEIPT);
+        // Phân luồng warehouse receipt status theo nhóm cây
+        boolean isFreshProduce = "VEGETABLE".equalsIgnoreCase(cropCategory) || "FRUIT".equalsIgnoreCase(cropCategory);
+        if (isFreshProduce) {
+            // Rau/Quả: không cần phơi sấy, postHarvestDelayDays = 0
+            mainHarvest.setWarehouseReceiptStatus(org.example.season.enums.WarehouseReceiptStatus.PENDING_RECEIPT);
+            // Frontend sẽ nhận postHarvestDelayDays = 0 -> nút "Nhập kho" sáng ngay
+        } else if (cropInfo.getPostHarvestDelayDays() != null && cropInfo.getPostHarvestDelayDays() > 0) {
+            // GRAIN/TUBER/HERB: cần phơi sấy -> đếm ngược
+            mainHarvest.setWarehouseReceiptStatus(org.example.season.enums.WarehouseReceiptStatus.PENDING_RECEIPT);
         } else {
-            // Nhóm Rau/Quả tươi không cần phơi sấy -> Có thể cho phép RECEIVED ngay hoặc có cờ đặc biệt
-            // Tạm thời vẫn để PENDING_RECEIPT nhưng frontend sẽ cho phép nút "Nhập kho" sáng lên ngay lập tức
-            harvest.setWarehouseReceiptStatus(org.example.season.enums.WarehouseReceiptStatus.PENDING_RECEIPT);
+            mainHarvest.setWarehouseReceiptStatus(org.example.season.enums.WarehouseReceiptStatus.PENDING_RECEIPT);
         }
 
-        return harvestRepository.save(harvest);
+        Harvest savedMain = harvestRepository.save(mainHarvest);
+        List<Harvest> results = new java.util.ArrayList<>();
+        results.add(savedMain);
+
+        // --- Lô SUBSTANDARD (nếu có) ---
+        if (grade == org.example.season.enums.QualityGrade.SUBSTANDARD
+                && subStandardQty != null
+                && subStandardQty.compareTo(BigDecimal.ZERO) > 0) {
+            Harvest subHarvest = Harvest.builder()
+                    .season(season)
+                    .harvestDate(LocalDate.now())
+                    .grossWetWeight(subStandardQty)
+                    .quantity(subStandardQty)
+                    .unit(BigDecimal.ONE)
+                    .qualityGrade(org.example.season.enums.QualityGrade.SUBSTANDARD)
+                    .qualityNotes("Tách từ lô #" + savedMain.getId() + " — không đạt chuẩn")
+                    .subStandardDisposition(parseSubStandardDisposition(subStandardDisp))
+                    .packagingType(pkgType)
+                    .processingType(procType)
+                    .cropCategory(cropCategory)
+                    .warehouseReceiptStatus(org.example.season.enums.WarehouseReceiptStatus.PENDING_RECEIPT)
+                    .build();
+            results.add(harvestRepository.save(subHarvest));
+        }
+
+        return results;
+    }
+
+    // === Enum parsing helpers ===
+    private org.example.season.enums.QualityGrade parseQualityGrade(String value) {
+        if (value == null || value.isBlank()) return org.example.season.enums.QualityGrade.PASSED;
+        try { return org.example.season.enums.QualityGrade.valueOf(value.trim().toUpperCase()); }
+        catch (IllegalArgumentException e) { return org.example.season.enums.QualityGrade.PASSED; }
+    }
+
+    private org.example.season.enums.SubStandardDisposition parseSubStandardDisposition(String value) {
+        if (value == null || value.isBlank()) return null;
+        try { return org.example.season.enums.SubStandardDisposition.valueOf(value.trim().toUpperCase()); }
+        catch (IllegalArgumentException e) { return null; }
+    }
+
+    private org.example.season.enums.PackagingType parsePackagingType(String value) {
+        if (value == null || value.isBlank()) return null;
+        try { return org.example.season.enums.PackagingType.valueOf(value.trim().toUpperCase()); }
+        catch (IllegalArgumentException e) { return null; }
+    }
+
+    private org.example.season.enums.ProcessingType parseProcessingType(String value) {
+        if (value == null || value.isBlank()) return null;
+        try { return org.example.season.enums.ProcessingType.valueOf(value.trim().toUpperCase()); }
+        catch (IllegalArgumentException e) { return null; }
     }
 
     /**

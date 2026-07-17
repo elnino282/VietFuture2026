@@ -128,4 +128,11 @@ public class ProductWarehouseController {
     public ApiResponse<ProductWarehouseTraceabilityResponse> getTraceability(@PathVariable Integer id) {
         return ApiResponse.success(productWarehousePublicService.getTraceability(id));
     }
+
+    @PostMapping("/lots/{id}/dispose-substandard")
+    public ApiResponse<ProductWarehouseLotResponse> disposeSubStandardLot(
+            @PathVariable Integer id,
+            @Valid @RequestBody org.example.inventory.dto.request.SubStandardDispositionRequest request) {
+        return ApiResponse.success(productWarehousePublicService.disposeSubStandardLot(id, request));
+    }
 }

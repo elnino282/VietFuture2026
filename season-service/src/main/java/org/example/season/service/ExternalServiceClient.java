@@ -67,6 +67,7 @@ public class ExternalServiceClient {
         return PlotInternalDto.builder()
                 .id(plot.getId())
                 .plotName(plot.getPlotName())
+                .plotArea(plot.getPlotArea())
                 .farmId(plot.getFarmId())
                 .farmName(plot.getFarmName())
                 .ownerUserId(plot.getOwnerUserId())
@@ -93,6 +94,7 @@ public class ExternalServiceClient {
     public static class PlotInternalDto {
         private Integer id;
         private String plotName;
+        private java.math.BigDecimal plotArea;
         private Integer farmId;
         private String farmName;
         private Long ownerUserId;
