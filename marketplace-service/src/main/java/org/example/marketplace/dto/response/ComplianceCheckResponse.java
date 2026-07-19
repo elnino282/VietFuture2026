@@ -1,1 +1,13 @@
-package org.example.marketplace.dto.response;\r\n\r\nimport java.util.List;\r\n\r\npublic record ComplianceCheckResponse(\r\n        boolean isEligible,\r\n        List<String> reasons,\r\n        String complianceClaim,\r\n        String certificationSnapshotJson,\r\n        String harvestSafetySnapshotJson\r\n) {\r\n}\r\n
+package org.example.marketplace.dto.response;
+
+import java.util.List;
+
+public record ComplianceCheckResponse(
+        boolean isEligible,
+        List<String> reasons,
+        String complianceClaim,
+        String certificationSnapshotJson,
+        String harvestSafetySnapshotJson
+) {
+}
+

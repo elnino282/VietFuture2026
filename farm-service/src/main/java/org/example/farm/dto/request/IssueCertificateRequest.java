@@ -1,1 +1,26 @@
-package org.example.farm.dto.request;\r\n\r\nimport jakarta.validation.constraints.NotBlank;\r\nimport jakarta.validation.constraints.NotNull;\r\nimport lombok.*;\r\nimport lombok.experimental.FieldDefaults;\r\nimport java.time.LocalDate;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@FieldDefaults(level = AccessLevel.PRIVATE)\r\npublic class IssueCertificateRequest {\r\n    @NotBlank\r\n    String certificateNumber;\r\n\r\n    @NotNull\r\n    LocalDate issuedDate;\r\n\r\n    @NotNull\r\n    LocalDate expiryDate;\r\n\r\n    Integer certificateDocumentId;  // FK tới farm_documents.id\r\n}\r\n
+package org.example.farm.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import java.time.LocalDate;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class IssueCertificateRequest {
+    @NotBlank
+    String certificateNumber;
+
+    @NotNull
+    LocalDate issuedDate;
+
+    @NotNull
+    LocalDate expiryDate;
+
+    Integer certificateDocumentId;  // FK tới farm_documents.id
+}
+

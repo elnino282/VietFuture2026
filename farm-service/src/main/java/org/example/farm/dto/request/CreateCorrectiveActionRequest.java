@@ -1,1 +1,17 @@
-package org.example.farm.dto.request;\r\n\r\nimport lombok.*;\r\nimport lombok.experimental.FieldDefaults;\r\nimport java.util.List;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@FieldDefaults(level = AccessLevel.PRIVATE)\r\npublic class CreateCorrectiveActionRequest {\r\n    String planDescription;\r\n    List<String> evidenceUrls;\r\n    Integer appliesFromSeasonId;  // nullable — mùa vụ tương lai\r\n}\r\n
+package org.example.farm.dto.request;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class CreateCorrectiveActionRequest {
+    String planDescription;
+    List<String> evidenceUrls;
+    Integer appliesFromSeasonId;  // nullable — mùa vụ tương lai
+}
+

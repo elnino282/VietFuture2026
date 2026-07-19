@@ -1,1 +1,15 @@
-package org.example.season.repository;\r\n\r\nimport org.example.season.entity.EmployeeTrainingRecord;\r\nimport org.springframework.data.jpa.repository.JpaRepository;\r\nimport org.springframework.stereotype.Repository;\r\n\r\nimport java.util.List;\r\n\r\n@Repository\r\npublic interface EmployeeTrainingRecordRepository extends JpaRepository<EmployeeTrainingRecord, Integer> {\r\n    List<EmployeeTrainingRecord> findByUserId(Long userId);\r\n    List<EmployeeTrainingRecord> findByWorkTeamId(Integer workTeamId);\r\n    List<EmployeeTrainingRecord> findByUserIdIn(List<Long> userIds);\r\n}\r\n
+package org.example.season.repository;
+
+import org.example.season.entity.EmployeeTrainingRecord;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface EmployeeTrainingRecordRepository extends JpaRepository<EmployeeTrainingRecord, Integer> {
+    List<EmployeeTrainingRecord> findByUserId(Long userId);
+    List<EmployeeTrainingRecord> findByWorkTeamId(Integer workTeamId);
+    List<EmployeeTrainingRecord> findByUserIdIn(List<Long> userIds);
+}
+

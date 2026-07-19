@@ -1,1 +1,59 @@
-package org.example.season.service;\r\n\r\nimport lombok.RequiredArgsConstructor;\r\nimport org.example.season.dto.response.PHIAlertDto;\r\nimport org.example.season.entity.PesticideRecord;\r\nimport org.example.season.entity.Season;\r\nimport org.example.season.enums.SeasonStatus;\r\nimport org.example.season.repository.PesticideRecordRepository;\r\nimport org.example.season.repository.SeasonRepository;\r\nimport org.springframework.stereotype.Service;\r\n\r\nimport java.time.LocalDate;\r\nimport java.time.temporal.ChronoUnit;\r\nimport java.util.ArrayList;\r\nimport java.util.List;\r\nimport java.util.Map;\r\nimport java.util.stream.Collectors;\r\n\r\n@Service\r\n@RequiredArgsConstructor\r\npublic class PHIAlertService {\r\n\r\n    private final SeasonRepository seasonRepository;\r\n    private final PesticideRecordRepository pesticideRecordRepository;\r\n\r\n    /**\r\n     * Lấy danh sách các cảnh báo PHI (PesticideRecord chưa qua thời gian cách ly)\r\n     * cho tất cả các mùa vụ đang ACTIVE của nông dân hiện tại.\r\n     */\r\n    public List<PHIAlertDto> getActivePHIAlerts(Long userId) {\r\n        // 1. Lấy danh sách các Season đang ACTIVE của userId\r\n        List<Season> activeSeasons = seasonRepository.findActiveSeasonsByUserIdOrderByStartDateDesc(SeasonStatus.ACTIVE, userId);\r\n        if (activeSeasons.isEmpty()) {\r\n            return new ArrayList<>();\r\n        }\r\n\r\n        List<Integer> seasonIds = activeSeasons.stream().map(Season::getId).collect(Collectors.toList());\r\n        Map<Integer, String> seasonNameMap = activeSeasons.stream().collect(Collectors.toMap(Season::getId, Season::getSeasonName));\r\n\r\n        // 2. Tìm các PesticideRecord có harvestAllowedDate > today\r\n        LocalDate today = LocalDate.now();\r\n        List<PesticideRecord> activeRecords = pesticideRecordRepository.findActivePHIBySeasonIds(seasonIds, today);\r\n\r\n        // 3. Map sang DTO\r\n        return activeRecords.stream().map(record -> {\r\n            long daysRemaining = ChronoUnit.DAYS.between(today, record.getHarvestAllowedDate());\r\n            return PHIAlertDto.builder()\r\n                    .seasonId(record.getSeasonId())\r\n                    .seasonName(seasonNameMap.get(record.getSeasonId()))\r\n                    .pesticideName(record.getPesticideName())\r\n                    .appliedDate(record.getApplicationDate())\r\n                    .requiredIntervalDays(record.getPhiDays())\r\n                    .earliestSafeDate(record.getHarvestAllowedDate())\r\n                    .daysRemaining(daysRemaining)\r\n                    .build();\r\n        }).collect(Collectors.toList());\r\n    }\r\n}\r\n
+package org.example.season.service;
+
+import lombok.RequiredArgsConstructor;
+import org.example.season.dto.response.PHIAlertDto;
+import org.example.season.entity.PesticideRecord;
+import org.example.season.entity.Season;
+import org.example.season.enums.SeasonStatus;
+import org.example.season.repository.PesticideRecordRepository;
+import org.example.season.repository.SeasonRepository;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class PHIAlertService {
+
+    private final SeasonRepository seasonRepository;
+    private final PesticideRecordRepository pesticideRecordRepository;
+
+    /**
+     * Lấy danh sách các cảnh báo PHI (PesticideRecord chưa qua thời gian cách ly)
+     * cho tất cả các mùa vụ đang ACTIVE của nông dân hiện tại.
+     */
+    public List<PHIAlertDto> getActivePHIAlerts(Long userId) {
+        // 1. Lấy danh sách các Season đang ACTIVE của userId
+        List<Season> activeSeasons = seasonRepository.findActiveSeasonsByUserIdOrderByStartDateDesc(SeasonStatus.ACTIVE, userId);
+        if (activeSeasons.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Integer> seasonIds = activeSeasons.stream().map(Season::getId).collect(Collectors.toList());
+        Map<Integer, String> seasonNameMap = activeSeasons.stream().collect(Collectors.toMap(Season::getId, Season::getSeasonName));
+
+        // 2. Tìm các PesticideRecord có harvestAllowedDate > today
+        LocalDate today = LocalDate.now();
+        List<PesticideRecord> activeRecords = pesticideRecordRepository.findActivePHIBySeasonIds(seasonIds, today);
+
+        // 3. Map sang DTO
+        return activeRecords.stream().map(record -> {
+            long daysRemaining = ChronoUnit.DAYS.between(today, record.getHarvestAllowedDate());
+            return PHIAlertDto.builder()
+                    .seasonId(record.getSeasonId())
+                    .seasonName(seasonNameMap.get(record.getSeasonId()))
+                    .pesticideName(record.getPesticideName())
+                    .appliedDate(record.getApplicationDate())
+                    .requiredIntervalDays(record.getPhiDays())
+                    .earliestSafeDate(record.getHarvestAllowedDate())
+                    .daysRemaining(daysRemaining)
+                    .build();
+        }).collect(Collectors.toList());
+    }
+}
+

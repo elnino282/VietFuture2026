@@ -1,1 +1,11 @@
-package org.example.farm.repository;\r\n\r\nimport org.example.farm.entity.CertificationNonconformity;\r\nimport org.springframework.data.jpa.repository.JpaRepository;\r\nimport java.util.List;\r\n\r\npublic interface CertificationNonconformityRepository extends JpaRepository<CertificationNonconformity, Long> {\r\n    List<CertificationNonconformity> findByAuditId(Long auditId);\r\n    List<CertificationNonconformity> findByAuditIdIn(List<Long> auditIds);\r\n}\r\n
+package org.example.farm.repository;
+
+import org.example.farm.entity.CertificationNonconformity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface CertificationNonconformityRepository extends JpaRepository<CertificationNonconformity, Long> {
+    List<CertificationNonconformity> findByAuditId(Long auditId);
+    List<CertificationNonconformity> findByAuditIdIn(List<Long> auditIds);
+}
+

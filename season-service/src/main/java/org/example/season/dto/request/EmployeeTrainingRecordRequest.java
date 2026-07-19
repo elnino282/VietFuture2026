@@ -1,1 +1,29 @@
-package org.example.season.dto.request;\r\n\r\nimport jakarta.validation.constraints.NotNull;\r\nimport lombok.AllArgsConstructor;\r\nimport lombok.Builder;\r\nimport lombok.Data;\r\nimport lombok.NoArgsConstructor;\r\n\r\nimport java.time.LocalDate;\r\nimport java.util.List;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\npublic class EmployeeTrainingRecordRequest {\r\n    private Integer workTeamId;\r\n    \r\n    @NotNull\r\n    private Integer trainingProgramId;\r\n    \r\n    @NotNull\r\n    private LocalDate trainedAt;\r\n    \r\n    private String trainerName;\r\n    private List<String> evidenceUrls;\r\n    private LocalDate certifiedUntil;\r\n}\r\n
+package org.example.season.dto.request;
+
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class EmployeeTrainingRecordRequest {
+    private Integer workTeamId;
+    
+    @NotNull
+    private Integer trainingProgramId;
+    
+    @NotNull
+    private LocalDate trainedAt;
+    
+    private String trainerName;
+    private List<String> evidenceUrls;
+    private LocalDate certifiedUntil;
+}
+

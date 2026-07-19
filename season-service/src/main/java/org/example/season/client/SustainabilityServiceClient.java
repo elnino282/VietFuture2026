@@ -1,1 +1,59 @@
-package org.example.season.client;\r\n\r\nimport lombok.AllArgsConstructor;\r\nimport lombok.Builder;\r\nimport lombok.Data;\r\nimport lombok.NoArgsConstructor;\r\nimport org.springframework.cloud.openfeign.FeignClient;\r\nimport org.springframework.web.bind.annotation.GetMapping;\r\nimport org.springframework.web.bind.annotation.PathVariable;\r\n\r\nimport java.util.List;\r\n\r\n@FeignClient(name = \"sustainability-service\", url = \"${app.sustainability-service-url}\", fallback = SustainabilityServiceClientFallback.class)\r\npublic interface SustainabilityServiceClient {\r\n\r\n    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/soil-tests\")\r\n    List<SoilTestInternalDto> getSoilTests(@PathVariable(\"seasonId\") Integer seasonId);\r\n\r\n    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/irrigation-water-analyses\")\r\n    List<IrrigationWaterAnalysisInternalDto> getWaterAnalyses(@PathVariable(\"seasonId\") Integer seasonId);\r\n\r\n    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/nutrient-inputs\")\r\n    List<NutrientInputEventInternalDto> getNutrientInputs(@PathVariable(\"seasonId\") Integer seasonId);\r\n\r\n    @Data\r\n    @Builder\r\n    @NoArgsConstructor\r\n    @AllArgsConstructor\r\n    class SoilTestInternalDto {\r\n        private Integer id;\r\n        private Integer seasonId;\r\n        private java.time.LocalDate sampleDate;\r\n        private Boolean measured;\r\n    }\r\n\r\n    @Data\r\n    @Builder\r\n    @NoArgsConstructor\r\n    @AllArgsConstructor\r\n    class IrrigationWaterAnalysisInternalDto {\r\n        private Integer id;\r\n        private Integer seasonId;\r\n        private java.time.LocalDate sampleDate;\r\n        private Boolean measured;\r\n    }\r\n\r\n    @Data\r\n    @Builder\r\n    @NoArgsConstructor\r\n    @AllArgsConstructor\r\n    class NutrientInputEventInternalDto {\r\n        private Integer id;\r\n        private Integer seasonId;\r\n        private java.time.LocalDate appliedDate;\r\n        private String inputSource;\r\n        private java.math.BigDecimal nKg;\r\n    }\r\n}\r\n
+package org.example.season.client;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.List;
+
+@FeignClient(name = \"sustainability-service\", url = \"${app.sustainability-service-url}\", fallback = SustainabilityServiceClientFallback.class)
+public interface SustainabilityServiceClient {
+
+    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/soil-tests\")
+    List<SoilTestInternalDto> getSoilTests(@PathVariable(\"seasonId\") Integer seasonId);
+
+    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/irrigation-water-analyses\")
+    List<IrrigationWaterAnalysisInternalDto> getWaterAnalyses(@PathVariable(\"seasonId\") Integer seasonId);
+
+    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/nutrient-inputs\")
+    List<NutrientInputEventInternalDto> getNutrientInputs(@PathVariable(\"seasonId\") Integer seasonId);
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class SoilTestInternalDto {
+        private Integer id;
+        private Integer seasonId;
+        private java.time.LocalDate sampleDate;
+        private Boolean measured;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class IrrigationWaterAnalysisInternalDto {
+        private Integer id;
+        private Integer seasonId;
+        private java.time.LocalDate sampleDate;
+        private Boolean measured;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class NutrientInputEventInternalDto {
+        private Integer id;
+        private Integer seasonId;
+        private java.time.LocalDate appliedDate;
+        private String inputSource;
+        private java.math.BigDecimal nKg;
+    }
+}
+

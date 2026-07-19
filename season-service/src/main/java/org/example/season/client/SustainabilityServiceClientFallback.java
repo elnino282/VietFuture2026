@@ -1,1 +1,25 @@
-package org.example.season.client;\r\n\r\nimport org.springframework.stereotype.Component;\r\nimport java.util.ArrayList;\r\nimport java.util.List;\r\n\r\n@Component\r\npublic class SustainabilityServiceClientFallback implements SustainabilityServiceClient {\r\n\r\n    @Override\r\n    public List<SoilTestInternalDto> getSoilTests(Integer seasonId) {\r\n        return new ArrayList<>();\r\n    }\r\n\r\n    @Override\r\n    public List<IrrigationWaterAnalysisInternalDto> getWaterAnalyses(Integer seasonId) {\r\n        return new ArrayList<>();\r\n    }\r\n\r\n    @Override\r\n    public List<NutrientInputEventInternalDto> getNutrientInputs(Integer seasonId) {\r\n        return new ArrayList<>();\r\n    }\r\n}\r\n
+package org.example.season.client;
+
+import org.springframework.stereotype.Component;
+import java.util.ArrayList;
+import java.util.List;
+
+@Component
+public class SustainabilityServiceClientFallback implements SustainabilityServiceClient {
+
+    @Override
+    public List<SoilTestInternalDto> getSoilTests(Integer seasonId) {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<IrrigationWaterAnalysisInternalDto> getWaterAnalyses(Integer seasonId) {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<NutrientInputEventInternalDto> getNutrientInputs(Integer seasonId) {
+        return new ArrayList<>();
+    }
+}
+

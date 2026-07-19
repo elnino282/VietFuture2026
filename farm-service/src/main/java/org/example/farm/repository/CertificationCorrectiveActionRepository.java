@@ -1,1 +1,12 @@
-package org.example.farm.repository;\r\n\r\nimport org.example.farm.entity.CertificationCorrectiveAction;\r\nimport org.springframework.data.jpa.repository.JpaRepository;\r\nimport java.util.List;\r\nimport java.util.Optional;\r\n\r\npublic interface CertificationCorrectiveActionRepository extends JpaRepository<CertificationCorrectiveAction, Long> {\r\n    List<CertificationCorrectiveAction> findByNonconformityId(Long nonconformityId);\r\n    Optional<CertificationCorrectiveAction> findTopByNonconformityIdOrderByCreatedAtDesc(Long nonconformityId);\r\n}\r\n
+package org.example.farm.repository;
+
+import org.example.farm.entity.CertificationCorrectiveAction;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+import java.util.Optional;
+
+public interface CertificationCorrectiveActionRepository extends JpaRepository<CertificationCorrectiveAction, Long> {
+    List<CertificationCorrectiveAction> findByNonconformityId(Long nonconformityId);
+    Optional<CertificationCorrectiveAction> findTopByNonconformityIdOrderByCreatedAtDesc(Long nonconformityId);
+}
+

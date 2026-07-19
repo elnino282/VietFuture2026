@@ -1,1 +1,30 @@
-CREATE TABLE training_programs (\r\n    id INT AUTO_INCREMENT PRIMARY KEY,\r\n    title VARCHAR(255) NOT NULL,\r\n    category VARCHAR(100),\r\n    description TEXT,\r\n    is_mandatory BOOLEAN DEFAULT FALSE,\r\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\r\n);\r\n\r\nCREATE TABLE employee_training_records (\r\n    id INT AUTO_INCREMENT PRIMARY KEY,\r\n    user_id BIGINT NOT NULL,\r\n    work_team_id INT,\r\n    training_program_id INT NOT NULL,\r\n    trained_at DATE NOT NULL,\r\n    trainer_name VARCHAR(255),\r\n    evidence_urls JSON,\r\n    certified_until DATE,\r\n    status VARCHAR(50) DEFAULT 'COMPLETED',\r\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\r\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\r\n    FOREIGN KEY (training_program_id) REFERENCES training_programs(id)\r\n);\r\n\r\n-- Seed data\r\nINSERT INTO training_programs (title, category, description, is_mandatory)\r\nVALUES \r\n('An toàn sử dụng thuốc BVTV', 'SAFETY', 'Huấn luyện sử dụng thuốc bảo vệ thực vật an toàn theo chuẩn VietGAP', TRUE),\r\n('Quy trình phân loại và thu hoạch', 'OPERATIONS', 'Đào tạo kỹ năng thu hoạch nông sản đảm bảo chất lượng', TRUE);\r\n
+CREATE TABLE training_programs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(100),
+    description TEXT,
+    is_mandatory BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE employee_training_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    work_team_id INT,
+    training_program_id INT NOT NULL,
+    trained_at DATE NOT NULL,
+    trainer_name VARCHAR(255),
+    evidence_urls JSON,
+    certified_until DATE,
+    status VARCHAR(50) DEFAULT 'COMPLETED',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (training_program_id) REFERENCES training_programs(id)
+);
+
+-- Seed data
+INSERT INTO training_programs (title, category, description, is_mandatory)
+VALUES 
+('An toàn sử dụng thuốc BVTV', 'SAFETY', 'Huấn luyện sử dụng thuốc bảo vệ thực vật an toàn theo chuẩn VietGAP', TRUE),
+('Quy trình phân loại và thu hoạch', 'OPERATIONS', 'Đào tạo kỹ năng thu hoạch nông sản đảm bảo chất lượng', TRUE);
+

@@ -1,1 +1,29 @@
-package org.example.season.dto.response;\r\n\r\nimport lombok.AllArgsConstructor;\r\nimport lombok.Builder;\r\nimport lombok.Data;\r\nimport lombok.NoArgsConstructor;\r\n\r\nimport java.time.LocalDate;\r\nimport java.time.LocalDateTime;\r\nimport java.util.List;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\npublic class EmployeeTrainingRecordDto {\r\n    private Integer id;\r\n    private Long userId;\r\n    private Integer workTeamId;\r\n    private TrainingProgramDto trainingProgram;\r\n    private LocalDate trainedAt;\r\n    private String trainerName;\r\n    private List<String> evidenceUrls;\r\n    private LocalDate certifiedUntil;\r\n    private String status;\r\n    private LocalDateTime createdAt;\r\n    private LocalDateTime updatedAt;\r\n}\r\n
+package org.example.season.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class EmployeeTrainingRecordDto {
+    private Integer id;
+    private Long userId;
+    private Integer workTeamId;
+    private TrainingProgramDto trainingProgram;
+    private LocalDate trainedAt;
+    private String trainerName;
+    private List<String> evidenceUrls;
+    private LocalDate certifiedUntil;
+    private String status;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+

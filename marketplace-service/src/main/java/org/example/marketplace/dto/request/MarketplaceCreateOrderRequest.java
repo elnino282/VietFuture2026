@@ -14,6 +14,9 @@ public record MarketplaceCreateOrderRequest(
         String shippingAddressLine,
         String note,
         String idempotencyKey,
+        Boolean isPreOrder,
+        java.time.LocalDate requestedDeliveryDate,
+        java.time.LocalDate harvestReadyDate,
         List<MarketplaceOrderItemRequest> items) {
 
     public MarketplaceCreateOrderRequest(
@@ -24,7 +27,7 @@ public record MarketplaceCreateOrderRequest(
             String shippingAddressLine,
             String note,
             String idempotencyKey) {
-        this(paymentMethod, addressId, shippingRecipientName, shippingPhone, shippingAddressLine, note, idempotencyKey, null);
+        this(paymentMethod, addressId, shippingRecipientName, shippingPhone, shippingAddressLine, note, idempotencyKey, false, null, null, null);
     }
 
     public record MarketplaceOrderItemRequest(

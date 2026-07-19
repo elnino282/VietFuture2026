@@ -1,1 +1,23 @@
-package org.example.farm.dto.response;\r\n\r\nimport lombok.*;\r\nimport lombok.experimental.FieldDefaults;\r\nimport java.time.LocalDateTime;\r\nimport java.util.List;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@FieldDefaults(level = AccessLevel.PRIVATE)\r\npublic class NonconformityResponse {\r\n    Long id;\r\n    Long auditId;\r\n    Integer checklistItemId;\r\n    String severity;\r\n    String description;\r\n    String status;\r\n    LocalDateTime createdAt;\r\n    List<CorrectiveActionResponse> correctiveActions;\r\n}\r\n
+package org.example.farm.dto.response;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class NonconformityResponse {
+    Long id;
+    Long auditId;
+    Integer checklistItemId;
+    String severity;
+    String description;
+    String status;
+    LocalDateTime createdAt;
+    List<CorrectiveActionResponse> correctiveActions;
+}
+

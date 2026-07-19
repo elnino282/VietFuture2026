@@ -1,1 +1,23 @@
-package org.example.season.dto.response;\r\n\r\nimport lombok.AllArgsConstructor;\r\nimport lombok.Builder;\r\nimport lombok.Data;\r\nimport lombok.NoArgsConstructor;\r\n\r\nimport java.time.LocalDate;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\npublic class PHIAlertDto {\r\n    private Integer seasonId;\r\n    private String seasonName;\r\n    private String pesticideName;\r\n    private LocalDate appliedDate;\r\n    private Integer requiredIntervalDays;\r\n    private LocalDate earliestSafeDate;\r\n    private Long daysRemaining;\r\n}\r\n
+package org.example.season.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PHIAlertDto {
+    private Integer seasonId;
+    private String seasonName;
+    private String pesticideName;
+    private LocalDate appliedDate;
+    private Integer requiredIntervalDays;
+    private LocalDate earliestSafeDate;
+    private Long daysRemaining;
+}
+

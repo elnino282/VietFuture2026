@@ -1,1 +1,8 @@
-package org.example.farm.enums;\r\n\r\npublic enum NonconformitySeverity {\r\n    MINOR,\r\n    MAJOR,\r\n    CRITICAL\r\n}\r\n
+package org.example.farm.enums;
+
+public enum NonconformitySeverity {
+    MINOR,
+    MAJOR,
+    CRITICAL
+}
+

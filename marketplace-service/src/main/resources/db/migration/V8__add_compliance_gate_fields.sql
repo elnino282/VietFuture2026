@@ -1,1 +1,14 @@
--- Thêm các field phục vụ Marketplace Compliance Gate (Luồng G - BRD) cho bảng marketplace_products\r\n\r\nALTER TABLE marketplace_products \r\nADD COLUMN compliance_claim VARCHAR(20) NULL;\r\n\r\nALTER TABLE marketplace_products \r\nADD COLUMN certification_snapshot_json TEXT NULL;\r\n\r\nALTER TABLE marketplace_products \r\nADD COLUMN harvest_safety_snapshot_json TEXT NULL;\r\n\r\nALTER TABLE marketplace_products \r\nADD COLUMN compliance_checked_at DATETIME NULL;\r\n
+-- Thêm các field phục vụ Marketplace Compliance Gate (Luồng G - BRD) cho bảng marketplace_products
+
+ALTER TABLE marketplace_products 
+ADD COLUMN compliance_claim VARCHAR(20) NULL;
+
+ALTER TABLE marketplace_products 
+ADD COLUMN certification_snapshot_json TEXT NULL;
+
+ALTER TABLE marketplace_products 
+ADD COLUMN harvest_safety_snapshot_json TEXT NULL;
+
+ALTER TABLE marketplace_products 
+ADD COLUMN compliance_checked_at DATETIME NULL;
+

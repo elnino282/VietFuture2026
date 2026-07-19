@@ -1,1 +1,32 @@
-package org.example.farm.client;\r\n\r\nimport lombok.AllArgsConstructor;\r\nimport lombok.Builder;\r\nimport lombok.Data;\r\nimport lombok.NoArgsConstructor;\r\nimport org.springframework.cloud.openfeign.FeignClient;\r\nimport org.springframework.web.bind.annotation.GetMapping;\r\nimport org.springframework.web.bind.annotation.PathVariable;\r\n\r\nimport java.util.List;\r\n\r\n@FeignClient(name = \"season-service\", url = \"${app.season-service-url}\", fallback = SeasonProductionDiaryClientFallback.class)\r\npublic interface SeasonProductionDiaryClient {\r\n\r\n    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/production-diary\")\r\n    List<ProductionDiaryEventDto> getProductionDiaryInternal(@PathVariable(\"seasonId\") Integer seasonId);\r\n\r\n    @Data\r\n    @Builder\r\n    @NoArgsConstructor\r\n    @AllArgsConstructor\r\n    class ProductionDiaryEventDto {\r\n        private java.time.LocalDate eventDate;\r\n        private String eventType;\r\n        private String title;\r\n        private String description;\r\n        private String sourceService;\r\n        private Integer sourceId;\r\n    }\r\n}\r\n
+package org.example.farm.client;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.List;
+
+@FeignClient(name = \"season-service\", url = \"${app.season-service-url}\", fallback = SeasonProductionDiaryClientFallback.class)
+public interface SeasonProductionDiaryClient {
+
+    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/production-diary\")
+    List<ProductionDiaryEventDto> getProductionDiaryInternal(@PathVariable(\"seasonId\") Integer seasonId);
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class ProductionDiaryEventDto {
+        private java.time.LocalDate eventDate;
+        private String eventType;
+        private String title;
+        private String description;
+        private String sourceService;
+        private Integer sourceId;
+    }
+}
+

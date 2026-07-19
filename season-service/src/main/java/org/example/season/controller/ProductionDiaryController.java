@@ -1,1 +1,44 @@
-package org.example.season.controller;\r\n\r\nimport io.swagger.v3.oas.annotations.Operation;\r\nimport io.swagger.v3.oas.annotations.responses.ApiResponse;\r\nimport io.swagger.v3.oas.annotations.responses.ApiResponses;\r\nimport lombok.RequiredArgsConstructor;\r\nimport org.example.season.dto.response.ProductionDiaryEventDto;\r\nimport org.example.season.service.ProductionDiaryAggregationService;\r\nimport org.springframework.security.access.prepost.PreAuthorize;\r\nimport org.springframework.web.bind.annotation.GetMapping;\r\nimport org.springframework.web.bind.annotation.PathVariable;\r\nimport org.springframework.web.bind.annotation.RequestMapping;\r\nimport org.springframework.web.bind.annotation.RestController;\r\n\r\nimport java.util.List;\r\n\r\n@RestController\r\n@RequestMapping(\"/api/v1\")\r\n@RequiredArgsConstructor\r\npublic class ProductionDiaryController {\r\n\r\n    private final ProductionDiaryAggregationService productionDiaryAggregationService;\r\n\r\n    @Operation(summary = \"Get Production Diary\", description = \"Get aggregated production diary events for a season\")\r\n    @ApiResponses({\r\n            @ApiResponse(responseCode = \"200\", description = \"Success\"),\r\n            @ApiResponse(responseCode = \"401\", description = \"Unauthorized\"),\r\n            @ApiResponse(responseCode = \"403\", description = \"Forbidden\"),\r\n            @ApiResponse(responseCode = \"404\", description = \"Season not found\")\r\n    })\r\n    @PreAuthorize(\"hasRole('FARMER') or hasRole('ADMIN')\")\r\n    @GetMapping(\"/farmer/seasons/{seasonId}/production-diary\")\r\n    public org.example.season.dto.common.ApiResponse<List<ProductionDiaryEventDto>> getProductionDiary(@PathVariable Integer seasonId) {\r\n        List<ProductionDiaryEventDto> events = productionDiaryAggregationService.getProductionDiary(seasonId);\r\n        return org.example.season.dto.common.ApiResponse.success(events);\r\n    }\r\n\r\n    // Internal endpoint for exporting dossier\r\n    @GetMapping(\"/internal/seasons/{seasonId}/production-diary\")\r\n    public List<ProductionDiaryEventDto> getProductionDiaryInternal(@PathVariable Integer seasonId) {\r\n        return productionDiaryAggregationService.getProductionDiary(seasonId);\r\n    }\r\n}\r\n
+package org.example.season.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.RequiredArgsConstructor;
+import org.example.season.dto.response.ProductionDiaryEventDto;
+import org.example.season.service.ProductionDiaryAggregationService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(\"/api/v1\")
+@RequiredArgsConstructor
+public class ProductionDiaryController {
+
+    private final ProductionDiaryAggregationService productionDiaryAggregationService;
+
+    @Operation(summary = \"Get Production Diary\", description = \"Get aggregated production diary events for a season\")
+    @ApiResponses({
+            @ApiResponse(responseCode = \"200\", description = \"Success\"),
+            @ApiResponse(responseCode = \"401\", description = \"Unauthorized\"),
+            @ApiResponse(responseCode = \"403\", description = \"Forbidden\"),
+            @ApiResponse(responseCode = \"404\", description = \"Season not found\")
+    })
+    @PreAuthorize(\"hasRole('FARMER') or hasRole('ADMIN')\")
+    @GetMapping(\"/farmer/seasons/{seasonId}/production-diary\")
+    public org.example.season.dto.common.ApiResponse<List<ProductionDiaryEventDto>> getProductionDiary(@PathVariable Integer seasonId) {
+        List<ProductionDiaryEventDto> events = productionDiaryAggregationService.getProductionDiary(seasonId);
+        return org.example.season.dto.common.ApiResponse.success(events);
+    }
+
+    // Internal endpoint for exporting dossier
+    @GetMapping(\"/internal/seasons/{seasonId}/production-diary\")
+    public List<ProductionDiaryEventDto> getProductionDiaryInternal(@PathVariable Integer seasonId) {
+        return productionDiaryAggregationService.getProductionDiary(seasonId);
+    }
+}
+

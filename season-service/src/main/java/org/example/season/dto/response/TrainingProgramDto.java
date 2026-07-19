@@ -1,1 +1,22 @@
-package org.example.season.dto.response;\r\n\r\nimport lombok.AllArgsConstructor;\r\nimport lombok.Builder;\r\nimport lombok.Data;\r\nimport lombok.NoArgsConstructor;\r\n\r\nimport java.time.LocalDateTime;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\npublic class TrainingProgramDto {\r\n    private Integer id;\r\n    private String title;\r\n    private String category;\r\n    private String description;\r\n    private Boolean isMandatory;\r\n    private LocalDateTime createdAt;\r\n}\r\n
+package org.example.season.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TrainingProgramDto {
+    private Integer id;
+    private String title;
+    private String category;
+    private String description;
+    private Boolean isMandatory;
+    private LocalDateTime createdAt;
+}
+

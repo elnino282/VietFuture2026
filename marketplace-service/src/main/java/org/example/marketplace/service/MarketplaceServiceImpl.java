@@ -774,6 +774,10 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         final String endpoint = "/api/v1/marketplace/orders";
         Long buyerUserId = currentUserService.getCurrentUserId();
 
+        if (Boolean.TRUE.equals(request.isPreOrder()) && request.requestedDeliveryDate() == null) {
+            throw new BadRequestException("requestedDeliveryDate is required for pre-orders");
+        }
+
         // 1. Get cart items and group by farmer
         MarketplaceCart cart = marketplaceCartRepository.findByUserIdWithItems(buyerUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
@@ -786,6 +790,26 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         // 2. Group items by farmer
         Map<Long, List<MarketplaceCartItem>> itemsByFarmer = cartItems.stream()
                 .collect(java.util.stream.Collectors.groupingBy(MarketplaceCartItem::getFarmerUserId));
+
+        // Resolve buyer address if addressId provided
+        String shippingRecipientName = request.shippingRecipientName();
+        String phoneVal = request.shippingPhone();
+        String addressLineVal = request.shippingAddressLine();
+        if (request.addressId() != null) {
+            Optional<MarketplaceAddress> addressOpt = marketplaceAddressRepository.findByIdAndUserId(request.addressId(), buyerUserId);
+            if (addressOpt.isPresent()) {
+                MarketplaceAddress addr = addressOpt.get();
+                shippingRecipientName = addr.getFullName();
+                phoneVal = addr.getPhone();
+                String addrLine = addr.getStreet() + ", " + addr.getWard() + ", " + addr.getDistrict() + ", " + addr.getProvince();
+                if (addr.getDetail() != null && !addr.getDetail().isBlank()) {
+                    addrLine = addr.getDetail() + ", " + addrLine;
+                }
+                addressLineVal = addrLine;
+            }
+        }
+        final String shippingPhone = phoneVal;
+        final String shippingAddressLine = addressLineVal;
 
         // 3. Create order group with PENDING_RESERVATION status
         String groupCode = "OG-" + System.currentTimeMillis() + "-" + buyerUserId;
@@ -814,7 +838,17 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                     .buyerUserId(buyerUserId)
                     .farmerUserId(farmerUserId)
                     .status(MarketplaceOrderStatus.PENDING_RESERVATION)
+                    .paymentMethod(request.paymentMethod())
+                    .shippingRecipientName(shippingRecipientName)
+                    .shippingPhone(shippingPhone)
+                    .shippingAddressLine(shippingAddressLine)
+                    .note(request.note())
+                    .shippingFee(DEFAULT_SHIPPING_FEE)
                     .totalAmount(BigDecimal.ZERO)
+                    .subtotal(BigDecimal.ZERO)
+                    .isPreOrder(request.isPreOrder() != null ? request.isPreOrder() : false)
+                    .requestedDeliveryDate(request.requestedDeliveryDate())
+                    .harvestReadyDate(request.harvestReadyDate())
                     .build();
             order = marketplaceOrderRepository.save(order);
             order = marketplaceOrderRepository.saveAndFlush(order); // Ensure ID is generated
@@ -851,7 +885,8 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 orderTotal = orderTotal.add(lineTotal);
             }
 
-            order.setTotalAmount(orderTotal);
+            order.setSubtotal(orderTotal);
+            order.setTotalAmount(orderTotal.add(order.getShippingFee()));
             marketplaceOrderRepository.save(order);
             createdOrders.add(order);
         }
@@ -1786,7 +1821,15 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         return toProductDetail(product);
     }
 
-    @Override\r\n    @Transactional(readOnly = true)\r\n    public org.example.marketplace.dto.response.ComplianceCheckResponse checkProductCompliance(Long productId) {\r\n        MarketplaceProduct product = marketplaceProductRepository.findById(productId)\r\n                .orElseThrow(() -> new ResourceNotFoundException(\"Product not found\"));\r\n        return complianceGateService.checkCompliance(product);\r\n    }\r\n\r\n    private void publishProductChangedEvent(MarketplaceProduct product) {
+    @Override
+    @Transactional(readOnly = true)
+    public org.example.marketplace.dto.response.ComplianceCheckResponse checkProductCompliance(Long productId) {
+        MarketplaceProduct product = marketplaceProductRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException(\"Product not found\"));
+        return complianceGateService.checkCompliance(product);
+    }
+
+    private void publishProductChangedEvent(MarketplaceProduct product) {
         if (product == null) return;
         MarketplaceProductChangedEvent event = new MarketplaceProductChangedEvent(
                 java.util.UUID.randomUUID().toString(),

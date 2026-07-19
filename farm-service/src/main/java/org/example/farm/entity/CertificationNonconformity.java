@@ -1,1 +1,55 @@
-package org.example.farm.entity;\r\n\r\nimport jakarta.persistence.*;\r\nimport lombok.*;\r\nimport lombok.experimental.FieldDefaults;\r\nimport java.time.LocalDateTime;\r\n\r\n@Getter\r\n@Setter\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@FieldDefaults(level = AccessLevel.PRIVATE)\r\n@Entity\r\n@Table(name = \"certification_nonconformities\")\r\npublic class CertificationNonconformity {\r\n\r\n    @Id\r\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\r\n    Long id;\r\n\r\n    @Column(name = \"audit_id\", nullable = false)\r\n    Long auditId;\r\n\r\n    @Column(name = \"checklist_item_id\")\r\n    Integer checklistItemId;\r\n\r\n    @Column(nullable = false, length = 20)\r\n    String severity;\r\n\r\n    @Column(nullable = false, columnDefinition = \"TEXT\")\r\n    String description;\r\n\r\n    @Column(length = 30, nullable = false)\r\n    @Builder.Default\r\n    String status = \"OPEN\";\r\n\r\n    @Column(name = \"created_at\")\r\n    LocalDateTime createdAt;\r\n\r\n    @Column(name = \"updated_at\")\r\n    LocalDateTime updatedAt;\r\n\r\n    @PrePersist\r\n    void onCreate() {\r\n        if (createdAt == null) createdAt = LocalDateTime.now();\r\n        if (updatedAt == null) updatedAt = LocalDateTime.now();\r\n    }\r\n\r\n    @PreUpdate\r\n    void onUpdate() {\r\n        updatedAt = LocalDateTime.now();\r\n    }\r\n}\r\n
+package org.example.farm.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Entity
+@Table(name = \"certification_nonconformities\")
+public class CertificationNonconformity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+
+    @Column(name = \"audit_id\", nullable = false)
+    Long auditId;
+
+    @Column(name = \"checklist_item_id\")
+    Integer checklistItemId;
+
+    @Column(nullable = false, length = 20)
+    String severity;
+
+    @Column(nullable = false, columnDefinition = \"TEXT\")
+    String description;
+
+    @Column(length = 30, nullable = false)
+    @Builder.Default
+    String status = \"OPEN\";
+
+    @Column(name = \"created_at\")
+    LocalDateTime createdAt;
+
+    @Column(name = \"updated_at\")
+    LocalDateTime updatedAt;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (updatedAt == null) updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}
+

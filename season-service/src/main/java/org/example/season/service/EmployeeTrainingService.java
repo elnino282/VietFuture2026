@@ -1,1 +1,125 @@
-package org.example.season.service;\r\n\r\nimport lombok.RequiredArgsConstructor;\r\nimport org.example.season.dto.request.EmployeeTrainingRecordRequest;\r\nimport org.example.season.dto.request.TrainingProgramRequest;\r\nimport org.example.season.dto.response.EmployeeTrainingRecordDto;\r\nimport org.example.season.dto.response.TrainingProgramDto;\r\nimport org.example.season.entity.EmployeeTrainingRecord;\r\nimport org.example.season.entity.TrainingProgram;\r\nimport org.example.season.entity.WorkTeamMember;\r\nimport org.example.season.repository.EmployeeTrainingRecordRepository;\r\nimport org.example.season.repository.TrainingProgramRepository;\r\nimport org.example.season.repository.WorkTeamMemberRepository;\r\nimport org.example.season.repository.WorkTeamRepository;\r\nimport org.springframework.stereotype.Service;\r\nimport org.springframework.transaction.annotation.Transactional;\r\n\r\nimport java.util.HashMap;\r\nimport java.util.List;\r\nimport java.util.Map;\r\nimport java.util.stream.Collectors;\r\n\r\n@Service\r\n@RequiredArgsConstructor\r\npublic class EmployeeTrainingService {\r\n\r\n    private final TrainingProgramRepository trainingProgramRepository;\r\n    private final EmployeeTrainingRecordRepository employeeTrainingRecordRepository;\r\n    private final WorkTeamRepository workTeamRepository;\r\n    private final WorkTeamMemberRepository workTeamMemberRepository;\r\n\r\n    @Transactional\r\n    public TrainingProgramDto createTrainingProgram(TrainingProgramRequest req) {\r\n        TrainingProgram program = TrainingProgram.builder()\r\n                .title(req.getTitle())\r\n                .category(req.getCategory())\r\n                .description(req.getDescription())\r\n                .isMandatory(req.getIsMandatory() != null ? req.getIsMandatory() : false)\r\n                .build();\r\n        program = trainingProgramRepository.save(program);\r\n        return toDto(program);\r\n    }\r\n\r\n    public List<TrainingProgramDto> getTrainingPrograms(String category) {\r\n        List<TrainingProgram> programs;\r\n        if (category != null && !category.isBlank()) {\r\n            programs = trainingProgramRepository.findByCategory(category);\r\n        } else {\r\n            programs = trainingProgramRepository.findAll();\r\n        }\r\n        return programs.stream().map(this::toDto).collect(Collectors.toList());\r\n    }\r\n\r\n    @Transactional\r\n    public EmployeeTrainingRecordDto recordTraining(Long userId, EmployeeTrainingRecordRequest req) {\r\n        TrainingProgram program = trainingProgramRepository.findById(req.getTrainingProgramId())\r\n                .orElseThrow(() -> new IllegalArgumentException(\"Training program not found\"));\r\n\r\n        EmployeeTrainingRecord record = EmployeeTrainingRecord.builder()\r\n                .userId(userId)\r\n                .workTeamId(req.getWorkTeamId())\r\n                .trainingProgram(program)\r\n                .trainedAt(req.getTrainedAt())\r\n                .trainerName(req.getTrainerName())\r\n                .evidenceUrls(req.getEvidenceUrls())\r\n                .certifiedUntil(req.getCertifiedUntil())\r\n                .build();\r\n        record = employeeTrainingRecordRepository.save(record);\r\n        return toDto(record);\r\n    }\r\n\r\n    public List<EmployeeTrainingRecordDto> getTrainingRecordsForUser(Long userId) {\r\n        return employeeTrainingRecordRepository.findByUserId(userId)\r\n                .stream().map(this::toDto).collect(Collectors.toList());\r\n    }\r\n\r\n    /**\r\n     * Trả về tình trạng đào tạo của tất cả thành viên trong một mùa vụ (theo seasonId).\r\n     * Dành cho API nội bộ hoặc Farmer kiểm tra.\r\n     */\r\n    public Map<Long, List<EmployeeTrainingRecordDto>> getTrainingStatusForSeason(Integer seasonId) {\r\n        // 1. Tìm các WorkTeam thuộc seasonId\r\n        var teams = workTeamRepository.findBySeasonId(seasonId);\r\n        if (teams.isEmpty()) {\r\n            return new HashMap<>();\r\n        }\r\n\r\n        // 2. Tìm tất cả userId trong các đội này\r\n        List<Integer> teamIds = teams.stream().map(t -> t.getId()).toList();\r\n        List<WorkTeamMember> members = workTeamMemberRepository.findByWorkTeamIdIn(teamIds);\r\n        List<Long> userIds = members.stream().map(WorkTeamMember::getUserId).distinct().toList();\r\n\r\n        if (userIds.isEmpty()) {\r\n            return new HashMap<>();\r\n        }\r\n\r\n        // 3. Lấy tất cả records của các userId này\r\n        List<EmployeeTrainingRecord> records = employeeTrainingRecordRepository.findByUserIdIn(userIds);\r\n\r\n        // 4. Nhóm theo userId\r\n        Map<Long, List<EmployeeTrainingRecordDto>> result = new HashMap<>();\r\n        for (Long uid : userIds) {\r\n            result.put(uid, records.stream()\r\n                    .filter(r -> r.getUserId().equals(uid))\r\n                    .map(this::toDto)\r\n                    .toList());\r\n        }\r\n        return result;\r\n    }\r\n\r\n    private TrainingProgramDto toDto(TrainingProgram p) {\r\n        return new TrainingProgramDto(\r\n                p.getId(), p.getTitle(), p.getCategory(), p.getDescription(), p.getIsMandatory(), p.getCreatedAt()\r\n        );\r\n    }\r\n\r\n    private EmployeeTrainingRecordDto toDto(EmployeeTrainingRecord r) {\r\n        return new EmployeeTrainingRecordDto(\r\n                r.getId(), r.getUserId(), r.getWorkTeamId(), toDto(r.getTrainingProgram()),\r\n                r.getTrainedAt(), r.getTrainerName(), r.getEvidenceUrls(),\r\n                r.getCertifiedUntil(), r.getStatus(), r.getCreatedAt(), r.getUpdatedAt()\r\n        );\r\n    }\r\n}\r\n
+package org.example.season.service;
+
+import lombok.RequiredArgsConstructor;
+import org.example.season.dto.request.EmployeeTrainingRecordRequest;
+import org.example.season.dto.request.TrainingProgramRequest;
+import org.example.season.dto.response.EmployeeTrainingRecordDto;
+import org.example.season.dto.response.TrainingProgramDto;
+import org.example.season.entity.EmployeeTrainingRecord;
+import org.example.season.entity.TrainingProgram;
+import org.example.season.entity.WorkTeamMember;
+import org.example.season.repository.EmployeeTrainingRecordRepository;
+import org.example.season.repository.TrainingProgramRepository;
+import org.example.season.repository.WorkTeamMemberRepository;
+import org.example.season.repository.WorkTeamRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class EmployeeTrainingService {
+
+    private final TrainingProgramRepository trainingProgramRepository;
+    private final EmployeeTrainingRecordRepository employeeTrainingRecordRepository;
+    private final WorkTeamRepository workTeamRepository;
+    private final WorkTeamMemberRepository workTeamMemberRepository;
+
+    @Transactional
+    public TrainingProgramDto createTrainingProgram(TrainingProgramRequest req) {
+        TrainingProgram program = TrainingProgram.builder()
+                .title(req.getTitle())
+                .category(req.getCategory())
+                .description(req.getDescription())
+                .isMandatory(req.getIsMandatory() != null ? req.getIsMandatory() : false)
+                .build();
+        program = trainingProgramRepository.save(program);
+        return toDto(program);
+    }
+
+    public List<TrainingProgramDto> getTrainingPrograms(String category) {
+        List<TrainingProgram> programs;
+        if (category != null && !category.isBlank()) {
+            programs = trainingProgramRepository.findByCategory(category);
+        } else {
+            programs = trainingProgramRepository.findAll();
+        }
+        return programs.stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public EmployeeTrainingRecordDto recordTraining(Long userId, EmployeeTrainingRecordRequest req) {
+        TrainingProgram program = trainingProgramRepository.findById(req.getTrainingProgramId())
+                .orElseThrow(() -> new IllegalArgumentException(\"Training program not found\"));
+
+        EmployeeTrainingRecord record = EmployeeTrainingRecord.builder()
+                .userId(userId)
+                .workTeamId(req.getWorkTeamId())
+                .trainingProgram(program)
+                .trainedAt(req.getTrainedAt())
+                .trainerName(req.getTrainerName())
+                .evidenceUrls(req.getEvidenceUrls())
+                .certifiedUntil(req.getCertifiedUntil())
+                .build();
+        record = employeeTrainingRecordRepository.save(record);
+        return toDto(record);
+    }
+
+    public List<EmployeeTrainingRecordDto> getTrainingRecordsForUser(Long userId) {
+        return employeeTrainingRecordRepository.findByUserId(userId)
+                .stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    /**
+     * Trả về tình trạng đào tạo của tất cả thành viên trong một mùa vụ (theo seasonId).
+     * Dành cho API nội bộ hoặc Farmer kiểm tra.
+     */
+    public Map<Long, List<EmployeeTrainingRecordDto>> getTrainingStatusForSeason(Integer seasonId) {
+        // 1. Tìm các WorkTeam thuộc seasonId
+        var teams = workTeamRepository.findBySeasonId(seasonId);
+        if (teams.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        // 2. Tìm tất cả userId trong các đội này
+        List<Integer> teamIds = teams.stream().map(t -> t.getId()).toList();
+        List<WorkTeamMember> members = workTeamMemberRepository.findByWorkTeamIdIn(teamIds);
+        List<Long> userIds = members.stream().map(WorkTeamMember::getUserId).distinct().toList();
+
+        if (userIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        // 3. Lấy tất cả records của các userId này
+        List<EmployeeTrainingRecord> records = employeeTrainingRecordRepository.findByUserIdIn(userIds);
+
+        // 4. Nhóm theo userId
+        Map<Long, List<EmployeeTrainingRecordDto>> result = new HashMap<>();
+        for (Long uid : userIds) {
+            result.put(uid, records.stream()
+                    .filter(r -> r.getUserId().equals(uid))
+                    .map(this::toDto)
+                    .toList());
+        }
+        return result;
+    }
+
+    private TrainingProgramDto toDto(TrainingProgram p) {
+        return new TrainingProgramDto(
+                p.getId(), p.getTitle(), p.getCategory(), p.getDescription(), p.getIsMandatory(), p.getCreatedAt()
+        );
+    }
+
+    private EmployeeTrainingRecordDto toDto(EmployeeTrainingRecord r) {
+        return new EmployeeTrainingRecordDto(
+                r.getId(), r.getUserId(), r.getWorkTeamId(), toDto(r.getTrainingProgram()),
+                r.getTrainedAt(), r.getTrainerName(), r.getEvidenceUrls(),
+                r.getCertifiedUntil(), r.getStatus(), r.getCreatedAt(), r.getUpdatedAt()
+        );
+    }
+}
+

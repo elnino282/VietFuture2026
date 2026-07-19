@@ -1,1 +1,11 @@
-package org.example.farm.repository;\r\n\r\nimport org.example.farm.entity.CertificationAudit;\r\nimport org.springframework.data.jpa.repository.JpaRepository;\r\nimport java.util.List;\r\n\r\npublic interface CertificationAuditRepository extends JpaRepository<CertificationAudit, Long> {\r\n    List<CertificationAudit> findByRecordIdOrderByCreatedAtDesc(Integer recordId);\r\n    List<CertificationAudit> findByRecordId(Integer recordId);\r\n}\r\n
+package org.example.farm.repository;
+
+import org.example.farm.entity.CertificationAudit;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface CertificationAuditRepository extends JpaRepository<CertificationAudit, Long> {
+    List<CertificationAudit> findByRecordIdOrderByCreatedAtDesc(Integer recordId);
+    List<CertificationAudit> findByRecordId(Integer recordId);
+}
+

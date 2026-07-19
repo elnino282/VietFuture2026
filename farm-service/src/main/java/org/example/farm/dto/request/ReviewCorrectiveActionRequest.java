@@ -1,1 +1,18 @@
-package org.example.farm.dto.request;\r\n\r\nimport jakarta.validation.constraints.NotBlank;\r\nimport lombok.*;\r\nimport lombok.experimental.FieldDefaults;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@FieldDefaults(level = AccessLevel.PRIVATE)\r\npublic class ReviewCorrectiveActionRequest {\r\n    @NotBlank\r\n    String result;  // ACCEPTED or REJECTED\r\n\r\n    String reviewNote;\r\n}\r\n
+package org.example.farm.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class ReviewCorrectiveActionRequest {
+    @NotBlank
+    String result;  // ACCEPTED or REJECTED
+
+    String reviewNote;
+}
+

@@ -1,1 +1,15 @@
-package org.example.farm.client;\r\n\r\nimport org.springframework.stereotype.Component;\r\nimport java.util.ArrayList;\r\nimport java.util.List;\r\n\r\n@Component\r\npublic class SeasonProductionDiaryClientFallback implements SeasonProductionDiaryClient {\r\n\r\n    @Override\r\n    public List<ProductionDiaryEventDto> getProductionDiaryInternal(Integer seasonId) {\r\n        return new ArrayList<>();\r\n    }\r\n}\r\n
+package org.example.farm.client;
+
+import org.springframework.stereotype.Component;
+import java.util.ArrayList;
+import java.util.List;
+
+@Component
+public class SeasonProductionDiaryClientFallback implements SeasonProductionDiaryClient {
+
+    @Override
+    public List<ProductionDiaryEventDto> getProductionDiaryInternal(Integer seasonId) {
+        return new ArrayList<>();
+    }
+}
+

@@ -211,4 +211,39 @@ public class PesticideRecordService {
                 .updatedAt(r.getUpdatedAt())
                 .build();
     }
+
+    public CreatePesticideRecordRequest prefillFromAi(org.example.season.dto.request.AiDiseaseSuggestionRequest req) {
+        String pesticideName = req.suggestedPesticide();
+        Integer phiDays = 0;
+        String activeIngredient = "";
+
+        if (pesticideName != null && !pesticideName.isBlank()) {
+            Optional<PesticidePHIReference> refOpt = pesticidePhiReferenceRepo
+                    .findByPesticideNameContainingIgnoreCase(pesticideName);
+            
+            if (refOpt.isEmpty()) {
+                refOpt = pesticidePhiReferenceRepo
+                        .findByActiveIngredientContainingIgnoreCase(pesticideName);
+            }
+            if (refOpt.isEmpty()) {
+                refOpt = pesticidePhiReferenceRepo.findByName(pesticideName);
+            }
+
+            if (refOpt.isPresent()) {
+                phiDays = refOpt.get().getPhiDays();
+                activeIngredient = refOpt.get().getActiveIngredient();
+            }
+        }
+
+        return new CreatePesticideRecordRequest(
+                pesticideName != null ? pesticideName : "",
+                activeIngredient,
+                phiDays,
+                LocalDate.now(),
+                "Phun lá", // default
+                "",
+                req.diseaseName(),
+                "Tạo từ gợi ý AI"
+        );
+    }
 }

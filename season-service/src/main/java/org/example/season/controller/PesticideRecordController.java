@@ -65,4 +65,17 @@ public class PesticideRecordController {
     public org.example.season.dto.common.ApiResponse<List<PesticideRecordResponse>> getRecords(@PathVariable Integer seasonId) {
         return org.example.season.dto.common.ApiResponse.success(pesticideRecordService.getBySeason(seasonId));
     }
+
+    @Operation(summary = "Prefill pesticide record from AI", description = "Maps an AI disease suggestion into a CreatePesticideRecordRequest with PHI lookup")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    @PostMapping("/ai-prefill")
+    public org.example.season.dto.common.ApiResponse<CreatePesticideRecordRequest> prefillFromAi(
+            @PathVariable Integer seasonId,
+            @Valid @RequestBody org.example.season.dto.request.AiDiseaseSuggestionRequest request) {
+        return org.example.season.dto.common.ApiResponse.success(pesticideRecordService.prefillFromAi(request));
+    }
 }

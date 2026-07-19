@@ -1,1 +1,19 @@
-package org.example.farm.dto.request;\r\n\r\nimport jakarta.validation.constraints.NotBlank;\r\nimport lombok.*;\r\nimport lombok.experimental.FieldDefaults;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@FieldDefaults(level = AccessLevel.PRIVATE)\r\npublic class CompleteAuditRequest {\r\n    @NotBlank\r\n    String result;  // PASSED or FAILED\r\n\r\n    String interviewNotes;\r\n    String sampleCollectionNotes;\r\n}\r\n
+package org.example.farm.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class CompleteAuditRequest {
+    @NotBlank
+    String result;  // PASSED or FAILED
+
+    String interviewNotes;
+    String sampleCollectionNotes;
+}
+

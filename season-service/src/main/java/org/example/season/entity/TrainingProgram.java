@@ -1,1 +1,45 @@
-package org.example.season.entity;\r\n\r\nimport jakarta.persistence.*;\r\nimport lombok.*;\r\nimport java.time.LocalDateTime;\r\n\r\n@Entity\r\n@Table(name = \"training_programs\")\r\n@Getter\r\n@Setter\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@Builder\r\npublic class TrainingProgram {\r\n\r\n    @Id\r\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\r\n    private Integer id;\r\n\r\n    @Column(nullable = false)\r\n    private String title;\r\n\r\n    @Column(length = 100)\r\n    private String category;\r\n\r\n    @Column(columnDefinition = \"TEXT\")\r\n    private String description;\r\n\r\n    @Column(name = \"is_mandatory\")\r\n    private Boolean isMandatory;\r\n\r\n    @Column(name = \"created_at\", updatable = false)\r\n    private LocalDateTime createdAt;\r\n\r\n    @PrePersist\r\n    protected void onCreate() {\r\n        if (createdAt == null) {\r\n            createdAt = LocalDateTime.now();\r\n        }\r\n        if (isMandatory == null) {\r\n            isMandatory = false;\r\n        }\r\n    }\r\n}\r\n
+package org.example.season.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = \"training_programs\")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class TrainingProgram {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(length = 100)
+    private String category;
+
+    @Column(columnDefinition = \"TEXT\")
+    private String description;
+
+    @Column(name = \"is_mandatory\")
+    private Boolean isMandatory;
+
+    @Column(name = \"created_at\", updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (isMandatory == null) {
+            isMandatory = false;
+        }
+    }
+}
+

@@ -1,1 +1,21 @@
-package org.example.farm.dto.request;\r\n\r\nimport jakarta.validation.constraints.NotBlank;\r\nimport lombok.*;\r\nimport lombok.experimental.FieldDefaults;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@FieldDefaults(level = AccessLevel.PRIVATE)\r\npublic class CreateNonconformityRequest {\r\n    Integer checklistItemId;  // nullable — liên kết tiêu chí cụ thể nếu có\r\n\r\n    @NotBlank\r\n    String severity;  // MINOR, MAJOR, CRITICAL\r\n\r\n    @NotBlank\r\n    String description;\r\n}\r\n
+package org.example.farm.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class CreateNonconformityRequest {
+    Integer checklistItemId;  // nullable — liên kết tiêu chí cụ thể nếu có
+
+    @NotBlank
+    String severity;  // MINOR, MAJOR, CRITICAL
+
+    @NotBlank
+    String description;
+}
+

@@ -1,1 +1,21 @@
-package org.example.season.dto.request;\r\n\r\nimport jakarta.validation.constraints.NotBlank;\r\nimport jakarta.validation.constraints.NotNull;\r\nimport lombok.AllArgsConstructor;\r\nimport lombok.Builder;\r\nimport lombok.Data;\r\nimport lombok.NoArgsConstructor;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\npublic class TrainingProgramRequest {\r\n    @NotBlank\r\n    private String title;\r\n    private String category;\r\n    private String description;\r\n    private Boolean isMandatory;\r\n}\r\n
+package org.example.season.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TrainingProgramRequest {
+    @NotBlank
+    private String title;
+    private String category;
+    private String description;
+    private Boolean isMandatory;
+}
+

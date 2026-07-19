@@ -1,1 +1,12 @@
-package org.example.delivery.dto.response;\r\n\r\nimport java.time.LocalDate;\r\n\r\npublic record BatchSuggestionResponse(\r\n    boolean batchEligible,\r\n    LocalDate suggestedDate,\r\n    String zone,\r\n    long currentCount,\r\n    long threshold\r\n) {}\r\n
+package org.example.delivery.dto.response;
+
+import java.time.LocalDate;
+
+public record BatchSuggestionResponse(
+    boolean batchEligible,
+    LocalDate suggestedDate,
+    String zone,
+    long currentCount,
+    long threshold
+) {}
+

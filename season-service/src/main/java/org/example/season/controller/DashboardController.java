@@ -1,1 +1,41 @@
-package org.example.season.controller;\r\n\r\nimport io.swagger.v3.oas.annotations.Operation;\r\nimport io.swagger.v3.oas.annotations.responses.ApiResponse;\r\nimport io.swagger.v3.oas.annotations.responses.ApiResponses;\r\nimport lombok.AccessLevel;\r\nimport lombok.RequiredArgsConstructor;\r\nimport lombok.experimental.FieldDefaults;\r\nimport org.example.season.dto.response.PHIAlertDto;\r\nimport org.example.season.service.PHIAlertService;\r\nimport org.example.season.service.SeasonWorkspaceAccessService;\r\nimport org.springframework.security.access.prepost.PreAuthorize;\r\nimport org.springframework.web.bind.annotation.GetMapping;\r\nimport org.springframework.web.bind.annotation.RequestMapping;\r\nimport org.springframework.web.bind.annotation.RestController;\r\n\r\nimport java.util.List;\r\n\r\n@RestController\r\n@RequestMapping(\"/api/v1/farmer/dashboard\")\r\n@RequiredArgsConstructor\r\n@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)\r\n@PreAuthorize(\"hasRole('FARMER')\")\r\npublic class DashboardController {\r\n\r\n    PHIAlertService phiAlertService;\r\n    SeasonWorkspaceAccessService workspaceAccessService;\r\n\r\n    @Operation(summary = \"Get PHI Alerts\", description = \"List all active PHI alerts for the current farmer's active seasons\")\r\n    @ApiResponses({\r\n            @ApiResponse(responseCode = \"200\", description = \"Success\"),\r\n            @ApiResponse(responseCode = \"401\", description = \"Unauthorized\"),\r\n            @ApiResponse(responseCode = \"403\", description = \"Forbidden\")\r\n    })\r\n    @GetMapping(\"/phi-alerts\")\r\n    public org.example.season.dto.common.ApiResponse<List<PHIAlertDto>> getPHIAlerts() {\r\n        Long userId = workspaceAccessService.getCurrentUserId();\r\n        return org.example.season.dto.common.ApiResponse.success(phiAlertService.getActivePHIAlerts(userId));\r\n    }\r\n}\r\n
+package org.example.season.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.example.season.dto.response.PHIAlertDto;
+import org.example.season.service.PHIAlertService;
+import org.example.season.service.SeasonWorkspaceAccessService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(\"/api/v1/farmer/dashboard\")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@PreAuthorize(\"hasRole('FARMER')\")
+public class DashboardController {
+
+    PHIAlertService phiAlertService;
+    SeasonWorkspaceAccessService workspaceAccessService;
+
+    @Operation(summary = \"Get PHI Alerts\", description = \"List all active PHI alerts for the current farmer's active seasons\")
+    @ApiResponses({
+            @ApiResponse(responseCode = \"200\", description = \"Success\"),
+            @ApiResponse(responseCode = \"401\", description = \"Unauthorized\"),
+            @ApiResponse(responseCode = \"403\", description = \"Forbidden\")
+    })
+    @GetMapping(\"/phi-alerts\")
+    public org.example.season.dto.common.ApiResponse<List<PHIAlertDto>> getPHIAlerts() {
+        Long userId = workspaceAccessService.getCurrentUserId();
+        return org.example.season.dto.common.ApiResponse.success(phiAlertService.getActivePHIAlerts(userId));
+    }
+}
+

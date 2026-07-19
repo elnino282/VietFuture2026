@@ -1,1 +1,27 @@
-package org.example.farm.enums;\r\n\r\n/**\r\n * Trạng thái vòng đời đầy đủ của CertificationRecord.\r\n * Giữ nguyên 3 state cũ (IN_PROGRESS, READY_TO_APPLY, APPLIED),\r\n * bổ sung thêm các state sau APPLIED theo BRD §5.4.\r\n */\r\npublic enum CertificationRecordStatus {\r\n    // === State cũ (không đổi) ===\r\n    IN_PROGRESS,\r\n    READY_TO_APPLY,\r\n    APPLIED,\r\n\r\n    // === State mới (sau APPLIED) ===\r\n    AUDIT_SCHEDULED,\r\n    AUDIT_IN_PROGRESS,\r\n    NONCONFORMITY_FOUND,\r\n    CORRECTIVE_ACTION_SUBMITTED,\r\n    AUDIT_PASSED,\r\n    CERTIFIED,\r\n    PUBLISHED,\r\n    PERIODIC_REVIEW_DUE,\r\n    EXPIRED,\r\n    REVOKED,\r\n    REJECTED\r\n}\r\n
+package org.example.farm.enums;
+
+/**
+ * Trạng thái vòng đời đầy đủ của CertificationRecord.
+ * Giữ nguyên 3 state cũ (IN_PROGRESS, READY_TO_APPLY, APPLIED),
+ * bổ sung thêm các state sau APPLIED theo BRD §5.4.
+ */
+public enum CertificationRecordStatus {
+    // === State cũ (không đổi) ===
+    IN_PROGRESS,
+    READY_TO_APPLY,
+    APPLIED,
+
+    // === State mới (sau APPLIED) ===
+    AUDIT_SCHEDULED,
+    AUDIT_IN_PROGRESS,
+    NONCONFORMITY_FOUND,
+    CORRECTIVE_ACTION_SUBMITTED,
+    AUDIT_PASSED,
+    CERTIFIED,
+    PUBLISHED,
+    PERIODIC_REVIEW_DUE,
+    EXPIRED,
+    REVOKED,
+    REJECTED
+}
+

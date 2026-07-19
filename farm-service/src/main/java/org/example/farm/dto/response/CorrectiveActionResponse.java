@@ -1,1 +1,27 @@
-package org.example.farm.dto.response;\r\n\r\nimport lombok.*;\r\nimport lombok.experimental.FieldDefaults;\r\nimport java.time.LocalDateTime;\r\nimport java.util.List;\r\n\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@FieldDefaults(level = AccessLevel.PRIVATE)\r\npublic class CorrectiveActionResponse {\r\n    Long id;\r\n    Long nonconformityId;\r\n    String planDescription;\r\n    List<String> evidenceUrls;\r\n    Integer appliesFromSeasonId;\r\n    Long submittedByUserId;\r\n    LocalDateTime submittedAt;\r\n    Long reviewedByUserId;\r\n    String reviewResult;\r\n    String reviewNote;\r\n    LocalDateTime reviewedAt;\r\n    LocalDateTime createdAt;\r\n}\r\n
+package org.example.farm.dto.response;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class CorrectiveActionResponse {
+    Long id;
+    Long nonconformityId;
+    String planDescription;
+    List<String> evidenceUrls;
+    Integer appliesFromSeasonId;
+    Long submittedByUserId;
+    LocalDateTime submittedAt;
+    Long reviewedByUserId;
+    String reviewResult;
+    String reviewNote;
+    LocalDateTime reviewedAt;
+    LocalDateTime createdAt;
+}
+

@@ -1,1 +1,74 @@
-package org.example.season.entity;\r\n\r\nimport jakarta.persistence.*;\r\nimport lombok.*;\r\nimport org.hibernate.annotations.JdbcTypeCode;\r\nimport org.hibernate.type.SqlTypes;\r\nimport java.time.LocalDate;\r\nimport java.time.LocalDateTime;\r\nimport java.util.List;\r\n\r\n@Entity\r\n@Table(name = \"employee_training_records\")\r\n@Getter\r\n@Setter\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@Builder\r\npublic class EmployeeTrainingRecord {\r\n\r\n    @Id\r\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\r\n    private Integer id;\r\n\r\n    @Column(name = \"user_id\", nullable = false)\r\n    private Long userId;\r\n\r\n    @Column(name = \"work_team_id\")\r\n    private Integer workTeamId;\r\n\r\n    @ManyToOne(fetch = FetchType.LAZY)\r\n    @JoinColumn(name = \"training_program_id\", nullable = false)\r\n    private TrainingProgram trainingProgram;\r\n\r\n    @Column(name = \"trained_at\", nullable = false)\r\n    private LocalDate trainedAt;\r\n\r\n    @Column(name = \"trainer_name\")\r\n    private String trainerName;\r\n\r\n    @JdbcTypeCode(SqlTypes.JSON)\r\n    @Column(name = \"evidence_urls\", columnDefinition = \"json\")\r\n    private List<String> evidenceUrls;\r\n\r\n    @Column(name = \"certified_until\")\r\n    private LocalDate certifiedUntil;\r\n\r\n    @Column(length = 50)\r\n    private String status;\r\n\r\n    @Column(name = \"created_at\", updatable = false)\r\n    private LocalDateTime createdAt;\r\n\r\n    @Column(name = \"updated_at\")\r\n    private LocalDateTime updatedAt;\r\n\r\n    @PrePersist\r\n    protected void onCreate() {\r\n        if (createdAt == null) {\r\n            createdAt = LocalDateTime.now();\r\n        }\r\n        if (updatedAt == null) {\r\n            updatedAt = LocalDateTime.now();\r\n        }\r\n        if (status == null) {\r\n            status = \"COMPLETED\";\r\n        }\r\n    }\r\n\r\n    @PreUpdate\r\n    protected void onUpdate() {\r\n        updatedAt = LocalDateTime.now();\r\n    }\r\n}\r\n
+package org.example.season.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = \"employee_training_records\")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class EmployeeTrainingRecord {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = \"user_id\", nullable = false)
+    private Long userId;
+
+    @Column(name = \"work_team_id\")
+    private Integer workTeamId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = \"training_program_id\", nullable = false)
+    private TrainingProgram trainingProgram;
+
+    @Column(name = \"trained_at\", nullable = false)
+    private LocalDate trainedAt;
+
+    @Column(name = \"trainer_name\")
+    private String trainerName;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = \"evidence_urls\", columnDefinition = \"json\")
+    private List<String> evidenceUrls;
+
+    @Column(name = \"certified_until\")
+    private LocalDate certifiedUntil;
+
+    @Column(length = 50)
+    private String status;
+
+    @Column(name = \"created_at\", updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = \"updated_at\")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = \"COMPLETED\";
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}
+

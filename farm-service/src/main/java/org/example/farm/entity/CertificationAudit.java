@@ -1,1 +1,68 @@
-package org.example.farm.entity;\r\n\r\nimport jakarta.persistence.*;\r\nimport lombok.*;\r\nimport lombok.experimental.FieldDefaults;\r\nimport java.time.LocalDate;\r\nimport java.time.LocalDateTime;\r\n\r\n@Getter\r\n@Setter\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@FieldDefaults(level = AccessLevel.PRIVATE)\r\n@Entity\r\n@Table(name = \"certification_audits\")\r\npublic class CertificationAudit {\r\n\r\n    @Id\r\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\r\n    Long id;\r\n\r\n    @Column(name = \"record_id\", nullable = false)\r\n    Integer recordId;\r\n\r\n    @Column(name = \"audit_type\", nullable = false, length = 30)\r\n    String auditType;\r\n\r\n    @Column(name = \"scheduled_date\")\r\n    LocalDate scheduledDate;\r\n\r\n    @Column(name = \"auditor_user_id\")\r\n    Long auditorUserId;\r\n\r\n    @Column(name = \"auditor_org_name\")\r\n    String auditorOrgName;\r\n\r\n    @Column(length = 30, nullable = false)\r\n    @Builder.Default\r\n    String status = \"SCHEDULED\";\r\n\r\n    @Column(name = \"interview_notes\", columnDefinition = \"TEXT\")\r\n    String interviewNotes;\r\n\r\n    @Column(name = \"sample_collection_notes\", columnDefinition = \"TEXT\")\r\n    String sampleCollectionNotes;\r\n\r\n    @Column(name = \"conducted_at\")\r\n    LocalDateTime conductedAt;\r\n\r\n    @Column(name = \"created_at\")\r\n    LocalDateTime createdAt;\r\n\r\n    @Column(name = \"updated_at\")\r\n    LocalDateTime updatedAt;\r\n\r\n    @PrePersist\r\n    void onCreate() {\r\n        if (createdAt == null) createdAt = LocalDateTime.now();\r\n        if (updatedAt == null) updatedAt = LocalDateTime.now();\r\n    }\r\n\r\n    @PreUpdate\r\n    void onUpdate() {\r\n        updatedAt = LocalDateTime.now();\r\n    }\r\n}\r\n
+package org.example.farm.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Entity
+@Table(name = \"certification_audits\")
+public class CertificationAudit {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+
+    @Column(name = \"record_id\", nullable = false)
+    Integer recordId;
+
+    @Column(name = \"audit_type\", nullable = false, length = 30)
+    String auditType;
+
+    @Column(name = \"scheduled_date\")
+    LocalDate scheduledDate;
+
+    @Column(name = \"auditor_user_id\")
+    Long auditorUserId;
+
+    @Column(name = \"auditor_org_name\")
+    String auditorOrgName;
+
+    @Column(length = 30, nullable = false)
+    @Builder.Default
+    String status = \"SCHEDULED\";
+
+    @Column(name = \"interview_notes\", columnDefinition = \"TEXT\")
+    String interviewNotes;
+
+    @Column(name = \"sample_collection_notes\", columnDefinition = \"TEXT\")
+    String sampleCollectionNotes;
+
+    @Column(name = \"conducted_at\")
+    LocalDateTime conductedAt;
+
+    @Column(name = \"created_at\")
+    LocalDateTime createdAt;
+
+    @Column(name = \"updated_at\")
+    LocalDateTime updatedAt;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (updatedAt == null) updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}
+
