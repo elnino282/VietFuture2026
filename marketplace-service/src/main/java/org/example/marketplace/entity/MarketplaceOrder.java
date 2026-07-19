@@ -111,6 +111,17 @@ public class MarketplaceOrder {
     @Column(name = "total_amount", nullable = false, precision = 19, scale = 2)
     BigDecimal totalAmount;
 
+    // Pre-order fields
+    @Column(name = "is_pre_order", nullable = false)
+    @Builder.Default
+    Boolean isPreOrder = Boolean.FALSE;
+
+    @Column(name = "requested_delivery_date")
+    java.time.LocalDate requestedDeliveryDate;
+
+    @Column(name = "harvest_ready_date")
+    java.time.LocalDate harvestReadyDate;
+
     @Column(name = "created_at", nullable = false)
     LocalDateTime createdAt;
 

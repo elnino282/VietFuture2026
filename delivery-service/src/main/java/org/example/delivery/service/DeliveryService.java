@@ -54,9 +54,17 @@ public class DeliveryService {
                 .recipientProvince(request.recipientProvince())
                 .weightKg(request.weightKg())
                 .estimatedDelivery(LocalDateTime.now().plusDays(2)) // Default 2 days estimate
+                .requestedDeliveryDate(request.requestedDeliveryDate())
+                .deliveryZoneTo(request.deliveryZoneTo())
                 .build();
 
         return deliveryOrderRepository.save(order);
+    }
+
+    public org.example.delivery.dto.response.BatchSuggestionResponse getBatchSuggestions(java.time.LocalDate date, String zone) {
+        long count = deliveryOrderRepository.countByRequestedDeliveryDateAndDeliveryZoneTo(date, zone);
+        boolean batchEligible = count >= 5;
+        return new org.example.delivery.dto.response.BatchSuggestionResponse(batchEligible, date, zone, count, 5L);
     }
 
     public List<DeliveryOrder> getAllDeliveryOrders() {

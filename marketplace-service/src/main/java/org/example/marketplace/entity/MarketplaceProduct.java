@@ -160,6 +160,27 @@ public class MarketplaceProduct {
     @Column(name = "status_changed_by_user_id")
     Long statusChangedByUserId;
 
+    // Fields for Compliance Gate (Luồng G - BRD)
+    @Column(name = "compliance_claim", length = 20)
+    String complianceClaim;
+
+    @Column(name = "certification_snapshot_json", columnDefinition = "TEXT")
+    String certificationSnapshotJson;
+
+    @Column(name = "harvest_safety_snapshot_json", columnDefinition = "TEXT")
+    String harvestSafetySnapshotJson;
+
+    @Column(name = "compliance_checked_at")
+    LocalDateTime complianceCheckedAt;
+
+    // Fields for Pre-order (Luồng I)
+    @Column(name = "allows_pre_order", nullable = false)
+    @Builder.Default
+    Boolean allowsPreOrder = Boolean.FALSE;
+
+    @Column(name = "earliest_fulfillment_date")
+    java.time.LocalDate earliestFulfillmentDate;
+
     @Column(name = "created_at", nullable = false)
     LocalDateTime createdAt;
 

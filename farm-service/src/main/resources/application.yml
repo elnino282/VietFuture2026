@@ -70,3 +70,5 @@ minio:
     farm-documents: ${MINIO_BUCKET_FARM_DOCUMENTS:farm-documents}
   public-url: ${MINIO_PUBLIC_URL:http://localhost:9000}
 
+app:
+  season-service-url: ${APP_SEASON_SERVICE_URL:http://localhost:8085}

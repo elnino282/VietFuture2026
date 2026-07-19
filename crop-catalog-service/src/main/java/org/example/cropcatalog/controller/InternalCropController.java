@@ -47,6 +47,11 @@ public class InternalCropController {
     public static class CropInternalDto {
         private Integer id;
         private String cropName;
+        private org.example.cropcatalog.entity.CropCategory category;
+        private Integer postHarvestDelayDays;
+        private Integer shelfLifeDays;
+        private String defaultStorageCategory;
+        private Boolean requiresColdChain;
     }
 
     @Data

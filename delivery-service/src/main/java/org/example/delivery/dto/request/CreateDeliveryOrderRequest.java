@@ -14,5 +14,7 @@ public record CreateDeliveryOrderRequest(
     @NotBlank String recipientPhone,
     @NotBlank String recipientAddress,
     @NotBlank String recipientProvince,
-    @NotNull BigDecimal weightKg
+    @NotNull BigDecimal weightKg,
+    java.time.LocalDate requestedDeliveryDate,
+    String deliveryZoneTo
 ) {}

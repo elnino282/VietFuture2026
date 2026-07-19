@@ -23,6 +23,14 @@ public interface PesticideRecordRepository extends JpaRepository<PesticideRecord
         @Param("seasonId") Integer seasonId,
         @Param("checkDate") LocalDate checkDate);
 
+    // Tìm các pesticide đang bị active PHI của nhiều season
+    @Query("SELECT p FROM PesticideRecord p WHERE p.seasonId IN :seasonIds " +
+           "AND p.harvestAllowedDate > :checkDate " +
+           "ORDER BY p.harvestAllowedDate ASC")
+    List<PesticideRecord> findActivePHIBySeasonIds(
+        @Param("seasonIds") List<Integer> seasonIds,
+        @Param("checkDate") LocalDate checkDate);
+
     // Tìm vi phạm PHI — harvest trước ngày cho phép
     @Query("SELECT p FROM PesticideRecord p WHERE p.seasonId = :seasonId " +
            "AND :harvestDate < p.harvestAllowedDate")

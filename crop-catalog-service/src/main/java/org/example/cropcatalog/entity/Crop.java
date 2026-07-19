@@ -33,4 +33,10 @@ public class Crop {
 
     @Column(name = "shelf_life_days")
     Integer shelfLifeDays;
+
+    @Column(name = "default_storage_category")
+    String defaultStorageCategory;
+
+    @Column(name = "requires_cold_chain")
+    Boolean requiresColdChain;
 }

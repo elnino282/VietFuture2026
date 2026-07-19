@@ -9,5 +9,14 @@ public record FarmCertificationDto(
         String status,
         LocalDate issuedDate,
         LocalDate expiryDate,
-        BigDecimal complianceScore) {
+        BigDecimal complianceScore,
+        String certificateNumber,
+        Integer missingMandatoryEvidenceCount,
+        java.util.List<MissingEvidenceItemDto> missingEvidenceItems
+) {
+    public record MissingEvidenceItemDto(
+            String itemCode,
+            String category,
+            String description
+    ) {}
 }

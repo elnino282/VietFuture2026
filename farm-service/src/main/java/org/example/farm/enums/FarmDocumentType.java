@@ -9,5 +9,7 @@ public enum FarmDocumentType {
     HARVEST_LOG,            // Hồ sơ thu hoạch
     INTERNAL_AUDIT,         // Biên bản kiểm tra nội bộ
     CERTIFICATE,            // Giấy chứng nhận (VietGAP, Organic, GlobalGAP)
+    PERIODIC_INSPECTION,    // Hồ sơ kiểm tra định kỳ
+    EXPORTED_DOSSIER,       // Hồ sơ xuất tổng hợp
     OTHER                   // Khác
 }

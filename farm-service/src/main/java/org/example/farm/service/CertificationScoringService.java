@@ -179,6 +179,24 @@ public class CertificationScoringService {
                         status.setCheckedAt(LocalDateTime.now());
                     }
                 }
+                case "TRAINING_RECORD" -> {
+                    boolean hasTraining = false;
+                    for (Integer seasonId : seasonIds) {
+                        try {
+                            var stats = seasonServiceClient.getTrainingStatsInternal(seasonId);
+                            if (stats != null && !stats.isEmpty()) {
+                                hasTraining = true;
+                                break;
+                            }
+                        } catch (Exception e) {
+                            log.error("Error fetching training stats for season {}", seasonId, e);
+                        }
+                    }
+                    if (hasTraining) {
+                        status.setStatus("PASS");
+                        status.setCheckedAt(LocalDateTime.now());
+                    }
+                }
             }
         }
     }

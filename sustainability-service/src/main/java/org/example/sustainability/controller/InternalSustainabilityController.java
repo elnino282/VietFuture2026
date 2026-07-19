@@ -22,6 +22,7 @@ public class InternalSustainabilityController {
 
     private final SoilTestRepository soilTestRepository;
     private final IrrigationWaterAnalysisRepository irrigationWaterAnalysisRepository;
+    private final org.example.sustainability.repository.NutrientInputEventRepository nutrientInputEventRepository;
 
     @GetMapping("/seasons/{seasonId}/soil-tests")
     public ResponseEntity<List<SoilTestInternalDto>> getSoilTestsInternal(@PathVariable Integer seasonId) {
@@ -48,6 +49,22 @@ public class InternalSustainabilityController {
                         .plotId(item.getPlotId())
                         .sampleDate(item.getSampleDate())
                         .measured(item.getMeasured())
+                        .build())
+                .toList();
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/seasons/{seasonId}/nutrient-inputs")
+    public ResponseEntity<List<NutrientInputEventInternalDto>> getNutrientInputsInternal(@PathVariable Integer seasonId) {
+        List<NutrientInputEvent> items = nutrientInputEventRepository.findAllBySeasonId(seasonId);
+
+        List<NutrientInputEventInternalDto> dtos = items.stream()
+                .map(item -> NutrientInputEventInternalDto.builder()
+                        .id(item.getId())
+                        .seasonId(item.getSeasonId())
+                        .appliedDate(item.getAppliedDate())
+                        .inputSource(item.getInputSource().name())
+                        .nKg(item.getNKg())
                         .build())
                 .toList();
         return ResponseEntity.ok(dtos);

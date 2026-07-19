@@ -167,5 +167,5 @@ public interface MarketplaceService {
 
     MarketplaceProductDetailResponse getAdminProductDetail(Long productId);
 
-    MarketplaceProductDetailResponse updateAdminProductStatus(Long productId, MarketplaceUpdateProductStatusRequest request);
+    MarketplaceProductDetailResponse updateAdminProductStatus(Long productId, MarketplaceUpdateProductStatusRequest request);\r\n\r\n    org.example.marketplace.dto.response.ComplianceCheckResponse checkProductCompliance(Long productId);
 }

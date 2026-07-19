@@ -36,4 +36,10 @@ public class SeasonServiceClientFallback implements SeasonServiceClient {
         log.error("Fallback triggered: Failed to get seasons for plot {} via season-service", plotId);
         return java.util.Collections.emptyList();
     }
+
+    @Override
+    public java.util.Map<Long, java.util.List<SeasonServiceClient.EmployeeTrainingRecordDto>> getTrainingStatsInternal(Integer seasonId) {
+        log.error("Fallback triggered: Failed to get training stats for season {} via season-service", seasonId);
+        return java.util.Collections.emptyMap();
+    }
 }

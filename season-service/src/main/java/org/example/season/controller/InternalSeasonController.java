@@ -27,6 +27,7 @@ public class InternalSeasonController {
     private final TaskRepository taskRepository;
     private final PesticideRecordRepository pesticideRecordRepository;
     private final FieldLogRepository fieldLogRepository;
+    private final org.example.season.service.EmployeeTrainingService employeeTrainingService;
 
     @PostMapping("/seasons/batch")
     public ResponseEntity<List<SeasonSummaryDto>> getSeasonsByIds(@RequestBody List<Integer> seasonIds) {
@@ -153,6 +154,11 @@ public class InternalSeasonController {
             @RequestParam String logType) {
         long count = fieldLogRepository.countBySeasonIdAndLogTypeIgnoreCase(seasonId, logType);
         return ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/seasons/{seasonId}/training-stats")
+    public ResponseEntity<java.util.Map<Long, List<org.example.season.dto.response.EmployeeTrainingRecordDto>>> getTrainingStatsInternal(@PathVariable Integer seasonId) {
+        return ResponseEntity.ok(employeeTrainingService.getTrainingStatusForSeason(seasonId));
     }
 
     @Data

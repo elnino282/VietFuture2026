@@ -51,4 +51,20 @@ public interface SeasonServiceClient {
         private java.time.LocalDate harvestAllowedDate;
         private java.time.LocalDate applicationDate;
     }
+    @GetMapping("/api/v1/internal/seasons/{seasonId}/training-stats")
+    java.util.Map<Long, java.util.List<EmployeeTrainingRecordDto>> getTrainingStatsInternal(@PathVariable("seasonId") Integer seasonId);
+
+    @lombok.Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    class EmployeeTrainingRecordDto {
+        private Integer id;
+        private Long userId;
+        private Integer workTeamId;
+        private java.time.LocalDate trainedAt;
+        private String trainerName;
+        private java.time.LocalDate certifiedUntil;
+        private String status;
+    }
 }

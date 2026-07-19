@@ -12,5 +12,5 @@ import lombok.experimental.FieldDefaults;
 public class CropResponse {
     Integer id;
     String cropName;
-    String description;
+    String description;\r\n    org.example.cropcatalog.entity.CropCategory category;\r\n    Integer postHarvestDelayDays;\r\n    Integer shelfLifeDays;\r\n    String defaultStorageCategory;\r\n    Boolean requiresColdChain;
 }

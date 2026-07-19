@@ -28,6 +28,7 @@ public class InternalFarmController {
     private final FarmMapper farmMapper;
     private final CertificationRecordRepository certificationRecordRepository;
     private final CertificationStandardRepository certificationStandardRepository;
+    private final org.example.farm.service.CertificationService certificationService;
 
     @PostMapping("/batch")
     public ResponseEntity<List<FarmSummaryDto>> getFarmsByIds(@RequestBody List<Integer> farmIds) {
@@ -47,8 +48,10 @@ public class InternalFarmController {
     }
 
     @GetMapping("/{farmId}/certification")
-    public ResponseEntity<CertificationInfoDto> getFarmCertification(@PathVariable Integer farmId) {
-        Optional<CertificationStandard> standardOpt = certificationStandardRepository.findByCode("VIETGAP-PLANTING-2024");
+    public ResponseEntity<CertificationInfoDto> getFarmCertification(
+            @PathVariable Integer farmId,
+            @RequestParam(value = "standardCode", defaultValue = "VIETGAP-PLANTING-2024") String standardCode) {
+        Optional<CertificationStandard> standardOpt = certificationStandardRepository.findByCode(standardCode);
         if (standardOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -57,7 +60,6 @@ public class InternalFarmController {
         Optional<CertificationRecord> recordOpt = certificationRecordRepository.findByFarmIdAndStandardId(farmId, standard.getId());
         
         if (recordOpt.isEmpty()) {
-            // Trả về đối tượng trống với trạng thái IN_PROGRESS hoặc PENDING để frontend hiển thị sạch
             return ResponseEntity.ok(CertificationInfoDto.builder()
                     .certificationName(standard.getName())
                     .certificationType(standard.getType())
@@ -66,14 +68,20 @@ public class InternalFarmController {
                     .build());
         }
 
+        // Dùng service để tự động tính điểm và lấy missing evidence
+        org.example.farm.dto.response.CertificationDetailsResponse details = certificationService.getCertificationDetails(farmId, standardCode);
+
         CertificationRecord record = recordOpt.get();
         return ResponseEntity.ok(CertificationInfoDto.builder()
                 .certificationName(standard.getName())
                 .certificationType(standard.getType())
-                .status(record.getStatus())
-                .issuedDate(record.getCertifiedAt() != null ? record.getCertifiedAt().toLocalDate() : null)
-                .expiryDate(record.getExpiryDate())
-                .complianceScore(record.getComplianceScore())
+                .status(details.getStatus())
+                .issuedDate(details.getCertifiedAt() != null ? details.getCertifiedAt().toLocalDate() : null)
+                .expiryDate(details.getExpiryDate())
+                .complianceScore(details.getComplianceScore())
+                .certificateNumber(details.getCertificateNumber())
+                .missingMandatoryEvidenceCount(details.getMissingMandatoryEvidenceCount())
+                .missingEvidenceItems(details.getMissingEvidenceItems())
                 .build());
     }
 

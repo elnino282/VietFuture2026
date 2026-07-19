@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface DeliveryOrderRepository extends JpaRepository<DeliveryOrder, Integer> {
     List<DeliveryOrder> findByMarketplaceOrderId(Long marketplaceOrderId);
+    long countByRequestedDeliveryDateAndDeliveryZoneTo(java.time.LocalDate date, String zone);
 }

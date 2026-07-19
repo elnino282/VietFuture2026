@@ -42,4 +42,20 @@ public class CertificationController {
             return ResponseEntity.badRequest().body(ApiResponse.error(org.springframework.http.HttpStatus.BAD_REQUEST, "ERR_BAD_REQUEST", e.getMessage()));
         }
     }
+
+    @PostMapping("/export-dossier")
+    public ResponseEntity<ApiResponse<org.example.farm.dto.response.FarmDocumentResponse>> exportDossier(
+            @PathVariable Integer farmId,
+            @RequestBody org.example.farm.dto.request.ExportDossierRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            org.springframework.beans.factory.ObjectProvider<org.example.farm.client.SeasonProductionDiaryClient> diaryClientProvider,
+            org.springframework.beans.factory.ObjectProvider<org.example.farm.service.FarmDocumentService> documentServiceProvider,
+            org.springframework.beans.factory.ObjectProvider<org.example.farm.config.CurrentUserService> currentUserServiceProvider) {
+
+        Long resolvedUserId = userId != null ? userId : currentUserServiceProvider.getObject().getCurrentUserId();
+        org.example.farm.dto.response.FarmDocumentResponse res = certificationService.exportDossier(
+                farmId, request, resolvedUserId, diaryClientProvider.getObject(), documentServiceProvider.getObject()
+        );
+        return ResponseEntity.ok(ApiResponse.success(res));
+    }
 }

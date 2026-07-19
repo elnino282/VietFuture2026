@@ -27,6 +27,23 @@ public class CertificationDetailsResponse {
     private List<CertificationItemDetail> items;
     private Boolean isEligible;
 
+    // === Additive fields (§5.5, §8.4 BRD) ===
+    private String certificateNumber;
+    private LocalDate nextPeriodicReviewDate;
+    private LocalDateTime publishedAt;
+    private Integer missingMandatoryEvidenceCount;
+    private List<MissingEvidenceItem> missingEvidenceItems;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MissingEvidenceItem {
+        private String itemCode;
+        private String category;
+        private String description;
+    }
+
     @Data
     @Builder
     @NoArgsConstructor

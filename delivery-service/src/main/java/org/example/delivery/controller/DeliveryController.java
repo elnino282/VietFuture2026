@@ -66,4 +66,12 @@ public class DeliveryController {
         DeliveryOrder order = deliveryService.updateDeliveryStatus(id, status);
         return ResponseEntity.ok(order);
     }
+
+    @GetMapping("/batch-suggestions")
+    public ResponseEntity<org.example.delivery.dto.response.BatchSuggestionResponse> getBatchSuggestions(
+            @RequestParam("date") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate date,
+            @RequestParam("zone") String zone) {
+        log.info("Fetching batch suggestions for date: {}, zone: {}", date, zone);
+        return ResponseEntity.ok(deliveryService.getBatchSuggestions(date, zone));
+    }
 }

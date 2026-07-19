@@ -20,5 +20,5 @@ public class CertificationInfoDto {
     String status;
     LocalDate issuedDate;
     LocalDate expiryDate;
-    BigDecimal complianceScore;
+    BigDecimal complianceScore;\r\n    String certificateNumber;\r\n    Integer missingMandatoryEvidenceCount;\r\n    java.util.List<org.example.farm.dto.response.CertificationDetailsResponse.MissingEvidenceItem> missingEvidenceItems;
 }

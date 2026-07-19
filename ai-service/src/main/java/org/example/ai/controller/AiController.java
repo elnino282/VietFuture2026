@@ -59,4 +59,12 @@ public class AiController {
         String result = geminiService.analyzeMarketplaceImage(imageBytes, request.getMimeType());
         return ApiResponse.success(result);
     }
+
+    @PreAuthorize("hasRole('FARMER')")
+    @PostMapping("/farmer/ai/diagnose-disease")
+    public ApiResponse<String> diagnoseDisease(@RequestBody InternalImageAnalysisRequest request) {
+        byte[] imageBytes = Base64.getDecoder().decode(request.getImageBytesBase64());
+        String result = geminiService.diagnoseDisease(imageBytes, request.getMimeType());
+        return ApiResponse.success(result);
+    }
 }

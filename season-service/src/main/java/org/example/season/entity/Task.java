@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
@@ -87,9 +88,6 @@ public class Task {
 
     @Column(name = "plot_id")
     Long plotId;
-
-    @Column(name = "plot_name")
-    String plotName;
 
     @Column(name = "plot_area")
     BigDecimal plotArea;

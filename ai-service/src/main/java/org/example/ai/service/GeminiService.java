@@ -185,6 +185,54 @@ public class GeminiService {
         }
     }
 
+    public String diagnoseDisease(byte[] imageBytes, String mimeType) {
+        Objects.requireNonNull(imageBytes, "imageBytes must not be null");
+        if (imageBytes.length == 0) {
+            throw new IllegalArgumentException("imageBytes must not be empty");
+        }
+        if (mimeType == null || mimeType.isBlank()) {
+            throw new IllegalArgumentException("mimeType must not be blank");
+        }
+
+        String requestId = UUID.randomUUID().toString();
+        if (!aiEnabled) {
+            log.warn("Gemini disease diagnosis skipped because AI is disabled (requestId={}).", requestId);
+            throw new IllegalStateException("Gemini image analysis is disabled");
+        }
+
+        GenerateContentConfig config = GenerateContentConfig.builder()
+                .responseMimeType("application/json")
+                .temperature(0.2F)
+                .maxOutputTokens(1024)
+                .build();
+        Content content = Content.fromParts(
+                Part.fromText(buildDiseaseDiagnosisPrompt()),
+                Part.fromBytes(imageBytes, mimeType));
+
+        try {
+            GenerateContentResponse response = client.models.generateContent(model, content, config);
+            String finishReason = response.finishReason() == null ? null : response.finishReason().toString();
+            if (finishReason != null && !"STOP".equalsIgnoreCase(finishReason)) {
+                log.warn("Gemini disease diagnosis finished with reason {} (requestId={}).", finishReason, requestId);
+            }
+            String text = response.text();
+            if (text == null || text.isBlank()) {
+                log.warn("Gemini disease diagnosis response empty (requestId={}).", requestId);
+                throw new IllegalStateException("Gemini image analysis returned an empty response");
+            }
+            return text;
+        } catch (ApiException ex) {
+            logApiException(requestId, ex);
+            throw new IllegalStateException("Gemini image analysis API error", ex);
+        } catch (GenAiIOException ex) {
+            logIoException(requestId, ex);
+            throw new IllegalStateException("Gemini image analysis IO error", ex);
+        } catch (Exception ex) {
+            logUnexpectedException(requestId, ex);
+            throw new IllegalStateException("Gemini image analysis unexpected error", ex);
+        }
+    }
+
     private String chatWithPrompt(String userMessage,
                                   String context,
                                   String systemPrompt,
@@ -259,6 +307,22 @@ public class GeminiService {
                   "confidenceLabel": "low|medium|high",
                   "agricultural": true,
                   "message": "short Vietnamese message"
+                }
+                """;
+    }
+
+    private String buildDiseaseDiagnosisPrompt() {
+        return """
+                Analyze this image of a plant/crop to diagnose any disease or pest.
+                Return ONLY compact valid JSON. No Markdown, no prose.
+                If the image is not a plant, or you cannot diagnose, set hasDisease to false.
+                {
+                  "hasDisease": true,
+                  "diseaseName": "Tên bệnh/sâu (Tiếng Việt)",
+                  "confidence": 0.95,
+                  "suggestedPesticide": "Tên hoạt chất/thuốc đề xuất (Tiếng Việt)",
+                  "estimatedPhiDays": 7,
+                  "message": "Lời khuyên ngắn gọn (Tiếng Việt)"
                 }
                 """;
     }

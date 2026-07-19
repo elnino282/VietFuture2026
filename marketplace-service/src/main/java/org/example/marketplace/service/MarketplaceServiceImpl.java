@@ -136,6 +136,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     MarketplaceStorageService storageService;
     QRCodeGenerator qrCodeGenerator;
     DomainEventPublisher domainEventPublisher;
+    MarketplaceComplianceGateService complianceGateService;
 
     @Override
     @Transactional(readOnly = true)
@@ -320,76 +321,52 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         MarketplaceTraceabilityResponse base = buildTraceabilityResponse(product, null);
 
         CertificationInfo certInfo = null;
-        if (product.getFarmId() != null) {
+        if (product.getCertificationSnapshotJson() != null && !product.getCertificationSnapshotJson().isBlank()) {
             try {
-                FarmCertificationDto certDto = farmClient.getFarmCertification(product.getFarmId());
-                if (certDto != null) {
-                    certInfo = new CertificationInfo(
-                            certDto.certificationName(),
-                            certDto.certificationType(),
-                            certDto.status(),
-                            certDto.issuedDate(),
-                            certDto.expiryDate(),
-                            certDto.complianceScore()
-                    );
-                }
+                certInfo = objectMapper.readValue(product.getCertificationSnapshotJson(), CertificationInfo.class);
             } catch (Exception e) {
-                log.warn("Failed to fetch certification info for farmId={}: {}", product.getFarmId(), e.getMessage());
+                log.warn("Failed to deserialize certification snapshot for productId={}: {}", product.getId(), e.getMessage());
             }
         }
 
         PHISafetyInfo phiInfo = null;
-        if (product.getSeasonId() != null) {
+        if (product.getHarvestSafetySnapshotJson() != null && !product.getHarvestSafetySnapshotJson().isBlank()) {
             try {
-                List<PesticideRecordDto> pesticideRecords = seasonClient.getSeasonPesticideRecords(product.getSeasonId());
-                if (pesticideRecords != null) {
-                    int totalPesticidesUsed = pesticideRecords.size();
-                    LocalDate today = LocalDate.now();
-                    int safePesticides = 0;
-                    int cautionPesticides = 0;
-                    boolean isSafe = true;
-                    List<PesticideUsageItem> usageItems = new java.util.ArrayList<>();
-
-                    for (PesticideRecordDto record : pesticideRecords) {
-                        LocalDate allowedDate = record.harvestAllowedDate();
-                        if (allowedDate == null && record.applicationDate() != null) {
-                            allowedDate = record.applicationDate().plusDays(record.phiDays());
-                        }
-
-                        String status = "SAFE";
-                        if (allowedDate != null) {
-                            if (today.isBefore(allowedDate)) {
-                                isSafe = false;
-                                long daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(today, allowedDate);
-                                if (daysRemaining <= 3) {
-                                    status = "CAUTION";
-                                    cautionPesticides++;
-                                } else {
-                                    status = "BLOCKED";
-                                }
-                            } else {
-                                safePesticides++;
-                            }
-                        }
-
-                        usageItems.add(new PesticideUsageItem(
-                                record.pesticideName(),
-                                record.applicationDate(),
-                                allowedDate,
-                                status
-                        ));
-                    }
-
+                phiInfo = objectMapper.readValue(product.getHarvestSafetySnapshotJson(), PHISafetyInfo.class);
+                // Filter out non-SAFE items for public view per BRD BR-H-02
+                if (phiInfo != null && phiInfo.usage() != null) {
+                    List<PesticideUsageItem> safeUsage = phiInfo.usage().stream()
+                            .filter(u -> "SAFE".equals(u.status()))
+                            .toList();
                     phiInfo = new PHISafetyInfo(
-                            isSafe,
-                            totalPesticidesUsed,
-                            safePesticides,
-                            cautionPesticides,
-                            usageItems
+                            phiInfo.isSafe(),
+                            phiInfo.totalPesticidesUsed(),
+                            phiInfo.safePesticides(),
+                            phiInfo.cautionPesticides(),
+                            safeUsage
                     );
                 }
             } catch (Exception e) {
-                log.warn("Failed to fetch PHI safety info for seasonId={}: {}", product.getSeasonId(), e.getMessage());
+                log.warn("Failed to deserialize harvest safety snapshot for productId={}: {}", product.getId(), e.getMessage());
+            }
+        }
+
+        MarketplaceTraceabilityResponse.SeasonTraceability season = base.season();
+        if (product.getSeasonId() != null && season != null) {
+            try {
+                SeasonDetailDto seasonDto = seasonClient.getSeason(product.getSeasonId());
+                if (seasonDto != null) {
+                    season = new MarketplaceTraceabilityResponse.SeasonTraceability(
+                            season.id(),
+                            season.name(),
+                            season.cropName(),
+                            seasonDto.varietyName() != null ? seasonDto.varietyName() : season.varietyName(),
+                            seasonDto.startDate(),
+                            season.harvestDate()
+                    );
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch season details for seasonId={}: {}", product.getSeasonId(), e.getMessage());
             }
         }
 
@@ -398,7 +375,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 base.traceable(),
                 base.farm(),
                 base.plot(),
-                base.season(),
+                season,
                 base.harvest(),
                 base.productLot(),
                 base.timeline(),
@@ -1786,6 +1763,17 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         MarketplaceProduct product = marketplaceProductRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
+        if (request.status() == MarketplaceProductStatus.PUBLISHED) {
+            ComplianceCheckResponse complianceCheck = complianceGateService.checkCompliance(product);
+            if (!complianceCheck.isEligible()) {
+                throw new org.example.marketplace.exception.ConflictException("Compliance check failed: " + String.join("; ", complianceCheck.reasons()));
+            }
+            // Update snapshots
+            product.setCertificationSnapshotJson(complianceCheck.certificationSnapshotJson());
+            product.setHarvestSafetySnapshotJson(complianceCheck.harvestSafetySnapshotJson());
+            product.setComplianceCheckedAt(LocalDateTime.now());
+        }
+
         product.setStatus(request.status());
         if (request.statusReason() != null) {
             product.setStatusReason(request.statusReason());
@@ -1798,7 +1786,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         return toProductDetail(product);
     }
 
-    private void publishProductChangedEvent(MarketplaceProduct product) {
+    @Override\r\n    @Transactional(readOnly = true)\r\n    public org.example.marketplace.dto.response.ComplianceCheckResponse checkProductCompliance(Long productId) {\r\n        MarketplaceProduct product = marketplaceProductRepository.findById(productId)\r\n                .orElseThrow(() -> new ResourceNotFoundException(\"Product not found\"));\r\n        return complianceGateService.checkCompliance(product);\r\n    }\r\n\r\n    private void publishProductChangedEvent(MarketplaceProduct product) {
         if (product == null) return;
         MarketplaceProductChangedEvent event = new MarketplaceProductChangedEvent(
                 java.util.UUID.randomUUID().toString(),
@@ -1897,6 +1885,8 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 product.getStatusReason(),
                 product.getPublishedAt(),
                 product.getStatusChangedAt(),
+                product.getAllowsPreOrder(),
+                product.getEarliestFulfillmentDate(),
                 true,
                 List.of(),
                 product.getCreatedAt(),
@@ -1933,6 +1923,8 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 product.getStatusReason(),
                 product.getPublishedAt(),
                 product.getStatusChangedAt(),
+                product.getAllowsPreOrder(),
+                product.getEarliestFulfillmentDate(),
                 true,
                 List.of(),
                 product.getCreatedAt(),
@@ -1998,6 +1990,9 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 order.getShippingFee(),
                 order.getTotalAmount(),
                 canCancel(order),
+                order.getIsPreOrder(),
+                order.getRequestedDeliveryDate(),
+                order.getHarvestReadyDate(),
                 order.getCreatedAt(),
                 order.getUpdatedAt(),
                 itemResponses);

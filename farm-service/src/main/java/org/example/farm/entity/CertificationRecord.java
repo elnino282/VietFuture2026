@@ -40,6 +40,21 @@ public class CertificationRecord {
     @Column(name = "auditor_notes", columnDefinition = "TEXT")
     String auditorNotes;
 
+    @Column(name = "certificate_number", length = 100)
+    String certificateNumber;
+
+    @Column(name = "certificate_document_id")
+    Integer certificateDocumentId;
+
+    @Column(name = "next_periodic_review_date")
+    LocalDate nextPeriodicReviewDate;
+
+    @Column(name = "published_at")
+    LocalDateTime publishedAt;
+
+    @Column(name = "published_by_user_id")
+    Long publishedByUserId;
+
     @Column(name = "created_at")
     LocalDateTime createdAt;
 

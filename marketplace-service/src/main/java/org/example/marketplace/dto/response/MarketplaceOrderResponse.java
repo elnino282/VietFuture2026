@@ -21,6 +21,9 @@ public record MarketplaceOrderResponse(
         BigDecimal shippingFee,
         BigDecimal totalAmount,
         Boolean canCancel,
+        Boolean isPreOrder,
+        java.time.LocalDate requestedDeliveryDate,
+        java.time.LocalDate harvestReadyDate,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         List<MarketplaceOrderItemResponse> items) {

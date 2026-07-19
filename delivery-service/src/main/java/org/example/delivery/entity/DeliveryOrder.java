@@ -67,6 +67,12 @@ public class DeliveryOrder {
     @Builder.Default
     private BigDecimal weightKg = BigDecimal.ZERO;
 
+    @Column(name = "requested_delivery_date")
+    private java.time.LocalDate requestedDeliveryDate;
+
+    @Column(name = "delivery_zone_to", length = 50)
+    private String deliveryZoneTo;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 

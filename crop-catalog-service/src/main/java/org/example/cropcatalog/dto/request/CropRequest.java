@@ -20,5 +20,5 @@ public class CropRequest {
     @NotBlank(message = "KEY_INVALID")
     String cropName;
 
-    String description;
+    String description;\r\n\r\n    org.example.cropcatalog.entity.CropCategory category;\r\n\r\n    Integer postHarvestDelayDays;\r\n\r\n    Integer shelfLifeDays;\r\n\r\n    String defaultStorageCategory;\r\n\r\n    Boolean requiresColdChain;
 }

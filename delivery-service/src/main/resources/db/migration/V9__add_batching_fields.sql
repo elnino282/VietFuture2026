@@ -1,0 +1,1 @@
+-- Add batching fields to delivery_orders\r\nALTER TABLE delivery_orders \r\nADD COLUMN requested_delivery_date DATE,\r\nADD COLUMN delivery_zone_to VARCHAR(50);\r\n

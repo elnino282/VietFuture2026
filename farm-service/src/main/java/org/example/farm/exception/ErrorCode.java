@@ -35,7 +35,16 @@ public enum ErrorCode {
     WARD_NOT_FOUND("ERR_WARD_NOT_FOUND", "Ward not found", HttpStatus.NOT_FOUND),
     WARD_REQUIRED("ERR_WARD_REQUIRED", "Ward is required when creating a farm", HttpStatus.BAD_REQUEST),
     WARD_NOT_IN_PROVINCE("ERR_WARD_NOT_IN_PROVINCE", "Ward does not belong to the specified province", HttpStatus.BAD_REQUEST),
-    ADDRESS_IMPORT_FAILED("ERR_ADDRESS_IMPORT_FAILED", "Failed to import address data", HttpStatus.INTERNAL_SERVER_ERROR);
+    ADDRESS_IMPORT_FAILED("ERR_ADDRESS_IMPORT_FAILED", "Failed to import address data", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // Certification audit workflow errors
+    CERTIFICATION_NOT_FOUND("ERR_CERTIFICATION_NOT_FOUND", "Certification record not found", HttpStatus.NOT_FOUND),
+    CERTIFICATION_INVALID_TRANSITION("ERR_CERTIFICATION_INVALID_TRANSITION", "Invalid certification status transition", HttpStatus.BAD_REQUEST),
+    AUDIT_NOT_FOUND("ERR_AUDIT_NOT_FOUND", "Certification audit not found", HttpStatus.NOT_FOUND),
+    NONCONFORMITY_NOT_FOUND("ERR_NONCONFORMITY_NOT_FOUND", "Nonconformity not found", HttpStatus.NOT_FOUND),
+    CORRECTIVE_ACTION_NOT_FOUND("ERR_CORRECTIVE_ACTION_NOT_FOUND", "Corrective action not found", HttpStatus.NOT_FOUND),
+    CRITICAL_NONCONFORMITY_OPEN("ERR_CRITICAL_NONCONFORMITY_OPEN", "Cannot issue certificate while critical nonconformity is open", HttpStatus.CONFLICT),
+    DOCUMENT_NOT_FOUND("ERR_DOCUMENT_NOT_FOUND", "Farm document not found", HttpStatus.NOT_FOUND);
 
     ErrorCode(String code, String message, HttpStatus statusCode) {
         this.code = code;

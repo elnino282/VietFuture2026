@@ -34,6 +34,8 @@ public record MarketplaceProductDetailResponse(
         String statusReason,
         LocalDateTime publishedAt,
         LocalDateTime statusChangedAt,
+        Boolean allowsPreOrder,
+        java.time.LocalDate earliestFulfillmentDate,
         Boolean approvalEligible,
         List<String> approvalBlockers,
         LocalDateTime createdAt,
