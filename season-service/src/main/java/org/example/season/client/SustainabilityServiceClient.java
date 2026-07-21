@@ -10,17 +10,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name = \"sustainability-service\", url = \"${app.sustainability-service-url}\", fallback = SustainabilityServiceClientFallback.class)
+@FeignClient(name = "sustainability-service", url = "${app.sustainability-service-url}", fallback = SustainabilityServiceClientFallback.class)
 public interface SustainabilityServiceClient {
 
-    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/soil-tests\")
-    List<SoilTestInternalDto> getSoilTests(@PathVariable(\"seasonId\") Integer seasonId);
+    @GetMapping("/api/v1/internal/seasons/{seasonId}/soil-tests")
+    List<SoilTestInternalDto> getSoilTests(@PathVariable("seasonId") Integer seasonId);
 
-    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/irrigation-water-analyses\")
-    List<IrrigationWaterAnalysisInternalDto> getWaterAnalyses(@PathVariable(\"seasonId\") Integer seasonId);
+    @GetMapping("/api/v1/internal/seasons/{seasonId}/irrigation-water-analyses")
+    List<IrrigationWaterAnalysisInternalDto> getWaterAnalyses(@PathVariable("seasonId") Integer seasonId);
 
-    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/nutrient-inputs\")
-    List<NutrientInputEventInternalDto> getNutrientInputs(@PathVariable(\"seasonId\") Integer seasonId);
+    @GetMapping("/api/v1/internal/seasons/{seasonId}/nutrient-inputs")
+    List<NutrientInputEventInternalDto> getNutrientInputs(@PathVariable("seasonId") Integer seasonId);
 
     @Data
     @Builder

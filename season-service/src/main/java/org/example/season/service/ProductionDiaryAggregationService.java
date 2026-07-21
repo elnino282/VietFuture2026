@@ -32,10 +32,10 @@ public class ProductionDiaryAggregationService {
         for (FieldLog log : fieldLogs) {
             events.add(ProductionDiaryEventDto.builder()
                     .eventDate(log.getLogDate())
-                    .eventType(\"FIELD_LOG\")
-                    .title(\"Nhật ký đồng ruộng\")
-                    .description(log.getDescription())
-                    .sourceService(\"season-service\")
+                    .eventType("FIELD_LOG")
+                    .title("Nhật ký đồng ruộng")
+                    .description(log.getNotes())
+                    .sourceService("season-service")
                     .sourceId(log.getId())
                     .build());
         }
@@ -45,10 +45,10 @@ public class ProductionDiaryAggregationService {
         for (PesticideRecord rec : pesticideRecords) {
             events.add(ProductionDiaryEventDto.builder()
                     .eventDate(rec.getApplicationDate())
-                    .eventType(\"PESTICIDE\")
-                    .title(\"Phun thuốc BVTV: \" + rec.getPesticideName())
-                    .description(\"Mục đích: \" + rec.getPurpose() + \". Liều lượng: \" + rec.getDosage())
-                    .sourceService(\"season-service\")
+                    .eventType("PESTICIDE")
+                    .title("Phun thuốc BVTV: " + rec.getPesticideName())
+                    .description("Mục đích: " + rec.getTargetPest() + ". Liều lượng: " + rec.getDosage())
+                    .sourceService("season-service")
                     .sourceId(rec.getId())
                     .build());
         }
@@ -58,10 +58,10 @@ public class ProductionDiaryAggregationService {
         for (Harvest harvest : harvests) {
             events.add(ProductionDiaryEventDto.builder()
                     .eventDate(harvest.getHarvestDate())
-                    .eventType(\"HARVEST\")
-                    .title(\"Thu hoạch\")
-                    .description(\"Số lượng: \" + harvest.getQuantity() + \" (Lô: \" + harvest.getLotCode() + \")\")
-                    .sourceService(\"season-service\")
+                    .eventType("HARVEST")
+                    .title("Thu hoạch")
+                    .description("Số lượng: " + harvest.getQuantity() + " (Mã Thu Hoạch: " + harvest.getId() + ")")
+                    .sourceService("season-service")
                     .sourceId(harvest.getId())
                     .build());
         }
@@ -72,10 +72,10 @@ public class ProductionDiaryAggregationService {
             for (var nutrient : nutrients) {
                 events.add(ProductionDiaryEventDto.builder()
                         .eventDate(nutrient.getAppliedDate())
-                        .eventType(\"FERTILIZER\")
-                        .title(\"Bón phân: \" + nutrient.getInputSource())
-                        .description(\"Lượng N(kg): \" + nutrient.getNKg())
-                        .sourceService(\"sustainability-service\")
+                        .eventType("FERTILIZER")
+                        .title("Bón phân: " + nutrient.getInputSource())
+                        .description("Lượng N(kg): " + nutrient.getNKg())
+                        .sourceService("sustainability-service")
                         .sourceId(nutrient.getId())
                         .build());
             }
@@ -88,10 +88,10 @@ public class ProductionDiaryAggregationService {
             for (var soil : soilTests) {
                 events.add(ProductionDiaryEventDto.builder()
                         .eventDate(soil.getSampleDate())
-                        .eventType(\"SOIL_TEST\")
-                        .title(\"Kiểm tra đất\")
-                        .description(\"Đã đo lường: \" + (soil.getMeasured() ? \"Có\" : \"Không\"))
-                        .sourceService(\"sustainability-service\")
+                        .eventType("SOIL_TEST")
+                        .title("Kiểm tra đất")
+                        .description("Đã đo lường: " + (soil.getMeasured() ? "Có" : "Không"))
+                        .sourceService("sustainability-service")
                         .sourceId(soil.getId())
                         .build());
             }
@@ -104,10 +104,10 @@ public class ProductionDiaryAggregationService {
             for (var water : waterAnalyses) {
                 events.add(ProductionDiaryEventDto.builder()
                         .eventDate(water.getSampleDate())
-                        .eventType(\"IRRIGATION\")
-                        .title(\"Phân tích nước tưới\")
-                        .description(\"Đã đo lường: \" + (water.getMeasured() ? \"Có\" : \"Không\"))
-                        .sourceService(\"sustainability-service\")
+                        .eventType("IRRIGATION")
+                        .title("Phân tích nước tưới")
+                        .description("Đã đo lường: " + (water.getMeasured() ? "Có" : "Không"))
+                        .sourceService("sustainability-service")
                         .sourceId(water.getId())
                         .build());
             }

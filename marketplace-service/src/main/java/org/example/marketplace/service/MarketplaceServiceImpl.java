@@ -354,7 +354,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         MarketplaceTraceabilityResponse.SeasonTraceability season = base.season();
         if (product.getSeasonId() != null && season != null) {
             try {
-                SeasonDetailDto seasonDto = seasonClient.getSeason(product.getSeasonId());
+                SeasonDetailDto seasonDto = seasonClient.getSeasonDetail(product.getSeasonId());
                 if (seasonDto != null) {
                     season = new MarketplaceTraceabilityResponse.SeasonTraceability(
                             season.id(),
@@ -1799,7 +1799,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         if (request.status() == MarketplaceProductStatus.PUBLISHED) {
-            ComplianceCheckResponse complianceCheck = complianceGateService.checkCompliance(product);
+            org.example.marketplace.dto.response.ComplianceCheckResponse complianceCheck = complianceGateService.checkCompliance(product);
             if (!complianceCheck.isEligible()) {
                 throw new org.example.marketplace.exception.ConflictException("Compliance check failed: " + String.join("; ", complianceCheck.reasons()));
             }
@@ -1825,7 +1825,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Transactional(readOnly = true)
     public org.example.marketplace.dto.response.ComplianceCheckResponse checkProductCompliance(Long productId) {
         MarketplaceProduct product = marketplaceProductRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException(\"Product not found\"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         return complianceGateService.checkCompliance(product);
     }
 

@@ -12,47 +12,47 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = \"certification_corrective_actions\")
+@Table(name = "certification_corrective_actions")
 public class CertificationCorrectiveAction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = \"nonconformity_id\", nullable = false)
+    @Column(name = "nonconformity_id", nullable = false)
     Long nonconformityId;
 
-    @Column(name = \"plan_description\", columnDefinition = \"TEXT\")
+    @Column(name = "plan_description", columnDefinition = "TEXT")
     String planDescription;
 
-    @Column(name = \"evidence_urls\", columnDefinition = \"TEXT\")
+    @Column(name = "evidence_urls", columnDefinition = "TEXT")
     String evidenceUrls;
 
-    @Column(name = \"applies_from_season_id\")
+    @Column(name = "applies_from_season_id")
     Integer appliesFromSeasonId;
 
-    @Column(name = \"submitted_by_user_id\")
+    @Column(name = "submitted_by_user_id")
     Long submittedByUserId;
 
-    @Column(name = \"submitted_at\")
+    @Column(name = "submitted_at")
     LocalDateTime submittedAt;
 
-    @Column(name = \"reviewed_by_user_id\")
+    @Column(name = "reviewed_by_user_id")
     Long reviewedByUserId;
 
-    @Column(name = \"review_result\", length = 20)
+    @Column(name = "review_result", length = 20)
     String reviewResult;
 
-    @Column(name = \"review_note\", columnDefinition = \"TEXT\")
+    @Column(name = "review_note", columnDefinition = "TEXT")
     String reviewNote;
 
-    @Column(name = \"reviewed_at\")
+    @Column(name = "reviewed_at")
     LocalDateTime reviewedAt;
 
-    @Column(name = \"created_at\")
+    @Column(name = "created_at")
     LocalDateTime createdAt;
 
-    @Column(name = \"updated_at\")
+    @Column(name = "updated_at")
     LocalDateTime updatedAt;
 
     @PrePersist

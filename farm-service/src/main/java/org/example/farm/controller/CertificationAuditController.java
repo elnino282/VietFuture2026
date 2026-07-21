@@ -29,8 +29,8 @@ public class CertificationAuditController {
     // ==========================================
 
     /** Auditor/Admin lên lịch đánh giá */
-    @PostMapping(\"/api/v1/farms/{farmId}/certification/audits\")
-    @PreAuthorize(\"hasAnyRole('ADMIN', 'AUDITOR')\")
+    @PostMapping("/api/v1/farms/{farmId}/certification/audits")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR')")
     public ResponseEntity<ApiResponse<CertificationAuditResponse>> scheduleAudit(
             @PathVariable Integer farmId,
             @RequestBody @Valid CreateAuditRequest request) {
@@ -38,24 +38,24 @@ public class CertificationAuditController {
     }
 
     /** Lấy danh sách đợt audit của farm */
-    @GetMapping(\"/api/v1/farms/{farmId}/certification/audits\")
-    @PreAuthorize(\"hasAnyRole('FARMER', 'ADMIN', 'AUDITOR')\")
+    @GetMapping("/api/v1/farms/{farmId}/certification/audits")
+    @PreAuthorize("hasAnyRole('FARMER', 'ADMIN', 'AUDITOR')")
     public ResponseEntity<ApiResponse<List<CertificationAuditResponse>>> getAudits(
             @PathVariable Integer farmId) {
         return ResponseEntity.ok(ApiResponse.success(auditService.getAudits(farmId)));
     }
 
     /** Bắt đầu audit */
-    @PutMapping(\"/api/v1/certification-audits/{auditId}/start\")
-    @PreAuthorize(\"hasAnyRole('ADMIN', 'AUDITOR')\")
+    @PutMapping("/api/v1/certification-audits/{auditId}/start")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR')")
     public ResponseEntity<ApiResponse<CertificationAuditResponse>> startAudit(
             @PathVariable Long auditId) {
         return ResponseEntity.ok(ApiResponse.success(auditService.startAudit(auditId)));
     }
 
     /** Kết luận audit (PASSED/FAILED) */
-    @PutMapping(\"/api/v1/certification-audits/{auditId}/complete\")
-    @PreAuthorize(\"hasAnyRole('ADMIN', 'AUDITOR')\")
+    @PutMapping("/api/v1/certification-audits/{auditId}/complete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR')")
     public ResponseEntity<ApiResponse<CertificationAuditResponse>> completeAudit(
             @PathVariable Long auditId,
             @RequestBody @Valid CompleteAuditRequest request) {
@@ -67,8 +67,8 @@ public class CertificationAuditController {
     // ==========================================
 
     /** Auditor ghi nhận lỗi không phù hợp */
-    @PostMapping(\"/api/v1/certification-audits/{auditId}/nonconformities\")
-    @PreAuthorize(\"hasAnyRole('ADMIN', 'AUDITOR')\")
+    @PostMapping("/api/v1/certification-audits/{auditId}/nonconformities")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR')")
     public ResponseEntity<ApiResponse<NonconformityResponse>> recordNonconformity(
             @PathVariable Long auditId,
             @RequestBody @Valid CreateNonconformityRequest request) {
@@ -76,8 +76,8 @@ public class CertificationAuditController {
     }
 
     /** Farmer xem danh sách lỗi cần khắc phục */
-    @GetMapping(\"/api/v1/farms/{farmId}/certification/nonconformities\")
-    @PreAuthorize(\"hasAnyRole('FARMER', 'ADMIN', 'AUDITOR')\")
+    @GetMapping("/api/v1/farms/{farmId}/certification/nonconformities")
+    @PreAuthorize("hasAnyRole('FARMER', 'ADMIN', 'AUDITOR')")
     public ResponseEntity<ApiResponse<List<NonconformityResponse>>> getNonconformities(
             @PathVariable Integer farmId) {
         return ResponseEntity.ok(ApiResponse.success(auditService.getNonconformities(farmId)));
@@ -88,8 +88,8 @@ public class CertificationAuditController {
     // ==========================================
 
     /** Farmer tạo kế hoạch khắc phục (nháp) */
-    @PostMapping(\"/api/v1/certification-nonconformities/{nonconformityId}/corrective-actions\")
-    @PreAuthorize(\"hasRole('FARMER')\")
+    @PostMapping("/api/v1/certification-nonconformities/{nonconformityId}/corrective-actions")
+    @PreAuthorize("hasRole('FARMER')")
     public ResponseEntity<ApiResponse<CorrectiveActionResponse>> createCorrectiveAction(
             @PathVariable Long nonconformityId,
             @RequestBody @Valid CreateCorrectiveActionRequest request) {
@@ -99,8 +99,8 @@ public class CertificationAuditController {
     }
 
     /** Farmer sửa kế hoạch trước khi nộp */
-    @PutMapping(\"/api/v1/certification-corrective-actions/{actionId}\")
-    @PreAuthorize(\"hasRole('FARMER')\")
+    @PutMapping("/api/v1/certification-corrective-actions/{actionId}")
+    @PreAuthorize("hasRole('FARMER')")
     public ResponseEntity<ApiResponse<CorrectiveActionResponse>> updateCorrectiveAction(
             @PathVariable Long actionId,
             @RequestBody @Valid CreateCorrectiveActionRequest request) {
@@ -108,8 +108,8 @@ public class CertificationAuditController {
     }
 
     /** Farmer nộp chính thức */
-    @PostMapping(\"/api/v1/certification-corrective-actions/{actionId}/submit\")
-    @PreAuthorize(\"hasRole('FARMER')\")
+    @PostMapping("/api/v1/certification-corrective-actions/{actionId}/submit")
+    @PreAuthorize("hasRole('FARMER')")
     public ResponseEntity<ApiResponse<CorrectiveActionResponse>> submitCorrectiveAction(
             @PathVariable Long actionId) {
         Long userId = currentUserService.getCurrentUserId();
@@ -117,8 +117,8 @@ public class CertificationAuditController {
     }
 
     /** Auditor xác nhận đạt/không đạt */
-    @PutMapping(\"/api/v1/certification-corrective-actions/{actionId}/review\")
-    @PreAuthorize(\"hasAnyRole('ADMIN', 'AUDITOR')\")
+    @PutMapping("/api/v1/certification-corrective-actions/{actionId}/review")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR')")
     public ResponseEntity<ApiResponse<CorrectiveActionResponse>> reviewCorrectiveAction(
             @PathVariable Long actionId,
             @RequestBody @Valid ReviewCorrectiveActionRequest request) {
@@ -132,13 +132,13 @@ public class CertificationAuditController {
     // ==========================================
 
     /** Auditor cấp giấy chứng nhận */
-    @PostMapping(\"/api/v1/farms/{farmId}/certification/issue\")
-    @PreAuthorize(\"hasAnyRole('ADMIN', 'AUDITOR')\")
+    @PostMapping("/api/v1/farms/{farmId}/certification/issue")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR')")
     public ResponseEntity<ApiResponse<String>> issueCertificate(
             @PathVariable Integer farmId,
             @RequestBody @Valid IssueCertificateRequest request) {
         auditService.issueCertificate(farmId, request);
-        return ResponseEntity.ok(ApiResponse.success(\"Giấy chứng nhận đã được cấp thành công\"));
+        return ResponseEntity.ok(ApiResponse.success("Giấy chứng nhận đã được cấp thành công"));
     }
 
     // ==========================================
@@ -146,15 +146,15 @@ public class CertificationAuditController {
     // ==========================================
 
     /** Admin duyệt tài liệu (đặc biệt giấy chứng nhận → auto PUBLISHED) */
-    @PatchMapping(\"/api/v1/admin/farms/{farmId}/documents/{documentId}/verify\")
-    @PreAuthorize(\"hasRole('ADMIN')\")
+    @PatchMapping("/api/v1/admin/farms/{farmId}/documents/{documentId}/verify")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> verifyDocument(
             @PathVariable Integer farmId,
             @PathVariable Integer documentId,
             @RequestBody @Valid VerifyDocumentRequest request) {
         Long adminUserId = currentUserService.getCurrentUserId();
         auditService.verifyDocument(farmId, documentId, request, adminUserId);
-        return ResponseEntity.ok(ApiResponse.success(\"Tài liệu đã được xác minh\"));
+        return ResponseEntity.ok(ApiResponse.success("Tài liệu đã được xác minh"));
     }
 }
 

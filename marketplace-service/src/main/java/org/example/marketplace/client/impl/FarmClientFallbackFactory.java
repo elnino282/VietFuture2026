@@ -40,8 +40,8 @@ public class FarmClientFallbackFactory implements FallbackFactory<FarmClient> {
             }
 
             @Override
-            public org.example.marketplace.dto.client.FarmCertificationDto getFarmCertification(Integer farmId) {
-                log.error("Fallback getFarmCertification farmId={} cause={}", farmId, cause.toString());
+            public org.example.marketplace.dto.client.FarmCertificationDto getFarmCertification(Integer farmId, String standardCode) {
+                log.error("Fallback getFarmCertification farmId={} standardCode={} cause={}", farmId, standardCode, cause.toString());
                 return null;
             }
         };

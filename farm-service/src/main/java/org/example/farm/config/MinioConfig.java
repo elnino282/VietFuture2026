@@ -50,7 +50,7 @@ public class MinioConfig {
                     "      \"Effect\": \"Allow\",\n" +
                     "      \"Principal\": { \"AWS\": [ \"*\" ] },\n" +
                     "      \"Action\": [ \"s3:GetObject\" ],\n" +
-                    "      \"Resource\": [ \"arn:aws:s3:::" + farmDocumentsBucket + "/*\" ]\n" +
+                    "      \"Resource\": [ \"arn:aws:s3:::\" + farmDocumentsBucket + \"/*\" ]\n" +
                     "    }\n" +
                     "  ]\n" +
                     "}";

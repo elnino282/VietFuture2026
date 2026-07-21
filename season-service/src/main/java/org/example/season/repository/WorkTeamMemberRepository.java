@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface WorkTeamMemberRepository extends JpaRepository<WorkTeamMember, Long> {
     List<WorkTeamMember> findByEmployeeUserId(Long employeeUserId);
+    List<WorkTeamMember> findByWorkTeamIdIn(List<Long> workTeamIds);
 }

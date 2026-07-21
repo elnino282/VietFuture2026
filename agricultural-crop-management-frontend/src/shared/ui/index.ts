@@ -399,10 +399,3 @@ export {
 } from "./typography";
 export type { TypographyProps } from "./typography";
 
-// Tooltip
-export {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from "./tooltip";

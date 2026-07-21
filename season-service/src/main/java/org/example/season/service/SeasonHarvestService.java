@@ -326,6 +326,7 @@ public class SeasonHarvestService {
 
         validateHarvestDateWithinSeason(season, request.getHarvestDate());
 
+        ExternalServiceClient.CropInternalDto crop = resolveCropForHarvestReceipt(season);
         Harvest harvest = Harvest.builder()
                 .season(season)
                 .harvestDate(request.getHarvestDate())
@@ -343,7 +344,7 @@ public class SeasonHarvestService {
                 .packagingCount(request.getPackagingCount())
                 .processingType(parseProcessingType(request.getProcessingType()))
                 // === Crop ===
-                .cropCategory(crop != null ? crop.getCategory() : null)
+                .cropCategory(null)
                 .grossWetWeight(request.getGrossWetWeight())
                 .build();
 

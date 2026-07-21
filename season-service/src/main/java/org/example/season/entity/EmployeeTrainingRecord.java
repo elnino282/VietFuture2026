@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = \"employee_training_records\")
+@Table(name = "employee_training_records")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,36 +21,36 @@ public class EmployeeTrainingRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = \"user_id\", nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = \"work_team_id\")
+    @Column(name = "work_team_id")
     private Integer workTeamId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = \"training_program_id\", nullable = false)
+    @JoinColumn(name = "training_program_id", nullable = false)
     private TrainingProgram trainingProgram;
 
-    @Column(name = \"trained_at\", nullable = false)
+    @Column(name = "trained_at", nullable = false)
     private LocalDate trainedAt;
 
-    @Column(name = \"trainer_name\")
+    @Column(name = "trainer_name")
     private String trainerName;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = \"evidence_urls\", columnDefinition = \"json\")
+    @Column(name = "evidence_urls", columnDefinition = "json")
     private List<String> evidenceUrls;
 
-    @Column(name = \"certified_until\")
+    @Column(name = "certified_until")
     private LocalDate certifiedUntil;
 
     @Column(length = 50)
     private String status;
 
-    @Column(name = \"created_at\", updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = \"updated_at\")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -62,7 +62,7 @@ public class EmployeeTrainingRecord {
             updatedAt = LocalDateTime.now();
         }
         if (status == null) {
-            status = \"COMPLETED\";
+            status = "COMPLETED";
         }
     }
 

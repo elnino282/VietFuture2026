@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name = \"season-service\", url = \"${app.season-service-url}\", fallback = SeasonProductionDiaryClientFallback.class)
+@FeignClient(name = "season-service", contextId = "seasonProductionDiaryClient", url = "${app.season-service-url}", fallback = SeasonProductionDiaryClientFallback.class)
 public interface SeasonProductionDiaryClient {
 
-    @GetMapping(\"/api/v1/internal/seasons/{seasonId}/production-diary\")
-    List<ProductionDiaryEventDto> getProductionDiaryInternal(@PathVariable(\"seasonId\") Integer seasonId);
+    @GetMapping("/api/v1/internal/seasons/{seasonId}/production-diary")
+    List<ProductionDiaryEventDto> getProductionDiaryInternal(@PathVariable("seasonId") Integer seasonId);
 
     @Data
     @Builder

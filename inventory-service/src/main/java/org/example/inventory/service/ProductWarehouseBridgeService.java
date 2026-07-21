@@ -301,7 +301,7 @@ public class ProductWarehouseBridgeService {
             return warehouse;
         }
 
-        List<Warehouse> warehouses = warehouseRepository.findByFarmId(request.getFarmId());
+        List<Warehouse> warehouses = warehouseRepository.findAllByFarmId(request.getFarmId());
         if (warehouses.isEmpty()) {
             throw new AppException(ErrorCode.RESOURCE_NOT_FOUND);
         }
@@ -321,7 +321,7 @@ public class ProductWarehouseBridgeService {
         if (preferredStorage != null) {
             final String targetStorage = preferredStorage;
             var matchedStorage = warehouses.stream()
-                    .filter(w -> w.getStorageConditions() != null && targetStorage.equalsIgnoreCase(w.getStorageConditions()))
+                    .filter(w -> w.getStorageCategory() != null && targetStorage.equalsIgnoreCase(w.getStorageCategory().name()))
                     .findFirst();
             if (matchedStorage.isPresent()) {
                 return matchedStorage.get();

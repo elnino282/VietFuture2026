@@ -57,12 +57,12 @@ public class MarketplaceAdminController {
         return ApiResponse.success(marketplaceService.updateAdminProductStatus(productId, request));
     }
 
-    @GetMapping(\"/products/{productId}/compliance-check\")
+    @GetMapping("/products/{productId}/compliance-check")
     public ApiResponse<org.example.marketplace.dto.response.ComplianceCheckResponse> checkProductCompliance(@PathVariable Long productId) {
         return ApiResponse.success(marketplaceService.checkProductCompliance(productId));
     }
 
-    @GetMapping(\"/orders\")
+    @GetMapping("/orders")
     public ApiResponse<PageResponse<MarketplaceOrderResponse>> listOrders(
             @RequestParam(value = "status", required = false) MarketplaceOrderStatus status,
             @RequestParam(value = "page", defaultValue = "0") int page,

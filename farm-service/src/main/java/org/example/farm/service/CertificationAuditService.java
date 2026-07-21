@@ -39,16 +39,16 @@ public class CertificationAuditService {
 
     // === VALID TRANSITIONS (state machine guard) ===
     private static final Map<String, Set<String>> VALID_TRANSITIONS = Map.ofEntries(
-        Map.entry(\"APPLIED\", Set.of(\"AUDIT_SCHEDULED\")),
-        Map.entry(\"AUDIT_SCHEDULED\", Set.of(\"AUDIT_IN_PROGRESS\")),
-        Map.entry(\"AUDIT_IN_PROGRESS\", Set.of(\"AUDIT_PASSED\", \"NONCONFORMITY_FOUND\")),
-        Map.entry(\"NONCONFORMITY_FOUND\", Set.of(\"CORRECTIVE_ACTION_SUBMITTED\")),
-        Map.entry(\"CORRECTIVE_ACTION_SUBMITTED\", Set.of(\"AUDIT_PASSED\", \"NONCONFORMITY_FOUND\", \"REJECTED\")),
-        Map.entry(\"AUDIT_PASSED\", Set.of(\"CERTIFIED\")),
-        Map.entry(\"CERTIFIED\", Set.of(\"PUBLISHED\", \"PERIODIC_REVIEW_DUE\", \"EXPIRED\", \"REVOKED\")),
-        Map.entry(\"PUBLISHED\", Set.of(\"PERIODIC_REVIEW_DUE\", \"EXPIRED\", \"REVOKED\")),
-        Map.entry(\"PERIODIC_REVIEW_DUE\", Set.of(\"AUDIT_SCHEDULED\", \"EXPIRED\")),
-        Map.entry(\"REJECTED\", Set.of(\"IN_PROGRESS\"))
+        Map.entry("APPLIED", Set.of("AUDIT_SCHEDULED")),
+        Map.entry("AUDIT_SCHEDULED", Set.of("AUDIT_IN_PROGRESS")),
+        Map.entry("AUDIT_IN_PROGRESS", Set.of("AUDIT_PASSED", "NONCONFORMITY_FOUND")),
+        Map.entry("NONCONFORMITY_FOUND", Set.of("CORRECTIVE_ACTION_SUBMITTED")),
+        Map.entry("CORRECTIVE_ACTION_SUBMITTED", Set.of("AUDIT_PASSED", "NONCONFORMITY_FOUND", "REJECTED")),
+        Map.entry("AUDIT_PASSED", Set.of("CERTIFIED")),
+        Map.entry("CERTIFIED", Set.of("PUBLISHED", "PERIODIC_REVIEW_DUE", "EXPIRED", "REVOKED")),
+        Map.entry("PUBLISHED", Set.of("PERIODIC_REVIEW_DUE", "EXPIRED", "REVOKED")),
+        Map.entry("PERIODIC_REVIEW_DUE", Set.of("AUDIT_SCHEDULED", "EXPIRED")),
+        Map.entry("REJECTED", Set.of("IN_PROGRESS"))
     );
 
     // ==========================================
@@ -56,7 +56,7 @@ public class CertificationAuditService {
     // ==========================================
     public CertificationAuditResponse scheduleAudit(Integer farmId, CreateAuditRequest req) {
         CertificationRecord record = findRecordByFarmId(farmId);
-        validateTransition(record.getStatus(), \"AUDIT_SCHEDULED\");
+        validateTransition(record.getStatus(), "AUDIT_SCHEDULED");
 
         CertificationAudit audit = CertificationAudit.builder()
                 .recordId(record.getId())
@@ -64,15 +64,15 @@ public class CertificationAuditService {
                 .scheduledDate(req.getScheduledDate())
                 .auditorUserId(req.getAuditorUserId())
                 .auditorOrgName(req.getAuditorOrgName())
-                .status(\"SCHEDULED\")
+                .status("SCHEDULED")
                 .build();
         audit = auditRepository.save(audit);
 
-        record.setStatus(\"AUDIT_SCHEDULED\");
+        record.setStatus("AUDIT_SCHEDULED");
         recordRepository.save(record);
 
-        publishEvent(\"farm.certification.audit_scheduled\", record.getId().toString(),
-                Map.of(\"farmId\", farmId, \"auditId\", audit.getId(), \"scheduledDate\", req.getScheduledDate().toString()));
+        publishEvent("farm.certification.audit_scheduled", record.getId().toString(),
+                Map.of("farmId", farmId, "auditId", audit.getId(), "scheduledDate", req.getScheduledDate().toString()));
 
         return toAuditResponse(audit);
     }
@@ -84,19 +84,19 @@ public class CertificationAuditService {
         CertificationAudit audit = auditRepository.findById(auditId)
                 .orElseThrow(() -> new AppException(ErrorCode.AUDIT_NOT_FOUND));
 
-        if (!\"SCHEDULED\".equals(audit.getStatus())) {
+        if (!"SCHEDULED".equals(audit.getStatus())) {
             throw new AppException(ErrorCode.CERTIFICATION_INVALID_TRANSITION);
         }
 
         CertificationRecord record = recordRepository.findById(audit.getRecordId())
                 .orElseThrow(() -> new AppException(ErrorCode.CERTIFICATION_NOT_FOUND));
-        validateTransition(record.getStatus(), \"AUDIT_IN_PROGRESS\");
+        validateTransition(record.getStatus(), "AUDIT_IN_PROGRESS");
 
-        audit.setStatus(\"IN_PROGRESS\");
+        audit.setStatus("IN_PROGRESS");
         audit.setConductedAt(LocalDateTime.now());
         auditRepository.save(audit);
 
-        record.setStatus(\"AUDIT_IN_PROGRESS\");
+        record.setStatus("AUDIT_IN_PROGRESS");
         recordRepository.save(record);
 
         return toAuditResponse(audit);
@@ -109,7 +109,7 @@ public class CertificationAuditService {
         CertificationAudit audit = auditRepository.findById(auditId)
                 .orElseThrow(() -> new AppException(ErrorCode.AUDIT_NOT_FOUND));
 
-        if (!\"IN_PROGRESS\".equals(audit.getStatus())) {
+        if (!"IN_PROGRESS".equals(audit.getStatus())) {
             throw new AppException(ErrorCode.CERTIFICATION_INVALID_TRANSITION);
         }
 
@@ -120,9 +120,9 @@ public class CertificationAuditService {
         if (req.getSampleCollectionNotes() != null) audit.setSampleCollectionNotes(req.getSampleCollectionNotes());
 
         String result = req.getResult().toUpperCase();
-        if (\"PASSED\".equals(result)) {
-            audit.setStatus(\"PASSED\");
-            record.setStatus(\"AUDIT_PASSED\");
+        if ("PASSED".equals(result)) {
+            audit.setStatus("PASSED");
+            record.setStatus("AUDIT_PASSED");
         } else {
             // Check if there are nonconformities recorded
             List<CertificationNonconformity> ncs = nonconformityRepository.findByAuditId(auditId);
@@ -130,8 +130,8 @@ public class CertificationAuditService {
                 throw new AppException(ErrorCode.BAD_REQUEST);
                 // Cannot fail audit without recording nonconformities
             }
-            audit.setStatus(\"FAILED\");
-            record.setStatus(\"NONCONFORMITY_FOUND\");
+            audit.setStatus("FAILED");
+            record.setStatus("NONCONFORMITY_FOUND");
         }
 
         auditRepository.save(audit);
@@ -146,7 +146,7 @@ public class CertificationAuditService {
         CertificationAudit audit = auditRepository.findById(auditId)
                 .orElseThrow(() -> new AppException(ErrorCode.AUDIT_NOT_FOUND));
 
-        if (!\"IN_PROGRESS\".equals(audit.getStatus())) {
+        if (!"IN_PROGRESS".equals(audit.getStatus())) {
             throw new AppException(ErrorCode.CERTIFICATION_INVALID_TRANSITION);
         }
 
@@ -155,16 +155,16 @@ public class CertificationAuditService {
                 .checklistItemId(req.getChecklistItemId())
                 .severity(req.getSeverity().toUpperCase())
                 .description(req.getDescription())
-                .status(\"OPEN\")
+                .status("OPEN")
                 .build();
         nc = nonconformityRepository.save(nc);
 
         CertificationRecord record = recordRepository.findById(audit.getRecordId())
                 .orElseThrow(() -> new AppException(ErrorCode.CERTIFICATION_NOT_FOUND));
 
-        publishEvent(\"farm.certification.nonconformity_recorded\", record.getId().toString(),
-                Map.of(\"farmId\", record.getFarmId(), \"auditId\", auditId, \"nonconformityId\", nc.getId(),
-                        \"severity\", nc.getSeverity()));
+        publishEvent("farm.certification.nonconformity_recorded", record.getId().toString(),
+                Map.of("farmId", record.getFarmId(), "auditId", auditId, "nonconformityId", nc.getId(),
+                        "severity", nc.getSeverity()));
 
         return toNonconformityResponse(nc);
     }
@@ -196,7 +196,7 @@ public class CertificationAuditService {
         CertificationNonconformity nc = nonconformityRepository.findById(nonconformityId)
                 .orElseThrow(() -> new AppException(ErrorCode.NONCONFORMITY_NOT_FOUND));
 
-        if (!\"OPEN\".equals(nc.getStatus()) && !\"REJECTED\".equals(nc.getStatus())) {
+        if (!"OPEN".equals(nc.getStatus()) && !"REJECTED".equals(nc.getStatus())) {
             throw new AppException(ErrorCode.CERTIFICATION_INVALID_TRANSITION);
         }
 
@@ -250,23 +250,23 @@ public class CertificationAuditService {
         // Update nonconformity status
         CertificationNonconformity nc = nonconformityRepository.findById(ca.getNonconformityId())
                 .orElseThrow(() -> new AppException(ErrorCode.NONCONFORMITY_NOT_FOUND));
-        nc.setStatus(\"CORRECTIVE_ACTION_SUBMITTED\");
+        nc.setStatus("CORRECTIVE_ACTION_SUBMITTED");
         nonconformityRepository.save(nc);
 
         // Check if ALL nonconformities of the audit have corrective actions submitted
         CertificationAudit audit = auditRepository.findById(nc.getAuditId())
                 .orElseThrow(() -> new AppException(ErrorCode.AUDIT_NOT_FOUND));
         List<CertificationNonconformity> allNcs = nonconformityRepository.findByAuditId(audit.getId());
-        boolean allSubmitted = allNcs.stream().allMatch(n -> \"CORRECTIVE_ACTION_SUBMITTED\".equals(n.getStatus()) || \"RESOLVED\".equals(n.getStatus()));
+        boolean allSubmitted = allNcs.stream().allMatch(n -> "CORRECTIVE_ACTION_SUBMITTED".equals(n.getStatus()) || "RESOLVED".equals(n.getStatus()));
 
         if (allSubmitted) {
             CertificationRecord record = recordRepository.findById(audit.getRecordId())
                     .orElseThrow(() -> new AppException(ErrorCode.CERTIFICATION_NOT_FOUND));
-            record.setStatus(\"CORRECTIVE_ACTION_SUBMITTED\");
+            record.setStatus("CORRECTIVE_ACTION_SUBMITTED");
             recordRepository.save(record);
 
-            publishEvent(\"farm.certification.corrective_action_submitted\", record.getId().toString(),
-                    Map.of(\"farmId\", record.getFarmId(), \"auditId\", audit.getId()));
+            publishEvent("farm.certification.corrective_action_submitted", record.getId().toString(),
+                    Map.of("farmId", record.getFarmId(), "auditId", audit.getId()));
         }
 
         return toCorrectiveActionResponse(ca);
@@ -293,10 +293,10 @@ public class CertificationAuditService {
         CertificationNonconformity nc = nonconformityRepository.findById(ca.getNonconformityId())
                 .orElseThrow(() -> new AppException(ErrorCode.NONCONFORMITY_NOT_FOUND));
 
-        if (\"ACCEPTED\".equals(result)) {
-            nc.setStatus(\"RESOLVED\");
+        if ("ACCEPTED".equals(result)) {
+            nc.setStatus("RESOLVED");
         } else {
-            nc.setStatus(\"OPEN\"); // Rejected → farmer must redo
+            nc.setStatus("OPEN"); // Rejected → farmer must redo
         }
         nonconformityRepository.save(nc);
 
@@ -304,16 +304,16 @@ public class CertificationAuditService {
         CertificationAudit audit = auditRepository.findById(nc.getAuditId())
                 .orElseThrow(() -> new AppException(ErrorCode.AUDIT_NOT_FOUND));
         List<CertificationNonconformity> allNcs = nonconformityRepository.findByAuditId(audit.getId());
-        boolean allResolved = allNcs.stream().allMatch(n -> \"RESOLVED\".equals(n.getStatus()));
-        boolean anyOpen = allNcs.stream().anyMatch(n -> \"OPEN\".equals(n.getStatus()));
+        boolean allResolved = allNcs.stream().allMatch(n -> "RESOLVED".equals(n.getStatus()));
+        boolean anyOpen = allNcs.stream().anyMatch(n -> "OPEN".equals(n.getStatus()));
 
         CertificationRecord record = recordRepository.findById(audit.getRecordId())
                 .orElseThrow(() -> new AppException(ErrorCode.CERTIFICATION_NOT_FOUND));
 
         if (allResolved) {
-            record.setStatus(\"AUDIT_PASSED\");
+            record.setStatus("AUDIT_PASSED");
         } else if (anyOpen) {
-            record.setStatus(\"NONCONFORMITY_FOUND\");
+            record.setStatus("NONCONFORMITY_FOUND");
         }
         recordRepository.save(record);
 
@@ -325,20 +325,20 @@ public class CertificationAuditService {
     // ==========================================
     public void issueCertificate(Integer farmId, IssueCertificateRequest req) {
         CertificationRecord record = findRecordByFarmId(farmId);
-        validateTransition(record.getStatus(), \"CERTIFIED\");
+        validateTransition(record.getStatus(), "CERTIFIED");
 
         // BR-D-01: Check no CRITICAL nonconformity is OPEN
         List<CertificationAudit> audits = auditRepository.findByRecordId(record.getId());
         for (CertificationAudit audit : audits) {
             List<CertificationNonconformity> ncs = nonconformityRepository.findByAuditId(audit.getId());
             boolean hasCriticalOpen = ncs.stream()
-                    .anyMatch(nc -> \"CRITICAL\".equals(nc.getSeverity()) && \"OPEN\".equals(nc.getStatus()));
+                    .anyMatch(nc -> "CRITICAL".equals(nc.getSeverity()) && "OPEN".equals(nc.getStatus()));
             if (hasCriticalOpen) {
                 throw new AppException(ErrorCode.CRITICAL_NONCONFORMITY_OPEN);
             }
         }
 
-        record.setStatus(\"CERTIFIED\");
+        record.setStatus("CERTIFIED");
         record.setCertifiedAt(LocalDateTime.now());
         record.setExpiryDate(req.getExpiryDate());
         record.setCertificateNumber(req.getCertificateNumber());
@@ -347,9 +347,9 @@ public class CertificationAuditService {
         record.setNextPeriodicReviewDate(req.getIssuedDate().plusMonths(6));
         recordRepository.save(record);
 
-        publishEvent(\"farm.certification.certified\", record.getId().toString(),
-                Map.of(\"farmId\", farmId, \"certificateNumber\", req.getCertificateNumber(),
-                        \"expiryDate\", req.getExpiryDate().toString()));
+        publishEvent("farm.certification.certified", record.getId().toString(),
+                Map.of("farmId", farmId, "certificateNumber", req.getCertificateNumber(),
+                        "expiryDate", req.getExpiryDate().toString()));
     }
 
     // ==========================================
@@ -368,21 +368,21 @@ public class CertificationAuditService {
         doc.setVerifiedAt(LocalDateTime.now());
         farmDocumentRepository.save(doc);
 
-        publishEvent(\"farm.document.verified\", doc.getId().toString(),
-                Map.of(\"farmId\", farmId, \"documentId\", documentId, \"status\", req.getStatus()));
+        publishEvent("farm.document.verified", doc.getId().toString(),
+                Map.of("farmId", farmId, "documentId", documentId, "status", req.getStatus()));
 
         // BR-D-02: If this is CERTIFICATE document and VERIFIED → auto PUBLISHED
-        if (\"VERIFIED\".equals(req.getStatus().toUpperCase()) && \"CERTIFICATE\".equals(doc.getDocumentType())) {
+        if ("VERIFIED".equals(req.getStatus().toUpperCase()) && "CERTIFICATE".equals(doc.getDocumentType())) {
             // Find certification record linked to this document
             List<CertificationRecord> records = recordRepository.findByFarmId(farmId);
             for (CertificationRecord record : records) {
                 if (record.getCertificateDocumentId() != null && record.getCertificateDocumentId().equals(documentId)
-                        && \"CERTIFIED\".equals(record.getStatus())) {
-                    record.setStatus(\"PUBLISHED\");
+                        && "CERTIFIED".equals(record.getStatus())) {
+                    record.setStatus("PUBLISHED");
                     record.setPublishedAt(LocalDateTime.now());
                     record.setPublishedByUserId(adminUserId);
                     recordRepository.save(record);
-                    log.info(\"Auto-published certification record {} for farm {} after document verified\", record.getId(), farmId);
+                    log.info("Auto-published certification record {} for farm {} after document verified", record.getId(), farmId);
                 }
             }
         }
@@ -416,7 +416,7 @@ public class CertificationAuditService {
     private void validateTransition(String currentStatus, String targetStatus) {
         Set<String> allowed = VALID_TRANSITIONS.get(currentStatus);
         if (allowed == null || !allowed.contains(targetStatus)) {
-            log.warn(\"Invalid certification transition: {} → {}\", currentStatus, targetStatus);
+            log.warn("Invalid certification transition: {} → {}", currentStatus, targetStatus);
             throw new AppException(ErrorCode.CERTIFICATION_INVALID_TRANSITION);
         }
     }
@@ -427,14 +427,14 @@ public class CertificationAuditService {
     private void publishEvent(String eventType, String aggregateId, Map<String, Object> data) {
         try {
             OutboxEvent event = OutboxEvent.builder()
-                    .aggregateType(\"CertificationRecord\")
+                    .aggregateType("CertificationRecord")
                     .aggregateId(aggregateId)
                     .eventType(eventType)
                     .payload(objectMapper.writeValueAsString(data))
                     .build();
             outboxEventRepository.save(event);
         } catch (JsonProcessingException e) {
-            log.error(\"Failed to serialize outbox event payload\", e);
+            log.error("Failed to serialize outbox event payload", e);
         }
     }
 

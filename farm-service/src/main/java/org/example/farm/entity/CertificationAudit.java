@@ -13,45 +13,45 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = \"certification_audits\")
+@Table(name = "certification_audits")
 public class CertificationAudit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = \"record_id\", nullable = false)
+    @Column(name = "record_id", nullable = false)
     Integer recordId;
 
-    @Column(name = \"audit_type\", nullable = false, length = 30)
+    @Column(name = "audit_type", nullable = false, length = 30)
     String auditType;
 
-    @Column(name = \"scheduled_date\")
+    @Column(name = "scheduled_date")
     LocalDate scheduledDate;
 
-    @Column(name = \"auditor_user_id\")
+    @Column(name = "auditor_user_id")
     Long auditorUserId;
 
-    @Column(name = \"auditor_org_name\")
+    @Column(name = "auditor_org_name")
     String auditorOrgName;
 
     @Column(length = 30, nullable = false)
     @Builder.Default
-    String status = \"SCHEDULED\";
+    String status = "SCHEDULED";
 
-    @Column(name = \"interview_notes\", columnDefinition = \"TEXT\")
+    @Column(name = "interview_notes", columnDefinition = "TEXT")
     String interviewNotes;
 
-    @Column(name = \"sample_collection_notes\", columnDefinition = \"TEXT\")
+    @Column(name = "sample_collection_notes", columnDefinition = "TEXT")
     String sampleCollectionNotes;
 
-    @Column(name = \"conducted_at\")
+    @Column(name = "conducted_at")
     LocalDateTime conductedAt;
 
-    @Column(name = \"created_at\")
+    @Column(name = "created_at")
     LocalDateTime createdAt;
 
-    @Column(name = \"updated_at\")
+    @Column(name = "updated_at")
     LocalDateTime updatedAt;
 
     @PrePersist

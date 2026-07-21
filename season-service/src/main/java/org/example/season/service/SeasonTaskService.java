@@ -256,6 +256,7 @@ public class SeasonTaskService {
             case IN_PROGRESS ->
                 EnumSet.of(TaskStatus.DONE, TaskStatus.CANCELLED, TaskStatus.OVERDUE).contains(targetStatus);
             case DONE, CANCELLED, OVERDUE -> false;
+            default -> false;
         };
     }
 

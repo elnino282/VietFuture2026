@@ -81,7 +81,7 @@ public class FarmerLaborManagementController {
 
     @DeleteMapping("/seasons/{seasonId}/employees/{seasonEmployeeId}")
     public ApiResponse<Void> removeSeasonEmployee(@PathVariable Integer seasonId,
-            @PathVariable Integer seasonEmployeeId) {
+            @PathVariable Long seasonEmployeeId) {
         laborManagementService.removeSeasonEmployee(seasonId, seasonEmployeeId);
         return ApiResponse.success(null);
     }

@@ -15,28 +15,28 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping(\"/api/v1\")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class ProductionDiaryController {
 
     private final ProductionDiaryAggregationService productionDiaryAggregationService;
 
-    @Operation(summary = \"Get Production Diary\", description = \"Get aggregated production diary events for a season\")
+    @Operation(summary = "Get Production Diary", description = "Get aggregated production diary events for a season")
     @ApiResponses({
-            @ApiResponse(responseCode = \"200\", description = \"Success\"),
-            @ApiResponse(responseCode = \"401\", description = \"Unauthorized\"),
-            @ApiResponse(responseCode = \"403\", description = \"Forbidden\"),
-            @ApiResponse(responseCode = \"404\", description = \"Season not found\")
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Season not found")
     })
-    @PreAuthorize(\"hasRole('FARMER') or hasRole('ADMIN')\")
-    @GetMapping(\"/farmer/seasons/{seasonId}/production-diary\")
+    @PreAuthorize("hasRole('FARMER') or hasRole('ADMIN')")
+    @GetMapping("/farmer/seasons/{seasonId}/production-diary")
     public org.example.season.dto.common.ApiResponse<List<ProductionDiaryEventDto>> getProductionDiary(@PathVariable Integer seasonId) {
         List<ProductionDiaryEventDto> events = productionDiaryAggregationService.getProductionDiary(seasonId);
         return org.example.season.dto.common.ApiResponse.success(events);
     }
 
     // Internal endpoint for exporting dossier
-    @GetMapping(\"/internal/seasons/{seasonId}/production-diary\")
+    @GetMapping("/internal/seasons/{seasonId}/production-diary")
     public List<ProductionDiaryEventDto> getProductionDiaryInternal(@PathVariable Integer seasonId) {
         return productionDiaryAggregationService.getProductionDiary(seasonId);
     }

@@ -54,7 +54,7 @@ public class EmployeeTrainingService {
     @Transactional
     public EmployeeTrainingRecordDto recordTraining(Long userId, EmployeeTrainingRecordRequest req) {
         TrainingProgram program = trainingProgramRepository.findById(req.getTrainingProgramId())
-                .orElseThrow(() -> new IllegalArgumentException(\"Training program not found\"));
+                .orElseThrow(() -> new IllegalArgumentException("Training program not found"));
 
         EmployeeTrainingRecord record = EmployeeTrainingRecord.builder()
                 .userId(userId)
@@ -80,15 +80,15 @@ public class EmployeeTrainingService {
      */
     public Map<Long, List<EmployeeTrainingRecordDto>> getTrainingStatusForSeason(Integer seasonId) {
         // 1. Tìm các WorkTeam thuộc seasonId
-        var teams = workTeamRepository.findBySeasonId(seasonId);
+        var teams = workTeamRepository.findBySeasonId(Long.valueOf(seasonId));
         if (teams.isEmpty()) {
             return new HashMap<>();
         }
 
         // 2. Tìm tất cả userId trong các đội này
-        List<Integer> teamIds = teams.stream().map(t -> t.getId()).toList();
+        List<Long> teamIds = teams.stream().map(t -> t.getId()).toList();
         List<WorkTeamMember> members = workTeamMemberRepository.findByWorkTeamIdIn(teamIds);
-        List<Long> userIds = members.stream().map(WorkTeamMember::getUserId).distinct().toList();
+        List<Long> userIds = members.stream().map(WorkTeamMember::getEmployeeUserId).distinct().toList();
 
         if (userIds.isEmpty()) {
             return new HashMap<>();

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.example.sustainability.entity.SoilTest;
 import org.example.sustainability.entity.IrrigationWaterAnalysis;
+import org.example.sustainability.entity.NutrientInputEvent;
 import org.example.sustainability.repository.SoilTestRepository;
 import org.example.sustainability.repository.IrrigationWaterAnalysisRepository;
 import org.springframework.http.ResponseEntity;
@@ -92,5 +93,17 @@ public class InternalSustainabilityController {
         private Integer plotId;
         private java.time.LocalDate sampleDate;
         private Boolean measured;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class NutrientInputEventInternalDto {
+        private Integer id;
+        private Integer seasonId;
+        private java.time.LocalDate appliedDate;
+        private String inputSource;
+        private java.math.BigDecimal nKg;
     }
 }

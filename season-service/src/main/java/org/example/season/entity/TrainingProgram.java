@@ -5,7 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = \"training_programs\")
+@Table(name = "training_programs")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,13 +23,13 @@ public class TrainingProgram {
     @Column(length = 100)
     private String category;
 
-    @Column(columnDefinition = \"TEXT\")
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = \"is_mandatory\")
+    @Column(name = "is_mandatory")
     private Boolean isMandatory;
 
-    @Column(name = \"created_at\", updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist

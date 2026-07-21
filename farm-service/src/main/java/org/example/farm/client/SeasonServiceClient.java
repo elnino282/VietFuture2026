@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "season-service", url = "${app.season-service-url:http://localhost:8085}", fallback = SeasonServiceClientFallback.class)
+@FeignClient(name = "season-service", contextId = "seasonServiceClient", url = "${app.season-service-url:http://localhost:8085}", fallback = SeasonServiceClientFallback.class)
 public interface SeasonServiceClient {
 
     @GetMapping("/api/v1/public/seasons/exists-active-by-plot/{plotId}")
