@@ -87,30 +87,24 @@ export function DocumentFilterBar({
         />
       </div>
 
-      {/* Type Chips */}
-      <div className="flex items-center gap-1 flex-wrap">
-        {TYPE_CHIPS.map((chip) => (
-          <Button
-            key={chip.value}
-            variant={
-              filters.type === chip.value ||
-              (!filters.type && chip.value === "")
-                ? "default"
-                : "outline"
-            }
-            size="sm"
-            onClick={() => onFilterChange("type", chip.value || undefined)}
-            className={`rounded-full px-3 text-xs font-medium transition-all ${
-              filters.type === chip.value ||
-              (!filters.type && chip.value === "")
-                ? "bg-primary text-white hover:bg-primary/90"
-                : "bg-background hover:bg-muted"
-            }`}
-          >
-            {t(chip.labelKey)}
-          </Button>
-        ))}
-      </div>
+      {/* Type Dropdown */}
+      <Select
+        value={filters.type || "all"}
+        onValueChange={(value) =>
+          onFilterChange("type", value === "all" ? undefined : value)
+        }
+      >
+        <SelectTrigger className="w-[160px] rounded-lg border-border">
+          <SelectValue placeholder={t("documents.filters.type.all")} />
+        </SelectTrigger>
+        <SelectContent>
+          {TYPE_CHIPS.map((chip) => (
+            <SelectItem key={chip.value || "all"} value={chip.value || "all"}>
+              {t(chip.labelKey)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {/* Crop Dropdown */}
       <Select

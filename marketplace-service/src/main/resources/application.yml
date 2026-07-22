@@ -1,5 +1,9 @@
 server:
   port: ${SERVER_PORT:8090}
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/plain
+    min-response-size: 1024
 
 spring:
   application:
@@ -15,6 +19,11 @@ spring:
     username: ${DB_USER:springuser}
     password: ${DB_PASS:springpass}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:30}
+      minimum-idle: ${DB_POOL_MIN_IDLE:10}
+      connection-timeout: 30000
+      idle-timeout: 600000
 
   jpa:
     hibernate:

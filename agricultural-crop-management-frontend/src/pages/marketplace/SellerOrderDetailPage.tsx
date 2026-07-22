@@ -203,6 +203,7 @@ export function SellerOrderDetailPage() {
               variant={action === "CANCELLED" ? "destructive" : "default"}
               onClick={() => statusMutation.mutate({ status: action })}
               disabled={statusMutation.isPending}
+              className="shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
             >
               {sellerOrderStatusLabel(action, t)}
             </Button>
@@ -230,7 +231,8 @@ export function SellerOrderDetailPage() {
                   <img
                     src={item.imageUrl}
                     alt={item.productName}
-                    className="h-16 w-16 rounded-lg bg-muted object-cover"
+                    loading="lazy"
+                    className="h-16 w-16 rounded-lg bg-muted/60 object-cover"
                     referrerPolicy="no-referrer"
                   />
                   <div className="min-w-0 flex-1">
@@ -270,14 +272,14 @@ export function SellerOrderDetailPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-start gap-3">
-                <MapPin size={16} className="mt-1 shrink-0 text-muted-foreground/60" />
+                <MapPin size={16} className="mt-1 shrink-0 text-muted-foreground" />
                 <div>
                   <p className="font-medium text-foreground">{order.shippingRecipientName}</p>
                   <p className="text-sm text-muted-foreground">{order.shippingAddressLine}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Phone size={16} className="shrink-0 text-muted-foreground/60" />
+                <Phone size={16} className="shrink-0 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">{order.shippingPhone}</p>
               </div>
             </CardContent>
@@ -321,7 +323,7 @@ export function SellerOrderDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
-                <CreditCard size={16} className="shrink-0 text-muted-foreground/60" />
+                <CreditCard size={16} className="shrink-0 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium text-foreground">{paymentMethodLabel(order.payment.method, t)}</p>
                   <p className="text-xs text-muted-foreground">
@@ -331,7 +333,7 @@ export function SellerOrderDetailPage() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Truck size={16} className="shrink-0 text-muted-foreground/60" />
+                <Truck size={16} className="shrink-0 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium text-foreground">
                     {t("marketplaceSeller.orderDetail.shippingStatus", "Shipping status")}

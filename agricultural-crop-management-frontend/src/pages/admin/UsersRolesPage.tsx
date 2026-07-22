@@ -313,12 +313,12 @@ export function UsersRolesPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="w-full rounded-[14px] border border-input bg-card py-2 pl-10 pr-4 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-64"
+                  className="w-full rounded-md border border-input bg-card py-2 pl-10 pr-4 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-64"
                 />
               </div>
               <button
                 onClick={handleSearch}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+                className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50"
               >
                 <Search className="h-4 w-4" />
                 {t('admin.users.searchButton')}
@@ -327,14 +327,14 @@ export function UsersRolesPage() {
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
               <button
                 onClick={handleAddUser}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90"
+                className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90"
               >
                 <Plus className="h-4 w-4" />
                 {t('admin.users.addUser')}
               </button>
               <button
                 onClick={() => { void fetchUsers(); }}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+                className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50"
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                 {t('admin.users.refresh')}
@@ -406,17 +406,17 @@ export function UsersRolesPage() {
               users.map((user) => (
                 <tr
                   key={user.id}
-                  className="border-b border-border hover:bg-muted/30"
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-sm">{user.username}</div>
+                  <td className="px-4 py-3 max-w-[200px]">
+                    <div className="font-medium text-sm truncate" title={user.username}>{user.username}</div>
                     {user.fullName && (
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground truncate" title={user.fullName}>
                         {user.fullName}
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                  <td className="px-4 py-3 text-sm text-muted-foreground max-w-[200px] truncate" title={user.email || undefined}>
                     {user.email || "—"}
                   </td>
                   <td className="px-4 py-3 text-sm">
@@ -445,7 +445,7 @@ export function UsersRolesPage() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="min-h-[44px] min-w-[44px] p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
                           aria-label={t('common.actions')}
                         >
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
@@ -506,7 +506,7 @@ export function UsersRolesPage() {
           <button
             onClick={() => setPage(Math.max(0, page - 1))}
             disabled={page === 0}
-            className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
+            className="min-h-[44px] px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
           >
             {t('admin.users.pagination.previous')}
           </button>
@@ -516,7 +516,7 @@ export function UsersRolesPage() {
           <button
             onClick={() => setPage(page + 1)}
             disabled={page >= totalPages - 1}
-            className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
+            className="min-h-[44px] px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
           >
             {t('admin.users.pagination.next')}
           </button>
@@ -575,14 +575,14 @@ export function UsersRolesPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
             <button
               onClick={handleAddRole}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90"
+              className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90"
             >
               <Plus className="h-4 w-4" />
               {t('admin.roles.addRole')}
             </button>
             <button
               onClick={() => { void fetchRoles(); }}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+              className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50"
             >
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               {t('admin.roles.refresh')}
@@ -650,18 +650,18 @@ export function UsersRolesPage() {
               roles.map((role, idx) => (
                 <tr
                   key={role.id || idx}
-                  className="border-b border-border hover:bg-muted/30"
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
-                  <td className="px-4 py-3 text-sm font-medium">{role.code}</td>
-                  <td className="px-4 py-3 text-sm">{role.name}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                  <td className="px-4 py-3 text-sm font-medium max-w-[150px] truncate" title={role.code}>{role.code}</td>
+                  <td className="px-4 py-3 text-sm max-w-[200px] truncate" title={role.name}>{role.name}</td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground max-w-[300px] truncate" title={role.description || undefined}>
                     {role.description || "-"}
                   </td>
                   <td className="px-4 py-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="min-h-[44px] min-w-[44px] p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
                           aria-label={t('common.actions')}
                         >
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
@@ -716,7 +716,7 @@ export function UsersRolesPage() {
             setPage(0);
           }}
           className={cn(
-            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
+            "min-h-[44px] inline-flex items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
             activeTab === "users"
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
@@ -731,7 +731,7 @@ export function UsersRolesPage() {
             setPage(0);
           }}
           className={cn(
-            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
+            "min-h-[44px] inline-flex items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
             activeTab === "roles"
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
@@ -749,15 +749,15 @@ export function UsersRolesPage() {
 
       {/* User Detail Drawer */}
       {showUserDetail && selectedUser && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
-          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border shadow-lg overflow-auto">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border shadow-2xl overflow-auto animate-in slide-in-from-right duration-300">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold">{t('admin.users.detail.title')}</h2>
                 <BackButton onClick={closeUserDetail} />
                 <button
                   onClick={closeUserDetail}
-                  className="p-2 hover:bg-muted rounded"
+                  className="min-h-[44px] min-w-[44px] p-2 hover:bg-muted rounded"
                 >
                   ✕
                 </button>
@@ -829,7 +829,7 @@ export function UsersRolesPage() {
                           !!userHasFarmerRole,
                         )
                       }
-                      className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                      className={`min-h-[44px] inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
                         userHasFarmerRole
                           ? "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
                           : "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400"

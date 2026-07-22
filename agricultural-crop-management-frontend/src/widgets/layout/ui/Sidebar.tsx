@@ -71,10 +71,10 @@ export function Sidebar({
     
     return (
         <aside
-            className={`acm-sidebar h-full overflow-hidden shadow-lg transition-all duration-300 shrink-0 ${collapsed ? 'w-[72px]' : 'w-64'
-                }`}
+            className="acm-sidebar bg-[var(--portal-sidebar-bg)] text-[var(--portal-sidebar-fg)] border-r border-[var(--portal-sidebar-border)] h-full shadow-lg shrink-0 grid transition-[grid-template-columns] duration-300 ease-in-out"
+            style={{ gridTemplateColumns: collapsed ? '72px' : '256px' }}
         >
-            <div className="h-full min-h-0 flex flex-col">
+            <div className="h-full min-h-0 flex flex-col overflow-hidden min-w-0 w-full">
                 {/* Navigation Items */}
                 <nav className="flex-1 min-h-0 p-3 space-y-1 overflow-y-auto overscroll-contain">
                     {navigationItems.map((item) => {
@@ -87,7 +87,8 @@ export function Sidebar({
                                     <button
                                         onClick={() => onNavigate(item.id)}
                                         aria-current={isActive ? 'page' : undefined}
-                                        className="acm-sidebar-nav-item acm-hover-surface relative w-full min-h-12 flex items-center gap-3 px-3 py-2 rounded-lg border border-l-4 transition-all duration-200"
+                                        aria-label={collapsed ? getNavLabel(item) : undefined}
+                                        className="acm-sidebar-nav-item acm-hover-surface relative w-full min-h-12 flex items-center gap-3 px-3 py-2 rounded-lg border border-l-4 transition-colors duration-200"
                                     >
                                         <item.icon className="w-5 h-5 shrink-0" />
                                         {!collapsed && (
@@ -121,6 +122,7 @@ export function Sidebar({
                         size="sm"
                         onClick={onToggleCollapse}
                         className="acm-sidebar-collapse-btn acm-hover-surface w-full min-h-12 justify-center border"
+                        aria-label={collapsed ? t('nav.expand', { defaultValue: 'Expand sidebar' }) : t('nav.collapse', { defaultValue: 'Collapse sidebar' })}
                     >
                         {collapsed ? (
                             <ChevronRight className="w-4 h-4" />

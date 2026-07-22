@@ -20,7 +20,7 @@ const adminInventoryMocks = vi.hoisted(() => ({
   getOptions: vi.fn(),
 }));
 
-vi.mock('@/services/api.admin', () => ({
+vi.mock('@/entities/user/api/api.admin', () => ({
   adminAlertApi: {
     list: adminAlertMocks.list,
     refresh: adminAlertMocks.refresh,

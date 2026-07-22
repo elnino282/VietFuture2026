@@ -59,9 +59,9 @@ const selectTriggerClass =
     'rounded-xl border-2 border-input bg-input-background px-4 text-sm font-medium text-foreground shadow-sm transition-colors hover:border-primary/50 focus-visible:border-primary focus-visible:ring-primary/20 data-[placeholder]:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-muted';
 
 const getActorBadgeClass = (actorType?: string | null) => {
-    if (actorType === 'EMPLOYEE') return 'bg-sky-100 text-sky-800 border-sky-200';
-    if (actorType === 'FARMER') return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-    return 'bg-muted text-muted-foreground border-border';
+    if (actorType === 'EMPLOYEE') return 'bg-[var(--portal-badge-secondary-bg)] text-[var(--portal-badge-secondary-fg)] border-[var(--portal-badge-secondary-border)]';
+    if (actorType === 'FARMER') return 'bg-[var(--portal-status-measured-bg)] text-[var(--portal-status-measured-fg)] border-[var(--portal-status-measured-border)]';
+    return 'bg-[var(--muted)] text-[var(--muted-foreground)] border-[var(--border)]';
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -356,8 +356,7 @@ export function FieldLogsPage() {
                                 disabled={!selectedSeasonId || isSeasonWriteLocked}
                                 title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
                                 variant="accent"
-                                className="text-white hover:opacity-90"
-                                style={{ background: 'linear-gradient(135deg, #2F9E44 0%, #1a7a30 100%)' }}
+                                className="min-h-[44px] bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 ring-offset-[var(--background)]"
                             >
                                 <Plus className="w-4 h-4 mr-2" />
                                 {t('fieldLogs.createButton')}
@@ -388,7 +387,7 @@ export function FieldLogsPage() {
                                     placeholder={t('fieldLogs.searchPlaceholder')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-10 rounded-xl border-border focus:border-primary"
+                                    className="pl-10 rounded-xl border-border focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                                     disabled={!selectedSeasonId}
                                 />
                             </div>
@@ -447,8 +446,8 @@ export function FieldLogsPage() {
             </Card>
 
             {isSeasonWriteLocked && (
-                <Card className="mb-6 border border-amber-300 bg-amber-50 rounded-xl">
-                    <CardContent className="px-6 py-3 text-sm text-amber-900">
+                <Card className="mb-6 border border-[var(--portal-status-estimated-border)] bg-[var(--portal-status-estimated-bg)] rounded-[var(--radius-xl)]">
+                    <CardContent className="px-6 py-3 text-sm text-[var(--portal-status-estimated-fg)]">
                         {seasonWriteLockReason}
                     </CardContent>
                 </Card>
@@ -552,6 +551,7 @@ export function FieldLogsPage() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
+                                                                className="min-h-[44px] min-w-[44px] transition-colors duration-200 hover:bg-[var(--portal-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] rounded-md"
                                                                 onClick={() => openEditModal(log)}
                                                                 disabled={isSeasonWriteLocked || log.canEdit === false}
                                                                 title={isSeasonWriteLocked
@@ -565,7 +565,7 @@ export function FieldLogsPage() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="text-destructive hover:text-destructive"
+                                                                className="min-h-[44px] min-w-[44px] text-[var(--destructive)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/10 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--destructive)] rounded-md"
                                                                 onClick={() => setDeleteLogId(log.id)}
                                                                 disabled={isSeasonWriteLocked || log.canDelete === false}
                                                                 title={isSeasonWriteLocked
@@ -662,8 +662,8 @@ export function FieldLogsPage() {
                         
                         {/* Inventory integration hint for FERTILIZE/SPRAY */}
                         {(formData.logType === 'FERTILIZE' || formData.logType === 'SPRAY') && (
-                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                <p className="text-sm text-blue-900">
+                            <div className="p-3 bg-[var(--portal-badge-secondary-bg)] border border-[var(--portal-badge-secondary-border)] rounded-lg">
+                                <p className="text-sm text-[var(--portal-badge-secondary-fg)]">
                                     💡 <strong>{t('fieldLogs.form.tip')}</strong> {t('fieldLogs.form.inventoryHint')}
                                 </p>
                             </div>
@@ -677,6 +677,7 @@ export function FieldLogsPage() {
                             onClick={handleSubmit}
                             disabled={isSeasonWriteLocked || createMutation.isPending || updateMutation.isPending}
                             variant="accent"
+                            className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 ring-offset-[var(--background)] bg-[var(--primary)] text-[var(--primary-foreground)]"
                         >
                             {(createMutation.isPending || updateMutation.isPending) && (
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
-import { resetPassword } from '@/api/auth';
+import { resetPassword } from '@/features/auth/api/auth';
 
 const EYE_ICON_PATH =
     'M10 4.16663C5.83334 4.16663 2.27501 6.73329 0.833344 10.4166C2.27501 14.1 5.83334 16.6666 10 16.6666C14.1667 16.6666 17.725 14.1 19.1667 10.4166C17.725 6.73329 14.1667 4.16663 10 4.16663ZM10 14.5833C7.70001 14.5833 5.83334 12.7166 5.83334 10.4166C5.83334 8.11663 7.70001 6.24996 10 6.24996C12.3 6.24996 14.1667 8.11663 14.1667 10.4166C14.1667 12.7166 12.3 14.5833 10 14.5833ZM10 7.91663C8.61668 7.91663 7.50001 9.03329 7.50001 10.4166C7.50001 11.8 8.61668 12.9166 10 12.9166C11.3833 12.9166 12.5 11.8 12.5 10.4166C12.5 9.03329 11.3833 7.91663 10 7.91663Z';
@@ -55,7 +55,7 @@ export function ResetPasswordPage() {
 
     return (
         <div className="bg-white relative min-h-screen flex items-center justify-center">
-            <div className="w-[410px] relative">
+            <div className="w-full max-w-[410px] px-4 sm:px-0 relative">
                 <div className="mb-[32px]">
                     <p
                         className="font-['DM_Sans:Bold',sans-serif] font-bold leading-[56px] text-[#2b3674] text-[36px] tracking-[-0.72px] mb-2"

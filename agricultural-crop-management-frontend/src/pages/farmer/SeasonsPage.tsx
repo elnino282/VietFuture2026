@@ -55,14 +55,14 @@ function SeasonHarvestSafetyBadge({ seasonId }: { seasonId: number }) {
   const hasActivePHI = activePHI.length > 0;
   if (hasActivePHI) {
     return (
-      <Badge className="bg-amber-100 text-amber-800 border border-amber-200 text-[10px] py-0 px-1.5 rounded">
+      <Badge className="bg-[var(--portal-status-estimated-bg)] text-[var(--portal-status-estimated-fg)] border-[var(--portal-status-estimated-border)] text-[10px] py-0 px-1.5 rounded">
         Cách ly BVTV ({activePHI.length})
       </Badge>
     );
   }
 
   return (
-    <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] py-0 px-1.5 rounded">
+    <Badge className="bg-[var(--portal-status-measured-bg)] text-[var(--portal-status-measured-fg)] border-[var(--portal-status-measured-border)] text-[10px] py-0 px-1.5 rounded">
       An toàn thu hoạch
     </Badge>
   );
@@ -92,21 +92,21 @@ function HarvestSafetyWidget({ seasons }: { seasons: any[] }) {
   const hasActivePHI = activePHI && activePHI.length > 0;
 
   return (
-    <Card className="mb-6 border border-border rounded-xl shadow-sm overflow-hidden bg-gradient-to-r from-emerald-50/10 via-teal-50/5 to-white">
+    <Card className="mb-6 border-[var(--portal-border-subtle)] rounded-[var(--radius-xl)] shadow-sm overflow-hidden bg-gradient-to-r from-[var(--portal-status-measured-bg)] to-[var(--portal-surface)]">
       <CardContent className="p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-[var(--border)] pb-3">
           <div>
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-              <Award className="w-4.5 h-4.5 text-emerald-600" />
+            <h3 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
+              <Award className="w-4.5 h-4.5 text-[var(--success)]" />
               Giám sát An toàn Thu hoạch (PHI Safety)
             </h3>
-            <p className="text-[11px] text-slate-500">Kiểm tra thời gian cách ly thuốc BVTV trước khi thu hoạch</p>
+            <p className="text-[11px] text-[var(--muted-foreground)]">Kiểm tra thời gian cách ly thuốc BVTV trước khi thu hoạch</p>
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold text-slate-600">Chọn vụ mùa active:</span>
+            <span className="text-[11px] font-semibold text-[var(--foreground)]">Chọn vụ mùa active:</span>
             <select
-              className="text-[11px] border border-slate-200 rounded-lg p-1.5 bg-white font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="text-[11px] border border-[var(--border)] rounded-lg p-1.5 bg-[var(--background)] font-medium focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
               value={selectedSeasonId || ""}
               onChange={(e) => setSelectedSeasonId(Number(e.target.value))}
             >
@@ -118,45 +118,45 @@ function HarvestSafetyWidget({ seasons }: { seasons: any[] }) {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center gap-2 text-slate-500 text-xs py-2">
-            <RefreshCw className="w-3.5 h-3.5 animate-spin text-slate-400" /> Đang tải thông tin cách ly...
+          <div className="flex items-center gap-2 text-[var(--muted-foreground)] text-xs py-2">
+            <RefreshCw className="w-3.5 h-3.5 animate-spin text-[var(--muted-foreground)]" /> Đang tải thông tin cách ly...
           </div>
         ) : !selectedSeasonId ? (
-          <div className="text-xs text-slate-500">Chưa chọn vụ mùa nào.</div>
+          <div className="text-xs text-[var(--muted-foreground)]">Chưa chọn vụ mùa nào.</div>
         ) : !hasActivePHI ? (
-          <div className="flex items-start gap-3 bg-emerald-50/50 border border-emerald-100 p-4.5 rounded-xl text-emerald-950">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 bg-[var(--portal-status-measured-bg)] border border-[var(--portal-status-measured-border)] p-4.5 rounded-[var(--radius-xl)] text-[var(--portal-status-measured-fg)]">
+            <CheckCircle2 className="w-5 h-5 text-[var(--success)] shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-xs font-bold text-emerald-800">Đã hết thời gian cách ly - An toàn thu hoạch</h4>
-              <p className="text-[11px] text-emerald-700 mt-1 leading-relaxed">
+              <h4 className="text-xs font-bold text-[var(--success-foreground)]">Đã hết thời gian cách ly - An toàn thu hoạch</h4>
+              <p className="text-[11px] text-[var(--success-foreground)] mt-1 leading-relaxed">
                 Vụ mùa <strong className="font-semibold">{currentSeason?.seasonName}</strong> không còn thuốc BVTV nào trong thời gian cách ly. Bạn có thể tiến hành thu hoạch bình thường và đảm bảo VietGAP.
               </p>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 bg-amber-50/30 border border-amber-100 p-4.5 rounded-xl text-amber-950">
+          <div className="flex flex-col gap-3 bg-[var(--portal-status-estimated-bg)] border border-[var(--portal-status-estimated-border)] p-4.5 rounded-[var(--radius-xl)] text-[var(--portal-status-estimated-fg)]">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-[var(--warning)] shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-xs font-bold text-amber-800">Cảnh báo: Đang trong thời gian cách ly (PHI)</h4>
-                <p className="text-[11px] text-amber-700 mt-1 leading-relaxed">
+                <h4 className="text-xs font-bold text-[var(--warning-foreground)]">Cảnh báo: Đang trong thời gian cách ly (PHI)</h4>
+                <p className="text-[11px] text-[var(--warning-foreground)] mt-1 leading-relaxed">
                   Vụ mùa <strong className="font-semibold">{currentSeason?.seasonName}</strong> còn {activePHI.length} hoạt chất thuốc BVTV chưa hết thời gian cách ly bắt buộc.
                 </p>
               </div>
             </div>
             
-            <div className="border-t border-amber-100/50 pt-3 mt-1 sm:pl-8 space-y-2">
-              <div className="text-[11px] text-amber-800 font-semibold">
+            <div className="border-t border-[var(--portal-status-estimated-border)] pt-3 mt-1 sm:pl-8 space-y-2">
+              <div className="text-[11px] text-[var(--warning-foreground)] font-semibold">
                 Danh sách hoạt chất đang cách ly:
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {activePHI.map((phi: any, idx: number) => (
-                  <div key={idx} className="bg-white p-2 rounded-lg border border-amber-100/60 text-xs flex justify-between items-center shadow-sm">
+                  <div key={idx} className="bg-[var(--background)] p-2 rounded-lg border border-[var(--portal-status-estimated-border)] text-xs flex justify-between items-center shadow-sm">
                     <div>
-                      <span className="font-semibold text-slate-700 block">{phi.pesticideName || phi.activeIngredient}</span>
-                      <span className="text-[10px] text-slate-500">Hoạt chất: {phi.activeIngredient}</span>
+                      <span className="font-semibold text-[var(--foreground)] block">{phi.pesticideName || phi.activeIngredient}</span>
+                      <span className="text-[10px] text-[var(--muted-foreground)]">Hoạt chất: {phi.activeIngredient}</span>
                     </div>
-                    <span className="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded text-[10px] border border-rose-100">
+                    <span className="text-[var(--destructive)] font-bold bg-[var(--destructive)]/10 px-2 py-0.5 rounded text-[10px] border border-[var(--destructive)]/20">
                       Đến {phi.harvestAllowedDate}
                     </span>
                   </div>
@@ -396,7 +396,7 @@ export function SeasonsPage() {
             title={t('seasons.title')}
             subtitle={t('seasons.subtitle')}
             actions={
-              <Button>
+              <Button className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                 <Plus className="w-4 h-4 mr-2" />
                 {t('seasons.createButton')}
               </Button>
@@ -415,7 +415,7 @@ export function SeasonsPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder={t('seasons.searchPlaceholder')}
-                className="pl-10 rounded-xl border-border focus:border-primary"
+                className="pl-10 rounded-xl border-border focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
@@ -482,7 +482,7 @@ export function SeasonsPage() {
             emptyTitle={t('seasons.empty.title')}
             emptyDescription={t('seasons.empty.description')}
             emptyAction={
-              <Button className="mt-2">
+              <Button className="min-h-[44px] mt-2 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                 <Plus className="w-4 h-4 mr-2" />
                 {t('seasons.createButton')}
               </Button>
@@ -532,6 +532,7 @@ export function SeasonsPage() {
                               size="sm"
                               onClick={() => handleOpenStartConfirm(season.id)}
                               disabled={startSeasonMutation.isPending}
+                              className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                             >
                               {t('seasons.actions.start')}
                             </Button>
@@ -544,6 +545,7 @@ export function SeasonsPage() {
                                 handleOpenCompleteDialog(season.id)
                               }
                               disabled={completeSeasonMutation.isPending}
+                              className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                             >
                               {t('seasons.actions.complete')}
                             </Button>
@@ -555,6 +557,7 @@ export function SeasonsPage() {
                               variant="destructive"
                               onClick={() => handleOpenCancelConfirm(season.id)}
                               disabled={cancelSeasonMutation.isPending}
+                              className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 ring-offset-background"
                             >
                               {t('seasons.actions.cancel')}
                             </Button>

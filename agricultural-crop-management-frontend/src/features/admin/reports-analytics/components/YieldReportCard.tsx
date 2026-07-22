@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePreferences } from '@/shared/contexts';
 import { convertWeight, getWeightUnitLabel } from '@/shared/lib';
-import type { YieldReport } from '@/services/api.admin';
+import type { YieldReport } from '@/entities/user/api/api.admin';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface YieldReportCardProps {

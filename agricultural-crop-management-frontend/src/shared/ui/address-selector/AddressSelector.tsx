@@ -114,7 +114,7 @@ export function AddressSelector({
         <Label>
           <MapPin className="inline-block w-4 h-4 mr-1.5 -mt-0.5" />
           {resolvedLabel}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-destructive ml-1">*</span>}
         </Label>
 
         {/* Clear button */}
@@ -134,21 +134,21 @@ export function AddressSelector({
 
       {/* Description */}
       {description && (
-        <p className="text-xs text-gray-500 -mt-1">{description}</p>
+        <p className="text-xs text-muted-foreground -mt-1">{description}</p>
       )}
 
       {/* Loading initial state */}
       {isLoadingInitial && (
-        <div className="flex items-center gap-2 py-3 px-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-          <span className="text-sm text-blue-900">{t("common.loadingAddress")}</span>
+        <div className="flex items-center gap-2 py-3 px-4 bg-muted border border-border rounded-lg">
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+          <span className="text-sm text-foreground">{t("common.loadingAddress")}</span>
         </div>
       )}
 
       {/* Address breadcrumb */}
       {addressBreadcrumb && !isLoadingInitial && (
-        <div className="py-2 px-3 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm text-green-900 font-medium">
+        <div className="py-2 px-3 bg-primary/10 border border-primary/20 rounded-lg">
+          <p className="text-sm text-foreground font-medium">
             {addressBreadcrumb}
           </p>
         </div>
@@ -158,9 +158,9 @@ export function AddressSelector({
       <div className="space-y-3">
         {/* Province selector */}
         <div className="space-y-1.5">
-          <Label htmlFor="province" className="text-xs text-gray-600">
+          <Label htmlFor="province" className="text-xs text-muted-foreground">
             {t("common.addressSelector.province")}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-destructive ml-1">*</span>}
           </Label>
           <Select
             value={selectedProvince?.toString() || ""}
@@ -171,7 +171,7 @@ export function AddressSelector({
           >
             <SelectTrigger
               id="province"
-              className={error ? "border-red-500" : ""}
+              className={`min-h-[44px] ${error ? "border-destructive" : ""}`}
               aria-invalid={!!error}
               aria-describedby={error ? errorId : undefined}
             >
@@ -184,7 +184,7 @@ export function AddressSelector({
                   <span className="ml-2 text-sm">{t("common.loading")}</span>
                 </div>
               ) : provinces.length === 0 ? (
-                <div className="py-4 text-center text-sm text-gray-500">
+                <div className="py-4 text-center text-sm text-muted-foreground">
                   {t("common.addressSelector.noProvinces")}
                 </div>
               ) : (
@@ -200,9 +200,9 @@ export function AddressSelector({
 
         {/* Ward selector */}
         <div className="space-y-1.5">
-          <Label htmlFor="ward" className="text-xs text-gray-600">
+          <Label htmlFor="ward" className="text-xs text-muted-foreground">
             {t("common.addressSelector.ward")}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-destructive ml-1">*</span>}
           </Label>
           <Select
             value={selectedWard?.toString() || ""}
@@ -218,7 +218,7 @@ export function AddressSelector({
           >
             <SelectTrigger
               id="ward"
-              className={error ? "border-red-500" : ""}
+              className={`min-h-[44px] ${error ? "border-destructive" : ""}`}
               aria-invalid={!!error}
               aria-describedby={error ? errorId : undefined}
             >
@@ -231,11 +231,11 @@ export function AddressSelector({
                   <span className="ml-2 text-sm">{t("common.loading")}</span>
                 </div>
               ) : !selectedProvince ? (
-                <div className="py-4 text-center text-sm text-gray-500">
+                <div className="py-4 text-center text-sm text-muted-foreground">
                   {t("common.addressSelector.selectProvinceFirst")}
                 </div>
               ) : wards.length === 0 ? (
-                <div className="py-4 text-center text-sm text-gray-500">
+                <div className="py-4 text-center text-sm text-muted-foreground">
                   {t("common.addressSelector.noWards")}
                 </div>
               ) : (
@@ -252,7 +252,7 @@ export function AddressSelector({
 
       {/* Error message */}
       {error && (
-        <p id={errorId} className="text-sm text-destructive mt-1">
+        <p id={errorId} role="alert" aria-live="polite" className="text-sm text-destructive mt-1">
           {error}
         </p>
       )}

@@ -2,7 +2,7 @@ import { useI18n } from "@/hooks/useI18n";
 import {
   adminSeasonApi,
   type AdminSeasonUpdateRequest,
-} from "@/services/api.admin";
+} from "@/entities/user/api/api.admin";
 import { usePreferences } from "@/shared/contexts";
 import {
   convertWeight,

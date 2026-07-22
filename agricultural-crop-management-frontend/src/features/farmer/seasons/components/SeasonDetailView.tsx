@@ -55,12 +55,7 @@ export function SeasonDetailView({
       />
 
       <div className="max-w-[1800px] mx-auto p-6 space-y-6">
-        <SeasonTabs
-          season={season}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          activities={activities}
-        />
+        <SeasonTabs season={season} />
         <ActivityFeed activities={activities} />
       </div>
     </>

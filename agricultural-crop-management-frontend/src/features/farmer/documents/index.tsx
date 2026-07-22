@@ -106,7 +106,7 @@ export function Documents() {
                 setFilter("tab", value as "all" | "favorites" | "recent")
               }
             >
-              <TabsList className="w-full md:w-auto grid grid-cols-3 mb-6 bg-muted rounded-xl p-1">
+              <TabsList className="w-full overflow-x-auto mb-6">
                 <TabsTrigger
                   value="all"
                   className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary"

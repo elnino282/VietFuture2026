@@ -2,7 +2,7 @@ import { useI18n } from "@/hooks/useI18n";
 import {
   adminTaskApi,
   type AdminTaskUpdateRequest,
-} from "@/services/api.admin";
+} from "@/entities/user/api/api.admin";
 import { BackButton } from "@/shared/ui/back-button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, AlertTriangle, Loader2 } from "lucide-react";

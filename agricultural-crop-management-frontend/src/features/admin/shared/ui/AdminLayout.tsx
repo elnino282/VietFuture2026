@@ -13,10 +13,10 @@ export const adminControlClass =
 export const adminButtonClass = "rounded-[14px]";
 
 export const adminTabsListClass =
-  "h-10 w-max rounded-[18px] border-0 bg-muted p-1";
+  "w-full overflow-x-auto";
 
 export const adminTabsTriggerClass =
-  "h-8 rounded-[18px] px-4 text-sm font-medium text-muted-foreground transition-all data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm";
+  "";
 
 type AdminPageContainerProps = {
   children: React.ReactNode;

@@ -5,7 +5,7 @@ import { FarmList } from '@/features/farmer/farms/components/FarmList';
 import { PlotList } from '@/features/farmer/farms/components/PlotList';
 import { CreateFarmRequest, CreatePlotRequest, Farm, Plot } from '@/features/farmer/farms/types';
 import { useI18n } from '@/hooks/useI18n';
-import { Button, Card, CardContent, PageContainer, PageHeader } from '@/shared/ui';
+import { Button, PageContainer, PageHeader } from '@/shared/ui';
 import { Map, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -106,33 +106,32 @@ export default function FarmsPlotsPage() {
 
     return (
         <PageContainer>
-            <Card className="mb-6 border border-border rounded-xl shadow-sm">
-                <CardContent className="px-6 py-4">
-                    <PageHeader
-                        className="mb-0"
-                        icon={<Map className="w-8 h-8" />}
-                        title={t('farms.title')}
-                        subtitle={t('farms.subtitle')}
-                        actions={
-                            <>
-                                <Button onClick={() => setIsCreateFarmOpen(true)}>
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    {t('farms.newFarmButton')}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setIsCreatePlotOpen(true)}
-                                    disabled={!canCreatePlot}
-                                    title={createPlotTitle}
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    {t('farms.newPlotButton')}
-                                </Button>
-                            </>
-                        }
-                    />
-                </CardContent>
-            </Card>
+            <div className="mb-8">
+                <PageHeader
+                    className="mb-0"
+                    icon={<Map className="w-8 h-8 text-primary" />}
+                    title={t('farms.title')}
+                    subtitle={t('farms.subtitle')}
+                    actions={
+                        <>
+                            <Button className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background" onClick={() => setIsCreateFarmOpen(true)}>
+                                <Plus className="w-4 h-4 mr-2" />
+                                {t('farms.newFarmButton')}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsCreatePlotOpen(true)}
+                                disabled={!canCreatePlot}
+                                title={createPlotTitle}
+                                className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                            >
+                                <Plus className="w-4 h-4 mr-2" />
+                                {t('farms.newPlotButton')}
+                            </Button>
+                        </>
+                    }
+                />
+            </div>
 
             <div className="flex flex-1 gap-0 min-h-[600px]">
                 {/* Left Pane: Farms List */}

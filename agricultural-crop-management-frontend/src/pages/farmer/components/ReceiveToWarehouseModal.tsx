@@ -77,6 +77,7 @@ export function ReceiveToWarehouseModal({ open, onOpenChange, lot, onSuccess }: 
                   placeholder="Ví dụ: 25"
                   value={currentMoisture}
                   onChange={(e) => setCurrentMoisture(e.target.value)}
+                  className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 />
                 <p className="text-xs text-muted-foreground">
                   Hệ thống sẽ tự tính toán hao hụt sấy dựa trên độ ẩm mục tiêu.
@@ -94,6 +95,7 @@ export function ReceiveToWarehouseModal({ open, onOpenChange, lot, onSuccess }: 
                   placeholder="Ví dụ: 14"
                   value={targetMoisture}
                   onChange={(e) => setTargetMoisture(e.target.value)}
+                  className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 />
               </div>
 
@@ -107,6 +109,7 @@ export function ReceiveToWarehouseModal({ open, onOpenChange, lot, onSuccess }: 
                   placeholder="0"
                   value={mechanicalLoss}
                   onChange={(e) => setMechanicalLoss(e.target.value)}
+                  className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 />
               </div>
             </>
@@ -136,6 +139,7 @@ export function ReceiveToWarehouseModal({ open, onOpenChange, lot, onSuccess }: 
                   placeholder="VD: 5"
                   value={mechanicalLoss}
                   onChange={(e) => setMechanicalLoss(e.target.value)}
+                  className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 />
                 <p className="text-xs text-muted-foreground">
                   Tỉ lệ hao hụt do loại bỏ phần hư hỏng, vỏ, cuống... trong quá trình sơ chế.
@@ -149,7 +153,7 @@ export function ReceiveToWarehouseModal({ open, onOpenChange, lot, onSuccess }: 
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Hủy
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button onClick={handleSubmit} disabled={isSubmitting} className="shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
             {isSubmitting ? "Đang xử lý..." : "Xác nhận Nhập kho"}
           </Button>
         </DialogFooter>

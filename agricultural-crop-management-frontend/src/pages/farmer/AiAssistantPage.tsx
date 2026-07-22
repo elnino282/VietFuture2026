@@ -1,15 +1,10 @@
-﻿import { MarkdownMessage } from '@/components/MarkdownMessage';
+import { MarkdownMessage } from '@/components/MarkdownMessage';
 import { AiChatSources, useAiChatSession } from '@/features/ai';
 import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/shared/lib';
 import {
     Badge,
     Button,
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
     PageContainer,
     PageHeader,
     ScrollArea,
@@ -96,42 +91,41 @@ export function AiAssistantPage() {
     return (
         <PageContainer maxWidth="default">
             {/* --- BẮT ĐẦU PHẦN CHỈNH SỬA --- */}
-            <Card className="mb-6 border border-border rounded-xl shadow-sm">
-                <CardContent className="px-6 py-4">
-                    <PageHeader
-                        className="mb-0"
-                        icon={<Bot className="w-7 h-7" />}
-                        title={t('ai.assistant.title')}
-                        subtitle={t('ai.assistant.subtitle')}
-                        actions={(
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleReset}
-                                disabled={!canReset}
-                            >
-                                <RotateCcw className="w-4 h-4 mr-2" />
-                                {t('common.reset', 'Làm mới hội thoại')}
-                            </Button>
-                        )}
-                    />
-                </CardContent>
-            </Card>
+            <div className="mb-8">
+                <PageHeader
+                    className="mb-0"
+                    icon={<Bot className="w-8 h-8 text-primary" />}
+                    title={t('ai.assistant.title')}
+                    subtitle={t('ai.assistant.subtitle')}
+                    actions={(
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleReset}
+                            disabled={!canReset}
+                            className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                        >
+                            <RotateCcw className="w-4 h-4 mr-2" />
+                            {t('common.reset', 'Làm mới hội thoại')}
+                        </Button>
+                    )}
+                />
+            </div>
             {/* --- KẾT THÚC PHẦN CHỈNH SỬA --- */}
 
-            <div className="grid gap-6 lg:grid-cols-[1.7fr_1fr]">
-                <Card className="flex flex-col">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                            <Leaf className="w-4 h-4 text-primary" />
+            <div className="grid gap-8 lg:grid-cols-[1.7fr_1fr]">
+                <section className="flex flex-col w-full max-w-3xl">
+                    <header className="mb-4">
+                        <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
+                            <Leaf className="w-5 h-5 text-primary" />
                             {t('ai.chat.title')}
-                        </CardTitle>
-                        <CardDescription>
+                        </h2>
+                        <p className="text-sm text-muted-foreground mt-1">
                             {t('ai.chat.description')}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-1 flex-col gap-4">
-                        <ScrollArea className="h-[420px] sm:h-[520px] rounded-lg border bg-muted/30">
+                        </p>
+                    </header>
+                    <div className="flex flex-1 flex-col gap-4">
+                        <ScrollArea className="h-[420px] sm:h-[520px] rounded-xl border bg-card shadow-sm">
                             <div className="space-y-4 p-4">
                                 {messages.map((message) => {
                                     const isUser = message.role === 'user';
@@ -195,6 +189,21 @@ export function AiAssistantPage() {
                             </div>
                         )}
 
+                        <div className="flex flex-wrap gap-2 pt-1">
+                            {QUICK_PROMPTS.map((prompt) => (
+                                <Button
+                                    key={prompt}
+                                    variant="outline"
+                                    size="sm"
+                                    className="min-h-[44px] whitespace-normal text-left h-auto py-1.5 px-3 text-xs bg-muted/30 hover:bg-muted transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                                    onClick={() => setDraft(prompt)}
+                                >
+                                    <Sparkles className="w-3 h-3 mr-1.5 text-primary" />
+                                    {prompt}
+                                </Button>
+                            ))}
+                        </div>
+
                         <div className="space-y-3">
                             <Textarea
                                 placeholder={t('ai.chat.placeholder')}
@@ -203,37 +212,39 @@ export function AiAssistantPage() {
                                 onKeyDown={handleKeyDown}
                                 rows={3}
                                 disabled={isSending}
+                                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                             />
                             <div className="flex items-center justify-between gap-3">
                                 <p className="text-xs text-muted-foreground">
                                     {t('ai.chat.sendHint')}
                                 </p>
-                                <Button onClick={handleSend} disabled={!draft.trim() || isSending}>
-                                    <Send className="w-4 h-4" />
+                                <Button onClick={handleSend} disabled={!draft.trim() || isSending} className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
+                                    <Send className="w-4 h-4 mr-2" />
                                     {t('common.send')}
                                 </Button>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </section>
 
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader className="pb-3">
-                            <CardTitle className="flex items-center gap-2 text-base">
+                <aside className="space-y-10 lg:pl-6 lg:border-l">
+                    <section>
+                        <header className="mb-4">
+                            <h3 className="flex items-center gap-2 text-base font-semibold">
                                 <Leaf className="w-4 h-4 text-primary" />
                                 {t('ai.context.title')}
-                            </CardTitle>
-                            <CardDescription>
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-1">
                                 {t('ai.context.description')}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
+                            </p>
+                        </header>
+                        <div className="space-y-3">
                             <Textarea
                                 placeholder={t('ai.context.placeholder')}
                                 value={cropContext}
                                 onChange={(event) => setCropContext(event.target.value)}
                                 rows={4}
+                                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                             />
                             <div className="flex flex-wrap gap-2">
                                 {CONTEXT_TEMPLATES.map((template) => (
@@ -241,56 +252,31 @@ export function AiAssistantPage() {
                                         key={template.label}
                                         variant="outline"
                                         size="sm"
-                                        className="whitespace-normal"
+                                        className="min-h-[44px] whitespace-normal transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                                         onClick={() => handleContextApply(template.value)}
                                     >
                                         {template.label}
                                     </Button>
                                 ))}
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </section>
 
-                    <Card>
-                        <CardHeader className="pb-3">
-                            <CardTitle className="flex items-center gap-2 text-base">
-                                <Sparkles className="w-4 h-4 text-primary" />
-                                {t('ai.suggestions.title')}
-                            </CardTitle>
-                            <CardDescription>{t('ai.suggestions.description')}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex flex-wrap gap-2">
-                                {QUICK_PROMPTS.map((prompt) => (
-                                    <Button
-                                        key={prompt}
-                                        variant="outline"
-                                        size="sm"
-                                        className="whitespace-normal text-left"
-                                        onClick={() => setDraft(prompt)}
-                                    >
-                                        {prompt}
-                                    </Button>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-primary/20 bg-primary/5">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="flex items-center gap-2 text-base">
+                    <section>
+                        <header className="mb-3">
+                            <h3 className="flex items-center gap-2 text-base font-semibold">
                                 {t('ai.scope.title')}
-                            </CardTitle>
-                            <CardDescription>
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-1">
                                 {t('ai.scope.description')}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="text-sm text-muted-foreground space-y-2">
+                            </p>
+                        </header>
+                        <div className="text-sm text-muted-foreground space-y-2">
                             <p>{t('ai.scope.supported')}</p>
                             <p>{t('ai.scope.notSupported')}</p>
-                        </CardContent>
-                    </Card>
-                </div>
+                        </div>
+                    </section>
+                </aside>
             </div>
         </PageContainer>
     );

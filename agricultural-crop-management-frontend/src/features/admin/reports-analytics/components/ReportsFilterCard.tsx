@@ -63,7 +63,7 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
       <CardContent className="p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
           {/* Date Range - Inline */}
-          <div className="flex h-9 w-full items-center gap-1.5 rounded-[14px] border border-input bg-card px-3 transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20 sm:w-auto sm:min-w-[260px]">
+          <div className="flex min-h-[44px] w-full items-center gap-1.5 rounded-[14px] border border-input bg-card px-3 transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20 sm:w-auto sm:min-w-[260px]">
             <svg
               className="w-4 h-4 text-muted-foreground flex-shrink-0"
               fill="none"
@@ -98,7 +98,7 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
               value={filters.farmId}
               onValueChange={(value) => handleChange("farmId", value)}
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] border-input bg-card text-sm text-foreground">
+              <SelectTrigger className="min-h-[44px] w-full rounded-[14px] border-input bg-card text-sm text-foreground">
                 <SelectValue placeholder={t('admin.reportsAnalytics.filters.allFarms')} />
               </SelectTrigger>
               <SelectContent className="rounded-[14px]">
@@ -120,7 +120,7 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
               disabled={isPlotDisabled}
             >
               <SelectTrigger
-                className={`h-9 w-full rounded-[14px] border-input bg-card text-sm text-foreground ${isPlotDisabled ? "cursor-not-allowed opacity-50" : ""}`}
+                className={`min-h-[44px] w-full rounded-[14px] border-input bg-card text-sm text-foreground ${isPlotDisabled ? "cursor-not-allowed opacity-50" : ""}`}
               >
                 <SelectValue placeholder={t('admin.reportsAnalytics.filters.allPlots')} />
               </SelectTrigger>
@@ -141,7 +141,7 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
               value={filters.cropId}
               onValueChange={(value) => handleChange("cropId", value)}
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] border-input bg-card text-sm text-foreground">
+              <SelectTrigger className="min-h-[44px] w-full rounded-[14px] border-input bg-card text-sm text-foreground">
                 <SelectValue placeholder={t('admin.reportsAnalytics.filters.allCrops')} />
               </SelectTrigger>
               <SelectContent className="rounded-[14px]">
@@ -163,7 +163,7 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
               disabled={isVarietyDisabled}
             >
               <SelectTrigger
-                className={`h-9 w-full rounded-[14px] border-input bg-card text-sm text-foreground ${isVarietyDisabled ? "cursor-not-allowed opacity-50" : ""}`}
+                className={`min-h-[44px] w-full rounded-[14px] border-input bg-card text-sm text-foreground ${isVarietyDisabled ? "cursor-not-allowed opacity-50" : ""}`}
               >
                 <SelectValue placeholder={t('admin.reportsAnalytics.filters.allVarieties')} />
               </SelectTrigger>
@@ -187,14 +187,14 @@ export const ReportsFilterCard: React.FC<ReportsFilterCardProps> = ({
             )}
             <button
               onClick={onReset}
-              className="text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors"
+              className="min-h-[44px] px-2 text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors"
             >
               {t('common.reset')}
             </button>
             <Button
               size="sm"
               onClick={onApply}
-              className="h-9 px-4 rounded-[14px] bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm"
+              className="min-h-[44px] px-4 rounded-[14px] bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm"
             >
               {t('admin.reportsAnalytics.filters.apply')}
             </Button>

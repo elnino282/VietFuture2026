@@ -199,7 +199,7 @@ export function TasksWorkspacePage() {
             title={t('tasks.title')}
             subtitle={t('tasks.subtitle')}
             actions={
-              <Button>
+              <Button className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                 <Plus className="w-4 h-4 mr-2" />
                 {t('tasks.createButton')}
               </Button>
@@ -216,7 +216,7 @@ export function TasksWorkspacePage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder={t('tasks.searchPlaceholder')}
-                className="pl-10"
+                className="pl-10 rounded-xl border-border focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
@@ -260,7 +260,7 @@ export function TasksWorkspacePage() {
             emptyTitle={t('tasks.empty.title')}
             emptyDescription={t('tasks.empty.description')}
             emptyAction={
-              <Button className="mt-2">
+              <Button className="min-h-[44px] mt-2 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                 <Plus className="w-4 h-4 mr-2" />
                 {t('tasks.createButton')}
               </Button>
@@ -293,6 +293,7 @@ export function TasksWorkspacePage() {
                               size="sm"
                               onClick={() => handleOpenStartConfirm(task.taskId)}
                               disabled={startTaskMutation.isPending}
+                              className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                             >
                               {t('tasks.actions.start')}
                             </Button>
@@ -303,6 +304,7 @@ export function TasksWorkspacePage() {
                               variant="secondary"
                               onClick={() => handleOpenCompleteDialog(task.taskId)}
                               disabled={completeTaskMutation.isPending}
+                              className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 ring-offset-background"
                             >
                               {t('tasks.actions.complete')}
                             </Button>
@@ -310,7 +312,7 @@ export function TasksWorkspacePage() {
                           {task.status === 'REVIEWING' && (
                             <Button
                               size="sm"
-                              className="bg-orange-500 hover:bg-orange-600"
+                              className="min-h-[44px] bg-orange-500 hover:bg-orange-600 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 ring-offset-background text-white"
                               onClick={() => handleOpenReviewDialog(task.taskId)}
                             >
                               Nghiệm thu
@@ -370,7 +372,7 @@ export function TasksWorkspacePage() {
                   type="date"
                   value={completionDate}
                   onChange={(e) => setCompletionDate(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background rounded-xl"
                 />
               </div>
             </div>
@@ -378,12 +380,14 @@ export function TasksWorkspacePage() {
           <DialogFooter>
             <Button
               variant="outline"
+              className="min-h-[44px]"
               onClick={() => setCompleteDialogOpen(false)}
               disabled={completeTaskMutation.isPending}
             >
               {t('common.cancel')}
             </Button>
             <Button
+              className="min-h-[44px]"
               onClick={handleCompleteTask}
               disabled={completeTaskMutation.isPending || !completionDate}
             >
@@ -437,10 +441,10 @@ export function TasksWorkspacePage() {
             </div>
           </div>
           <DialogFooter className="mt-4 shrink-0">
-            <Button variant="destructive" onClick={handleRejectTask} disabled={rejectTaskMutation.isPending || !rejectReason}>
+            <Button variant="destructive" className="min-h-[44px]" onClick={handleRejectTask} disabled={rejectTaskMutation.isPending || !rejectReason}>
               <XCircle className="w-4 h-4 mr-2" /> Từ chối
             </Button>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleApproveTask} disabled={approveTaskMutation.isPending}>
+            <Button className="min-h-[44px] bg-orange-500 hover:bg-orange-600 text-white" onClick={handleApproveTask} disabled={approveTaskMutation.isPending}>
               <CheckCircle className="w-4 h-4 mr-2" /> Duyệt
             </Button>
           </DialogFooter>

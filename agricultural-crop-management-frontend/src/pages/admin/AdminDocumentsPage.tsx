@@ -51,22 +51,18 @@ const DOCUMENT_STATUSES = ["ACTIVE", "INACTIVE"] as const;
 type DocumentStatus = (typeof DOCUMENT_STATUSES)[number];
 
 // Type badges styling
-const typeBadgeColors: Record<DocumentType, string> = {
-  POLICY:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
-  GUIDE: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  MANUAL:
-    "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-  LEGAL:
-    "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
-  OTHER: "bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-400",
+const typeBadgeColors = {
+  POLICY: "bg-status-success text-status-success-foreground",
+  GUIDE: "bg-status-warning text-status-warning-foreground",
+  MANUAL: "bg-status-warning text-status-warning-foreground",
+  LEGAL: "bg-status-warning text-status-warning-foreground",
+  OTHER: "bg-status-neutral text-status-neutral-foreground",
 };
 
 // Status badges styling
-const statusBadgeColors: Record<DocumentStatus, string> = {
-  ACTIVE:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
-  INACTIVE: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+const statusBadgeColors = {
+  ACTIVE: "bg-status-success text-status-success-foreground",
+  INACTIVE: "bg-status-error text-status-error-foreground",
 };
 
 export function AdminDocumentsPage() {
@@ -417,19 +413,19 @@ export function AdminDocumentsPage() {
                 value={debouncedSearch}
                 onChange={(e) => setDebouncedSearch(e.target.value)}
                 placeholder={t("admin.documents.searchPlaceholder")}
-                className="w-full rounded-[14px] border border-input bg-card py-2 pl-10 pr-4 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                className="w-full rounded-md border border-input bg-card py-2 pl-10 pr-4 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
               />
             </div>
 
         {/* Type Filter */}
-        <select
-          value={filterType}
-          onChange={(e) => {
-            setFilterType(e.target.value);
-            setPage(0);
-          }}
-          className="w-full rounded-[14px] border border-input bg-card px-3 py-2 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-auto"
-        >
+          <select
+            value={filterType}
+            onChange={(e) => {
+              setFilterType(e.target.value);
+              setPage(0);
+            }}
+            className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-auto"
+          >
           <option value="">{t("admin.documents.filters.allTypes")}</option>
           {DOCUMENT_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -439,14 +435,14 @@ export function AdminDocumentsPage() {
         </select>
 
         {/* Status Filter */}
-        <select
-          value={filterStatus}
-          onChange={(e) => {
-            setFilterStatus(e.target.value);
-            setPage(0);
-          }}
-          className="w-full rounded-[14px] border border-input bg-card px-3 py-2 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-auto"
-        >
+          <select
+            value={filterStatus}
+            onChange={(e) => {
+              setFilterStatus(e.target.value);
+              setPage(0);
+            }}
+            className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-auto"
+          >
           <option value="">{t("admin.documents.filters.allStatuses")}</option>
           {DOCUMENT_STATUSES.map((status) => (
             <option key={status} value={status}>
@@ -459,7 +455,7 @@ export function AdminDocumentsPage() {
         {(searchQuery || filterType || filterStatus) && (
           <button
             onClick={resetFilters}
-            className="w-full sm:w-auto px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+            className="min-h-[44px] w-full sm:w-auto px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
           >
             {t("common.reset")}
           </button>
@@ -470,7 +466,7 @@ export function AdminDocumentsPage() {
         {/* Create Button */}
         <button
           onClick={() => openForm()}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90 transition-colors"
+          className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90 transition-colors"
         >
           <Plus className="h-4 w-4" />
           {t("admin.documents.actions.create")}
@@ -479,7 +475,7 @@ export function AdminDocumentsPage() {
         {/* Refresh */}
         <button
           onClick={fetchDocuments}
-          className="w-full sm:w-auto p-2 border border-border rounded-[14px] hover:bg-muted/50 transition-colors"
+          className="min-h-[44px] w-full sm:w-auto p-2 border border-border rounded-md hover:bg-muted/50 transition-colors"
           title={t("common.refresh")}
         >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
@@ -561,7 +557,7 @@ export function AdminDocumentsPage() {
               documents.map((doc) => (
                 <tr
                   key={doc.id}
-                  className="border-b border-border hover:bg-muted/30 transition-colors"
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
                   <td className="px-4 py-3">
                     <div className="font-medium text-sm">{doc.title}</div>
@@ -614,7 +610,7 @@ export function AdminDocumentsPage() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="min-h-[44px] min-w-[44px] p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
                           aria-label={t("common.actions")}
                         >
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
@@ -680,14 +676,14 @@ export function AdminDocumentsPage() {
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="px-3 py-1 border border-border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50"
+              className="min-h-[44px] px-3 py-1 border border-border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50"
             >
               {t("pagination.previousPage")}
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1 border border-border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50"
+              className="min-h-[44px] px-3 py-1 border border-border rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50"
             >
               {t("pagination.nextPage")}
             </button>
@@ -697,8 +693,8 @@ export function AdminDocumentsPage() {
 
       {/* Create/Edit Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
-          <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-md mx-4">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md mx-4 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h3 className="text-lg font-semibold">
                 {editingDocument ? t("admin.documents.form.editTitle") : t("admin.documents.form.createTitle")}
@@ -706,7 +702,7 @@ export function AdminDocumentsPage() {
               <BackButton onClick={() => closeForm()} />
               <button
                 onClick={() => closeForm()}
-                className="p-1 hover:bg-muted rounded"
+                className="min-h-[44px] min-w-[44px] p-1 hover:bg-muted rounded"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -812,14 +808,14 @@ export function AdminDocumentsPage() {
             <div className="flex justify-end gap-2 p-4 border-t border-border">
               <button
                 onClick={() => closeForm()}
-                className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
+                className="min-h-[44px] px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
               >
                 {t("common.cancel")}
               </button>
               <button
                 onClick={handleSave}
                 disabled={formLoading}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50"
+                className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50"
               >
                 {formLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {editingDocument ? t("common.update") : t("common.create")}
@@ -854,14 +850,14 @@ export function AdminDocumentsPage() {
               <button
                 onClick={() => setDeactivateConfirm(null)}
                 disabled={deactivateLoading}
-                className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50 disabled:opacity-50"
+                className="min-h-[44px] px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50 disabled:opacity-50"
               >
                 {t("common.cancel")}
               </button>
               <button
                 onClick={handleDeactivate}
                 disabled={deactivateLoading}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm hover:bg-destructive/90 disabled:opacity-50"
+                className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm hover:bg-destructive/90 disabled:opacity-50"
               >
                 {deactivateLoading ? (
                   <>
@@ -928,7 +924,7 @@ export function AdminDocumentsPage() {
                   setHardDeleteConfirmText("");
                 }}
                 disabled={hardDeleteLoading}
-                className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50 disabled:opacity-50"
+                className="min-h-[44px] px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50 disabled:opacity-50"
               >
                 {t("common.cancel")}
               </button>
@@ -937,7 +933,7 @@ export function AdminDocumentsPage() {
                 disabled={
                   hardDeleteConfirmText !== "DELETE" || hardDeleteLoading
                 }
-                className="inline-flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {hardDeleteLoading ? (
                   <>

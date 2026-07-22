@@ -100,7 +100,7 @@ export function Reports({
                     <Card variant="content" className="rounded-[18px]">
                         <CardContent className="px-6 py-4">
                             <Tabs value={activeSection} onValueChange={(v: string) => setActiveSection(v as ReportSection)}>
-                                <TabsList className="mb-6 grid w-full grid-cols-2 p-1 md:grid-cols-4">
+                                <TabsList className="mb-6 w-full overflow-x-auto">
                                     {tabConfig.map(({ value, icon: Icon, label }) => (
                                         <TabsTrigger key={value} value={value} className="rounded-[14px] data-[state=active]:text-primary">
                                             <Icon className="mr-2 h-4 w-4" />

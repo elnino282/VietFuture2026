@@ -84,7 +84,7 @@ export function FarmDetailPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createPlotDialogOpen, setCreatePlotDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("info");
+  const [activeTab, setActiveTab] = useState("plots");
   const [seasonSearch, setSeasonSearch] = useState("");
   const [seasonStatusFilter, setSeasonStatusFilter] = useState<
     SeasonStatus | "all"
@@ -356,21 +356,18 @@ export function FarmDetailPage() {
     <div className="min-h-screen acm-main-content pb-20">
       <div className="container mx-auto py-6 px-4 max-w-7xl">
         <BackButton to="/farmer/farms" className="mb-4 w-fit" />
-        {/* Navigation Header Card */}
-        <div className="mb-6 rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm px-4 py-3 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-sm">
-              <a 
-                href="/farmer/farms" 
-                className="text-muted-foreground hover:text-foreground transition-colors font-medium"
-              >
-                {t('farmDetail.myFarms')}
-              </a>
-              <span className="text-muted-foreground/50">/</span>
-              <span className="text-foreground font-semibold">{farm.name}</span>
-            </nav>
-          </div>
+        {/* Navigation Header */}
+        <div className="mb-8">
+          <nav className="flex items-center gap-2 text-sm">
+            <a 
+              href="/farmer/farms" 
+              className="text-muted-foreground hover:text-foreground transition-colors font-medium"
+            >
+              {t('farmDetail.myFarms')}
+            </a>
+            <span className="text-muted-foreground/50">/</span>
+            <span className="text-foreground font-semibold">{farm.name}</span>
+          </nav>
         </div>
 
         {/* Farm Info Card */}
@@ -387,10 +384,7 @@ export function FarmDetailPage() {
 
         {/* Tabs for Related Entities */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6 w-full flex flex-wrap justify-start gap-2 h-auto">
-            <TabsTrigger value="info" className="flex-none px-3">
-              {t('farmDetail.tabs.overview')}
-            </TabsTrigger>
+          <TabsList className="mb-6 w-full overflow-x-auto">
             <TabsTrigger value="plots" className="flex-none px-3">
               {t('farmDetail.tabs.plots')}
               {plots.length > 0 && (
@@ -414,51 +408,6 @@ export function FarmDetailPage() {
               {t('farmDetail.tabs.incidents')}
             </TabsTrigger>
           </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="info" className="space-y-4">
-            <div className="bg-card rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold mb-4">{t('farmDetail.overview.title')}</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">{t('farmDetail.overview.farmName')}</p>
-                  <p className="text-base font-medium">{farm.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">{t('farmDetail.overview.owner')}</p>
-                  <p className="text-base font-medium">@{farm.ownerUsername}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">{t('farmDetail.overview.totalArea')}</p>
-                  <p className="text-base font-medium font-mono">
-                    {farm.area != null ? `${farm.area} ha` : t('farmDetail.overview.notSpecified')}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">{t('farmDetail.overview.location')}</p>
-                  <p className="text-base font-medium">
-                    {farm.wardName && farm.provinceName
-                      ? `${farm.wardName}, ${farm.provinceName}`
-                      : farm.provinceName || t('farmDetail.overview.notSpecified')}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">{t('farmDetail.overview.status')}</p>
-                  <div className="mt-1">
-                    <Badge variant={farm.active ? "default" : "secondary"}>
-                      {farm.active ? t('farmDetail.overview.active') : t('farmDetail.overview.inactive')}
-                    </Badge>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">{t('farmDetail.overview.totalPlots')}</p>
-                  <p className="text-base font-medium font-mono">
-                    {plots.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
 
           {/* Plots Tab */}
           <TabsContent value="plots">
@@ -520,70 +469,74 @@ export function FarmDetailPage() {
 
           {/* Seasons Tab */}
           <TabsContent value="seasons">
-            <div className="space-y-4">
+            <div className="space-y-6">
+
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <Sprout className="h-5 w-5 text-emerald-600" />
-                    <h3 className="text-lg font-semibold">
+                    <h3 className="text-2xl font-bold tracking-tight text-foreground">
                       {t('farmDetail.seasons.title', { name: farm.name })}
                     </h3>
                   </div>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground mt-1">
                     {t('farmDetail.seasons.subtitle')}
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-3">
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
                     onClick={() => refetchSeasons()}
                     disabled={isLoadingSeasons}
+                    className="text-muted-foreground"
                   >
+                    <RefreshCw className="w-4 h-4 mr-2" />
                     {t('farmDetail.seasons.refresh')}
                   </Button>
-                  <Button size="sm" onClick={() => navigate("/farmer/seasons")}>
+                  <Button onClick={() => navigate("/farmer/seasons")} className="shadow-sm">
                     {t('farmDetail.seasons.manageSeasons')}
                   </Button>
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-lg border border-gray-200 bg-card p-4">
-                  <p className="text-xs text-gray-500">{t('farmDetail.seasons.metrics.totalSeasons')}</p>
-                  <p className="text-2xl font-semibold">
+              <div className="flex flex-wrap lg:flex-nowrap gap-x-12 gap-y-8 py-6 my-2 border-y border-border/40">
+                <div className="flex-1 min-w-[140px]">
+                  <p className="text-sm font-medium text-muted-foreground mb-1.5">{t('farmDetail.seasons.metrics.totalSeasons')}</p>
+                  <p className="text-4xl font-light tracking-tight text-foreground">
                     {seasonSummary.total}
                   </p>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {t('farmDetail.seasons.metrics.activeCount', { count: seasonSummary.active })}
                   </p>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-card p-4">
-                  <p className="text-xs text-gray-500">{t('farmDetail.seasons.metrics.plannedVsCompleted')}</p>
-                  <p className="text-2xl font-semibold">
-                    {seasonSummary.planned} / {seasonSummary.completed}
+                <div className="w-px bg-border/60 hidden lg:block"></div>
+                <div className="flex-1 min-w-[140px]">
+                  <p className="text-sm font-medium text-muted-foreground mb-1.5">{t('farmDetail.seasons.metrics.plannedVsCompleted')}</p>
+                  <p className="text-4xl font-light tracking-tight text-foreground">
+                    {seasonSummary.planned} <span className="text-2xl text-muted-foreground font-normal">/ {seasonSummary.completed}</span>
                   </p>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {t('farmDetail.seasons.metrics.archivedOrCancelled', {
                       count: seasonSummary.cancelled + seasonSummary.archived,
                     })}
                   </p>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-card p-4">
-                  <p className="text-xs text-gray-500">{t('farmDetail.seasons.metrics.upcomingHarvest')}</p>
-                  <p className="text-2xl font-semibold">
+                <div className="w-px bg-border/60 hidden lg:block"></div>
+                <div className="flex-1 min-w-[140px]">
+                  <p className="text-sm font-medium text-muted-foreground mb-1.5">{t('farmDetail.seasons.metrics.upcomingHarvest')}</p>
+                  <p className="text-4xl font-light tracking-tight text-foreground">
                     {upcomingHarvestLabel}
                   </p>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {t('farmDetail.seasons.metrics.basedOnPlanned')}
                   </p>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-card p-4">
-                  <p className="text-xs text-gray-500">{t('farmDetail.seasons.metrics.expectedYield')}</p>
-                  <p className="text-2xl font-semibold font-mono">
+                <div className="w-px bg-border/60 hidden lg:block"></div>
+                <div className="flex-1 min-w-[140px]">
+                  <p className="text-sm font-medium text-muted-foreground mb-1.5">{t('farmDetail.seasons.metrics.expectedYield')}</p>
+                  <p className="text-4xl font-light tracking-tight text-emerald-600 font-mono">
                     {expectedYieldLabel}
                   </p>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {t('farmDetail.seasons.metrics.sumOfExpected')}
                   </p>
                 </div>

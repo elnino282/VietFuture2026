@@ -1,9 +1,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { sendAiChatMessage } from '@/services/aiChatService';
+import { sendAiChatMessage } from '@/entities/ai/api/aiChatService';
 import { useAiChatSession } from './useAiChatSession';
 
-vi.mock('@/services/aiChatService', () => ({
+vi.mock('@/entities/ai/api/aiChatService', () => ({
     sendAiChatMessage: vi.fn(),
 }));
 

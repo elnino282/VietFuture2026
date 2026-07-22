@@ -8,7 +8,7 @@ import {
     formatMoney,
     getWeightUnitLabel,
 } from '@/shared/lib';
-import type { CostReport } from '@/services/api.admin';
+import type { CostReport } from '@/entities/user/api/api.admin';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface CostAnalysisChartProps {

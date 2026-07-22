@@ -2,7 +2,7 @@ import { useI18n } from "@/hooks/useI18n";
 import {
   adminFarmApi,
   type AdminPlotCreateRequest,
-} from "@/services/api.admin";
+} from "@/entities/user/api/api.admin";
 import { BackButton } from "@/shared/ui/back-button";
 import { useVietnameseAddress } from "@/shared/ui/address-selector";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

@@ -275,7 +275,7 @@ export function AdminIncidentsPage() {
                 updateParams({ farmId: value === "all" ? undefined : value })
               }
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[220px]">
+              <SelectTrigger className="h-9 w-full sm:w-[220px]">
                 <SelectValue placeholder={t("admin.alerts.farms.all")} />
               </SelectTrigger>
               <SelectContent>
@@ -292,7 +292,7 @@ export function AdminIncidentsPage() {
               value={status}
               onValueChange={(value) => updateParams({ status: value })}
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[160px]">
+              <SelectTrigger className="h-9 w-full sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -308,7 +308,7 @@ export function AdminIncidentsPage() {
               value={severity}
               onValueChange={(value) => updateParams({ severity: value })}
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[160px]">
+              <SelectTrigger className="h-9 w-full sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -324,7 +324,7 @@ export function AdminIncidentsPage() {
               value={sort}
               onValueChange={(value) => updateParams({ sort: value })}
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[140px]">
+              <SelectTrigger className="h-9 w-full sm:w-[140px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -339,7 +339,7 @@ export function AdminIncidentsPage() {
             <div className="relative w-full sm:w-[260px]">
               <Input
                 placeholder={t("admin.incidentsPage.searchPlaceholder")}
-                className="h-9 rounded-[14px]"
+                className="h-9"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
               />
@@ -365,6 +365,7 @@ export function AdminIncidentsPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="min-h-[44px]"
                   onClick={() => incidentsQuery.refetch()}
                 >
                   {t("common.retry")}
@@ -390,7 +391,7 @@ export function AdminIncidentsPage() {
                     </TableHeader>
                     <TableBody>
                       {incidentsQuery.data.items.map((incident) => (
-                        <TableRow key={incident.incidentId}>
+                        <TableRow key={incident.incidentId} className="hover:bg-muted/50 transition-colors">
                           <TableCell className="font-medium">
                             {incident.incidentType || t("admin.incidentsPage.fallbackIncident")}
                           </TableCell>
@@ -411,7 +412,7 @@ export function AdminIncidentsPage() {
                                   type="button"
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 rounded-[14px]"
+                                  className="min-h-[44px] min-w-[44px]"
                                   aria-label={t("admin.farmsPlots.actionsFor", { name: incident.incidentType || t("admin.incidentsPage.fallbackIncident") })}
                                 >
                                   <MoreVertical className="h-4 w-4" />
@@ -440,6 +441,7 @@ export function AdminIncidentsPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="min-h-[44px]"
                         disabled={page === 0}
                         onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
                       >
@@ -448,6 +450,7 @@ export function AdminIncidentsPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="min-h-[44px]"
                         disabled={
                           page >= (incidentsQuery.data.totalPages ?? 1) - 1
                         }
@@ -470,11 +473,11 @@ export function AdminIncidentsPage() {
 
       {detailOpen && selectedIncident && (
         <div
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm cursor-pointer"
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm cursor-pointer animate-in fade-in duration-200"
           onClick={() => setDetailOpen(false)}
         >
           <div
-            className="fixed right-0 top-0 h-full w-full max-w-xl bg-card border-l border-border shadow-lg overflow-auto cursor-default"
+            className="fixed right-0 top-0 h-full w-full max-w-xl bg-card border-l border-border shadow-2xl overflow-auto cursor-default animate-in slide-in-from-right duration-300"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="p-6 space-y-6">
@@ -488,6 +491,7 @@ export function AdminIncidentsPage() {
                 <Button
                   variant="ghost"
                   size="icon"
+                  className="min-h-[44px] min-w-[44px]"
                   onClick={() => setDetailOpen(false)}
                   aria-label={t("common.close")}
                 >
@@ -536,7 +540,7 @@ export function AdminIncidentsPage() {
                     })
                   }
                 >
-                  <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[200px]">
+                  <SelectTrigger className="h-9 w-full sm:w-[200px]">
                     <SelectValue placeholder={t("admin.incidentsPage.detail.selectStatus")} />
                   </SelectTrigger>
                   <SelectContent>

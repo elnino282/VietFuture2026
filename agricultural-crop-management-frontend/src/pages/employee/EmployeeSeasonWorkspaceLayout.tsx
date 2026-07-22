@@ -19,7 +19,7 @@ const pageShellClassName = "acm-main-content mx-auto max-w-[1920px] p-4 md:p-6";
 
 const tabClassName = (isActive: boolean) =>
   [
-    "inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
+    "min-h-[44px] inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
     isActive
       ? "border-primary bg-primary text-primary-foreground"
       : "border-border bg-card text-foreground hover:bg-muted",
@@ -97,7 +97,7 @@ export function EmployeeSeasonWorkspaceLayout() {
               </div>
 
               <Select value={String(selectedSeasonId)} onValueChange={handleSeasonChange}>
-                <SelectTrigger className="w-full lg:w-[280px]">
+                <SelectTrigger className="min-h-[44px] w-full lg:w-[280px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

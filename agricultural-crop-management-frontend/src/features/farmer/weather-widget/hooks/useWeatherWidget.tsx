@@ -130,11 +130,10 @@ export function useWeatherWidget(
         } catch (err) {
             console.error("Error fetching weather data:", err);
             clearWeatherData();
-            const message =
-                err instanceof Error ? err.message : "Failed to fetch weather data";
+            const friendlyMessage = "Không thể tải dữ liệu thời tiết lúc này. Đang thử lại...";
             setUiState("error");
-            setStatusMessage(message);
-            setError(message);
+            setStatusMessage(friendlyMessage);
+            setError(friendlyMessage);
         } finally {
             setIsLoading(false);
         }

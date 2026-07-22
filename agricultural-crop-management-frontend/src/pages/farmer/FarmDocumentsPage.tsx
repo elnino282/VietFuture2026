@@ -381,7 +381,7 @@ export default function FarmDocumentsPage() {
                   value={selectedFarmId?.toString() || ""}
                   onValueChange={(val) => setSelectedFarmId(Number(val))}
                 >
-                  <SelectTrigger className="w-[180px] border-none shadow-none focus:ring-0 focus:ring-offset-0 bg-transparent text-sm font-semibold text-slate-800">
+                  <SelectTrigger className="w-[180px] border-none shadow-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ring-offset-background bg-transparent text-sm font-semibold text-slate-800">
                     <SelectValue placeholder="Chọn nông trại" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border border-slate-100 shadow-md">
@@ -403,7 +403,7 @@ export default function FarmDocumentsPage() {
                   }
                   setIsUploadModalOpen(true);
                 }}
-                className="bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl px-5 py-6 font-semibold shadow-md shadow-emerald-700/10 flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02]"
+                className="min-h-[44px] bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl px-5 py-6 font-semibold shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background flex items-center gap-2"
               >
                 <Plus className="w-5 h-5" />
                 Thêm Tài Liệu
@@ -471,7 +471,7 @@ export default function FarmDocumentsPage() {
               <Button
                 variant={selectedTypeFilter === "ALL" ? "default" : "outline"}
                 onClick={() => setSelectedTypeFilter("ALL")}
-                className={`rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
+                className={`min-h-[44px] rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background ${
                   selectedTypeFilter === "ALL"
                     ? "bg-emerald-800 text-white shadow-sm"
                     : "bg-white text-slate-600 hover:bg-slate-50 border-slate-200"
@@ -484,7 +484,7 @@ export default function FarmDocumentsPage() {
                   key={type.value}
                   variant={selectedTypeFilter === type.value ? "default" : "outline"}
                   onClick={() => setSelectedTypeFilter(type.value)}
-                  className={`rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap transition-all duration-300 ${
+                  className={`min-h-[44px] rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background ${
                     selectedTypeFilter === type.value
                       ? "bg-emerald-800 text-white shadow-sm"
                       : "bg-white text-slate-600 hover:bg-slate-50 border-slate-200"
@@ -503,7 +503,7 @@ export default function FarmDocumentsPage() {
                 placeholder="Tìm kiếm tài liệu..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border-slate-200 focus:border-emerald-500 rounded-xl text-sm font-medium shadow-none focus:ring-0 focus-visible:ring-0"
+                className="pl-10 pr-4 py-2 w-full border-slate-200 focus:border-emerald-500 rounded-xl text-sm font-medium shadow-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
           </div>
@@ -578,7 +578,7 @@ export default function FarmDocumentsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-lg h-9 w-9 p-0 border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200"
+                            className="min-h-[44px] min-w-[44px] rounded-lg h-9 w-9 p-0 border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                             onClick={() => window.open(doc.fileUrl, "_blank")}
                             title="Xem chi tiết"
                           >
@@ -587,7 +587,7 @@ export default function FarmDocumentsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-lg h-9 w-9 p-0 border-slate-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200"
+                            className="min-h-[44px] min-w-[44px] rounded-lg h-9 w-9 p-0 border-slate-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
                             onClick={() => handleDelete(doc.id)}
                             title="Xóa tài liệu"
                           >
@@ -626,7 +626,7 @@ export default function FarmDocumentsPage() {
                 placeholder="Nhập tên tài liệu (Ví dụ: Giấy phân tích mẫu nước Q3-2026)"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="border-slate-200 focus:border-emerald-500 rounded-xl"
+                className="border-slate-200 focus:border-emerald-500 rounded-xl focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background"
                 required
               />
             </div>
@@ -635,7 +635,7 @@ export default function FarmDocumentsPage() {
               <div className="space-y-2">
                 <Label htmlFor="documentType" className="font-bold text-slate-700 text-sm">Phân loại VietGAP <span className="text-rose-500">*</span></Label>
                 <Select value={documentType} onValueChange={setDocumentType}>
-                  <SelectTrigger id="documentType" className="border-slate-200 focus:border-emerald-500 rounded-xl">
+                  <SelectTrigger id="documentType" className="border-slate-200 focus:border-emerald-500 rounded-xl focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border border-slate-100">
@@ -660,7 +660,7 @@ export default function FarmDocumentsPage() {
                   />
                   <Label
                     htmlFor="file-upload"
-                    className="flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/20 rounded-xl py-2 px-3 cursor-pointer text-xs font-bold text-slate-700 transition-all duration-300"
+                    className="flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/20 rounded-xl py-2 px-3 cursor-pointer text-xs font-bold text-slate-700 transition-all duration-300 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2 ring-offset-background"
                   >
                     {uploadingFile ? (
                       <>
@@ -693,7 +693,7 @@ export default function FarmDocumentsPage() {
                     type="date"
                     value={issuedDate}
                     onChange={(e) => setIssuedDate(e.target.value)}
-                    className="border-slate-200 focus:border-emerald-500 rounded-xl pl-10"
+                    className="border-slate-200 focus:border-emerald-500 rounded-xl pl-10 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background"
                   />
                 </div>
               </div>
@@ -707,7 +707,7 @@ export default function FarmDocumentsPage() {
                     type="date"
                     value={expiryDate}
                     onChange={(e) => setExpiryDate(e.target.value)}
-                    className="border-slate-200 focus:border-emerald-500 rounded-xl pl-10"
+                    className="border-slate-200 focus:border-emerald-500 rounded-xl pl-10 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background"
                   />
                 </div>
               </div>
@@ -720,7 +720,7 @@ export default function FarmDocumentsPage() {
                 placeholder="Ghi chú thêm về tài liệu (ví dụ: Số hiệu tài liệu, nhà cung cấp, hoặc ghi chú kiểm định)..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="border-slate-200 focus:border-emerald-500 rounded-xl min-h-[80px]"
+                className="border-slate-200 focus:border-emerald-500 rounded-xl min-h-[80px] focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
 
@@ -732,14 +732,14 @@ export default function FarmDocumentsPage() {
                   resetForm();
                   setIsUploadModalOpen(false);
                 }}
-                className="rounded-xl border-slate-200 font-semibold"
+                className="min-h-[44px] rounded-xl border-slate-200 font-semibold"
               >
                 Hủy bỏ
               </Button>
               <Button
                 type="submit"
                 disabled={createDocumentMutation.isPending || uploadingFile || !uploadedUrl}
-                className="bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-semibold shadow-md shadow-emerald-700/10 px-5"
+                className="min-h-[44px] bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-semibold shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background px-5"
               >
                 {createDocumentMutation.isPending ? "Đang lưu..." : "Lưu tài liệu"}
               </Button>

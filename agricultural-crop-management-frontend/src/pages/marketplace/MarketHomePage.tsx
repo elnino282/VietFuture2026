@@ -55,122 +55,149 @@ export function MarketHomePage() {
   const [card3Ref, card3InView] = useInView<HTMLDivElement>();
 
   return (
-    <div>
-      <section
-        className="fb-marketplace fb-hero"
-        style={{
-          backgroundImage:
-            'linear-gradient(90deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.78) 42%, rgba(255, 255, 255, 0.3) 100%), url("/background.png")',
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-        }}
-      >
-        <div className="max-w-[1800px] mx-auto px-6">
-          <div className="fb-hero-grid">
-            <div className={cn("fb-hero-left fb-stagger", mounted && "fb-mounted")}>
-              <span className="fb-chip">
-                <Leaf size={14} aria-hidden="true" />
-                Nông sản minh bạch
-              </span>
+    <div className="flex min-h-screen flex-col bg-background">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-emerald-950 px-6 py-24 sm:py-32 lg:px-8">
+        <div className="absolute inset-0 -z-10 h-full w-full">
+          <img
+            src="/background.png"
+            alt=""
+            className="h-full w-full object-cover opacity-[0.15]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950 via-emerald-950/90 to-emerald-900/40" />
+        </div>
 
-              <h1 className="fb-h1">
+        <div className="mx-auto max-w-[1800px]">
+          <div className="grid grid-cols-1 gap-x-12 gap-y-16 lg:grid-cols-2 lg:items-center">
+            <div
+              className={cn(
+                "max-w-2xl transition-all duration-1000 ease-out",
+                mounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
+              )}
+            >
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-300">
+                <Leaf size={16} aria-hidden="true" />
+                Nông sản minh bạch
+              </div>
+
+              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
                 Nông Sản Sạch,
                 <br />
-                <span className="fb-h1-gradient">Rõ Nguồn Gốc</span>
+                Rõ Nguồn Gốc
               </h1>
 
-              <p className="fb-subtitle">
+              <p className="mt-6 text-lg leading-8 text-emerald-100/90">
                 Khám phá nông sản tươi ngon được kết nối trực tiếp với nông trại, mùa vụ và lô thu hoạch thật trong hệ thống hiện tại.
               </p>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link to="/marketplace/products" className="fb-cta-primary">
+              <div className="mt-10 flex items-center gap-x-6">
+                <Link
+                  to="/marketplace/products"
+                  className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
+                >
                   Mua sắm ngay
-                  <ArrowRight size={18} aria-hidden="true" />
+                  <ArrowRight size={18} className="ml-2" aria-hidden="true" />
                 </Link>
               </div>
 
-              <ul className="fb-trust-strip" aria-label="Cam kết">
-                <li>✓ 500+ nông trại</li>
-                <li>✓ Truy xuất minh bạch</li>
-                <li>✓ Giao toàn quốc</li>
+              <ul className="mt-10 flex flex-wrap gap-6 text-sm font-medium text-emerald-200/80">
+                <li className="flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-emerald-400" aria-hidden="true" />
+                  500+ nông trại
+                </li>
+                <li className="flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-emerald-400" aria-hidden="true" />
+                  Truy xuất minh bạch
+                </li>
+                <li className="flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-emerald-400" aria-hidden="true" />
+                  Giao toàn quốc
+                </li>
               </ul>
             </div>
 
-            <div className="fb-hero-right">
-              <div className="fb-hero-image-wrap">
-                {heroImage ? (
-                  <>
-                    <img
-                      src={heroImage}
-                      alt="Nông trại xanh tươi"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="fb-hero-overlay" aria-hidden="true" />
-                    <div className="absolute bottom-6 left-3 right-6 z-10 text-white">
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className="fb-frosted-pill">Có truy xuất</span>
-                        <span className="fb-frosted-pill">Kết nối dữ liệu thật</span>
-                      </div>
-                      <p className="text-lg font-medium text-white/90">
-                        Thu hoạch minh bạch, giao dịch trực tiếp từ nông trại địa phương
-                      </p>
+            <div className="relative lg:ml-auto lg:w-full lg:max-w-xl">
+              {heroImage ? (
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10">
+                  <img
+                    src={heroImage}
+                    alt="Nông trại xanh tươi"
+                    className="h-full w-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur-md">
+                        Có truy xuất
+                      </span>
+                      <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur-md">
+                        Kết nối dữ liệu thật
+                      </span>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex h-full min-h-[320px] items-center justify-center bg-emerald-50 text-sm font-medium text-primary">
-                    Dữ liệu hình ảnh sẽ hiển thị khi có sản phẩm hoặc nông trại công khai.
+                    <p className="text-base font-medium text-white/95 sm:text-lg">
+                      Thu hoạch minh bạch, giao dịch trực tiếp từ nông trại địa phương
+                    </p>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-emerald-900/50 p-8 text-center text-sm font-medium text-emerald-200/60 ring-1 ring-white/10">
+                  Dữ liệu hình ảnh sẽ hiển thị khi có sản phẩm hoặc nông trại công khai.
+                </div>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="fb-marketplace fb-features-section">
-        <div className="max-w-[1800px] mx-auto px-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      {/* Features Section */}
+      <section className="bg-background py-24 sm:py-32">
+        <div className="mx-auto max-w-[1800px] px-6">
+          <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
             <div
               ref={card1Ref}
-              className={cn("fb-feature-card fb-reveal", card1InView && "fb-visible")}
+              className={cn(
+                "transition-all duration-700 ease-out",
+                card1InView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
+              )}
             >
-              <div className="fb-icon-circle">
-                <ShieldCheck size={28} aria-hidden="true" />
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-500/20">
+                <ShieldCheck size={24} aria-hidden="true" />
               </div>
-              <h3 className="fb-card-title">Truy xuất rõ ràng</h3>
-              <p className="fb-card-body">
+              <h3 className="mb-3 text-lg font-semibold text-foreground">Truy xuất rõ ràng</h3>
+              <p className="text-muted-foreground">
                 Xem nông trại, mùa vụ và lô thu hoạch ngay trên từng sản phẩm.
               </p>
             </div>
+            
             <div
               ref={card2Ref}
               className={cn(
-                "fb-feature-card fb-reveal fb-reveal--delay-1",
-                card2InView && "fb-visible",
+                "transition-all duration-700 ease-out delay-150",
+                card2InView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
               )}
             >
-              <div className="fb-icon-circle">
-                <Leaf size={28} aria-hidden="true" />
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-500/20">
+                <Leaf size={24} aria-hidden="true" />
               </div>
-              <h3 className="fb-card-title">Sản phẩm minh bạch</h3>
-              <p className="fb-card-body">
+              <h3 className="mb-3 text-lg font-semibold text-foreground">Sản phẩm minh bạch</h3>
+              <p className="text-muted-foreground">
                 Người bán chỉ đăng được sản phẩm gắn với tồn kho thu hoạch hiện có.
               </p>
             </div>
+
             <div
               ref={card3Ref}
               className={cn(
-                "fb-feature-card fb-reveal fb-reveal--delay-2",
-                card3InView && "fb-visible",
+                "transition-all duration-700 ease-out delay-300",
+                card3InView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
               )}
             >
-              <div className="fb-icon-circle">
-                <Truck size={28} aria-hidden="true" />
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-500/20">
+                <Truck size={24} aria-hidden="true" />
               </div>
-              <h3 className="fb-card-title">Đặt mua trực tiếp</h3>
-              <p className="fb-card-body">
+              <h3 className="mb-3 text-lg font-semibold text-foreground">Đặt mua trực tiếp</h3>
+              <p className="text-muted-foreground">
                 Giữ trải nghiệm thương mại điện tử quen thuộc với giỏ hàng, checkout và đơn hàng thật.
               </p>
             </div>
@@ -178,58 +205,70 @@ export function MarketHomePage() {
         </div>
       </section>
 
-      <section className="bg-muted/50 py-16">
-        <div className="max-w-[1800px] mx-auto px-6">
-          <div className="mb-8 flex items-end justify-between">
+      {/* Featured Products */}
+      <section className="bg-muted/30 py-24 sm:py-32">
+        <div className="mx-auto max-w-[1800px] px-6">
+          <div className="mb-12 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <h2 className="text-3xl font-bold text-foreground">Sản phẩm nổi bật</h2>
-              <p className="mt-2 text-muted-foreground">Nông sản mới lên kệ từ các lô thu hoạch đã được liên kết</p>
+              <h2 className="text-3xl font-bold tracking-tight text-foreground">Sản phẩm nổi bật</h2>
+              <p className="mt-2 text-muted-foreground">
+                Nông sản mới lên kệ từ các lô thu hoạch đã được liên kết
+              </p>
             </div>
-            <Link to="/marketplace/products" className="flex items-center gap-1 font-medium text-primary hover:underline">
+            <Link
+              to="/marketplace/products"
+              className="inline-flex items-center gap-1.5 font-medium text-emerald-600 hover:text-emerald-700 hover:underline"
+            >
               Xem tất cả <ArrowRight size={16} />
             </Link>
           </div>
 
           {productsQuery.isLoading ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }, (_, index) => <ProductCardSkeleton key={index} />)}
             </div>
           ) : productsQuery.isError ? (
-            <div className="rounded-xl border border-red-200 bg-card p-8 text-center text-sm text-destructive">
+            <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-8 text-center text-sm text-destructive">
               Không thể tải danh sách sản phẩm nổi bật.
             </div>
           ) : featuredProducts.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-              Chưa có sản phẩm công khai. Vui lòng quay lại sau.
+            <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+              <p className="text-sm text-muted-foreground">Chưa có sản phẩm công khai. Vui lòng quay lại sau.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {featuredProducts.map((product) => (
                 <Link key={product.id} to={`/marketplace/products/${product.slug}`}>
-                  <Card className="group h-full overflow-hidden transition-shadow hover:shadow-md">
+                  <Card className="group h-full overflow-hidden border-border/50 shadow-sm transition-all hover:border-emerald-500/30 hover:shadow-md">
                     <div className="relative aspect-square overflow-hidden bg-muted">
                       <img
                         src={product.imageUrl}
                         alt={product.name}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="h-full w-full object-cover transition-opacity duration-500 group-hover:opacity-90"
                         referrerPolicy="no-referrer"
                       />
                       {product.traceable ? (
-                        <span className="absolute left-2 top-2 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white">
+                        <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-emerald-500/95 px-2.5 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-sm">
                           Có truy xuất
                         </span>
                       ) : null}
                     </div>
-                    <CardContent className="p-4">
-                      <div className="mb-1 text-xs text-muted-foreground">{product.category}</div>
-                      <h3 className="mb-2 line-clamp-2 h-10 font-semibold text-foreground">{product.name}</h3>
-                      <div className="mt-4 flex items-center justify-between">
-                        <span className="text-lg font-bold text-primary">
-                          {formatVnd(product.price)}
-                          <span className="ml-1 text-sm font-normal text-muted-foreground">/{product.unit}</span>
-                        </span>
-                        <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Star size={14} className="fill-current text-yellow-500" />
+                    <CardContent className="p-5">
+                      <div className="mb-2 text-xs font-medium text-muted-foreground">
+                        {product.category}
+                      </div>
+                      <h3 className="mb-3 line-clamp-2 h-11 font-semibold leading-snug text-foreground transition-colors group-hover:text-emerald-600">
+                        {product.name}
+                      </h3>
+                      <div className="mt-auto flex items-end justify-between">
+                        <div>
+                          <span className="text-lg font-bold text-emerald-600">
+                            {formatVnd(product.price)}
+                          </span>
+                          <span className="ml-1 text-sm text-muted-foreground">/{product.unit}</span>
+                        </div>
+                        <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                          <Star size={14} className="fill-yellow-400 text-yellow-400" />
                           {product.ratingAverage ? product.ratingAverage.toFixed(1) : "Mới"}
                         </span>
                       </div>
@@ -242,26 +281,31 @@ export function MarketHomePage() {
         </div>
       </section>
 
-      <section className="bg-card py-16">
-        <div className="max-w-[1800px] mx-auto px-6">
-          <h2 className="mb-8 text-center text-3xl font-bold text-foreground">Nông trại đối tác</h2>
+      {/* Partner Farms */}
+      <section className="bg-background py-24 sm:py-32">
+        <div className="mx-auto max-w-[1800px] px-6">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">Nông trại đối tác</h2>
+            <p className="mt-4 text-muted-foreground">Các hợp tác xã và nông trại tham gia nền tảng</p>
+          </div>
+
           {farmsQuery.isLoading ? (
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
               {Array.from({ length: 2 }, (_, index) => <FarmCardSkeleton key={index} />)}
             </div>
           ) : farmsQuery.isError ? (
-            <div className="rounded-xl border border-red-200 bg-card p-8 text-center text-sm text-destructive">
+            <div className="mx-auto max-w-2xl rounded-2xl border border-destructive/20 bg-destructive/5 p-8 text-center text-sm text-destructive">
               Không thể tải danh sách nông trại.
             </div>
           ) : featuredFarms.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-              Chưa có nông trại công khai trên marketplace.
+            <div className="mx-auto max-w-2xl rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+              <p className="text-sm text-muted-foreground">Chưa có nông trại công khai trên marketplace.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
               {featuredFarms.map((farm) => (
-                <Card key={farm.id} className="overflow-hidden sm:flex">
-                  <div className="aspect-video w-full sm:w-1/3 sm:aspect-square">
+                <Card key={farm.id} className="overflow-hidden border-border/50 shadow-sm transition-shadow hover:shadow-md sm:flex">
+                  <div className="aspect-video w-full shrink-0 sm:w-2/5 sm:aspect-auto">
                     {farm.coverImageUrl ? (
                       <img
                         src={farm.coverImageUrl}
@@ -270,20 +314,20 @@ export function MarketHomePage() {
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center bg-muted text-xs text-muted-foreground/60">
-                        Chưa có ảnh
+                      <div className="flex h-full items-center justify-center bg-muted">
+                        <span className="text-sm text-muted-foreground">Chưa có ảnh</span>
                       </div>
                     )}
                   </div>
-                  <CardContent className="flex flex-1 flex-col justify-center p-6">
-                    <h3 className="mb-2 text-xl font-bold">{farm.name}</h3>
-                    <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
+                  <CardContent className="flex flex-1 flex-col justify-center p-6 sm:p-8">
+                    <h3 className="mb-2 text-xl font-bold tracking-tight text-foreground">{farm.name}</h3>
+                    <p className="mb-6 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                       Nông trại tham gia hệ thống với {farm.productCount} sản phẩm đang được công khai trên sàn.
                     </p>
-                    <div className="mb-4 text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">Khu vực:</span> {farm.region ?? "Đang cập nhật"}
+                    <div className="mt-auto flex items-center text-sm text-muted-foreground">
+                      <span className="mr-2 font-medium text-foreground">Khu vực:</span> 
+                      {farm.region ?? "Đang cập nhật"}
                     </div>
-
                   </CardContent>
                 </Card>
               ))}

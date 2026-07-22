@@ -64,7 +64,9 @@ export function KanbanColumn({
             />
           ))}
           {tasks.length === 0 && (
-            <div className="text-center py-8 text-sm text-muted-foreground">{t("tasks.empty.title")}</div>
+            <div className="flex flex-col items-center justify-center py-8 px-4 border-2 border-dashed border-border rounded-xl bg-muted/10 text-center m-1">
+              <span className="text-sm font-medium text-muted-foreground">Kéo thả công việc vào đây</span>
+            </div>
           )}
         </div>
       </ScrollArea>

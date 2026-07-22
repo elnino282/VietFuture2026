@@ -24,7 +24,7 @@ import { useSeasons } from "@/entities/season";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { seasonsApi } from "@/api/seasonsApi";
+import { seasonsApi } from "@/entities/season/api/seasonsApi";
 
 export function HarvestManagement() {
   const { t } = useI18n();

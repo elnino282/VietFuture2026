@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { sendAiChatMessage, type AiChatSource } from '@/services/aiChatService';
+import { sendAiChatMessage, type AiChatSource } from '@/entities/ai/api/aiChatService';
 import type { AiChatMessage, AiChatRole } from './useAiChatSession';
 
 type BuyerAiChatSessionOptions = {

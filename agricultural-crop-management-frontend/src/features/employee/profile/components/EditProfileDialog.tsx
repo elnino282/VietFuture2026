@@ -161,7 +161,7 @@ export function EditProfileDialog({
                     <FormItem>
                       <FormLabel>{t("profile.editDialog.fullName")}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t("profile.editDialog.fullNamePlaceholder")} {...field} />
+                        <Input className="min-h-[44px]" placeholder={t("profile.editDialog.fullNamePlaceholder")} {...field} />
                       </FormControl>
                       {renderFieldError(fieldState.error?.message)}
                     </FormItem>
@@ -175,7 +175,7 @@ export function EditProfileDialog({
                     <FormItem>
                       <FormLabel>{t("profile.editDialog.phone")}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t("profile.editDialog.phonePlaceholder")} {...field} />
+                        <Input className="min-h-[44px]" placeholder={t("profile.editDialog.phonePlaceholder")} {...field} />
                       </FormControl>
                       {renderFieldError(fieldState.error?.message)}
                     </FormItem>
@@ -219,6 +219,7 @@ export function EditProfileDialog({
                 <Button
                   type="button"
                   variant="outline"
+                  className="min-h-[44px]"
                   onClick={handleClose}
                   disabled={isSaving}
                 >
@@ -227,7 +228,7 @@ export function EditProfileDialog({
                 <Button
                   type="submit"
                   disabled={isSaving}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="min-h-[44px] bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {isSaving && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -259,7 +260,7 @@ export function EditProfileDialog({
                 setShowSuccessDialog(false);
                 window.location.reload();
               }}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              className="min-h-[44px] bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {t("common.ok")}
             </AlertDialogAction>

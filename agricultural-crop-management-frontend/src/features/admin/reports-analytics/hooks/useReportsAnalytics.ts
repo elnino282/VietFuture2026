@@ -18,7 +18,7 @@ import {
     type TaskPerformanceReport,
     type InventoryOnHandReport,
     type IncidentStatisticsReport,
-} from '@/services/api.admin';
+} from '@/entities/user/api/api.admin';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 export const useReportsAnalytics = () => {

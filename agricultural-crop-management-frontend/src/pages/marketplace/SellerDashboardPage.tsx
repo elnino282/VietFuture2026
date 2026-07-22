@@ -3,13 +3,14 @@ import {
   Package,
   Plus,
   ShoppingBag,
+  Sprout,
   Store,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 // eslint-disable-next-line no-restricted-imports
 import { useI18n } from "@/hooks/useI18n";
 import type { MarketplaceStatsUnavailableReason } from "@/shared/api";
-import { AsyncState, Button, Card, CardContent, CardHeader, CardTitle, PageContainer } from "@/shared/ui";
+import { AsyncState, Button, Card, CardContent, PageContainer } from "@/shared/ui";
 import { useMarketplaceFarmerDashboard, useMarketplaceFarmerProducts } from "@/features/marketplace/hooks";
 import { SellerMarketplaceTabs } from "@/features/marketplace/layout";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
@@ -23,25 +24,46 @@ function MetricCard({
   value,
   tone,
   helperText,
+  layout = "editorial-stat",
 }: {
   icon: typeof DollarSign;
   label: string;
   value: string | number;
   tone: string;
   helperText?: string;
+  layout?: "editorial-hero" | "editorial-stat";
 }) {
+  if (layout === "editorial-hero") {
+    return (
+      <Card className="group relative overflow-hidden border border-primary/20 bg-primary/5 shadow-sm transition-colors duration-300 hover:bg-primary/10">
+        <CardContent className="relative z-10 flex h-full min-h-[200px] flex-col justify-between p-8">
+          <div className="flex items-center gap-2">
+            <Icon size={20} className="text-primary" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+          </div>
+          <div className="mt-8 animate-in slide-in-from-bottom-2 fade-in duration-700 delay-150 fill-mode-both">
+            <p className="font-display text-4xl font-semibold leading-none tracking-tight text-foreground md:text-5xl">
+              {value}
+            </p>
+            {helperText ? <p className="mt-3 text-sm font-medium text-muted-foreground">{helperText}</p> : null}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="rounded-lg border-border shadow-sm">
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className={`rounded-lg p-3 ${tone}`}>
-          <Icon size={21} />
+    <Card className="group flex h-full flex-col justify-between overflow-hidden border border-border/50 bg-card shadow-sm transition-colors duration-300 hover:bg-muted/30">
+      <CardContent className="flex h-full flex-col justify-between p-8">
+        <div className="mb-6 flex items-center gap-2 text-muted-foreground">
+          <Icon size={18} className={tone} />
+          <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="mt-1 text-xl font-bold text-foreground md:text-2xl">{value}</p>
-          {helperText ? (
-            <p className="mt-1 text-xs text-muted-foreground">{helperText}</p>
-          ) : null}
+          <p className="font-display text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+            {value}
+          </p>
+          {helperText ? <p className="mt-2 text-sm text-muted-foreground">{helperText}</p> : null}
         </div>
       </CardContent>
     </Card>
@@ -114,30 +136,34 @@ export function SellerDashboardPage() {
 
 
           {!hasProducts ? (
-            <Card className="rounded-lg border-dashed border-border">
-              <CardContent className="space-y-4 p-8 text-center">
-                <h2 className="text-xl font-semibold text-foreground">
-                  {t("marketplaceSeller.dashboard.emptyProducts.title", "No marketplace product yet")}
-                </h2>
-                <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
-                  {t(
-                    "marketplaceSeller.dashboard.emptyProducts.description",
-                    "Add your first product listing to unlock order and revenue metrics on this dashboard.",
-                  )}
-                </p>
-                <div className="flex flex-wrap justify-center gap-3">
-                  <Button onClick={() => navigate("/farmer/marketplace-products/new")}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t("marketplaceSeller.dashboard.emptyProducts.actions.createFirst", "Create first product")}
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link to="/farmer/marketplace-products">
-                      {t("marketplaceSeller.dashboard.emptyProducts.actions.goToListings", "Go to listings")}
-                    </Link>
+            <Card className="overflow-hidden border border-dashed border-border bg-muted/30 shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center space-y-6 p-12 text-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-info/10 text-info ring-1 ring-info/20">
+                  <Sprout size={40} strokeWidth={1.5} />
+                </div>
+                <div className="max-w-md space-y-2">
+                  <h2 className="font-display text-2xl font-semibold text-foreground">
+                    {t("marketplaceSeller.dashboard.emptyProducts.title", "No products yet")}
+                  </h2>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {t(
+                      "marketplaceSeller.dashboard.emptyProducts.description",
+                      "Start your selling journey by publishing your first agricultural product. Once you have products, revenue and order metrics will activate.",
+                    )}
+                  </p>
+                </div>
+                <div className="flex flex-wrap justify-center gap-4 pt-2">
+                  <Button 
+                    onClick={() => navigate("/farmer/marketplace-products/new")} 
+                    size="lg" 
+                    className="rounded-full shadow-sm transition-all duration-200 hover:scale-[1.02] hover:bg-primary/90 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                  >
+                    <Plus className="mr-2 h-5 w-5" />
+                    {t("marketplaceSeller.dashboard.emptyProducts.actions.createFirst", "Add first product")}
                   </Button>
                 </div>
                 {unavailableReasons.length > 0 ? (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="mt-5 text-xs font-medium text-muted-foreground">
                     {unavailableReasons.map((reason) => unavailableReasonLabel(reason, t)).join(" ")}
                   </p>
                 ) : null}
@@ -146,19 +172,24 @@ export function SellerDashboardPage() {
           ) : null}
 
           {hasProducts && !hasOrders ? (
-            <Card className="rounded-lg border-dashed border-border">
-              <CardContent className="space-y-3 p-8 text-center">
-                <h2 className="text-xl font-semibold text-foreground">
-                  {t("marketplaceSeller.dashboard.noOrders.title", "Products are live, but no orders yet")}
-                </h2>
-                <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
-                  {t(
-                    "marketplaceSeller.dashboard.noOrders.description",
-                    "Keep listings updated and in stock. Buyer orders will appear here as soon as they are placed.",
-                  )}
-                </p>
+            <Card className="overflow-hidden border border-dashed border-border bg-muted/30 shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center space-y-6 p-12 text-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-warning/20 text-warning-foreground ring-1 ring-warning/30">
+                  <ShoppingBag size={40} strokeWidth={1.5} />
+                </div>
+                <div className="max-w-md space-y-2">
+                  <h2 className="font-display text-2xl font-semibold text-foreground">
+                    {t("marketplaceSeller.dashboard.noOrders.title", "No orders yet")}
+                  </h2>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {t(
+                      "marketplaceSeller.dashboard.noOrders.description",
+                      "Your products are ready on the market! Keep your inventory up to date. New orders will appear here as soon as buyers purchase them.",
+                    )}
+                  </p>
+                </div>
                 {unavailableReasons.length > 0 ? (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="mt-5 text-xs font-medium text-muted-foreground">
                     {unavailableReasons.map((reason) => unavailableReasonLabel(reason, t)).join(" ")}
                   </p>
                 ) : null}
@@ -166,78 +197,88 @@ export function SellerDashboardPage() {
             </Card>
           ) : null}
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-            <MetricCard
-              icon={DollarSign}
-              label={t("marketplaceSeller.dashboard.metrics.revenue", "Revenue")}
-              value={
-                hasRevenueData && dashboard?.totalRevenue != null
-                  ? formatVnd(dashboard.totalRevenue, locale)
-                  : "--"
-              }
-              helperText={
-                hasRevenueData
-                  ? undefined
-                  : t("marketplaceSeller.dashboard.metrics.revenueEmpty", "No completed orders yet.")
-              }
-              tone="bg-primary/10 text-primary"
-            />
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 xl:grid-cols-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="md:col-span-2 xl:col-span-1">
+              <MetricCard
+                icon={DollarSign}
+                label={t("marketplaceSeller.dashboard.metrics.revenue", "Revenue")}
+                value={
+                  hasRevenueData && dashboard?.totalRevenue != null
+                    ? formatVnd(dashboard.totalRevenue, locale)
+                    : "--"
+                }
+                helperText={
+                  hasRevenueData
+                    ? undefined
+                    : t("marketplaceSeller.dashboard.metrics.revenueEmpty", "No completed orders yet.")
+                }
+                tone="text-primary-foreground"
+                layout="editorial-hero"
+              />
+            </div>
             <MetricCard
               icon={ShoppingBag}
               label={t("marketplaceSeller.dashboard.metrics.pendingOrders", "Pending orders")}
               value={dashboard?.pendingOrders ?? "--"}
-              tone="bg-secondary/15 text-secondary"
-            />
-            <MetricCard
-              icon={Package}
-              label={t("marketplaceSeller.dashboard.metrics.publishedProducts", "Published products")}
-              value={dashboard?.publishedProducts ?? "--"}
-              tone="bg-accent/20 text-accent"
+              tone="text-destructive"
+              layout="editorial-stat"
             />
             <MetricCard
               icon={Store}
               label={t("marketplaceSeller.dashboard.metrics.pendingReview", "Pending review")}
               value={dashboard?.pendingReviewProducts ?? "--"}
-              tone="bg-muted text-foreground"
+              tone="text-info"
+              layout="editorial-stat"
+            />
+            <MetricCard
+              icon={Package}
+              label={t("marketplaceSeller.dashboard.metrics.publishedProducts", "Published products")}
+              value={dashboard?.publishedProducts ?? "--"}
+              tone="text-muted-foreground"
+              layout="editorial-stat"
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <Card className="overflow-hidden rounded-lg border-border shadow-sm">
-              <CardHeader className="border-b border-border/50 px-5 pt-5">
-                <div className="flex items-center justify-between gap-3">
-                  <CardTitle>{t("marketplaceSeller.dashboard.recentOrders.title", "Recent orders")}</CardTitle>
-                  <Link to="/farmer/marketplace-orders" className="text-sm font-medium text-primary hover:underline">
-                    {t("marketplaceSeller.dashboard.recentOrders.seeAll", "See all")}
-                  </Link>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3 p-5">
+          <div className="mt-10 grid grid-cols-1 gap-10 xl:grid-cols-2 xl:gap-12">
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
+              <div className="flex items-baseline justify-between border-b border-border/60 pb-3">
+                <h3 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+                  {t("marketplaceSeller.dashboard.recentOrders.title", "Recent orders")}
+                </h3>
+                <Link 
+                  to="/farmer/marketplace-orders" 
+                  className="rounded-sm text-xs font-medium uppercase tracking-wider text-primary transition-all duration-200 hover:text-primary/80 active:text-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                >
+                  {t("marketplaceSeller.dashboard.recentOrders.seeAll", "See all")}
+                </Link>
+              </div>
+              
+              <div className="space-y-0">
                 {(dashboard?.recentOrders?.length ?? 0) > 0 ? (
                   dashboard!.recentOrders.map((order) => (
                     <Link
                       key={order.id}
                       to={`/farmer/marketplace-orders/${order.id}`}
-                      className="flex items-center justify-between rounded-lg border border-border p-4 transition-colors hover:bg-muted/50"
+                      className="group flex items-center justify-between border-b border-border/40 py-4 px-3 -mx-3 sm:px-4 sm:-mx-4 transition-all duration-200 hover:bg-muted/50 active:bg-muted rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ring-offset-background"
                     >
                       <div>
-                        <p className="font-semibold text-foreground">{order.orderCode}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-medium text-foreground transition-colors group-hover:text-primary">{order.orderCode}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {t("marketplaceSeller.dashboard.recentOrders.itemCount", {
                             count: order.items.length,
                             defaultValue: "{{count}} items",
                           })}{" "}
-                          - {formatDateTime(order.createdAt, locale)}
+                          <span className="opacity-50">•</span> {formatDateTime(order.createdAt, locale)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-primary">{formatVnd(order.totalAmount, locale)}</p>
-                        <p className="text-sm text-muted-foreground">{orderStatusLabel(order.status, t)}</p>
+                        <p className="font-medium text-foreground">{formatVnd(order.totalAmount, locale)}</p>
+                        <p className="mt-1 text-xs font-medium text-muted-foreground">{orderStatusLabel(order.status, t)}</p>
                       </div>
                     </Link>
                   ))
                 ) : (
-                  <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+                  <div className="py-12 text-center text-sm font-medium text-muted-foreground">
                     {hasProducts
                       ? t("marketplaceSeller.dashboard.recentOrders.emptyWithProducts", "No buyer orders yet.")
                       : t(
@@ -246,55 +287,60 @@ export function SellerDashboardPage() {
                         )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            <Card className="overflow-hidden rounded-lg border-border shadow-sm">
-              <CardHeader className="border-b border-border/50 px-5 pt-5">
-                <div className="flex items-center justify-between gap-3">
-                  <CardTitle>{t("marketplaceSeller.dashboard.topProducts.title", "Top products")}</CardTitle>
-                  <Link to="/farmer/marketplace-products" className="text-sm font-medium text-primary hover:underline">
-                    {t("marketplaceSeller.dashboard.topProducts.manageProducts", "Manage products")}
-                  </Link>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3 p-5">
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
+              <div className="flex items-baseline justify-between border-b border-border/60 pb-3">
+                <h3 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+                  {t("marketplaceSeller.dashboard.topProducts.title", "Top products")}
+                </h3>
+                <Link 
+                  to="/farmer/marketplace-products" 
+                  className="rounded-sm text-xs font-medium uppercase tracking-wider text-primary transition-all duration-200 hover:text-primary/80 active:text-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                >
+                  {t("marketplaceSeller.dashboard.topProducts.manageProducts", "Manage products")}
+                </Link>
+              </div>
+              
+              <div className="space-y-0">
                 {topProducts.length > 0 ? (
                   topProducts.map((product) => (
-                    <div key={product.id} className="flex items-center gap-4 rounded-lg border border-border p-4">
-                      <div className="h-14 w-14 overflow-hidden rounded-lg bg-muted">
+                    <div key={product.id} className="group flex items-center gap-5 border-b border-border/40 py-4 px-3 -mx-3 sm:px-4 sm:-mx-4 transition-all duration-200 hover:bg-muted/40 rounded-lg">
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded bg-muted/60 shadow-sm ring-1 ring-border/50">
                         <img
                           src={product.imageUrl}
                           alt={product.name}
-                          className="h-full w-full object-cover"
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105 group-hover:opacity-90"
                           referrerPolicy="no-referrer"
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium text-foreground">{product.name}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="truncate font-medium text-foreground transition-colors group-hover:text-primary">{product.name}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {formatVnd(product.price, locale)} / {product.unit}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        <p className="text-xs font-medium text-muted-foreground">
                           {t("marketplaceSeller.table.available", "Available")}
                         </p>
-                        <p className="font-semibold text-primary">
-                          {product.availableQuantity} {product.unit}
+                        <p className="mt-1 font-medium text-foreground">
+                          {product.availableQuantity} <span className="text-xs text-muted-foreground">{product.unit}</span>
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+                  <div className="py-12 text-center text-sm font-medium text-muted-foreground">
                     {hasProducts
                       ? t("marketplaceSeller.dashboard.topProducts.emptyWithProducts", "No published products yet.")
                       : t("marketplaceSeller.dashboard.topProducts.emptyNoProducts", "No products available yet.")}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </AsyncState>
       </div>

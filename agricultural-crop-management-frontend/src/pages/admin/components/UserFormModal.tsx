@@ -266,11 +266,11 @@ export function UserFormModal({
                 onChange={(e) =>
                   setFormData({ ...formData, username: e.target.value })
                 }
-                className={`rounded-[14px] pl-10 ${errors.username ? "border-destructive" : ""}`}
+                className={`min-h-[44px] rounded-[14px] pl-10 ${errors.username ? "border-destructive" : ""}`}
               />
             </div>
             {errors.username && (
-              <p className="text-xs text-destructive">{errors.username}</p>
+              <p className="text-xs text-destructive break-words">{errors.username}</p>
             )}
           </div>
 
@@ -288,10 +288,10 @@ export function UserFormModal({
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className={`rounded-[14px] ${errors.password ? "border-destructive" : ""}`}
+                className={`min-h-[44px] rounded-[14px] ${errors.password ? "border-destructive" : ""}`}
               />
               {errors.password && (
-                <p className="text-xs text-destructive">{errors.password}</p>
+                <p className="text-xs text-destructive break-words">{errors.password}</p>
               )}
             </div>
           )}
@@ -309,11 +309,11 @@ export function UserFormModal({
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className={`rounded-[14px] pl-10 ${errors.email ? "border-destructive" : ""}`}
+                className={`min-h-[44px] rounded-[14px] pl-10 ${errors.email ? "border-destructive" : ""}`}
               />
             </div>
             {errors.email && (
-              <p className="text-xs text-destructive">{errors.email}</p>
+              <p className="text-xs text-destructive break-words">{errors.email}</p>
             )}
           </div>
 
@@ -327,7 +327,7 @@ export function UserFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, fullName: e.target.value })
               }
-              className="rounded-[14px]"
+              className="min-h-[44px] rounded-[14px]"
             />
           </div>
 
@@ -343,7 +343,7 @@ export function UserFormModal({
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value })
                 }
-                className="rounded-[14px] pl-10"
+                className="min-h-[44px] rounded-[14px] pl-10"
               />
             </div>
           </div>
@@ -372,7 +372,7 @@ export function UserFormModal({
                       key={role.id || role.code}
                       type="button"
                       onClick={() => handleRoleToggle(role.code || "")}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                         isSelected
                           ? "bg-primary text-primary-foreground"
                           : "bg-background border border-border hover:bg-muted"
@@ -385,7 +385,7 @@ export function UserFormModal({
               )}
             </div>
             {errors.roles && (
-              <p className="text-xs text-destructive">{errors.roles}</p>
+              <p className="text-xs text-destructive break-words">{errors.roles}</p>
             )}
           </div>
 
@@ -399,7 +399,7 @@ export function UserFormModal({
                   setFormData({ ...formData, status: value })
                 }
               >
-                <SelectTrigger className="rounded-[14px]">
+                <SelectTrigger className="min-h-[44px] rounded-[14px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -432,7 +432,7 @@ export function UserFormModal({
             variant="outline"
             onClick={handleClose}
             disabled={loading}
-            className="rounded-[14px]"
+            className="min-h-[44px] rounded-[14px]"
           >
             <X className="w-4 h-4 mr-2" />
             {t("common.cancel")}
@@ -440,7 +440,7 @@ export function UserFormModal({
           <Button
             onClick={handleSubmit}
             disabled={loading}
-            className="rounded-[14px] bg-primary hover:bg-primary/90"
+            className="min-h-[44px] rounded-[14px] bg-primary hover:bg-primary/90"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

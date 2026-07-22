@@ -20,7 +20,7 @@ import {
   certificationApi,
   CertificationDetails,
   CertificationItemDetail,
-} from "@/api/certificationApi";
+} from "@/entities/farm/api/certificationApi";
 import {
   Button,
   Card,
@@ -142,7 +142,7 @@ export default function CertificationPage() {
         <div className="text-center py-12">
           <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold">Không tìm thấy thông tin đánh giá</h2>
-          <Button className="mt-4" onClick={() => navigate(-1)}>
+          <Button className="min-h-[44px] mt-4" onClick={() => navigate(-1)}>
             Quay lại
           </Button>
         </div>
@@ -196,14 +196,14 @@ export default function CertificationPage() {
     <PageContainer>
       {/* Back button & Action Toolbar */}
       <div className="flex items-center justify-between mb-6">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="min-h-[44px] flex items-center gap-2 transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
           <ArrowLeft className="w-4 h-4" /> Quay lại danh sách nông trại
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={() => fetchCertificationDetails(true)}
-          className="flex items-center gap-2"
+          className="min-h-[44px] flex items-center gap-2 shadow-sm transition hover:opacity-90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
         >
           <RefreshCw className="w-4 h-4" /> Đồng bộ & Đánh giá lại
         </Button>
@@ -211,7 +211,7 @@ export default function CertificationPage() {
 
       {/* Main Header / Status Widget */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <Card className="lg:col-span-2 border border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-gradient-to-r from-emerald-50 via-teal-50/20 to-white">
+        <Card className="lg:col-span-2 border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
           <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-4 text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start gap-3">
@@ -312,9 +312,9 @@ export default function CertificationPage() {
 
           <div className="space-y-3">
             <Button
-              className={`w-full py-6 rounded-xl font-bold transition-all shadow-md ${
+              className={`w-full py-6 rounded-xl font-bold transition-all duration-300 shadow-md ${
                 details.isEligible && ["IN_PROGRESS", "READY_TO_APPLY"].includes(details.status)
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-emerald-200"
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-emerald-200 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background"
                   : "bg-slate-200 text-slate-400 cursor-not-allowed"
               }`}
               disabled={!details.isEligible || !["IN_PROGRESS", "READY_TO_APPLY"].includes(details.status) || submitting}
@@ -346,12 +346,12 @@ export default function CertificationPage() {
         <CardContent className="p-0">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="border-b border-slate-100 px-6 bg-slate-50/50">
-              <TabsList className="bg-transparent flex gap-1 py-2 overflow-x-auto">
+              <TabsList className="w-full overflow-x-auto">
                 {categories.map((cat) => (
                   <TabsTrigger
                     key={cat}
                     value={cat}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all capitalize ${
+                    className={`min-h-[44px] px-4 py-2 rounded-lg text-sm font-semibold transition-all capitalize ${
                       activeTab === cat
                         ? "bg-white text-emerald-700 shadow-sm border border-slate-100"
                         : "text-slate-500 hover:text-slate-800"
@@ -416,7 +416,7 @@ export default function CertificationPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs"
+                          className="min-h-[44px] text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                           onClick={() => handleEditClick(item)}
                         >
                           <Upload className="w-3.5 h-3.5 mr-1" /> Minh chứng
@@ -472,6 +472,7 @@ export default function CertificationPage() {
                   placeholder="https://example.com/certificate.pdf"
                   value={editEvidenceUrl}
                   onChange={(e) => setEditEvidenceUrl(e.target.value)}
+                  className="focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background"
                 />
               </div>
 
@@ -483,17 +484,18 @@ export default function CertificationPage() {
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
                   rows={3}
+                  className="focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background"
                 />
               </div>
             </div>
           )}
 
           <DialogFooter className="gap-2">
-            <Button variant="ghost" onClick={() => setEditingItem(null)}>
+            <Button variant="ghost" className="min-h-[44px]" onClick={() => setEditingItem(null)}>
               Hủy
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5"
+              className="min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-sm transition hover:opacity-90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ring-offset-background"
               onClick={handleUpdateItem}
               disabled={submitting}
             >

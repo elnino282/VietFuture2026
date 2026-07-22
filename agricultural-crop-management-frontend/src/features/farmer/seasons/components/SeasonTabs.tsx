@@ -1,17 +1,12 @@
-import { Card, CardContent, CardHeader } from '@/shared/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-import { Label } from '@/shared/ui/label';
+
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { Season, Activity } from '../types';
 
 interface SeasonTabsProps {
   season: Season;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  activities: Activity[];
 }
 
-export function SeasonTabs({ season, activeTab, setActiveTab, activities }: SeasonTabsProps) {
+export function SeasonTabs({ season }: SeasonTabsProps) {
   const { t } = useI18n();
   const effectiveEndDate = season.endDate || season.plannedHarvestDate || season.startDate;
   const endDateLabel = effectiveEndDate
@@ -19,52 +14,45 @@ export function SeasonTabs({ season, activeTab, setActiveTab, activities }: Seas
     : '-';
 
   return (
-    <Card className="border-border acm-rounded-lg acm-card-shadow">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <CardHeader className="border-b border-border overflow-x-auto">
-          <TabsList className="bg-muted w-max">
-            <TabsTrigger value="overview">{t("seasonTabs.overview", "Overview")}</TabsTrigger>
-          </TabsList>
-        </CardHeader>
-        <CardContent className="p-6">
-          <TabsContent value="overview" className="mt-0">
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm text-muted-foreground">{t("seasonTabs.crop", "Crop")}</Label>
-                  <div className="mt-1 text-foreground">{season.crop}</div>
-                </div>
-                <div>
-                  <Label className="text-sm text-muted-foreground">{t("seasonTabs.variety", "Variety")}</Label>
-                  <div className="mt-1 text-foreground">{season.variety}</div>
-                </div>
-                <div>
-                  <Label className="text-sm text-muted-foreground">{t("seasonTabs.startDate", "Start Date")}</Label>
-                  <div className="mt-1 text-foreground">
-                    {new Date(season.startDate).toLocaleDateString()}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-sm text-muted-foreground">{t("seasonTabs.endDate", "End Date")}</Label>
-                  <div className="mt-1 text-foreground">
-                    {endDateLabel}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-sm text-muted-foreground">{t("seasonTabs.totalTasks", "Total Tasks")}</Label>
-                  <div className="mt-1 text-foreground numeric">
-                    {season.tasksCompleted} / {season.tasksTotal}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-sm text-muted-foreground">{t("seasonTabs.incidents", "Incidents")}</Label>
-                  <div className="mt-1 text-foreground numeric">{season.incidentCount}</div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-        </CardContent>
-      </Tabs>
-    </Card>
+    <div className="w-full pt-2 mb-8">
+      <div className="mb-6 pb-2 border-b border-border/40">
+        <h2 className="text-lg font-bold tracking-tight text-foreground">{t("seasonTabs.infoTitle", "Thông tin chung")}</h2>
+      </div>
+      
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-12 gap-y-8">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm text-muted-foreground">{t("seasonTabs.crop", "Crop")}</span>
+          <span className="text-base font-semibold text-foreground">{season.crop}</span>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm text-muted-foreground">{t("seasonTabs.variety", "Variety")}</span>
+          <span className="text-base font-semibold text-foreground">{season.variety || '-'}</span>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm text-muted-foreground">{t("seasonTabs.startDate", "Start Date")}</span>
+          <span className="text-base font-semibold text-foreground">
+            {new Date(season.startDate).toLocaleDateString()}
+          </span>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm text-muted-foreground">{t("seasonTabs.endDate", "End Date")}</span>
+          <span className="text-base font-semibold text-foreground">
+            {endDateLabel}
+          </span>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm text-muted-foreground">{t("seasonTabs.totalTasks", "Total Tasks")}</span>
+          <span className="text-base font-semibold text-foreground numeric">
+            {season.tasksCompleted} / {season.tasksTotal}
+          </span>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm text-muted-foreground">{t("seasonTabs.incidents", "Incidents")}</span>
+          <span className="text-base font-semibold text-foreground numeric">
+            {season.incidentCount}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }

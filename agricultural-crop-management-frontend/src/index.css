@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -84,8 +84,8 @@
   :where(:not(:has([class*=" text-"], [class^="text-"]))) h4,
   :where(:not(:has([class*=" text-"], [class^="text-"]))) h5,
   :where(:not(:has([class*=" text-"], [class^="text-"]))) h6 {
-    font-family: var(--font-family-base);
-    font-weight: var(--font-weight-semibold);
+    font-family: "Fraunces", "Outfit", system-ui, sans-serif;
+    font-weight: var(--font-weight-bold);
   }
 
   :where(:not(:has([class*=" text-"], [class^="text-"]))) h1 {
@@ -132,10 +132,15 @@
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
+
+  /* Organic asymmetry for cards */
+  .bg-card.rounded-xl, .bg-card.rounded-2xl {
+    border-radius: 1.25rem 0.875rem 1.125rem 1rem !important;
+  }
 }
 :root {
   --font-size: 16px;
-  --font-family-base: "Roboto", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-family-base: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   --font-family-mono: "Roboto Mono", "Courier New", monospace;
   --font-sans: var(--font-family-base);
   --font-mono: var(--font-family-mono);
@@ -148,14 +153,14 @@
   --acm-primary: #3ba55d;
   --acm-secondary: #4a90e2;
   --acm-accent: #f4c542;
-  --acm-background: #f4f6f8;
-  --acm-background-alt: #edf1f5;
+  --acm-background: #f1f5f2;
+  --acm-background-alt: #e9efe7;
   --acm-text-primary: #212121;
   --acm-text-secondary: #4b5563;
   --acm-success: #3ba55d;
-  --acm-warning: #f4c542;
-  --acm-error: #e74c3c;
-  --background: #f4f6f8;
+  --acm-warning: #EBB353;
+  --acm-error: #C85A3F;
+  --background: #f1f5f2;
   --foreground: #212121;
   --card: #fff;
   --card-foreground: #212121;
@@ -169,7 +174,7 @@
   --muted-foreground: #4b5563;
   --accent: #f4c542;
   --accent-foreground: #212121;
-  --destructive: #e74c3c;
+  --destructive: #C85A3F;
   --destructive-foreground: #fff;
   --border: #e0e0e0;
   --input: #cbd5e1;
@@ -182,15 +187,15 @@
   --ring: #3ba55d;
   --success: #3ba55d;
   --success-foreground: #fff;
-  --warning: #f4c542;
-  --warning-foreground: #333;
-  --info: #4a90e2;
+  --warning: #EBB353;
+  --warning-foreground: #3e2e12;
+  --info: #8C6B5D;
   --info-foreground: #fff;
   --chart-1: #3ba55d;
-  --chart-2: #4a90e2;
-  --chart-3: #f4c542;
+  --chart-2: #8C6B5D;
+  --chart-3: #EBB353;
   --chart-4: #81c784;
-  --chart-5: #ff9800;
+  --chart-5: #C85A3F;
   --radius: .875rem;
   --sidebar: #fff;
   --sidebar-foreground: #333;
@@ -247,8 +252,8 @@
   --portal-button-secondary-filled-fg: var(--secondary-foreground);
 
   --portal-button-danger-bg: var(--destructive);
-  --portal-button-danger-hover-bg: #c62929;
-  --portal-button-danger-active-bg: #aa2121;
+  --portal-button-danger-hover-bg: #B04930;
+  --portal-button-danger-active-bg: #8C3722;
   --portal-button-danger-fg: var(--destructive-foreground);
 
   --portal-button-disabled-bg: #e0e0e0;
@@ -259,24 +264,32 @@
   --portal-status-measured-bg: #e8f5e9;
   --portal-status-measured-fg: #2e7d32;
   --portal-status-measured-border: #c8e6c9;
-  --portal-status-estimated-bg: #fff3e0;
-  --portal-status-estimated-fg: #e65100;
-  --portal-status-estimated-border: #ffcc80;
-  --portal-status-missing-bg: #ffebee;
-  --portal-status-missing-fg: #c62828;
-  --portal-status-missing-border: #ffcdd2;
-  --portal-status-unavailable-bg: #eceff1;
-  --portal-status-unavailable-fg: #455a64;
-  --portal-status-unavailable-border: #cfd8dc;
+  --portal-status-estimated-bg: #fdf5e7;
+  --portal-status-estimated-fg: #b07e28;
+  --portal-status-estimated-border: #f7e0b5;
+  --portal-status-missing-bg: #faebe7;
+  --portal-status-missing-fg: #a83f27;
+  --portal-status-missing-border: #f4cec4;
+  --portal-status-unavailable-bg: #f4f0ef;
+  --portal-status-unavailable-fg: #6f5145;
+  --portal-status-unavailable-border: #dcd1cd;
   --portal-status-level-low-bg: #e8f5e9;
   --portal-status-level-low-fg: #2e7d32;
   --portal-status-level-low-border: #c8e6c9;
-  --portal-status-level-medium-bg: #fff3e0;
-  --portal-status-level-medium-fg: #e65100;
-  --portal-status-level-medium-border: #ffcc80;
-  --portal-status-level-high-bg: #ffebee;
-  --portal-status-level-high-fg: #c62828;
-  --portal-status-level-high-border: #ffcdd2;
+  --portal-status-level-medium-bg: #fdf5e7;
+  --portal-status-level-medium-fg: #b07e28;
+  --portal-status-level-medium-border: #f7e0b5;
+  --portal-status-level-high-bg: #faebe7;
+  --portal-status-level-high-fg: #a83f27;
+  --portal-status-level-high-border: #f4cec4;
+  --status-success-bg: #dcfce7;
+  --status-success-fg: #14532d;
+  --status-warning-bg: #fef3c7;
+  --status-warning-fg: #78350f;
+  --status-error-bg: #fee2e2;
+  --status-error-fg: #7f1d1d;
+  --status-neutral-bg: #f3f4f6;
+  --status-neutral-fg: #1f2937;
 }
 
 .dark {
@@ -295,7 +308,7 @@
   --muted-foreground: #a8a8a8;
   --accent: #f4c542;
   --accent-foreground: #1a1a1a;
-  --destructive: #e74c3c;
+  --destructive: #D97257;
   --destructive-foreground: #fff;
   --border: #2f2f2f;
   --input: #2f2f2f;
@@ -307,10 +320,10 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   --chart-1: #3ba55d;
-  --chart-2: #4a90e2;
-  --chart-3: #f4c542;
+  --chart-2: #A48578;
+  --chart-3: #F2C97D;
   --chart-4: #81c784;
-  --chart-5: #ff9800;
+  --chart-5: #D97257;
   --sidebar: #1b1b1b;
   --sidebar-foreground: #f5f5f5;
   --sidebar-primary: #3ba55d;
@@ -321,9 +334,9 @@
   --sidebar-ring: #3ba55d;
   --success: #4ade80;
   --success-foreground: #1a1a1a;
-  --warning: #fbbf24;
-  --warning-foreground: #1a1a1a;
-  --info: #60a5fa;
+  --warning: #F2C97D;
+  --warning-foreground: #2d1f0b;
+  --info: #A48578;
   --info-foreground: #1a1a1a;
   --portal-content-bg: #151515;
   --portal-surface: var(--card);
@@ -345,12 +358,20 @@
   --portal-button-disabled-bg: #242424;
   --portal-button-disabled-fg: #777;
   --portal-button-disabled-border: #333;
+  --status-success-bg: #052e16;
+  --status-success-fg: #4ade80;
+  --status-warning-bg: #451a03;
+  --status-warning-fg: #fbbf24;
+  --status-error-bg: #450a0a;
+  --status-error-fg: #f87171;
+  --status-neutral-bg: #111827;
+  --status-neutral-fg: #9ca3af;
 }
 
 .portal-farmer {
   /* Farmer token groups */
   --portal-touch-target-min: 48px;
-  --portal-content-bg: #f4f6f8;
+  --portal-content-bg: #f1f5f2;
   --portal-surface: var(--card);
   --portal-surface-muted: var(--muted);
   --portal-surface-elevated: var(--card);
@@ -388,32 +409,32 @@
   --farmer-button-secondary-filled-active-bg: #263238;
   --farmer-button-secondary-filled-fg: #fff;
 
-  --farmer-danger-bg: #d32f2f;
-  --farmer-danger-hover-bg: #b71c1c;
-  --farmer-danger-active-bg: #8f1111;
+  --farmer-danger-bg: #C85A3F;
+  --farmer-danger-hover-bg: #B04930;
+  --farmer-danger-active-bg: #8C3722;
   --farmer-danger-fg: #fff;
 
   --farmer-status-measured-bg: #e8f5e9;
   --farmer-status-measured-fg: #2e7d32;
   --farmer-status-measured-border: #c8e6c9;
-  --farmer-status-estimated-bg: #fff3e0;
-  --farmer-status-estimated-fg: #e65100;
-  --farmer-status-estimated-border: #ffcc80;
-  --farmer-status-missing-bg: #ffebee;
-  --farmer-status-missing-fg: #c62828;
-  --farmer-status-missing-border: #ffcdd2;
-  --farmer-status-unavailable-bg: #eceff1;
-  --farmer-status-unavailable-fg: #455a64;
-  --farmer-status-unavailable-border: #cfd8dc;
+  --farmer-status-estimated-bg: #fdf5e7;
+  --farmer-status-estimated-fg: #b07e28;
+  --farmer-status-estimated-border: #f7e0b5;
+  --farmer-status-missing-bg: #faebe7;
+  --farmer-status-missing-fg: #a83f27;
+  --farmer-status-missing-border: #f4cec4;
+  --farmer-status-unavailable-bg: #f4f0ef;
+  --farmer-status-unavailable-fg: #6f5145;
+  --farmer-status-unavailable-border: #dcd1cd;
   --farmer-status-level-low-bg: #e8f5e9;
   --farmer-status-level-low-fg: #2e7d32;
   --farmer-status-level-low-border: #c8e6c9;
-  --farmer-status-level-medium-bg: #fff3e0;
-  --farmer-status-level-medium-fg: #e65100;
-  --farmer-status-level-medium-border: #ffcc80;
-  --farmer-status-level-high-bg: #ffebee;
-  --farmer-status-level-high-fg: #c62828;
-  --farmer-status-level-high-border: #ffcdd2;
+  --farmer-status-level-medium-bg: #fdf5e7;
+  --farmer-status-level-medium-fg: #b07e28;
+  --farmer-status-level-medium-border: #f7e0b5;
+  --farmer-status-level-high-bg: #faebe7;
+  --farmer-status-level-high-fg: #a83f27;
+  --farmer-status-level-high-border: #f4cec4;
 
   /* Apply farmer tokens to portal semantic tokens */
   --portal-sidebar-bg: var(--farmer-sidebar-bg);
@@ -524,24 +545,24 @@
   --farmer-status-measured-bg: #14351f;
   --farmer-status-measured-fg: #86efac;
   --farmer-status-measured-border: #25663a;
-  --farmer-status-estimated-bg: #3a2b11;
-  --farmer-status-estimated-fg: #fbbf24;
-  --farmer-status-estimated-border: #815d13;
-  --farmer-status-missing-bg: #3a1717;
-  --farmer-status-missing-fg: #fca5a5;
-  --farmer-status-missing-border: #7f2a2a;
-  --farmer-status-unavailable-bg: #202a23;
-  --farmer-status-unavailable-fg: #c5d3ca;
-  --farmer-status-unavailable-border: #35483d;
+  --farmer-status-estimated-bg: #3b2a0c;
+  --farmer-status-estimated-fg: #F2C97D;
+  --farmer-status-estimated-border: #8c6a25;
+  --farmer-status-missing-bg: #3d1b13;
+  --farmer-status-missing-fg: #D97257;
+  --farmer-status-missing-border: #8b3c29;
+  --farmer-status-unavailable-bg: #2a211e;
+  --farmer-status-unavailable-fg: #A48578;
+  --farmer-status-unavailable-border: #52423b;
   --farmer-status-level-low-bg: #14351f;
   --farmer-status-level-low-fg: #86efac;
   --farmer-status-level-low-border: #25663a;
-  --farmer-status-level-medium-bg: #3a2b11;
-  --farmer-status-level-medium-fg: #fbbf24;
-  --farmer-status-level-medium-border: #815d13;
-  --farmer-status-level-high-bg: #3a1717;
-  --farmer-status-level-high-fg: #fca5a5;
-  --farmer-status-level-high-border: #7f2a2a;
+  --farmer-status-level-medium-bg: #3b2a0c;
+  --farmer-status-level-medium-fg: #F2C97D;
+  --farmer-status-level-medium-border: #8c6a25;
+  --farmer-status-level-high-bg: #3d1b13;
+  --farmer-status-level-high-fg: #D97257;
+  --farmer-status-level-high-border: #8b3c29;
 }
 
 .portal-admin {
@@ -1298,11 +1319,7 @@ html {
   border-color: var(--portal-button-disabled-border);
   box-shadow: none;
   transform: none;
-  background-image: repeating-linear-gradient(135deg,
-      transparent 0,
-      transparent 8px,
-      rgba(0, 0, 0, 0.06) 8px,
-      rgba(0, 0, 0, 0.06) 12px);
+  opacity: 0.5;
 }
 
 .portal-farmer [data-slot="button"].acm-button-primary,

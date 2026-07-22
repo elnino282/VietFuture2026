@@ -86,6 +86,7 @@ export function SubStandardDisposalModal({ open, onOpenChange, lot, onSuccess }:
                 placeholder="VD: 100"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
 
@@ -95,7 +96,7 @@ export function SubStandardDisposalModal({ open, onOpenChange, lot, onSuccess }:
                 value={disposition}
                 onValueChange={(value: SubStandardDisposition) => setDisposition(value)}
               >
-                <SelectTrigger className="rounded-xl border-border">
+                <SelectTrigger className="rounded-xl border-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                   <SelectValue placeholder="Chọn..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -118,6 +119,7 @@ export function SubStandardDisposalModal({ open, onOpenChange, lot, onSuccess }:
                   placeholder="Nhập tên người mua..."
                   value={buyerName}
                   onChange={(e) => setBuyerName(e.target.value)}
+                  className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 />
               </div>
               <div className="space-y-2">
@@ -127,6 +129,7 @@ export function SubStandardDisposalModal({ open, onOpenChange, lot, onSuccess }:
                   placeholder="09..."
                   value={buyerContact}
                   onChange={(e) => setBuyerContact(e.target.value)}
+                  className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 />
               </div>
               <div className="space-y-2">
@@ -137,6 +140,7 @@ export function SubStandardDisposalModal({ open, onOpenChange, lot, onSuccess }:
                   placeholder="VD: 5000"
                   value={salePricePerKg}
                   onChange={(e) => setSalePricePerKg(e.target.value)}
+                  className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 />
               </div>
             </div>
@@ -149,7 +153,7 @@ export function SubStandardDisposalModal({ open, onOpenChange, lot, onSuccess }:
               placeholder="Nhập ghi chú thêm..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="min-h-[80px]"
+              className="min-h-[80px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
             />
           </div>
         </div>
@@ -158,7 +162,7 @@ export function SubStandardDisposalModal({ open, onOpenChange, lot, onSuccess }:
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Hủy
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !quantity || !disposition}>
+          <Button onClick={handleSubmit} disabled={isSubmitting || !quantity || !disposition} className="shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
             {isSubmitting ? "Đang xử lý..." : "Xác nhận Xuất kho"}
           </Button>
         </DialogFooter>

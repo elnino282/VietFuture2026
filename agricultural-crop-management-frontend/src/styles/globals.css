@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600&family=Roboto+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -12,8 +12,8 @@
   --acm-accent: #F4C542;           /* Accent Yellow - sunlight, harvest, energy */
   
   /* Neutral Backgrounds */
-  --acm-background: #F8F8F4;       /* Soft neutral background */
-  --acm-background-alt: #F3EFE6;   /* Earthy alternative background */
+  --acm-background: #F1F5F2;       /* Pale sage green */
+  --acm-background-alt: #E9EFE7;   /* Earthy alternative background */
   
   /* Text Colors */
   --acm-text-primary: #333333;     /* Primary text - high readability */
@@ -25,7 +25,7 @@
   --acm-error: #E74C3C;            /* Error - clear red for alerts */
   
   /* Base System Colors - Mapped to Agriculture Palette */
-  --background: #F8F8F4;
+  --background: #F1F5F2;
   --foreground: #333333;
   --card: #ffffff;
   --card-foreground: #333333;
@@ -194,20 +194,20 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   }
 }
 
 /**
  * ACM Typography System
- * Headings: Poppins SemiBold
- * Body: Inter Regular
+ * Headings: Outfit
+ * Body: Plus Jakarta Sans
  * Numeric: Roboto Mono
  */
 @layer base {
   :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
     h1, h2, h3, h4, h5, h6 {
-      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-weight: 700;
     }
 
@@ -232,28 +232,28 @@
     }
 
     p {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 16px;
       font-weight: var(--font-weight-normal);
       line-height: 1.6;
     }
 
     label {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 12px;
       font-weight: var(--font-weight-medium);
       line-height: 1.5;
     }
 
     button {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 14px;
       font-weight: var(--font-weight-semibold);
       line-height: 1.5;
     }
 
     input, textarea {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 16px;
       font-weight: var(--font-weight-normal);
       line-height: 1.5;

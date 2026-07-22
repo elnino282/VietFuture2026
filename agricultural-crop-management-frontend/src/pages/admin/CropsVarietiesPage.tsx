@@ -280,12 +280,12 @@ export function CropsVarietiesPage() {
                 value={cropSearchQuery}
                 onChange={(e) => setCropSearchQuery(e.target.value)}
                 placeholder={t("admin.crops.searchCrops")}
-                className="w-full rounded-[14px] border border-input bg-card py-2 pl-9 pr-3 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                className="w-full rounded-md border border-input bg-card py-2 pl-9 pr-3 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
               />
             </div>
             <button
               onClick={() => setCropSearchQuery(cropSearchQuery)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50 transition-colors"
+              className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-md text-sm hover:bg-muted/50 transition-colors"
             >
               <Search className="h-4 w-4" />
               {t("common.search")}
@@ -303,14 +303,14 @@ export function CropsVarietiesPage() {
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <button
                 onClick={() => openCropForm()}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90"
+                className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90"
               >
                 <Plus className="h-4 w-4" />
                 {t("admin.crops.addCrop")}
               </button>
               <button
                 onClick={fetchCrops}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+                className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50"
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               </button>
@@ -377,7 +377,7 @@ export function CropsVarietiesPage() {
               filteredCrops.map((crop) => (
                 <tr
                   key={crop.id}
-                  className="border-b border-border hover:bg-muted/30"
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
                   <td className="px-4 py-3 text-sm font-medium">
                     {crop.cropName}
@@ -389,7 +389,7 @@ export function CropsVarietiesPage() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="min-h-[44px] min-w-[44px] p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
                           aria-label={t("admin.crops.actionsMenu")}
                         >
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
@@ -442,12 +442,12 @@ export function CropsVarietiesPage() {
                 value={varietySearchQuery}
                 onChange={(e) => setVarietySearchQuery(e.target.value)}
                 placeholder={t("admin.crops.searchVarieties")}
-                className="w-full rounded-[14px] border border-input bg-card py-2 pl-9 pr-3 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                className="w-full rounded-md border border-input bg-card py-2 pl-9 pr-3 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
               />
             </div>
             <button
               onClick={() => setVarietySearchQuery(varietySearchQuery)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50 transition-colors"
+              className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-md text-sm hover:bg-muted/50 transition-colors"
             >
               <Search className="h-4 w-4" />
               {t("common.search")}
@@ -461,7 +461,7 @@ export function CropsVarietiesPage() {
                 onChange={(e) =>
                   setSelectedCropId(e.target.value ? Number(e.target.value) : null)
                 }
-                className="w-full rounded-[14px] border border-input bg-card px-3 py-2 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-auto"
+                className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-auto"
               >
                 <option value="">{t("seasonFilters.allCrops")}</option>
                 {crops.map((c) => (
@@ -479,14 +479,14 @@ export function CropsVarietiesPage() {
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <button
                 onClick={() => openVarietyForm()}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-[14px] text-sm hover:bg-primary/90"
+                className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90"
               >
                 <Plus className="h-4 w-4" />
                 {t("admin.crops.addVariety")}
               </button>
               <button
                 onClick={fetchVarieties}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+                className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50"
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               </button>
@@ -556,7 +556,7 @@ export function CropsVarietiesPage() {
               filteredVarieties.map((variety) => (
                 <tr
                   key={variety.id}
-                  className="border-b border-border hover:bg-muted/30"
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
                   <td className="px-4 py-3 text-sm font-medium">
                     {variety.name}
@@ -573,7 +573,7 @@ export function CropsVarietiesPage() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="min-h-[44px] min-w-[44px] p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
                           aria-label={t("admin.crops.actionsMenu")}
                         >
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
@@ -627,7 +627,7 @@ export function CropsVarietiesPage() {
         <button
           onClick={() => setActiveTab("crops")}
           className={cn(
-            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
+            "inline-flex h-[44px] items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
             activeTab === "crops"
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
@@ -639,7 +639,7 @@ export function CropsVarietiesPage() {
         <button
           onClick={() => setActiveTab("varieties")}
           className={cn(
-            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
+            "inline-flex h-[44px] items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
             activeTab === "varieties"
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
@@ -657,15 +657,15 @@ export function CropsVarietiesPage() {
 
       {/* Crop Form Modal */}
       {showCropForm && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
-          <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-md mx-4">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md mx-4 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h3 className="text-lg font-semibold">
                 {editingCrop ? t("admin.crops.form.editCrop") : t("admin.crops.form.addCrop")}
               </h3>
               <button
                 onClick={() => setShowCropForm(false)}
-                className="p-1 hover:bg-muted rounded"
+                className="min-h-[44px] min-w-[44px] p-1 hover:bg-muted rounded"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -696,14 +696,14 @@ export function CropsVarietiesPage() {
             <div className="flex justify-end gap-2 p-4 border-t border-border">
               <button
                 onClick={() => setShowCropForm(false)}
-                className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
+                className="min-h-[44px] px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
               >
                 {t("common.cancel")}
               </button>
               <button
                 onClick={handleSaveCrop}
                 disabled={formLoading || !cropName.trim()}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50"
+                className="min-h-[44px] px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50"
               >
                 {formLoading ? t("common.saving") : t("common.save")}
               </button>
@@ -714,15 +714,15 @@ export function CropsVarietiesPage() {
 
       {/* Variety Form Modal */}
       {showVarietyForm && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
-          <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-md mx-4">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md mx-4 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h3 className="text-lg font-semibold">
                 {editingVariety ? t("admin.crops.form.editVariety") : t("admin.crops.form.addVariety")}
               </h3>
               <button
                 onClick={() => setShowVarietyForm(false)}
-                className="p-1 hover:bg-muted rounded"
+                className="min-h-[44px] min-w-[44px] p-1 hover:bg-muted rounded"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -768,14 +768,14 @@ export function CropsVarietiesPage() {
             <div className="flex justify-end gap-2 p-4 border-t border-border">
               <button
                 onClick={() => setShowVarietyForm(false)}
-                className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
+                className="min-h-[44px] px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50"
               >
                 {t("common.cancel")}
               </button>
               <button
                 onClick={handleSaveVariety}
                 disabled={formLoading || !varietyName.trim() || !varietyCropId}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50"
+                className="min-h-[44px] px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50"
               >
                 {formLoading ? t("common.saving") : t("common.save")}
               </button>
@@ -786,8 +786,8 @@ export function CropsVarietiesPage() {
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200">
             <div className="p-4 border-b border-border">
               <h2 className="text-lg font-semibold text-destructive">
                 {deleteConfirm.type === "crop"
@@ -818,14 +818,14 @@ export function CropsVarietiesPage() {
               <button
                 onClick={() => setDeleteConfirm(null)}
                 disabled={deleteLoading}
-                className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50 disabled:opacity-50"
+                className="min-h-[44px] px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted/50 disabled:opacity-50"
               >
                 {t("common.cancel")}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleteLoading}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm hover:bg-destructive/90 disabled:opacity-50"
+                className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm hover:bg-destructive/90 disabled:opacity-50"
               >
                 {deleteLoading ? (
                   <>

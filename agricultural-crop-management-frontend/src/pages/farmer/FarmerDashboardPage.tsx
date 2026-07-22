@@ -46,7 +46,7 @@ import {
 import { useSeason, usePreferences } from '@/shared/contexts';
 import { useBudgetTracker, useExpenseAnalyticsByCategory } from '@/entities/expense';
 import { useMarketplaceFarmerDashboard } from '@/features/marketplace/hooks';
-import { certificationApi } from '@/api/certificationApi';
+import { certificationApi } from '@/entities/farm/api/certificationApi';
 import { formatMoney, convertToDisplayCurrency } from '@/shared/lib';
 import type { Season } from '@/types/Season';
 
@@ -79,16 +79,16 @@ interface KPICardProps {
 
 function KPICard({ label, value, trend, trendType = 'up', icon, highlight, tone = 'default', onClick }: KPICardProps) {
   const toneClasses = {
-    success: 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300',
-    warning: 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-300',
-    info: 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300',
-    default: 'bg-card border-border text-card-foreground',
+    success: 'bg-[var(--portal-status-measured-bg)] border-[var(--portal-status-measured-border)] text-[var(--portal-status-measured-fg)]',
+    warning: 'bg-[var(--portal-status-estimated-bg)] border-[var(--portal-status-estimated-border)] text-[var(--portal-status-estimated-fg)]',
+    info: 'bg-[var(--portal-badge-secondary-bg)] border-[var(--portal-badge-secondary-border)] text-[var(--portal-badge-secondary-fg)]',
+    default: 'bg-[var(--portal-surface)] border-[var(--portal-border-subtle)] text-[var(--foreground)]',
   };
 
   return (
     <Card 
       onClick={onClick}
-      className={`border transition-all duration-300 ${onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-1' : ''} ${highlight ? 'ring-2 ring-primary/20' : ''}`}
+      className={`border transition-all duration-200 ${onClick ? 'cursor-pointer hover:shadow-md hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background' : ''} ${highlight ? 'ring-2 ring-primary/20' : ''}`}
     >
       <CardContent className="p-5 flex items-center justify-between">
         <div className="space-y-1 overflow-hidden">
@@ -137,7 +137,7 @@ function QuickActionsPanel({ actions }: QuickActionsPanelProps) {
               key={index}
               variant="outline"
               onClick={() => navigate(action.href)}
-              className="h-16 flex flex-col items-center justify-center gap-1.5 border-border hover:border-primary hover:bg-primary/5 hover:text-primary transition-all duration-300 group rounded-xl"
+              className="h-16 min-h-[44px] flex flex-col items-center justify-center gap-1.5 border-[var(--portal-border-subtle)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 hover:text-[var(--primary)] transition-all duration-200 group rounded-[var(--radius-xl)] hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 ring-offset-[var(--background)]"
             >
               <div className="text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all duration-300">
                 {action.icon}
@@ -211,8 +211,8 @@ function SeasonYieldChart({ seasons, selectedSeasonId }: SeasonYieldChartProps) 
                 contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }}
               />
               <Legend verticalAlign="top" height={36} iconType="circle" />
-              <Bar dataKey="expected" name="Sản lượng Dự kiến" fill="#94a3b8" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="actual" name="Sản lượng Thực tế" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="expected" name="Sản lượng Dự kiến" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="actual" name="Sản lượng Thực tế" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -240,7 +240,7 @@ function ExpenseBreakdownChart({ seasonId }: ExpenseBreakdownChartProps) {
     }));
   }, [categoryAnalytics]);
 
-  const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
+  const COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
 
   const formatValue = (value: number) =>
     formatMoney(

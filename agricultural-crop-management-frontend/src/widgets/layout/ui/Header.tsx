@@ -45,8 +45,7 @@ export function Header({
     
     return (
         <header
-            className="h-16 border-b border-white/10 flex items-center justify-between px-3 sm:px-4 gap-2 sm:gap-4 shrink-0 z-50"
-            style={{ backgroundColor: config.color }}
+            className="h-16 border-b border-[var(--portal-sidebar-border)] flex items-center justify-between px-3 sm:px-4 gap-2 sm:gap-4 shrink-0 z-50 bg-[var(--portal-sidebar-bg)] text-[var(--portal-sidebar-fg)]"
         >
             {/* Left Section */}
             <div className="flex items-center gap-2 sm:gap-4 min-w-0">
@@ -55,7 +54,7 @@ export function Header({
                     variant="ghost"
                     size="icon"
                     onClick={onToggleSidebar}
-                    className="shrink-0 text-white hover:bg-white/10"
+                    className="shrink-0 text-[var(--portal-sidebar-fg)] hover:bg-[var(--portal-sidebar-item-hover-bg)]"
                     aria-label={t('nav.toggleSidebar', { defaultValue: 'Toggle navigation' })}
                 >
                     <Menu className="w-5 h-5" />
@@ -66,12 +65,12 @@ export function Header({
                     onClick={() => onViewChange('dashboard')}
                     className="flex items-center gap-2 shrink-0 min-w-0 hover:opacity-80 transition-opacity"
                 >
-                    <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                        <span className="text-white text-lg">{config.emoji}</span>
+                    <div className="w-8 h-8 rounded-lg bg-[var(--portal-sidebar-item-hover-bg)] shadow-sm flex items-center justify-center">
+                        <span className="text-[var(--portal-sidebar-fg)] text-lg">{config.emoji}</span>
                     </div>
                     <div className="hidden sm:block min-w-0">
-                        <div className="font-semibold text-sm text-white">{t('common.appName')}</div>
-                        <div className="text-xs text-white/80 truncate">{config.name}</div>
+                        <div className="font-semibold text-sm text-[var(--portal-sidebar-fg)]">{t('common.appName')}</div>
+                        <div className="text-xs text-[var(--portal-sidebar-fg)] opacity-80 truncate">{config.name}</div>
                     </div>
                 </button>
 
@@ -89,7 +88,7 @@ export function Header({
                     />
                 )}
 
-                <ThemeToggle className="text-white hover:bg-white/10" />
+                <ThemeToggle className="text-[var(--portal-sidebar-fg)] hover:bg-[var(--portal-sidebar-item-hover-bg)]" />
 
                 {/* AI Assistant Toggle */}
                 <TooltipProvider>
@@ -99,7 +98,8 @@ export function Header({
                                 variant="ghost"
                                 size="icon"
                                 onClick={onAiDrawerOpen}
-                                className="shrink-0 text-white hover:bg-white/10"
+                                className="shrink-0 text-[var(--portal-sidebar-fg)] hover:bg-[var(--portal-sidebar-item-hover-bg)]"
+                                aria-label={t('header.aiAssistant', { defaultValue: 'AI Assistant' })}
                             >
                                 <Bot className="w-5 h-5" />
                             </Button>
@@ -118,7 +118,8 @@ export function Header({
                                 variant="ghost"
                                 size="icon"
                                 onClick={onNotificationsOpen}
-                                className="relative shrink-0 text-white hover:bg-white/10"
+                                className="relative shrink-0 text-[var(--portal-sidebar-fg)] hover:bg-[var(--portal-sidebar-item-hover-bg)]"
+                                aria-label={t('header.notifications', { defaultValue: 'Notifications' })}
                             >
                                 <Bell className="w-5 h-5" />
                                 {unreadCount > 0 && (
@@ -137,7 +138,7 @@ export function Header({
                     </Tooltip>
                 </TooltipProvider>
 
-                <Separator orientation="vertical" className="h-8 bg-white/20 hidden sm:block" />
+                <Separator orientation="vertical" className="h-8 bg-[var(--portal-sidebar-border)] hidden sm:block" />
 
                 {/* Profile Menu */}
                 <ProfileMenu

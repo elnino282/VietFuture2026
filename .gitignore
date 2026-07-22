@@ -50,6 +50,7 @@ google-credentials*.json
 # Logs and runtime artifacts
 # =========================
 *.log
+*.log*
 logs/
 *.pid
 *.pid.lock
@@ -78,3 +79,26 @@ logs/
 **/.nuxt/
 **/storybook-static/
 **/*.tsbuildinfo
+
+# =========================
+# Python venv
+# =========================
+venv/
+.venv/
+
+# =========================
+# Compiled bytecode
+# =========================
+*.class
+
+# =========================
+# Local agent/IDE settings
+# =========================
+.claude/settings.local.json
+
+# =========================
+# Ad-hoc debug/dump files
+# =========================
+all.txt
+encoding_report.txt
+sustainability_logs.txt

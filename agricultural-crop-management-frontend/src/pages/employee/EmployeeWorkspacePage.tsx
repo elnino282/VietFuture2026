@@ -71,12 +71,12 @@ export function EmployeeWorkspacePage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {seasons.map((season) => (
-            <Card key={season.seasonId} className="border border-border rounded-xl shadow-sm">
+            <Card key={season.seasonId} className="border border-border rounded-xl shadow-sm hover:border-primary/50 transition-colors">
               <CardContent className="px-5 py-4 space-y-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-foreground">{season.seasonName}</h3>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-foreground line-clamp-2" title={season.seasonName}>{season.seasonName}</h3>
+                    <p className="text-sm text-muted-foreground truncate" title={`${formatDate(season.startDate, locale, t("common.notAvailable"))} - ${formatDate(season.endDate ?? season.plannedHarvestDate, locale, t("common.notAvailable"))}`}>
                       {formatDate(season.startDate, locale, t("common.notAvailable"))} -{" "}
                       {formatDate(season.endDate ?? season.plannedHarvestDate, locale, t("common.notAvailable"))}
                     </p>
@@ -88,7 +88,7 @@ export function EmployeeWorkspacePage() {
                   )}
                 </div>
                 <Button
-                  className="w-full"
+                  className="min-h-[44px] w-full"
                   onClick={() => navigate(`/employee/seasons/${season.seasonId}/workspace/field-logs`)}
                 >
                   {t("employee.workspace.openWorkspace")}

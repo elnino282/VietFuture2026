@@ -9,7 +9,7 @@ import {
     type AdminUserCreateRequest,
     type AdminUserStatusUpdate,
     type AdminUserUpdateRequest,
-} from '@/services/api.admin';
+} from '@/entities/user/api/api.admin';
 import { toast } from 'sonner';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 import type {

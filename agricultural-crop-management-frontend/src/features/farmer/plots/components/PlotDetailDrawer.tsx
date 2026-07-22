@@ -128,7 +128,7 @@ export function PlotDetailDialog({
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="mt-6">
-          <TabsList className="grid w-full grid-cols-2 gap-1 rounded-xl p-1 sm:grid-cols-4">
+          <TabsList className="mb-4 w-full overflow-x-auto">
             <TabsTrigger value="overview" className="rounded-lg data-[state=active]:shadow-sm">{t("plots.detail.tabs.overview")}</TabsTrigger>
             <TabsTrigger value="soil" className="rounded-lg data-[state=active]:shadow-sm">{t("plots.detail.tabs.soilData")}</TabsTrigger>
             <TabsTrigger value="seasons" className="rounded-lg data-[state=active]:shadow-sm">{t("plots.detail.tabs.seasons")}</TabsTrigger>

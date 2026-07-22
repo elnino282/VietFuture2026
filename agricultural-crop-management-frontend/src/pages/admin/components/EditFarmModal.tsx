@@ -3,7 +3,7 @@ import {
   adminFarmApi,
   adminUsersApi,
   type AdminFarmUpdateRequest,
-} from "@/services/api.admin";
+} from "@/entities/user/api/api.admin";
 import { BackButton } from "@/shared/ui/back-button";
 import { useVietnameseAddress } from "@/shared/ui/address-selector";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

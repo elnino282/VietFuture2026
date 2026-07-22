@@ -653,11 +653,21 @@ export function SeasonWorkspaceLayout() {
             </div>
             <div className="rounded-xl border border-border p-4 bg-card acm-card-elevated acm-hover-surface">
               <p className="acm-body-text text-muted-foreground mb-1">{t("seasonWorkspace.details.upcomingTask")}</p>
-              <p className="text-base text-foreground line-clamp-2">{upcomingTask ?? t("seasonWorkspace.details.noUpcomingTask")}</p>
+              {upcomingTask ? (
+                <p className="text-base text-foreground line-clamp-2">{upcomingTask}</p>
+              ) : (
+                <div 
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary cursor-pointer hover:underline mt-0.5"
+                  onClick={() => setIsTaskDialogOpen(true)}
+                >
+                  <ClipboardList className="w-3.5 h-3.5" />
+                  <span>Thêm công việc</span>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
+          <div className="flex overflow-x-auto divide-x divide-border border-y border-border py-5 my-2 -mx-6 px-6">
             <MetricCard icon={ClipboardList} label={t("seasonWorkspace.metrics.pending")} value={pendingTasks} />
             <MetricCard icon={PackageCheck} label={t("seasonWorkspace.metrics.inProgress")} value={inProgressTasks} />
             <MetricCard icon={AlertCircle} label={t("seasonWorkspace.metrics.overdue")} value={overdueTasks} />
@@ -873,14 +883,14 @@ interface MetricCardProps {
 
 function MetricCard({ icon: Icon, label, value, suffix }: MetricCardProps) {
   return (
-    <div className="rounded-xl border border-border p-3 bg-card acm-card-elevated acm-hover-surface">
+    <div className="flex flex-col justify-center px-5 shrink-0 first:pl-0 last:pr-0">
       <div className="flex items-center gap-2 text-muted-foreground mb-1">
-        <Icon className="w-4 h-4" />
-        <span className="acm-body-text">{label}</span>
+        <Icon className="w-4 h-4 opacity-70" />
+        <span className="acm-body-text whitespace-nowrap">{label}</span>
       </div>
-      <p className="text-2xl font-semibold text-foreground">
+      <p className="text-2xl font-medium text-foreground tracking-tight">
         {value}
-        {suffix ? ` ${suffix}` : ""}
+        {suffix && <span className="text-sm font-normal text-muted-foreground ml-1">{suffix}</span>}
       </p>
     </div>
   );

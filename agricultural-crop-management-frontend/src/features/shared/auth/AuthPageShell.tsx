@@ -29,7 +29,7 @@ export function AuthPageShell({ children, mode }: AuthPageShellProps) {
       className="h-dvh overflow-x-hidden overflow-y-auto bg-[#f4fbf6] bg-cover bg-center p-3 text-[#143222] sm:p-4 lg:p-6"
       style={{
         backgroundImage:
-          "linear-gradient(135deg, rgba(247, 252, 249, 0.94), rgba(232, 248, 239, 0.9)), url('/background.png')",
+          "linear-gradient(135deg, rgba(244, 251, 246, 1), rgba(232, 248, 239, 1)), url('/background.png')",
       }}
       data-name={isSignUp ? "auth.sign-up" : "auth.sign-in"}
     >
@@ -38,13 +38,14 @@ export function AuthPageShell({ children, mode }: AuthPageShellProps) {
           className="relative hidden overflow-hidden rounded-[28px] bg-cover bg-center p-8 text-white shadow-[0_24px_90px_rgba(18,74,43,0.28)] lg:flex lg:flex-col lg:justify-between xl:p-10"
           style={{
             backgroundImage:
-              "linear-gradient(135deg, rgba(12, 61, 31, 0.84), rgba(17, 117, 63, 0.42) 46%, rgba(244, 197, 66, 0.18)), url('/background.png')",
+              "linear-gradient(135deg, rgba(12, 61, 31, 0.95), rgba(17, 117, 63, 0.95)), url('/background.png')",
+            backgroundBlendMode: "multiply"
           }}
           aria-label={t("auth.shell.visualLabel")}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_22%,rgba(255,255,255,0.32),transparent_28%),linear-gradient(180deg,transparent,rgba(6,40,22,0.52))]" />
           <div className="relative flex items-center gap-3">
-            <span className="flex size-12 items-center justify-center rounded-2xl border border-white/35 bg-white/20 backdrop-blur-md">
+            <span className="flex size-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 shadow-sm">
               <Leaf className="size-6 text-[#d8ff8c]" aria-hidden="true" />
             </span>
             <div>
@@ -56,7 +57,7 @@ export function AuthPageShell({ children, mode }: AuthPageShellProps) {
           </div>
 
           <div className="relative max-w-2xl">
-            <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/18 px-4 py-2 text-sm font-semibold text-white shadow-sm backdrop-blur-md">
+            <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#d8ff8c]/30 bg-[#d8ff8c]/10 px-4 py-2 text-sm font-semibold text-[#d8ff8c] shadow-sm">
               <ShieldCheck className="size-4 text-[#d8ff8c]" aria-hidden="true" />
               {t("auth.shell.eyebrow")}
             </span>
@@ -72,7 +73,7 @@ export function AuthPageShell({ children, mode }: AuthPageShellProps) {
             {BENEFITS.map(({ key, icon: Icon }) => (
               <div
                 key={key}
-                className="rounded-2xl border border-white/22 bg-white/16 p-4 shadow-sm backdrop-blur-md"
+                className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-md transition-transform hover:-translate-y-1"
               >
                 <Icon className="mb-3 size-5 text-[#F4C542]" aria-hidden="true" />
                 <p className="text-sm font-bold text-white">{t(`auth.shell.benefits.${key}.title`)}</p>
@@ -87,13 +88,13 @@ export function AuthPageShell({ children, mode }: AuthPageShellProps) {
         <section className="flex min-h-[calc(100dvh-24px)] min-w-0 items-center justify-center py-5 sm:min-h-[calc(100dvh-32px)] sm:py-8 lg:min-h-[calc(100dvh-48px)]">
           <div className={cn("w-full min-w-0 max-w-full", isSignUp ? "sm:max-w-[610px]" : "sm:max-w-[500px]")}>
             <div className="mb-4 flex items-center justify-between gap-3">
-              <div className="min-w-0 truncate inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/76 px-3 py-2 text-sm font-semibold text-[#24583a] shadow-sm backdrop-blur-md lg:hidden">
+              <div className="min-w-0 truncate inline-flex items-center gap-2 rounded-full border border-white bg-white px-3 py-2 text-sm font-bold text-[#143222] shadow-sm lg:hidden">
                 <Leaf className="size-4 text-[#3BA55D]" aria-hidden="true" />
                 {t("common.appName")}
               </div>
 
               <div
-                className="ml-auto shrink-0 inline-flex rounded-full border border-white/70 bg-white/78 p-1 shadow-sm backdrop-blur-md"
+                className="ml-auto shrink-0 inline-flex rounded-full border border-white bg-white p-1 shadow-sm"
                 aria-label={t("auth.shell.languageLabel")}
               >
                 <Globe2 className="ml-2 mr-1 mt-1.5 hidden size-4 text-[#3BA55D] min-[420px]:block" aria-hidden="true" />
@@ -119,7 +120,7 @@ export function AuthPageShell({ children, mode }: AuthPageShellProps) {
               </div>
             </div>
 
-            <div className="max-w-full overflow-hidden rounded-[28px] border border-white/80 bg-white/90 p-5 shadow-[0_24px_80px_rgba(19,96,52,0.18)] backdrop-blur-xl sm:p-7 lg:p-8">
+            <div className="max-w-full overflow-hidden rounded-[28px] border border-white bg-white p-5 shadow-[0_24px_80px_rgba(19,96,52,0.12)] sm:p-7 lg:p-8">
               {children}
             </div>
 

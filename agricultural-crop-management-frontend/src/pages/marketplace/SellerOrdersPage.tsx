@@ -12,6 +12,11 @@ import {
   CardContent,
   Label,
   PageContainer,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Table,
   TableBody,
   TableCell,
@@ -84,7 +89,7 @@ function OrderEmptyState() {
 
   return (
     <div className="flex flex-col items-center justify-center gap-3 px-4 py-10 text-center">
-      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
         <Inbox size={24} />
       </span>
       <p className="max-w-md text-sm text-muted-foreground">
@@ -112,7 +117,7 @@ function OrderMobileCard({
   locale: string;
 }) {
   return (
-    <article className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <article className="rounded-lg border border-border bg-card p-4 sm:p-5 shadow-sm transition-all duration-200 hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-semibold text-foreground">{order.orderCode}</p>
@@ -135,9 +140,9 @@ function OrderMobileCard({
       </div>
 
       <div className="mt-3 flex justify-end">
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm" className="transition-all duration-200 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
           <Link to={`/farmer/marketplace-orders/${order.id}`}>
-            <Eye size={16} />
+            <Eye size={16} className="mr-1.5" />
             {t("marketplaceSeller.orders.table.detail", "Detail")}
           </Link>
         </Button>
@@ -170,64 +175,46 @@ export function SellerOrdersPage() {
       <div className="space-y-4 md:space-y-5">
         <SellerMarketplaceTabs />
 
-        <Card variant="page-header" className="rounded-lg">
-          <CardContent className="px-4 py-4 sm:px-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <h1 className="flex items-center gap-2 text-xl font-bold leading-tight text-foreground md:text-2xl">
-                  <ShoppingBag className="h-5 w-5 text-primary md:h-6 md:w-6" />
-                  {t("marketplaceSeller.orders.title", "Manage orders")}
-                </h1>
-                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  {t(
-                    "marketplaceSeller.orders.subtitle",
-                    "Track buyer orders, monitor status transitions, and open order details for fulfillment.",
-                  )}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between py-2">
+          <div className="min-w-0">
+            <h1 className="flex items-center gap-2 text-xl font-bold leading-tight text-foreground md:text-2xl">
+              <ShoppingBag className="h-5 w-5 text-primary md:h-6 md:w-6" />
+              {t("marketplaceSeller.orders.title", "Manage orders")}
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              {t(
+                "marketplaceSeller.orders.subtitle",
+                "Track buyer orders, monitor status transitions, and open order details for fulfillment.",
+              )}
+            </p>
+          </div>
+        </div>
 
-        <Card variant="filter" className="rounded-lg">
-          <CardContent className="px-4 py-4 sm:px-5">
-            <Label className="mb-2 block text-xs font-semibold text-muted-foreground">
-              {t("marketplaceSeller.orders.filters.label", "Filter orders")}
-            </Label>
-            <div className="-mx-1 overflow-x-auto pb-1">
-              <div
-                className="flex min-w-max items-center gap-2 px-1 md:min-w-0 md:flex-wrap"
-                role="group"
+        <div className="py-2">
+          <Label htmlFor="seller-order-status-filter" className="mb-2 block text-xs font-semibold text-muted-foreground">
+            {t("marketplaceSeller.orders.filters.label", "Filter orders")}
+          </Label>
+          <div className="max-w-xs">
+            <Select value={status} onValueChange={(value) => setStatus(value as "ALL" | MarketplaceOrderStatus)}>
+              <SelectTrigger
+                id="seller-order-status-filter"
                 aria-label={t("marketplaceSeller.orders.filters.ariaLabel", "Order status filters")}
+                className="h-10 rounded-md border-border"
               >
-                {statusOptions.map((option) => {
-                  const isActive = status === option.value;
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-                  return (
-                    <Button
-                      key={option.value}
-                      type="button"
-                      variant={isActive ? "default" : "outline"}
-                      size="sm"
-                      aria-pressed={isActive}
-                      onClick={() => setStatus(option.value)}
-                      className={cn(
-                        "rounded-full",
-                        isActive
-                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : "bg-card text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-foreground",
-                      )}
-                    >
-                      {option.label}
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="content" className="hidden overflow-hidden rounded-lg md:block">
+        <div className="hidden overflow-x-auto md:block">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40">
@@ -278,9 +265,9 @@ export function SellerOrdersPage() {
                       </TableCell>
                       <TableCell>{statusBadge(order.status, t)}</TableCell>
                       <TableCell className="pr-4 text-right">
-                        <Button asChild variant="ghost" size="sm" className="text-primary hover:bg-primary/10 hover:text-primary">
+                        <Button asChild variant="ghost" size="sm" className="text-primary hover:bg-primary/10 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ring-offset-background">
                           <Link to={`/farmer/marketplace-orders/${order.id}`}>
-                            <Eye size={16} />
+                            <Eye size={16} className="mr-1.5" />
                             {t("marketplaceSeller.orders.table.detail", "Detail")}
                           </Link>
                         </Button>
@@ -306,7 +293,7 @@ export function SellerOrdersPage() {
               ) : null}
             </TableBody>
           </Table>
-        </Card>
+        </div>
 
         <section
           className="space-y-3 md:hidden"

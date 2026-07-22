@@ -69,7 +69,7 @@ export function EmployeePayrollPage() {
               </TableHeader>
               <TableBody>
                 {payroll.map((record) => (
-                  <TableRow key={record.id}>
+                  <TableRow key={record.id} className="hover:bg-muted/50 transition-colors">
                     <TableCell>{record.seasonName || t("common.notAvailable")}</TableCell>
                     <TableCell>
                       {record.periodStart || "-"} - {record.periodEnd || "-"}
@@ -84,7 +84,7 @@ export function EmployeePayrollPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        size="sm"
+                        className="min-h-[44px]"
                         onClick={() => setSelectedPayrollId(record.id)}
                       >
                         {t("employee.payroll.actions.viewDetail")}

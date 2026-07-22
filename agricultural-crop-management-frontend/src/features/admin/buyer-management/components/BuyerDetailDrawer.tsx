@@ -66,7 +66,7 @@ export function BuyerDetailDrawer({
                 </SheetHeader>
 
                 <Tabs value={activeTab} onValueChange={onTabChange} className="mt-6">
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="w-full overflow-x-auto">
                         <TabsTrigger value="general">{t('admin.buyerManagement.detail.tabs.general')}</TabsTrigger>
                         <TabsTrigger value="kyc" disabled={!buyer}>
                             {t('admin.buyerManagement.detail.tabs.kyc')}

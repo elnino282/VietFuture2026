@@ -66,6 +66,35 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis_quanlymuavu
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redispass}
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli -a $REDIS_PASSWORD ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: chroma_quanlymuavu
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   identity-service:
     build:
       context: ./identity-service
@@ -139,6 +168,8 @@ services:
       dockerfile: Dockerfile
     container_name: ai_service_quanlymuavu
     restart: unless-stopped
+    ports:
+      - "8083:8083"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -147,9 +178,14 @@ services:
       APP_AI_API_KEY: ${APP_AI_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      SPRING_AI_CHROMADB_STORE_URL: "http://chroma:8000"
+      SPRING_AI_CHROMADB_STORE_COLLECTION_NAME: acm_knowledge
       MANAGEMENT_OTLP_TRACING_EXPORT_ENABLED: "false"
+    volumes:
+      - ./ai-service/data:/data/ai_knowledge
     depends_on:
       - identity-service
+      - chroma
 
   farm-service:
     build:
@@ -526,3 +562,5 @@ volumes:
   mysql_data:
   minio_data:
   rabbitmq_data:
+  redis_data:
+  chroma_data:

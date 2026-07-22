@@ -273,7 +273,7 @@ export function SearchResultsPage({
                       <Button
                         variant="outline"
                         size="sm"
-                        className={cn(isAdminVariant && "rounded-[14px]")}
+                        className={cn("min-h-[44px]", isAdminVariant && "rounded-[14px]")}
                         disabled={!item.route}
                         disabledHint="No route available"
                         onClick={() => item.route && navigate(item.route)}

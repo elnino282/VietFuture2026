@@ -5,6 +5,10 @@ const config: Config = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', "sans-serif"],
+        display: ['"Fraunces"', "serif"],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
@@ -31,6 +35,12 @@ const config: Config = {
         "warning-foreground": "var(--warning-foreground)",
         info: "var(--info)",
         "info-foreground": "var(--info-foreground)",
+        status: {
+          success: { DEFAULT: "var(--status-success-bg)", foreground: "var(--status-success-fg)" },
+          warning: { DEFAULT: "var(--status-warning-bg)", foreground: "var(--status-warning-fg)" },
+          error: { DEFAULT: "var(--status-error-bg)", foreground: "var(--status-error-fg)" },
+          neutral: { DEFAULT: "var(--status-neutral-bg)", foreground: "var(--status-neutral-fg)" }
+        },
         chart: {
           1: "var(--chart-1)",
           2: "var(--chart-2)",

@@ -71,142 +71,132 @@ export function SeasonHeader({
       selectedSeason.startDate;
 
     return (
-      <div className="mb-6">
-        <Card variant="page-header">
-          <CardContent className="px-6 py-4">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex min-w-0 items-center gap-4">
-                <BackButton
-                  onClick={onBack}
-                  className="acm-rounded-sm"
-                />
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="min-w-0 text-2xl break-words">{selectedSeason.name}</h1>
-                    <Badge
-                      className={`${getStatusColor(selectedSeason.status)} acm-rounded-sm`}
-                    >
-                      {getStatusLabel(selectedSeason.status)}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {formatDateRange(
-                      selectedSeason.startDate,
-                      effectiveEndDate,
-                    )}
-                  </p>
-                </div>
-              </div>
-
+      <div className="mb-6 px-6 py-6 bg-background border-b border-border/40">
+        <div className="max-w-[1800px] mx-auto flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex min-w-0 items-start gap-4">
+            <BackButton
+              onClick={onBack}
+              className="mt-1"
+            />
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  variant="outline"
-                  onClick={onEdit}
-                  disabled={!onEdit || !canEdit}
-                  className="acm-rounded-sm border-border hover:bg-muted"
+                <h1 className="min-w-0 text-3xl md:text-4xl font-bold tracking-tight text-foreground break-words">{selectedSeason.name}</h1>
+                <Badge
+                  className={`${getStatusColor(selectedSeason.status)}`}
                 >
-                  <Edit className="w-4 h-4 mr-2" />
-                  {t('seasons.actions.edit')}
-                </Button>
-                {canStart && onStartSeason && (
-                  <Button
-                    variant="outline"
-                    onClick={() => onStartSeason(selectedSeason)}
-                    className="acm-rounded-sm border-border hover:bg-muted"
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    {t('seasons.actions.start')}
-                  </Button>
-                )}
-                {canComplete && onCompleteSeason && (
-                  <Button
-                    variant="outline"
-                    onClick={() => onCompleteSeason(selectedSeason)}
-                    className="acm-rounded-sm border-border hover:bg-muted"
-                  >
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    {t('seasons.actions.complete')}
-                  </Button>
-                )}
-                {canCancel && onCancelSeason && (
-                  <Button
-                    variant="outline"
-                    onClick={() => onCancelSeason(selectedSeason)}
-                    className="acm-rounded-sm border-border hover:bg-muted text-destructive"
-                  >
-                    <Ban className="w-4 h-4 mr-2" />
-                    {t('seasons.actions.cancel')}
-                  </Button>
-                )}
-                {canArchive && onArchiveSeason && (
-                  <Button
-                    variant="outline"
-                    onClick={() => onArchiveSeason(selectedSeason)}
-                    className="acm-rounded-sm border-border hover:bg-muted"
-                  >
-                    <Archive className="w-4 h-4 mr-2" />
-                    {t('seasons.actions.archive')}
-                  </Button>
-                )}
+                  {getStatusLabel(selectedSeason.status)}
+                </Badge>
               </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                {formatDateRange(
+                  selectedSeason.startDate,
+                  effectiveEndDate,
+                )}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={onEdit}
+              disabled={!onEdit || !canEdit}
+              className="border-border hover:bg-muted"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              {t('seasons.actions.edit')}
+            </Button>
+            {canStart && onStartSeason && (
+              <Button
+                variant="outline"
+                onClick={() => onStartSeason(selectedSeason)}
+                className="border-border hover:bg-muted"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                {t('seasons.actions.start')}
+              </Button>
+            )}
+            {canComplete && onCompleteSeason && (
+              <Button
+                onClick={() => onCompleteSeason(selectedSeason)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                {t('seasons.actions.complete')}
+              </Button>
+            )}
+            {canCancel && onCancelSeason && (
+              <Button
+                variant="destructive"
+                onClick={() => onCancelSeason(selectedSeason)}
+                className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground shadow-none"
+              >
+                <Ban className="w-4 h-4 mr-2" />
+                {t('seasons.actions.cancel')}
+              </Button>
+            )}
+            {canArchive && onArchiveSeason && (
+              <Button
+                variant="outline"
+                onClick={() => onArchiveSeason(selectedSeason)}
+                className="border-border hover:bg-muted"
+              >
+                <Archive className="w-4 h-4 mr-2" />
+                {t('seasons.actions.archive')}
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mb-6">
-      <Card variant="page-header">
-        <CardContent className="px-6 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex-shrink-0">
-              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
-                <Calendar className="w-6 h-6 text-emerald-600" />
-                {t('seasons.pageTitle')}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t('seasons.subtitle')}
-              </p>
-            </div>
+    <div className="mb-6 px-6 py-6 bg-background border-b border-border/40">
+      <div className="max-w-[1800px] mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-shrink-0">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground flex items-center gap-3 tracking-tight">
+            <Calendar className="w-8 h-8 text-emerald-600" />
+            {t('seasons.pageTitle')}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-2">
+            {t('seasons.subtitle')}
+          </p>
+        </div>
 
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="acm-rounded-sm"
-                    >
-                      <HelpCircle className="w-5 h-5 text-muted-foreground" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{t('seasons.help')}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                >
+                  <HelpCircle className="w-5 h-5 text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('seasons.help')}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-              <Button
-                variant="outline"
-                onClick={onExport}
-                className="acm-rounded-sm border-border hover:bg-muted"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {t('seasons.actions.export')}
-              </Button>
+          <Button
+            variant="outline"
+            onClick={onExport}
+            className="border-border hover:bg-muted"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            {t('seasons.actions.export')}
+          </Button>
 
-              <Button
-                className="bg-primary hover:bg-primary/90 text-white acm-rounded-sm acm-button-shadow"
-                onClick={onNewSeason}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                {t('seasons.createButton')}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          <Button
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+            onClick={onNewSeason}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            {t('seasons.createButton')}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

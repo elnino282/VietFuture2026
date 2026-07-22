@@ -214,7 +214,7 @@ export function AppShell({
                 )}
 
                 {/* Page Content */}
-                <main className="acm-main-content flex-1 overflow-auto">
+                <main className="acm-main-content flex-1 overflow-auto bg-[var(--portal-content-bg)]">
                     <BreadcrumbContextBar breadcrumbs={breadcrumbs} />
                     {children}
                 </main>

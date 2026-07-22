@@ -1,4 +1,4 @@
-﻿import { useFarmerNotifications, useMarkNotificationRead } from '@/entities/notification';
+import { useFarmerNotifications, useMarkNotificationRead } from '@/entities/notification';
 import { useI18n } from '@/hooks/useI18n';
 import { usePreferences } from '@/shared/contexts';
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, PageContainer, PageHeader } from '@/shared/ui';
@@ -75,7 +75,7 @@ export function NotificationsPage() {
           {notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`rounded-lg border p-4 transition ${
+              className={`rounded-lg border p-4 transition-all duration-200 hover:shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ring-offset-background ${
                 notification.readAt ? 'bg-muted/30' : 'bg-card'
               }`}
             >
@@ -97,6 +97,7 @@ export function NotificationsPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleOpenNotification(notification)}
+                    className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                   >
                     {t('common.view')}
                   </Button>
@@ -106,8 +107,9 @@ export function NotificationsPage() {
                       size="sm"
                       onClick={() => markReadMutation.mutate(notification.id)}
                       disabled={markReadMutation.isPending}
+                      className="min-h-[44px] transition-all duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                     >
-                      <CheckCircle2 className="h-4 w-4 mr-1" />
+                      <CheckCircle2 className="h-4 w-4 mr-1 text-primary" />
                       {t('common.markRead')}
                     </Button>
                   )}

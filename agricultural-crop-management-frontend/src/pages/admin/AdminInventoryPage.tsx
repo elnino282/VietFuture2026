@@ -274,7 +274,7 @@ export function AdminInventoryPage() {
                 updateParams({ farmId: value === "all" ? undefined : value })
               }
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[220px]">
+              <SelectTrigger className="h-9 w-full sm:w-[220px]">
                 <SelectValue placeholder={t("admin.alerts.farms.all")} />
               </SelectTrigger>
               <SelectContent>
@@ -293,7 +293,7 @@ export function AdminInventoryPage() {
                 updateParams({ itemId: value === "all" ? undefined : value })
               }
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[220px]">
+              <SelectTrigger className="h-9 w-full sm:w-[220px]">
                 <SelectValue placeholder={t("admin.inventoryRisks.filters.allItems")} />
               </SelectTrigger>
               <SelectContent>
@@ -310,7 +310,7 @@ export function AdminInventoryPage() {
               value={status}
               onValueChange={(value) => updateParams({ status: value })}
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[170px]">
+              <SelectTrigger className="h-9 w-full sm:w-[170px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -326,7 +326,7 @@ export function AdminInventoryPage() {
               value={severity}
               onValueChange={(value) => updateParams({ severity: value })}
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[170px]">
+              <SelectTrigger className="h-9 w-full sm:w-[170px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -343,7 +343,7 @@ export function AdminInventoryPage() {
                 value={String(windowDays)}
                 onValueChange={(value) => updateParams({ windowDays: value })}
               >
-                <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[120px]">
+                <SelectTrigger className="h-9 w-full sm:w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -367,7 +367,7 @@ export function AdminInventoryPage() {
                       lowStockThreshold: event.target.value || undefined,
                     })
                   }
-                  className="h-9 w-full rounded-[14px] sm:w-[120px]"
+                  className="h-9 w-full sm:w-[120px]"
                 />
                 <span className="text-xs text-muted-foreground">
                   {t("admin.inventoryRisks.filters.lowStockThreshold")}
@@ -379,7 +379,7 @@ export function AdminInventoryPage() {
               value={sort}
               onValueChange={(value) => updateParams({ sort: value })}
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[190px]">
+              <SelectTrigger className="h-9 w-full sm:w-[190px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -395,7 +395,7 @@ export function AdminInventoryPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder={t("admin.inventoryRisks.searchPlaceholder")}
-                className="h-9 rounded-[14px] pl-9"
+                className="h-9 pl-9"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
               />
@@ -419,6 +419,7 @@ export function AdminInventoryPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="min-h-[44px]"
                   onClick={() => lotsQuery.refetch()}
                 >
                   {t("common.retry")}
@@ -446,14 +447,14 @@ export function AdminInventoryPage() {
                     </TableHeader>
                     <TableBody>
                       {lotsQuery.data.items.map((lot) => (
-                        <TableRow key={lot.lotId}>
-                          <TableCell>
-                            <div className="font-medium">{lot.itemName}</div>
-                            <div className="text-xs text-muted-foreground">
+                        <TableRow key={lot.lotId} className="hover:bg-muted/50 transition-colors">
+                          <TableCell className="max-w-[200px]">
+                            <div className="font-medium truncate" title={lot.itemName}>{lot.itemName}</div>
+                            <div className="text-xs text-muted-foreground truncate" title={lot.lotCode || undefined}>
                               {lot.lotCode || t("admin.inventoryRisks.noLotCode")}
                             </div>
                           </TableCell>
-                          <TableCell>{lot.farmName || "-"}</TableCell>
+                          <TableCell className="max-w-[150px] truncate" title={lot.farmName || undefined}>{lot.farmName || "-"}</TableCell>
                           <TableCell>
                             {formatDate(lot.expiryDate, preferences.locale)}
                           </TableCell>
@@ -472,7 +473,7 @@ export function AdminInventoryPage() {
                                   type="button"
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 rounded-[14px]"
+                                  className="min-h-[44px] min-w-[44px]"
                                   aria-label={t("admin.farmsPlots.actionsFor", { name: lot.itemName })}
                                 >
                                   <MoreVertical className="h-4 w-4" />
@@ -495,6 +496,7 @@ export function AdminInventoryPage() {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="min-h-[44px]"
                       disabled={page === 0}
                       onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
                     >
@@ -503,6 +505,7 @@ export function AdminInventoryPage() {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="min-h-[44px]"
                       disabled={page >= (lotsQuery.data?.totalPages ?? 1) - 1}
                       onClick={() => setPage((prev) => prev + 1)}
                     >
@@ -522,11 +525,11 @@ export function AdminInventoryPage() {
 
       {detailOpen && (
         <div
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm cursor-pointer"
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm cursor-pointer animate-in fade-in duration-200"
           onClick={closeDetail}
         >
           <div
-            className="fixed right-0 top-0 h-full w-full max-w-xl bg-card border-l border-border shadow-lg overflow-auto cursor-default"
+            className="fixed right-0 top-0 h-full w-full max-w-xl bg-card border-l border-border shadow-2xl overflow-auto cursor-default animate-in slide-in-from-right duration-300"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="p-6 space-y-6">
@@ -604,10 +607,10 @@ export function AdminInventoryPage() {
                             <TableRow
                               key={`${balance.warehouseId}-${balance.locationId}-${index}`}
                             >
-                              <TableCell>
+                              <TableCell className="max-w-[150px] truncate" title={balance.warehouseName || undefined}>
                                 {balance.warehouseName || "-"}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="max-w-[150px] truncate" title={balance.locationLabel || undefined}>
                                 {balance.locationLabel || "-"}
                               </TableCell>
                               <TableCell className="text-right font-mono">
@@ -663,7 +666,7 @@ export function AdminInventoryPage() {
                             <TableCell className="text-right font-mono">
                               {formatNumber(Number(movement.quantity))}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="max-w-[200px] truncate" title={movement.reference || movement.note || undefined}>
                               {movement.reference || movement.note || "-"}
                             </TableCell>
                           </TableRow>

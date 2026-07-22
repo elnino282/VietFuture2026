@@ -1,4 +1,4 @@
-import { forgotPassword } from '@/api/auth';
+import { forgotPassword } from '@/features/auth/api/auth';
 import { useI18n } from '@/hooks/useI18n';
 import { useMutation } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
@@ -24,7 +24,7 @@ export function ForgotPasswordPage() {
 
     return (
         <div className="bg-white relative min-h-screen flex items-center justify-center">
-            <div className="w-[410px] relative">
+            <div className="w-full max-w-[410px] px-4 sm:px-0 relative">
                 <div className="mb-[32px]">
                     <p
                         className="font-['DM_Sans:Bold',sans-serif] font-bold leading-[56px] text-[#2b3674] text-[36px] tracking-[-0.72px] mb-2"

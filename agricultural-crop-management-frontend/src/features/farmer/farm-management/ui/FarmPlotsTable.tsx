@@ -52,9 +52,9 @@ export function FarmPlotsTable({ plots, isLoading = false }: FarmPlotsTableProps
     const { t } = useTranslation();
 
     // Loading state
-    if (isLoading) {
+        if (isLoading) {
         return (
-            <div className="rounded-md border">
+            <div className="rounded-md">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -90,7 +90,7 @@ export function FarmPlotsTable({ plots, isLoading = false }: FarmPlotsTableProps
     }
 
     return (
-        <div className="rounded-md border">
+        <div className="rounded-md mt-2">
             <Table>
                 <TableHeader>
                     <TableRow>

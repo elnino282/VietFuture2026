@@ -104,56 +104,46 @@ export function SellerDeliveriesPage() {
       <div className="space-y-4 md:space-y-5">
         <SellerMarketplaceTabs />
 
-        <Card variant="page-header" className="rounded-lg">
-          <CardContent className="px-4 py-4 sm:px-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <h1 className="flex items-center gap-2 text-xl font-bold leading-tight text-foreground md:text-2xl">
-                  <Truck className="h-5 w-5 text-primary md:h-6 md:w-6" />
-                  Quản lý Vận đơn (Delivery Orders)
-                </h1>
-                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  Theo dõi trạng thái các lô hàng nông sản được gửi qua các đối tác giao hàng, bao gồm chuỗi lạnh và giao trong ngày.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between py-2">
+          <div className="min-w-0">
+            <h1 className="flex items-center gap-2 text-xl font-bold leading-tight text-foreground md:text-2xl">
+              <Truck className="h-5 w-5 text-primary md:h-6 md:w-6" />
+              Quản lý Vận đơn (Delivery Orders)
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Theo dõi trạng thái các lô hàng nông sản được gửi qua các đối tác giao hàng, bao gồm chuỗi lạnh và giao trong ngày.
+            </p>
+          </div>
+        </div>
 
         {/* Filter Section */}
-        <Card variant="filter" className="rounded-lg">
-          <CardContent className="px-4 py-4 sm:px-5">
-            <Label className="mb-2 block text-xs font-semibold text-muted-foreground">
-              Lọc trạng thái vận đơn
-            </Label>
-            <div className="-mx-1 overflow-x-auto pb-1">
-              <div className="flex min-w-max items-center gap-2 px-1 md:min-w-0 md:flex-wrap">
-                <Button
-                  variant={statusFilter === "ALL" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setStatusFilter("ALL")}
-                  className={cn("rounded-full", statusFilter === "ALL" ? "bg-primary text-primary-foreground" : "")}
-                >
-                  Tất cả
-                </Button>
+        <div className="py-2">
+          <Label htmlFor="seller-delivery-status-filter" className="mb-2 block text-xs font-semibold text-muted-foreground">
+            Lọc trạng thái vận đơn
+          </Label>
+          <div className="max-w-xs">
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as "ALL" | DeliveryOrder["status"])}>
+              <SelectTrigger
+                id="seller-delivery-status-filter"
+                aria-label="Lọc trạng thái vận đơn"
+                className="h-10 rounded-md border-border"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tất cả</SelectItem>
                 {DELIVERY_STATUSES.map((status) => (
-                  <Button
-                    key={status}
-                    variant={statusFilter === status ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setStatusFilter(status)}
-                    className={cn("rounded-full", statusFilter === status ? "bg-primary text-primary-foreground" : "")}
-                  >
+                  <SelectItem key={status} value={status}>
                     {status}
-                  </Button>
+                  </SelectItem>
                 ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         {/* Table View for Desktop */}
-        <Card variant="content" className="hidden overflow-hidden rounded-lg md:block">
+        <div className="hidden overflow-x-auto md:block">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40">
@@ -207,7 +197,7 @@ export function SellerDeliveriesPage() {
                       <TableCell className="font-medium">
                         <Link
                           to={`/farmer/marketplace-orders/${delivery.marketplaceOrderId}`}
-                          className="text-primary hover:underline"
+                          className="text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm px-1 -mx-1"
                         >
                           Đơn #{delivery.marketplaceOrderId}
                         </Link>
@@ -264,7 +254,7 @@ export function SellerDeliveriesPage() {
                 <TableRow>
                   <TableCell colSpan={7} className="p-0">
                     <div className="flex flex-col items-center justify-center gap-3 px-4 py-10 text-center">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
                         <Inbox size={24} />
                       </span>
                       <p className="max-w-md text-sm text-muted-foreground">
@@ -276,24 +266,24 @@ export function SellerDeliveriesPage() {
               ) : null}
             </TableBody>
           </Table>
-        </Card>
+        </div>
 
         {/* Mobile View */}
         <div className="space-y-3 md:hidden">
           {!deliveriesQuery.isLoading && !deliveriesQuery.isError && hasDeliveries
             ? filteredDeliveries.map((delivery) => (
-                <Card key={delivery.id} className="rounded-lg border border-border bg-card p-4 shadow-sm">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold text-foreground">Vận đơn: {delivery.trackingNumber || "N/A"}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{formatDate(delivery.createdAt, locale)}</p>
+                <Card key={delivery.id} className="rounded-lg border border-border bg-card p-4 sm:p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground truncate">Vận đơn: {delivery.trackingNumber || "N/A"}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{formatDate(delivery.createdAt, locale)}</p>
                     </div>
-                    <Badge variant={statusBadgeVariant(delivery.status)}>{delivery.status}</Badge>
+                    <Badge variant={statusBadgeVariant(delivery.status)} className="shrink-0">{delivery.status}</Badge>
                   </div>
-                  <div className="mt-3 space-y-1 text-sm border-t border-border pt-2.5">
+                  <div className="mt-4 space-y-1.5 text-sm border-t border-border/50 pt-3">
                     <p className="text-muted-foreground">
                       Đơn hàng:{" "}
-                      <Link to={`/farmer/marketplace-orders/${delivery.marketplaceOrderId}`} className="text-primary hover:underline">
+                      <Link to={`/farmer/marketplace-orders/${delivery.marketplaceOrderId}`} className="text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
                         #{delivery.marketplaceOrderId}
                       </Link>
                     </p>

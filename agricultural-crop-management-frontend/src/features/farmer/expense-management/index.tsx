@@ -242,7 +242,7 @@ export function ExpenseManagement() {
                 <Card className="border-border rounded-2xl shadow-sm">
                     <CardContent className="px-6 py-4">
                         <Tabs value={activeTab} onValueChange={setActiveTab}>
-                            <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted p-1 rounded-xl">
+                            <TabsList className="mb-6 w-full overflow-x-auto">
                                 <TabsTrigger
                                     value="list"
                                     className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"

@@ -125,7 +125,7 @@ export function EmployeeProfile() {
           <div className="w-full sm:w-auto">
             <Button
               onClick={() => setEditDialogOpen(true)}
-              className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="min-h-[44px] w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <User className="w-4 h-4 mr-2" />
               {t("profile.editProfile")}
@@ -283,7 +283,7 @@ export function EmployeeProfile() {
                         : ""
                     }`}
                   >
-                    <div className="bg-primary/10 rounded-2xl p-2 mt-0.5">
+                    <div className="bg-primary/10 rounded-md p-2 mt-0.5">
                       <User className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1 space-y-1">
@@ -309,7 +309,7 @@ export function EmployeeProfile() {
               </h4>
 
               <div className="space-y-4">
-                <div className="bg-muted border border-border rounded-2xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="bg-muted border border-border rounded-md p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="space-y-1">
                     <Label
                       htmlFor="employee-task-updates"
@@ -338,7 +338,7 @@ export function EmployeeProfile() {
                   />
                 </div>
 
-                <div className="bg-muted border border-border rounded-2xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="bg-muted border border-border rounded-md p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="space-y-1">
                     <Label
                       htmlFor="employee-payroll-updates"

@@ -86,33 +86,33 @@ export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
                 side="right"
                 className="flex w-full max-w-full gap-0 overflow-hidden border-l border-border bg-background p-0 text-foreground shadow-2xl sm:w-[640px] sm:max-w-[640px] lg:w-[720px] lg:max-w-[720px]"
             >
-                <SheetHeader className="border-b border-border bg-card px-5 py-5 pr-14 text-left sm:px-6">
+                <SheetHeader className="px-5 py-6 pr-14 text-left sm:px-6">
                     <div className="flex items-start gap-3">
                         <div
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-sm"
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
                             style={{ background: `linear-gradient(135deg, ${portalColor} 0%, #16a34a 100%)` }}
                         >
-                            <Leaf className="h-5 w-5" />
+                            <Sparkles className="h-5 w-5" />
                         </div>
-                        <div className="min-w-0">
-                            <SheetTitle className="text-base font-semibold text-foreground sm:text-lg">
+                        <div className="min-w-0 mt-0.5">
+                            <SheetTitle className="text-lg font-bold text-foreground">
                                 Trợ lý AI mùa vụ
                             </SheetTitle>
-                            <SheetDescription className="mt-1 max-w-[34rem] text-sm leading-6 text-muted-foreground">
+                            <SheetDescription className="mt-0.5 max-w-[34rem] text-sm text-muted-foreground">
                                 Nhận gợi ý về thời tiết, chăm sóc cây trồng, sâu bệnh và chi phí vận hành trang trại.
                             </SheetDescription>
                         </div>
                     </div>
                 </SheetHeader>
 
-                <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5">
-                    <div className="flex items-start justify-between gap-3">
-                        <div className="flex flex-wrap gap-2.5">
+                <div className="flex min-h-0 flex-1 flex-col gap-2 px-4 pb-4 sm:px-6 sm:pb-5">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex flex-wrap gap-2">
                             {QUICK_CHIPS.map((chip) => (
                                 <button
                                     key={chip.label}
                                     type="button"
-                                    className="inline-flex h-9 items-center rounded-full border border-border bg-card px-3 text-sm font-medium text-muted-foreground shadow-sm transition hover:border-primary/40 hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/45 focus:ring-offset-2 focus:ring-offset-background"
+                                    className="inline-flex h-8 items-center rounded-full bg-primary/5 px-3.5 text-xs font-medium text-primary transition-colors hover:bg-primary/15 focus:outline-none focus:ring-2 focus:ring-primary/45 focus:ring-offset-2"
                                     onClick={() => setDraft(chip.prompt)}
                                 >
                                     {chip.label}
@@ -123,7 +123,7 @@ export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-primary"
+                            className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
                             onClick={() => {
                                 reset();
                                 setDraft('');
@@ -131,34 +131,34 @@ export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
                             disabled={messages.length <= 1 || isSending}
                             aria-label="Làm mới hội thoại"
                         >
-                            <RotateCcw className="h-4 w-4" />
+                            <RotateCcw className="h-3.5 w-3.5" />
                         </Button>
                     </div>
 
-                    <div className="min-h-0 flex-1 rounded-2xl border border-border bg-muted/30 shadow-inner">
+                    <div className="min-h-0 flex-1">
                         <ScrollArea className="h-full">
-                            <div className="space-y-4 p-4 sm:p-5">
+                            <div className="space-y-6 p-2">
                                 {messages.map((message) => {
                                     const isUser = message.role === 'user';
                                     return (
                                         <div
                                             key={message.id}
                                             className={cn(
-                                                'flex items-start gap-2',
+                                                'flex items-start gap-3',
                                                 isUser ? 'justify-end' : 'justify-start',
                                             )}
                                         >
                                             {!isUser && (
-                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                                    <Bot className="h-4 w-4" />
+                                                <div className="flex h-8 w-8 mt-0.5 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                                                    <Sparkles className="h-4 w-4" />
                                                 </div>
                                             )}
                                             <div
                                                 className={cn(
-                                                    'max-w-[84%] rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm',
+                                                    'max-w-[85%] text-sm leading-relaxed',
                                                     isUser
-                                                        ? 'bg-primary text-primary-foreground'
-                                                        : 'border border-border bg-card text-card-foreground',
+                                                        ? 'rounded-2xl bg-primary text-primary-foreground px-4 py-2.5 shadow-sm'
+                                                        : 'text-foreground pt-1.5',
                                                 )}
                                             >
                                                 {isUser ? (
@@ -174,12 +174,12 @@ export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
                                     );
                                 })}
                                 {isSending && (
-                                    <div className="flex items-start gap-2">
-                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                            <Bot className="h-4 w-4" />
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex h-8 w-8 mt-0.5 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                                            <Sparkles className="h-4 w-4" />
                                         </div>
-                                        <div className="animate-pulse rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
-                                            Đang trả lời...
+                                        <div className="animate-pulse text-sm text-muted-foreground pt-1.5">
+                                            Đang phân tích...
                                         </div>
                                     </div>
                                 )}
@@ -188,31 +188,25 @@ export function AiDrawer({ open, onOpenChange, portalColor }: AiDrawerProps) {
                         </ScrollArea>
                     </div>
 
-                    <div className="rounded-2xl border border-border bg-card p-3 shadow-sm focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/15">
+                    <div className="relative mt-2 rounded-3xl border border-border bg-card shadow-sm transition-shadow focus-within:border-primary focus-within:shadow-md focus-within:ring-1 focus-within:ring-primary">
                         <Textarea
-                            placeholder="Hỏi về cây trồng, sâu bệnh, đất, tưới tiêu hoặc lịch mùa vụ..."
+                            placeholder="Hỏi về cây trồng, sâu bệnh, đất..."
                             value={draft}
                             onChange={(event) => setDraft(event.target.value)}
                             onKeyDown={handleKeyDown}
                             disabled={isSending}
-                            rows={3}
-                            className="min-h-[88px] resize-none border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
+                            rows={1}
+                            className="min-h-[52px] resize-none border-0 bg-transparent px-4 py-3.5 pr-14 text-sm shadow-none focus-visible:ring-0 leading-relaxed"
                         />
-                        <div className="mt-3 flex items-center justify-between gap-3">
-                            <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                                <Sparkles className="h-3.5 w-3.5" />
-                                AI mùa vụ
-                            </span>
-                            <Button
-                                type="button"
-                                className="rounded-full bg-primary px-4 text-primary-foreground hover:bg-primary/90"
-                                onClick={handleSend}
-                                disabled={!draft.trim() || isSending}
-                            >
-                                <Send className="h-4 w-4" />
-                                Gửi
-                            </Button>
-                        </div>
+                        <Button
+                            type="button"
+                            size="icon"
+                            className="absolute right-2 top-2 h-9 w-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+                            onClick={handleSend}
+                            disabled={!draft.trim() || isSending}
+                        >
+                            <Send className="h-4 w-4 ml-0.5" />
+                        </Button>
                     </div>
                 </div>
             </SheetContent>

@@ -51,7 +51,7 @@ const getTaskStatusClassName = (status?: string) => {
 
 export function EmployeeTasksPage() {
   const { t } = useI18n();
-  const { data: taskPageData, isLoading } = useEmployeeTasks({ page: 0, size: 200 });
+  const { data: taskPageData, isLoading, isError, error } = useEmployeeTasks({ page: 0, size: 200 });
   const [progressTaskId, setProgressTaskId] = useState<number | null>(null);
   const [planSeasonId, setPlanSeasonId] = useState<number | null>(null);
   const [progressPercent, setProgressPercent] = useState<string>("0");
@@ -158,6 +158,11 @@ export function EmployeeTasksPage() {
         <CardContent>
           {isLoading ? (
             <p className="text-sm text-muted-foreground">{t("employee.tasks.loading")}</p>
+          ) : isError ? (
+            <div className="p-4 rounded-md border border-red-200 bg-red-50 text-red-700">
+              <p className="font-semibold">{t("employee.tasks.error", "Đã xảy ra lỗi khi tải dữ liệu công việc.")}</p>
+              <p className="text-sm mt-1">{error instanceof Error ? error.message : String(error)}</p>
+            </div>
           ) : tasks.length === 0 ? (
             <p className="text-sm text-muted-foreground flex items-center">
               <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" />
@@ -174,8 +179,7 @@ export function EmployeeTasksPage() {
                     {group.seasonId && (
                       <Button
                         type="button"
-                        size="sm"
-                        variant="secondary"
+                        className="min-h-[44px]"
                         onClick={() => setPlanSeasonId(group.seasonId)}
                       >
                         {t("employee.tasks.actions.viewSeasonPlan")}
@@ -201,9 +205,9 @@ export function EmployeeTasksPage() {
                           <div className="space-y-2.5 mb-4 text-sm flex-1 bg-muted/20 p-3 rounded-md border border-border/50">
                             {/* [FIX] Hiển thị Plot Name và Diện Tích */}
                             {(task.plotName || task.plot) && (
-                              <div className="flex items-center text-foreground font-medium">
-                                <MapPin className="w-4 h-4 mr-2 text-primary" />
-                                <span>
+                              <div className="flex items-center text-foreground font-medium min-w-0">
+                                <MapPin className="w-4 h-4 mr-2 text-primary shrink-0" />
+                                <span className="truncate" title={task.plotName || task.plot || undefined}>
                                   {task.plotName || task.plot}
                                   {task.plotArea ? (
                                     <span className="text-muted-foreground font-normal">
@@ -238,7 +242,7 @@ export function EmployeeTasksPage() {
                                 size="sm"
                                 onClick={() => acceptTaskMutation.mutate(task.taskId)}
                                 disabled={acceptTaskMutation.isPending}
-                                className="w-full sm:w-auto"
+                                className="min-h-[44px] w-full sm:w-auto"
                               >
                                 {t("employee.tasks.actions.acceptTask")}
                               </Button>
@@ -247,7 +251,7 @@ export function EmployeeTasksPage() {
                               <Button 
                                 size="sm" 
                                 onClick={() => setProgressTaskId(task.taskId)}
-                                className="w-full sm:w-auto"
+                                className="min-h-[44px] w-full sm:w-auto"
                               >
                                 {t("employee.tasks.actions.reportProgress")}
                               </Button>
@@ -271,9 +275,9 @@ export function EmployeeTasksPage() {
             <DialogTitle>{t("employee.tasks.progressDialog.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              {t("employee.tasks.progressDialog.taskLabel")}{" "}
-              <span className="text-foreground">{selectedTask?.title || t("common.notAvailable")}</span>
+            <p className="text-sm text-muted-foreground flex flex-col sm:flex-row sm:items-center sm:gap-1 min-w-0">
+              <span className="shrink-0">{t("employee.tasks.progressDialog.taskLabel")}</span>
+              <span className="text-foreground truncate font-medium" title={selectedTask?.title || undefined}>{selectedTask?.title || t("common.notAvailable")}</span>
             </p>
             <div className="space-y-2">
               <Label>{t("employee.tasks.progressDialog.progressPercent")}</Label>
@@ -281,6 +285,7 @@ export function EmployeeTasksPage() {
                 type="number"
                 min={0}
                 max={100}
+                className="min-h-[44px]"
                 value={progressPercent}
                 onChange={(event) => setProgressPercent(event.target.value)}
               />
@@ -290,6 +295,7 @@ export function EmployeeTasksPage() {
               <Textarea
                 rows={4}
                 value={progressNote}
+                className="min-h-[44px]"
                 onChange={(event) => setProgressNote(event.target.value)}
                 placeholder={t("employee.tasks.progressDialog.notePlaceholder")}
               />
@@ -305,6 +311,7 @@ export function EmployeeTasksPage() {
                 <Input
                   type="file"
                   accept="image/*"
+                  className="min-h-[44px]"
                   capture="environment"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -324,10 +331,10 @@ export function EmployeeTasksPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeProgressDialog}>
+            <Button variant="outline" className="min-h-[44px]" onClick={closeProgressDialog}>
               {t("common.cancel")}
             </Button>
-            <Button onClick={handleSubmitProgress} disabled={reportProgressMutation.isPending}>
+            <Button className="min-h-[44px]" onClick={handleSubmitProgress} disabled={reportProgressMutation.isPending}>
               {t("employee.tasks.progressDialog.submit")}
             </Button>
           </DialogFooter>
@@ -358,7 +365,7 @@ export function EmployeeTasksPage() {
                 </TableHeader>
                 <TableBody>
                   {seasonPlanTasks.map((task) => (
-                    <TableRow key={task.taskId}>
+                    <TableRow key={task.taskId} className="hover:bg-muted/50 transition-colors">
                       <TableCell>
                         <div className="space-y-1">
                           <p className="font-medium">{task.title}</p>
@@ -378,7 +385,7 @@ export function EmployeeTasksPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPlanSeasonId(null)}>
+            <Button variant="outline" className="min-h-[44px]" onClick={() => setPlanSeasonId(null)}>
               {t("common.close")}
             </Button>
           </DialogFooter>

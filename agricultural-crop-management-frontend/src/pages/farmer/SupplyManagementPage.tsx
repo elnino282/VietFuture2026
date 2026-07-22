@@ -526,7 +526,7 @@ export function SupplyManagementPage() {
               title={t("suppliers.title")}
               subtitle={t("suppliers.subtitle")}
               actions={
-                <Button onClick={() => setShowStockInModal(true)} variant="default">
+                <Button onClick={() => setShowStockInModal(true)} variant="default" className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
                   <Plus className="w-4 h-4 mr-2" />
                   {t("common.stockIn")}
                 </Button>
@@ -547,6 +547,7 @@ export function SupplyManagementPage() {
                     value={selectedWarehouseId || ""}
                     onChange={(e) => handleWarehouseChange(Number(e.target.value))}
                     disabled={loadingWarehouses}
+                    className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                   >
                     {loadingWarehouses && <option>{t("inventory.loading")}</option>}
                     {!loadingWarehouses && supplyWarehouses.length === 0 && (
@@ -561,15 +562,15 @@ export function SupplyManagementPage() {
                 </div>
 
                 <div className="inventory-warehouse-toolbar">
-                  <Button type="button" variant="default" size="sm" onClick={openCreateWarehouseModal}>
+                  <Button type="button" variant="default" size="sm" onClick={openCreateWarehouseModal} className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
                     <Plus className="w-4 h-4" />
                     {t("inventory.actions.addWarehouse")}
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={openEditWarehouseModal} disabled={!selectedWarehouse}>
+                  <Button type="button" variant="outline" size="sm" onClick={openEditWarehouseModal} disabled={!selectedWarehouse} className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                     <Pencil className="w-4 h-4" />
                     {t("inventory.actions.editWarehouse")}
                   </Button>
-                  <Button type="button" variant="destructive" size="sm" onClick={() => setShowDeleteWarehouseModal(true)} disabled={!selectedWarehouse}>
+                  <Button type="button" variant="destructive" size="sm" onClick={() => setShowDeleteWarehouseModal(true)} disabled={!selectedWarehouse} className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 ring-offset-background">
                     <Trash2 className="w-4 h-4" />
                     {t("inventory.actions.deleteWarehouse")}
                   </Button>
@@ -581,6 +582,7 @@ export function SupplyManagementPage() {
                     id="location-select"
                     value={selectedLocationId || ""}
                     onChange={(e) => setSelectedLocationId(e.target.value ? Number(e.target.value) : undefined)}
+                    className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                   >
                     <option value="">{t("inventory.allLocations")}</option>
                     {locations?.map((loc) => (
@@ -600,6 +602,7 @@ export function SupplyManagementPage() {
                       placeholder={t("inventory.searchPlaceholder")}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
+                      className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                     />
                   </div>
                 )}
@@ -608,7 +611,7 @@ export function SupplyManagementPage() {
                   <>
                     <div className="control-group">
                       <label htmlFor="type-filter">{t("inventory.movementType")}</label>
-                      <select id="type-filter" value={movementTypeFilter} onChange={(e) => setMovementTypeFilter(e.target.value)}>
+                      <select id="type-filter" value={movementTypeFilter} onChange={(e) => setMovementTypeFilter(e.target.value)} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                         <option value="">{t("inventory.allTypes")}</option>
                         <option value="IN">{t("inventory.types.in")}</option>
                         <option value="OUT">{t("inventory.types.out")}</option>
@@ -617,11 +620,11 @@ export function SupplyManagementPage() {
                     </div>
                     <div className="control-group">
                       <label htmlFor="date-from">{t("common.from")}</label>
-                      <input id="date-from" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+                      <input id="date-from" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background" />
                     </div>
                     <div className="control-group">
                       <label htmlFor="date-to">{t("common.to")}</label>
-                      <input id="date-to" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+                      <input id="date-to" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background" />
                     </div>
                   </>
                 )}
@@ -641,9 +644,9 @@ export function SupplyManagementPage() {
                     placeholder={t("suppliers.searchSuppliers")}
                     value={suppliersSearch}
                     onChange={(e) => { setSuppliersSearch(e.target.value); setPage(0); }}
-                    className="search-input"
+                    className="search-input focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                   />
-                  <Button onClick={handleAddSupplier} variant="outline" size="sm">
+                  <Button onClick={handleAddSupplier} variant="outline" size="sm" className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                     <UserPlus className="w-4 h-4 mr-2" />
                     {t("suppliers.addSupplier")}
                   </Button>
@@ -657,17 +660,18 @@ export function SupplyManagementPage() {
                     placeholder={t("suppliers.searchSupplies")}
                     value={itemsSearch}
                     onChange={(e) => { setItemsSearch(e.target.value); setPage(0); }}
-                    className="search-input"
+                    className="search-input focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                   />
                   <label className="filter-checkbox">
                     <input
                       type="checkbox"
                       checked={itemsRestrictedFilter === true}
                       onChange={(e) => { setItemsRestrictedFilter(e.target.checked ? true : undefined); setPage(0); }}
+                      className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background rounded border-input"
                     />
                     {t("suppliers.filters.restrictedOnly")}
                   </label>
-                  <Button onClick={handleAddItem} variant="outline" size="sm">
+                  <Button onClick={handleAddItem} variant="outline" size="sm" className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                     <Plus className="w-4 h-4 mr-2" />
                     {t("suppliers.addItem")}
                   </Button>
@@ -681,7 +685,7 @@ export function SupplyManagementPage() {
                     placeholder={t("suppliers.lots.searchPlaceholder")}
                     value={lotsSearch}
                     onChange={(e) => { setLotsSearch(e.target.value); setPage(0); }}
-                    className="search-input"
+                    className="search-input focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                   />
                   <select
                     value={lotsItemFilter || ""}
@@ -696,7 +700,7 @@ export function SupplyManagementPage() {
                   <select
                     value={lotsSupplierFilter || ""}
                     onChange={(e) => { setLotsSupplierFilter(e.target.value ? Number(e.target.value) : undefined); setPage(0); }}
-                    className="filter-select"
+                    className="filter-select focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                   >
                     <option value="">{t("suppliers.filters.all")} {t("suppliers.tabs.suppliers")}</option>
                     {allSuppliers?.map((s) => (
@@ -1156,7 +1160,7 @@ function OnHandTable({ data, loading, onStockOut, onAdjust, formatDate }: OnHand
                 <td className="actions-cell">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button type="button" className="action-btn" aria-label={t("inventory.actions.menu")} title={t("inventory.actions.menu")}>
+                      <button type="button" className="action-btn transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" aria-label={t("inventory.actions.menu")} title={t("inventory.actions.menu")}>
                         <MoreVertical className="w-4 h-4" />
                       </button>
                     </DropdownMenuTrigger>
@@ -1357,7 +1361,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
                   onValueChange={(val) => { setWarehouseId(Number(val)); setLocationId(null); setFieldErrors(prev => ({...prev, warehouse: ""})); }}
                   disabled={isPending}
                 >
-                  <SelectTrigger id="warehouse" aria-invalid={!!fieldErrors.warehouse} aria-describedby={fieldErrors.warehouse ? warehouseErrorId : undefined}>
+                  <SelectTrigger id="warehouse" aria-invalid={!!fieldErrors.warehouse} aria-describedby={fieldErrors.warehouse ? warehouseErrorId : undefined} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                     <SelectValue placeholder={t("suppliers.stockIn.form.selectWarehouse")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -1376,7 +1380,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
                   onValueChange={(val) => setLocationId(val === "any" ? null : Number(val))} 
                   disabled={!warehouseId || isPending}
                 >
-                  <SelectTrigger id="location">
+                  <SelectTrigger id="location" className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                     <SelectValue placeholder={t("suppliers.stockIn.form.anyLocation")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -1399,7 +1403,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
                   onValueChange={(val) => { setSupplierId(Number(val)); setFieldErrors(prev => ({...prev, supplier: ""})); }}
                   disabled={isPending}
                 >
-                  <SelectTrigger id="supplier" aria-invalid={!!fieldErrors.supplier} aria-describedby={fieldErrors.supplier ? supplierErrorId : undefined}>
+                  <SelectTrigger id="supplier" aria-invalid={!!fieldErrors.supplier} aria-describedby={fieldErrors.supplier ? supplierErrorId : undefined} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                     <SelectValue placeholder={t("suppliers.stockIn.form.selectSupplier")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -1420,7 +1424,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
                   onValueChange={(val) => { setSupplyItemId(Number(val)); setConfirmRestricted(false); setFieldErrors(prev => ({...prev, item: ""})); }}
                   disabled={isPending}
                 >
-                  <SelectTrigger id="supplyItem" aria-invalid={!!fieldErrors.item} aria-describedby={fieldErrors.item ? itemErrorId : undefined}>
+                  <SelectTrigger id="supplyItem" aria-invalid={!!fieldErrors.item} aria-describedby={fieldErrors.item ? itemErrorId : undefined} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                     <SelectValue placeholder={t("suppliers.stockIn.form.selectItem")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -1438,7 +1442,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
                 <strong className="text-sm text-amber-800 flex items-center">{t("suppliers.stockIn.form.restrictedTitle")}</strong>
                 <p className="text-sm text-amber-700">{t("suppliers.stockIn.form.restrictedDescription")}</p>
                 <label className="flex items-center space-x-2 text-sm text-amber-900 cursor-pointer">
-                  <input type="checkbox" className="rounded border-amber-300 text-amber-600 focus:ring-amber-500" checked={confirmRestricted} onChange={(e) => setConfirmRestricted(e.target.checked)} disabled={isPending} />
+                  <input type="checkbox" className="rounded border-amber-300 text-amber-600 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ring-offset-amber-50" checked={confirmRestricted} onChange={(e) => setConfirmRestricted(e.target.checked)} disabled={isPending} />
                   <span>{t("suppliers.stockIn.form.restrictedConfirm")}</span>
                 </label>
               </div>
@@ -1453,6 +1457,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
                   onChange={(e) => setBatchCode(e.target.value)} 
                   placeholder={t("suppliers.stockIn.form.batchCodePlaceholder")} 
                   disabled={isPending}
+                  className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 />
               </div>
 
@@ -1464,6 +1469,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
                   value={expiryDate} 
                   onChange={(e) => { setExpiryDate(e.target.value); setConfirmExpiry(false); }} 
                   disabled={isPending}
+                  className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 />
               </div>
             </div>
@@ -1472,7 +1478,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-md space-y-2">
                 <strong className="text-sm text-amber-800">{t("suppliers.stockIn.form.pastExpiryTitle")}</strong>
                 <label className="flex items-center space-x-2 text-sm text-amber-900 cursor-pointer">
-                  <input type="checkbox" className="rounded border-amber-300 text-amber-600 focus:ring-amber-500" checked={confirmExpiry} onChange={(e) => setConfirmExpiry(e.target.checked)} disabled={isPending} />
+                  <input type="checkbox" className="rounded border-amber-300 text-amber-600 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ring-offset-amber-50" checked={confirmExpiry} onChange={(e) => setConfirmExpiry(e.target.checked)} disabled={isPending} />
                   <span>{t("suppliers.stockIn.form.pastExpiryConfirm")}</span>
                 </label>
               </div>
@@ -1493,6 +1499,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
                 disabled={isPending}
                 aria-invalid={!!fieldErrors.quantity} 
                 aria-describedby={fieldErrors.quantity ? quantityErrorId : undefined}
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               />
               {fieldErrors.quantity && <p id={quantityErrorId} className="text-sm text-destructive">{fieldErrors.quantity}</p>}
             </div>
@@ -1505,6 +1512,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
                 onChange={(e) => setNote(e.target.value)} 
                 placeholder={t("suppliers.stockIn.form.notePlaceholder")} 
                 disabled={isPending}
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
           </div>
@@ -1513,7 +1521,7 @@ function StockInModal({ onClose, onSuccess, onSubmit, isPending, defaultWarehous
             <Button type="button" variant="outline" onClick={closeWithConfirm} disabled={isPending}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
               {isPending ? t("common.processing") : t("suppliers.stockIn.actions.confirm")}
             </Button>
           </DialogFooter>
@@ -1589,6 +1597,7 @@ function StockOutModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; 
               aria-invalid={!!error}
               aria-describedby={error ? "stock-out-error" : undefined}
               disabled={isPending}
+              className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
             />
           </div>
           <div className="space-y-2">
@@ -1605,6 +1614,7 @@ function StockOutModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; 
               aria-invalid={!!error}
               aria-describedby={error ? "stock-out-error" : undefined}
               disabled={isPending}
+              className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
             />
           </div>
           <div className="space-y-2">
@@ -1615,13 +1625,14 @@ function StockOutModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; 
               onChange={(e) => setNote(e.target.value)}
               placeholder={t("inventory.addNote")}
               disabled={isPending}
+              className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
             />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeWithConfirm} disabled={isPending}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
               {isPending ? t("common.processing") : t("inventory.confirmStockOut")}
             </Button>
           </DialogFooter>
@@ -1699,6 +1710,7 @@ function AdjustModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; on
               aria-invalid={!!error}
               aria-describedby={error ? "adjust-stock-error adjust-stock-preview" : "adjust-stock-preview"}
               disabled={isPending}
+              className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
             />
             <p id="adjust-stock-preview" className="text-xs text-muted-foreground">
               {t("inventory.newOnHand")}:{" "}
@@ -1718,13 +1730,14 @@ function AdjustModal({ row, onClose, onSubmit, isPending }: { row: OnHandRow; on
               aria-describedby={error ? "adjust-stock-error" : undefined}
               disabled={isPending}
               required
+              className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
             />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={isPending || !note.trim()}>
+            <Button type="submit" disabled={isPending || !note.trim()} className="shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
               {isPending ? t("common.processing") : t("inventory.confirmAdjust")}
             </Button>
           </DialogFooter>
@@ -1795,6 +1808,7 @@ function WarehouseFormModal({ mode, name, farmId, farms, onNameChange, onFarmIdC
               aria-invalid={!!error}
               aria-describedby={error ? "inventory-warehouse-form-error" : undefined}
               disabled={isPending}
+              className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
             />
           </div>
           <div className="space-y-2">
@@ -1810,6 +1824,7 @@ function WarehouseFormModal({ mode, name, farmId, farms, onNameChange, onFarmIdC
                 id="inventory-warehouse-farm"
                 aria-invalid={!!error}
                 aria-describedby={error ? "inventory-warehouse-form-error" : undefined}
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               >
                 <SelectValue placeholder={t("inventory.form.selectFarm")} />
               </SelectTrigger>
@@ -1826,7 +1841,7 @@ function WarehouseFormModal({ mode, name, farmId, farms, onNameChange, onFarmIdC
             <Button type="button" variant="outline" onClick={closeWithConfirm} disabled={isPending}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
               {isPending ? t("common.processing") : t("common.save")}
             </Button>
           </DialogFooter>
@@ -1856,7 +1871,7 @@ function DeleteWarehouseModal({ warehouseName, onClose, onConfirm, isPending }: 
           <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
             {t("common.cancel")}
           </Button>
-          <Button type="button" variant="destructive" onClick={onConfirm} disabled={isPending}>
+          <Button type="button" variant="destructive" onClick={onConfirm} disabled={isPending} className="shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 ring-offset-background">
             {isPending ? t("common.processing") : t("inventory.actions.deleteWarehouse")}
           </Button>
         </DialogFooter>
@@ -1943,23 +1958,23 @@ function SupplierFormDialog({ open, onOpenChange, supplier, onSubmit, isPending 
           {error && <div id="supplier-form-error" role="alert" className="text-destructive text-sm">{error}</div>}
           <div className="space-y-2">
             <Label htmlFor="supplier-name" required>{t("suppliers.form.name")}</Label>
-            <Input id="supplier-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("suppliers.form.namePlaceholder")} aria-invalid={!!error} aria-describedby={error ? "supplier-form-error" : undefined} disabled={isPending} />
+            <Input id="supplier-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("suppliers.form.namePlaceholder")} aria-invalid={!!error} aria-describedby={error ? "supplier-form-error" : undefined} disabled={isPending} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="supplier-license">{t("suppliers.form.licenseNo")}</Label>
-            <Input id="supplier-license" type="text" value={licenseNo} onChange={(e) => setLicenseNo(e.target.value)} placeholder={t("suppliers.form.licenseNoPlaceholder")} disabled={isPending} />
+            <Input id="supplier-license" type="text" value={licenseNo} onChange={(e) => setLicenseNo(e.target.value)} placeholder={t("suppliers.form.licenseNoPlaceholder")} disabled={isPending} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="supplier-phone">{t("suppliers.form.phone")}</Label>
-            <Input id="supplier-phone" type="text" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder={t("suppliers.form.phonePlaceholder")} disabled={isPending} />
+            <Input id="supplier-phone" type="text" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder={t("suppliers.form.phonePlaceholder")} disabled={isPending} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="supplier-email">{t("suppliers.form.email")}</Label>
-            <Input id="supplier-email" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder={t("suppliers.form.emailPlaceholder")} disabled={isPending} />
+            <Input id="supplier-email" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder={t("suppliers.form.emailPlaceholder")} disabled={isPending} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background" />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeWithConfirm} disabled={isPending}>{t("common.cancel")}</Button>
-            <Button type="submit" disabled={isPending}>{isPending ? t("common.saving") : supplier ? t("common.saveChanges") : t("suppliers.form.addButton")}</Button>
+            <Button type="submit" disabled={isPending} className="shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">{isPending ? t("common.saving") : supplier ? t("common.saveChanges") : t("suppliers.form.addButton")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -1992,7 +2007,7 @@ function DeleteSupplierDialog({ open, onOpenChange, supplier, onConfirm, isPendi
         {error && <p id="delete-supplier-error" role="alert" className="text-sm text-destructive">{error}</p>}
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>{t("common.cancel")}</Button>
-          <Button variant="destructive" onClick={handleConfirm} disabled={isPending}>{isPending ? t("common.deleting") : t("common.delete")}</Button>
+          <Button variant="destructive" onClick={handleConfirm} disabled={isPending} className="shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 ring-offset-background">{isPending ? t("common.deleting") : t("common.delete")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -2097,25 +2112,25 @@ function SupplyItemFormDialog({ open, onOpenChange, item, onSubmit, isPending }:
           {error && <div id="supply-item-form-error" role="alert" className="text-destructive text-sm">{error}</div>}
           <div className="space-y-2">
             <Label htmlFor="supply-item-name" required>{t("suppliers.itemForm.name")}</Label>
-            <Input id="supply-item-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("suppliers.itemForm.namePlaceholder")} aria-invalid={!!error} aria-describedby={error ? "supply-item-form-error" : undefined} disabled={isPending} />
+            <Input id="supply-item-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("suppliers.itemForm.namePlaceholder")} aria-invalid={!!error} aria-describedby={error ? "supply-item-form-error" : undefined} disabled={isPending} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="supply-item-active-ingredient">{t("suppliers.itemForm.activeIngredient")}</Label>
-            <Input id="supply-item-active-ingredient" type="text" value={activeIngredient} onChange={(e) => setActiveIngredient(e.target.value)} placeholder={t("suppliers.itemForm.activeIngredientPlaceholder")} disabled={isPending} />
+            <Input id="supply-item-active-ingredient" type="text" value={activeIngredient} onChange={(e) => setActiveIngredient(e.target.value)} placeholder={t("suppliers.itemForm.activeIngredientPlaceholder")} disabled={isPending} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="supply-item-unit" required>{t("suppliers.itemForm.unit")}</Label>
-            <Input id="supply-item-unit" type="text" value={unit} onChange={(e) => setUnit(e.target.value)} placeholder={t("suppliers.itemForm.unitPlaceholder")} maxLength={20} disabled={isPending} />
+            <Input id="supply-item-unit" type="text" value={unit} onChange={(e) => setUnit(e.target.value)} placeholder={t("suppliers.itemForm.unitPlaceholder")} maxLength={20} disabled={isPending} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background" />
           </div>
           <div className="space-y-2">
             <label className="filter-checkbox">
-              <input type="checkbox" checked={restrictedFlag} onChange={(e) => setRestrictedFlag(e.target.checked)} disabled={isPending} />
+              <input type="checkbox" checked={restrictedFlag} onChange={(e) => setRestrictedFlag(e.target.checked)} disabled={isPending} className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background rounded border-input" />
               {t("suppliers.itemForm.restricted")}
             </label>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeWithConfirm} disabled={isPending}>{t("common.cancel")}</Button>
-            <Button type="submit" disabled={isPending}>{isPending ? t("common.saving") : item ? t("common.saveChanges") : t("suppliers.itemForm.addButton")}</Button>
+            <Button type="submit" disabled={isPending} className="shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">{isPending ? t("common.saving") : item ? t("common.saveChanges") : t("suppliers.itemForm.addButton")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -2150,7 +2165,7 @@ function DeleteSupplyItemDialog({ open, onOpenChange, item, onConfirm, isPending
         {error && <p id="delete-supply-item-error" role="alert" className="text-sm text-destructive">{error}</p>}
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>{t("common.cancel")}</Button>
-          <Button variant="destructive" onClick={handleConfirm} disabled={isPending}>{isPending ? t("common.deleting") : t("common.delete")}</Button>
+          <Button variant="destructive" onClick={handleConfirm} disabled={isPending} className="shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 ring-offset-background">{isPending ? t("common.deleting") : t("common.delete")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

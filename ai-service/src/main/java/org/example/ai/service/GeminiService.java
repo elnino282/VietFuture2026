@@ -24,6 +24,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -68,8 +74,12 @@ public class GeminiService {
     private final boolean aiEnabled;
     private final String apiKeySource;
     private final Environment environment;
+    private final VectorStore vectorStore;
+    private final QuestionRouter questionRouter;
 
-    public GeminiService(AppProperties appProperties, Environment environment) {
+    public GeminiService(AppProperties appProperties, Environment environment, org.springframework.beans.factory.ObjectProvider<VectorStore> vectorStoreProvider, QuestionRouter questionRouter) {
+        this.questionRouter = questionRouter;
+        this.vectorStore = vectorStoreProvider.getIfAvailable();
         this.environment = environment;
         AppProperties.Ai aiProps = appProperties.getAi();
 
@@ -245,13 +255,35 @@ public class GeminiService {
             throw new IllegalArgumentException("userMessage must not be blank");
         }
 
+        if (this.questionRouter != null && this.questionRouter.route(userMessage) == QuestionRouter.RouteMode.OFF_TOPIC) {
+            return "Xin lỗi, tôi chỉ có thể trả lời các câu hỏi liên quan đến nông nghiệp và nền tảng quản lý mùa vụ.";
+        }
+
         String requestId = UUID.randomUUID().toString();
         if (!aiEnabled) {
             log.warn("Gemini request skipped because AI is disabled (requestId={}).", requestId);
             return connectionFallbackMessage;
         }
+        
+        String combinedContext = context != null ? context : "";
+        if (this.vectorStore != null) {
+            try {
+                List<Document> documents = this.vectorStore.similaritySearch(
+                        SearchRequest.query(userMessage).withTopK(5)
+                );
+                String ragContext = documents.stream()
+                        .map(doc -> {
+                            String heading = doc.getMetadata().containsKey("heading") ? doc.getMetadata().get("heading").toString() : "Tài liệu";
+                            return "[TÀI LIỆU]\nTiêu đề: " + heading + "\n" + doc.getContent();
+                        })
+                        .collect(Collectors.joining("\n\n"));
+                combinedContext += "\n\nThông tin tham khảo từ hệ thống (RAG):\n" + ragContext;
+            } catch (Exception e) {
+                log.warn("Failed to retrieve documents from VectorStore for RAG: {}", e.getMessage());
+            }
+        }
 
-        String prompt = buildPrompt(userMessage, context, systemPrompt, contextLabel, questionLabel);
+        String prompt = buildPrompt(userMessage, combinedContext, systemPrompt, contextLabel, questionLabel);
 
         try {
             GenerateContentResponse response = client.models.generateContent(model, prompt, null);

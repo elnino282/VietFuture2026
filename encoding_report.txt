@@ -1,3 +1,0 @@
-Total non-UTF-8 files found: 0
-Fixed files:
-Needs review:

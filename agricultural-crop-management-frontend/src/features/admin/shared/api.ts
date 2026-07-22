@@ -12,13 +12,13 @@ export {
   adminIncidentApi,
   adminInventoryApi,
   adminPlotApi,
-  adminReportsApi,
   adminRoleApi,
   adminUsersApi,
   adminVarietyApi,
   dashboardStatsKeys,
-  reportsKeys,
-} from "../../../services/api.admin";
+} from "@/entities/user/api/api.admin";
+
+export * from '@/entities/user/api/api.admin';
 
 export type {
   AdminAlert,
@@ -40,4 +40,4 @@ export type {
   RoleCreateRequest,
   RoleUpdateRequest,
   YieldAnalyticsRow,
-} from "../../../services/api.admin";
+} from "@/entities/user/api/api.admin";

@@ -11,7 +11,7 @@ const adminInventoryMocks = vi.hoisted(() => ({
   getLotMovements: vi.fn(),
 }));
 
-vi.mock('@/services/api.admin', () => ({
+vi.mock('@/entities/user/api/api.admin', () => ({
   adminInventoryApi: {
     listRiskLots: adminInventoryMocks.listRiskLots,
     getOptions: adminInventoryMocks.getOptions,

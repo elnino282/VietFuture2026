@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { seasonsApi } from "@/api/seasonsApi";
+import { seasonsApi } from "@/entities/season/api/seasonsApi";
 import { cn } from "@/shared/lib";
 import { Text } from "@/shared/ui";
 
@@ -136,25 +136,24 @@ export function SeasonWorkspaceOverview() {
         {MODULE_CARDS.map((module) => {
             const Icon = module.icon;
             return (
-              <Card key={module.path} className="border border-border rounded-2xl acm-card-elevated acm-hover-surface">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-foreground flex items-center gap-2">
-                    <Icon className="w-5 h-5 text-primary" />
-                    {t(module.titleKey)}
+              <Card 
+                key={module.path} 
+                className="group border border-border rounded-2xl bg-card cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md hover:border-primary/40 hover:bg-primary/[0.02]"
+                onClick={() => navigate(`/farmer/seasons/${seasonIdSegment}/workspace/${module.path}`)}
+              >
+                <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0">
+                  <CardTitle className="text-lg text-foreground flex items-center gap-2.5">
+                    <div className="p-2 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors duration-300">
+                      <Icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <span>{t(module.titleKey)}</span>
                   </CardTitle>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground opacity-0 -translate-x-3 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-primary" />
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="acm-body-text text-muted-foreground min-h-[66px]">{t(module.descriptionKey)}</p>
-                  <Button
-                    className="w-full rounded-xl acm-hover-surface acm-body-text"
-                    variant="outline"
-                    onClick={() => navigate(`/farmer/seasons/${seasonIdSegment}/workspace/${module.path}`)}
-                  >
-                  {t("seasonWorkspaceOverview.openModule")}
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
+                <CardContent className="pt-2">
+                  <p className="acm-body-text text-muted-foreground line-clamp-3">{t(module.descriptionKey)}</p>
+                </CardContent>
+              </Card>
           );
         })}
       </div>

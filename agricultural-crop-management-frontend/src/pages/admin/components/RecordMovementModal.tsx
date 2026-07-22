@@ -3,7 +3,7 @@ import {
   adminSeasonApi,
   adminSupplierApi,
   adminWarehouseApi,
-} from "@/services/api.admin";
+} from "@/entities/user/api/api.admin";
 import { BackButton } from "@/shared/ui/back-button";
 import {
   AlertCircle,

@@ -41,53 +41,25 @@ export function DocumentCard({
 
     return (
         <Card
-            className="border-border rounded-2xl shadow-sm hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
+            className="border-border rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group relative overflow-hidden flex flex-row items-center p-3 gap-4"
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             onClick={() => onPreview(document)}
         >
-            <div
-                className="h-40 flex items-center justify-center text-6xl relative"
-                style={{
-                    background:
-                        "linear-gradient(to bottom right, color-mix(in oklab, var(--primary) 10%, transparent), color-mix(in oklab, var(--secondary) 10%, transparent))",
-                }}
-            >
-                {document.thumbnail}
-
-                {isHovered && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 animate-in fade-in duration-200">
-                        <Button
-                            size="lg"
-                            className="bg-primary text-white hover:bg-primary/90 rounded-xl"
-                            onClick={handleOpen}
-                        >
-                            <ExternalLink className="w-5 h-5 mr-2" />
-                            {t("documents.actions.openNewTab")}
-                        </Button>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            className="bg-card text-foreground hover:bg-muted/50 rounded-xl"
-                            onClick={(e: React.MouseEvent) => {
-                                e.stopPropagation();
-                                onPreview(document);
-                            }}
-                        >
-                            <Eye className="w-5 h-5 mr-2" />
-                            {t("documents.actions.preview")}
-                        </Button>
-                    </div>
-                )}
+            {/* Small icon thumbnail replacement */}
+            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                {getDocumentIcon(document.type)}
             </div>
 
-            <CardContent className="pt-4">
-                <div className="flex items-start justify-between mb-2">
-                    {getDocumentIcon(document.type)}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                    <h4 className="text-sm font-semibold text-foreground truncate">
+                        {document.title}
+                    </h4>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 -mt-1 -mr-2"
+                        className="h-8 w-8 -mr-2 shrink-0"
                         aria-label={
                             document.isFavorite
                                 ? t("documents.actions.removeFavorite")
@@ -101,59 +73,64 @@ export function DocumentCard({
                         <Star
                             className={`w-4 h-4 ${document.isFavorite
                                 ? "text-accent fill-current"
-                                : "text-muted-foreground"
+                                : "text-muted-foreground hover:text-accent"
                                 }`}
                         />
                     </Button>
                 </div>
 
-                <h4 className="text-sm font-medium text-foreground mb-2 line-clamp-2 min-h-[40px]">
-                    {document.title}
-                </h4>
-
-                <div className="flex flex-wrap gap-1 mb-3 min-h-[24px]">
+                <div className="flex flex-wrap gap-1 mb-2">
                     {document.crop && (
-                        <Badge
-                            variant="outline"
-                            className="text-xs bg-primary/10 text-primary border-primary/20"
-                        >
+                        <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20 px-1.5 py-0 font-medium">
                             {document.crop}
                         </Badge>
                     )}
                     {document.stage && (
-                        <Badge
-                            variant="outline"
-                            className="text-xs bg-secondary/10 text-secondary border-secondary/20"
-                        >
+                        <Badge variant="outline" className="text-[10px] bg-secondary/5 text-secondary border-secondary/20 px-1.5 py-0 font-medium">
                             {document.stage}
                         </Badge>
                     )}
                     {document.topic && (
-                        <Badge
-                            variant="outline"
-                            className="text-xs bg-accent/10 text-accent border-accent/20"
-                        >
+                        <Badge variant="outline" className="text-[10px] bg-accent/5 text-accent border-accent/20 px-1.5 py-0 font-medium">
                             {document.topic}
                         </Badge>
                     )}
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-1">
                     <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {new Date(document.updatedAt).toLocaleDateString(locale)}
                     </div>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 px-2 text-xs text-primary hover:bg-primary/10"
-                        onClick={handleOpen}
-                    >
-                        <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                        {t("documents.actions.openNewTab")}
-                    </Button>
+                    {isHovered ? (
+                        <div className="flex gap-1 animate-in fade-in duration-200">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-[11px] hover:bg-primary/10"
+                                onClick={(e: React.MouseEvent) => {
+                                    e.stopPropagation();
+                                    onPreview(document);
+                                }}
+                            >
+                                <Eye className="w-3 h-3 mr-1" />
+                                {t("documents.actions.preview")}
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-[11px] text-primary hover:bg-primary/10"
+                                onClick={handleOpen}
+                            >
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                {t("documents.actions.openNewTab")}
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="h-6" /> /* Placeholder to avoid layout shift when hovered */
+                    )}
                 </div>
-            </CardContent>
+            </div>
         </Card>
     );
 }

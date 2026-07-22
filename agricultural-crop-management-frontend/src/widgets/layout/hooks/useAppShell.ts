@@ -5,7 +5,7 @@ import {
 } from '@/entities/notification';
 import { useTheme } from '@/hooks/useTheme';
 import i18n, { changeLanguage, getCurrentLocale, getLanguageCode } from '@/i18n';
-import { adminAlertApi, type AdminAlert } from '@/services/api.admin';
+import { adminAlertApi, type AdminAlert } from '@/entities/user/api/api.admin';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { portalConfig } from '../lib/config';

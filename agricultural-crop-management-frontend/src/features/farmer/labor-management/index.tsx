@@ -47,7 +47,7 @@ import {
   TooltipProvider,
 } from "@/shared/ui";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
-import { Calendar, ExternalLink, RefreshCw, Trash2, UserPlus, Users, BookOpen, Filter } from "lucide-react";
+import { Calendar, ExternalLink, RefreshCw, Trash2, UserPlus, Users, BookOpen, Filter, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -400,58 +400,57 @@ export function LaborManagementPage() {
   }
 
   return (
-    <PageContainer variant="wide" className="space-y-6">
-      {/* Header Card — matches harvest tab's PageHeader pattern */}
-      <Card className="mb-6 border border-border rounded-xl shadow-sm">
-        <CardContent className="px-6 py-4">
-          <PageHeader
-            className="mb-0"
-            icon={<Users className="w-8 h-8" />}
-            title={t("laborWorkspace.title")}
-            subtitle={t("laborWorkspace.subtitle")}
-          />
-        </CardContent>
-      </Card>
+    <PageContainer variant="wide" className="space-y-8 pb-10">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-6 border-b border-border/40">
+        <PageHeader
+          className="mb-0"
+          icon={
+            <div className="p-2.5 rounded-2xl bg-primary/10 text-primary">
+              <Users className="w-6 h-6" />
+            </div>
+          }
+          title={t("laborWorkspace.title")}
+          subtitle={t("laborWorkspace.subtitle")}
+        />
 
-      {/* Season Filter Card — matches harvest tab's filter card pattern */}
-      <Card className="mb-6 border border-border rounded-xl shadow-sm">
-        <CardContent className="px-6 py-4">
-          <div className="flex flex-wrap items-center justify-start gap-3 md:gap-4">
-            {isWorkspaceScoped ? (
-              <div className="rounded-xl border border-border px-3 py-2 text-sm bg-card flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <span>{t("laborWorkspace.currentSeasonLabel", { season: "" })}</span>
-                <Badge className="bg-muted text-foreground border-border">
-                  {selectedSeasonName ?? t("seasonWorkspace.fallbackSeasonName", { id: workspaceSeasonId })}
-                </Badge>
+        <div className="flex items-center gap-3">
+          {isWorkspaceScoped ? (
+            <div className="rounded-2xl border border-border/60 px-4 py-2 text-sm bg-card/50 shadow-sm flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <span className="text-muted-foreground">{t("laborWorkspace.currentSeasonLabel", { season: "" })}</span>
+              <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-transparent shadow-none font-medium">
+                {selectedSeasonName ?? t("seasonWorkspace.fallbackSeasonName", { id: workspaceSeasonId })}
+              </Badge>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 bg-card/50 rounded-2xl border border-border/60 p-1 shadow-sm">
+              <div className="pl-3 pr-1 text-muted-foreground">
+                <Calendar className="w-4 h-4" />
               </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <Select
-                  value={selectedSeasonId?.toString() ?? ""}
-                  onValueChange={(val) => setSelectedSeasonId(Number(val))}
-                >
-                  <SelectTrigger className="rounded-xl border-border w-full sm:w-[280px]">
-                    <SelectValue placeholder={t("laborWorkspace.selectSeasonPlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(mySeasons ?? []).map((season) => (
-                      <SelectItem
-                        key={season.seasonId}
-                        value={season.seasonId?.toString() ?? ''}
-                      >
-                        {season.seasonName}{" "}
-                        {season.status && `(${season.status})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              <Select
+                value={selectedSeasonId?.toString() ?? ""}
+                onValueChange={(val) => setSelectedSeasonId(Number(val))}
+              >
+                <SelectTrigger className="rounded-xl border-transparent bg-transparent shadow-none w-full sm:w-[280px] hover:bg-muted/50 focus:ring-0 focus:ring-offset-0">
+                  <SelectValue placeholder={t("laborWorkspace.selectSeasonPlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(mySeasons ?? []).map((season) => (
+                    <SelectItem
+                      key={season.seasonId}
+                      value={season.seasonId?.toString() ?? ''}
+                      className="rounded-lg cursor-pointer"
+                    >
+                      {season.seasonName}{" "}
+                      {season.status && <span className="text-muted-foreground text-xs ml-1">({season.status})</span>}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      </div>
 
       {isSeasonLocked && (
         <Card className="rounded-xl border border-amber-300 bg-amber-50 shadow-sm">
@@ -474,105 +473,116 @@ export function LaborManagementPage() {
           <WorkTeamPanel seasonId={seasonId} />
         </TabsContent>
 
-        <TabsContent value="employees" className="space-y-4">
-          <Card className="rounded-xl border border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">{t("laborWorkspace.sections.addEmployees.title")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="space-y-2">
-                  <Label>{t("laborWorkspace.fields.availableEmployees")}</Label>
-                  <Select
-                    value={selectedDirectoryEmployeeId}
-                    onValueChange={setSelectedDirectoryEmployeeId}
-                    disabled={!canMutateSeason}
-                  >
-                    <SelectTrigger className="h-11 rounded-xl border border-input bg-input-background px-4 text-sm shadow-sm data-[placeholder]:text-muted-foreground hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20">
-                      <SelectValue placeholder={t("laborWorkspace.fields.selectEmployeePlaceholder")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableDirectoryEmployees.map((employee) => (
-                        <SelectItem key={employee.userId} value={String(employee.userId)}>
-                          {employee.fullName || employee.username || employee.email || t("seasonWorkspace.employeeFallback", { id: employee.userId })}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        <TabsContent value="employees" className="space-y-8 mt-6">
+          {/* Add Employees Section */}
+          <section className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight">{t("laborWorkspace.sections.addEmployees.title")}</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Thêm nhân công vào mùa vụ và thiết lập mức lương mặc định.
+              </p>
+            </div>
 
-                <div className="space-y-2">
-                  <Label>{t("laborWorkspace.fields.wagePerTaskVnd")}</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={wagePerTask}
-                    onChange={(event) => setWagePerTask(event.target.value)}
-                    placeholder={t("laborWorkspace.fields.wagePerTaskPlaceholder")}
-                    disabled={!canMutateSeason}
-                    className="h-11 rounded-xl border border-input bg-input-background px-4 text-sm shadow-sm placeholder:text-muted-foreground hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6 rounded-2xl bg-card border border-border/50 shadow-sm">
+              <div className="md:col-span-5 space-y-2">
+                <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("laborWorkspace.fields.availableEmployees")}</Label>
+                <Select
+                  value={selectedDirectoryEmployeeId}
+                  onValueChange={setSelectedDirectoryEmployeeId}
+                  disabled={!canMutateSeason}
+                >
+                  <SelectTrigger className="h-11 rounded-xl bg-background border-border/60 hover:border-primary/50 transition-colors">
+                    <SelectValue placeholder={t("laborWorkspace.fields.selectEmployeePlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableDirectoryEmployees.map((employee) => (
+                      <SelectItem key={employee.userId} value={String(employee.userId)} className="rounded-lg cursor-pointer">
+                        {employee.fullName || employee.username || employee.email || t("seasonWorkspace.employeeFallback", { id: employee.userId })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div className="flex items-end">
+              <div className="md:col-span-4 space-y-2">
+                <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("laborWorkspace.fields.wagePerTaskVnd")}</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={wagePerTask}
+                  onChange={(event) => setWagePerTask(event.target.value)}
+                  placeholder={t("laborWorkspace.fields.wagePerTaskPlaceholder")}
+                  disabled={!canMutateSeason}
+                  className="h-11 rounded-xl bg-background border-border/60 hover:border-primary/50 transition-colors"
+                />
+              </div>
+
+              <div className="md:col-span-3 flex items-end">
+                <Button
+                  className="w-full h-11 rounded-xl"
+                  onClick={handleAddSeasonEmployee}
+                  disabled={!canMutateSeason || addSeasonEmployeeMutation.isPending || !selectedDirectoryEmployeeId}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  {t("laborWorkspace.actions.addEmployee")}
+                </Button>
+              </div>
+            </div>
+
+            {/* Bulk Add Section */}
+            <div className="rounded-2xl border border-border/50 overflow-hidden">
+              <div className="bg-muted/30 p-4 border-b border-border/50 flex flex-wrap items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium">{t("laborWorkspace.bulk.description")}</h4>
+                  <p className="text-xs text-muted-foreground">Chọn nhiều nhân công từ danh bạ để thêm vào mùa vụ cùng lúc.</p>
+                </div>
+                <div className="flex items-center gap-2">
                   <Button
-                    className="w-full"
-                    onClick={handleAddSeasonEmployee}
-                    disabled={!canMutateSeason || addSeasonEmployeeMutation.isPending || !selectedDirectoryEmployeeId}
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8 rounded-lg text-xs"
+                    onClick={() =>
+                      setSelectedBulkEmployeeIds(
+                        availableDirectoryEmployees.map((employee) => employee.userId)
+                      )
+                    }
+                    disabled={!canMutateSeason || availableDirectoryEmployees.length === 0}
                   >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    {t("laborWorkspace.actions.addEmployee")}
+                    {t("laborWorkspace.bulk.selectAll")}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 rounded-lg text-xs"
+                    onClick={() => setSelectedBulkEmployeeIds([])}
+                    disabled={selectedBulkEmployeeIds.length === 0}
+                  >
+                    {t("laborWorkspace.bulk.clearSelection")}
                   </Button>
                 </div>
               </div>
 
-              <Separator />
-
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm text-muted-foreground">
-                    {t("laborWorkspace.bulk.description")}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        setSelectedBulkEmployeeIds(
-                          availableDirectoryEmployees.map((employee) => employee.userId)
-                        )
-                      }
-                      disabled={!canMutateSeason || availableDirectoryEmployees.length === 0}
-                    >
-                      {t("laborWorkspace.bulk.selectAll")}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="rounded-xl border-border bg-card shadow-sm hover:border-primary/50 hover:bg-muted focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
-                      onClick={() => setSelectedBulkEmployeeIds([])}
-                      disabled={selectedBulkEmployeeIds.length === 0}
-                    >
-                      {t("laborWorkspace.bulk.clearSelection")}
-                    </Button>
-                  </div>
-                </div>
-
+              <div className="p-4 bg-card">
                 {availableDirectoryEmployees.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t("laborWorkspace.bulk.emptyAvailableEmployees")}
-                  </p>
+                  <div className="py-8 text-center flex flex-col items-center justify-center space-y-3">
+                    <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">{t("laborWorkspace.bulk.emptyAvailableEmployees")}</p>
+                  </div>
                 ) : (
-                  <div className="max-h-56 overflow-y-auto rounded-xl border border-border p-3 space-y-2">
+                  <div className="max-h-60 overflow-y-auto pr-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {availableDirectoryEmployees.map((employee) => {
                       const checked = selectedBulkEmployeeIds.includes(employee.userId);
                       const label = employee.fullName || employee.username || employee.email || t("seasonWorkspace.employeeFallback", { id: employee.userId });
                       return (
                         <label
                           key={employee.userId}
-                          className="flex items-center gap-3 rounded-lg border border-border px-3 py-2 hover:bg-muted/40"
+                          className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
+                            checked ? "border-primary bg-primary/5" : "border-border/60 bg-background hover:border-primary/50"
+                          }`}
                         >
                           <Checkbox
                             checked={checked}
@@ -587,57 +597,81 @@ export function LaborManagementPage() {
                               })
                             }
                             disabled={!canMutateSeason}
+                            className="mt-0.5 rounded shadow-none data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                           />
-                          <span className="text-sm text-foreground">{label}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{label}</p>
+                            <p className="text-xs text-muted-foreground truncate">{employee.email ?? "No email"}</p>
+                          </div>
                         </label>
                       );
                     })}
                   </div>
                 )}
 
-                <div className="flex justify-end">
-                  <Button
-                    onClick={handleBulkAssignSeasonEmployees}
-                    disabled={
-                      !canMutateSeason
-                      || bulkAssignSeasonEmployeesMutation.isPending
-                      || selectedBulkEmployeeIds.length === 0
-                    }
-                  >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    {t("laborWorkspace.actions.bulkAddEmployees")}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-xl border border-border shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">{t("laborWorkspace.sections.seasonEmployees.title")}</CardTitle>
-              <Select value={trainingFilter} onValueChange={(val: any) => setTrainingFilter(val)}>
-                <SelectTrigger className="w-[160px] h-8">
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4" />
-                    <SelectValue placeholder="Lọc trạng thái" />
+                {availableDirectoryEmployees.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-border/50 flex justify-end">
+                    <Button
+                      onClick={handleBulkAssignSeasonEmployees}
+                      className="rounded-xl px-6"
+                      disabled={
+                        !canMutateSeason
+                        || bulkAssignSeasonEmployeesMutation.isPending
+                        || selectedBulkEmployeeIds.length === 0
+                      }
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      {t("laborWorkspace.actions.bulkAddEmployees")}
+                    </Button>
                   </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("laborWorkspace.filter.all", "Tất cả")}</SelectItem>
-                  <SelectItem value="trained">{t("laborWorkspace.filter.trained", "Đã Train")}</SelectItem>
-                  <SelectItem value="untrained">{t("laborWorkspace.filter.untrained", "Chưa Train")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardHeader>
-            <CardContent>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Season Employees List Section */}
+          <section className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold tracking-tight">{t("laborWorkspace.sections.seasonEmployees.title")}</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={trainingFilter} onValueChange={(val: any) => setTrainingFilter(val)}>
+                  <SelectTrigger className="w-[160px] h-9 rounded-xl border-border/60 bg-card">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Filter className="w-3.5 h-3.5" />
+                      <SelectValue placeholder="Lọc trạng thái" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" className="rounded-lg cursor-pointer">{t("laborWorkspace.filter.all", "Tất cả")}</SelectItem>
+                    <SelectItem value="trained" className="rounded-lg cursor-pointer">{t("laborWorkspace.filter.trained", "Đã Train")}</SelectItem>
+                    <SelectItem value="untrained" className="rounded-lg cursor-pointer">{t("laborWorkspace.filter.untrained", "Chưa Train")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/50 bg-card shadow-sm overflow-hidden">
               {isLoadingBase ? (
-                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.seasonEmployees.loading")}</p>
+                <div className="p-12 text-center flex flex-col items-center justify-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.seasonEmployees.loading")}</p>
+                </div>
               ) : seasonEmployees.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.seasonEmployees.empty")}</p>
+                <div className="p-12 text-center flex flex-col items-center justify-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.seasonEmployees.empty")}</p>
+                </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/30">
+                      <TableRow className="hover:bg-transparent">
                       <TableHead>{t("laborWorkspace.table.employee")}</TableHead>
                       <TableHead>{t("laborWorkspace.table.email")}</TableHead>
                       <TableHead>{t("laborWorkspace.table.wagePerTask")}</TableHead>
@@ -693,11 +727,12 @@ export function LaborManagementPage() {
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right py-3 pr-4">
                           <div className="flex justify-end gap-2">
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
+                              className="h-8 hover:bg-muted"
                               onClick={() => {
                                 setTrainingDialogEmployee(employee as SeasonEmployeeResponse);
                                 setIsTrainingDialogOpen(true);
@@ -705,16 +740,16 @@ export function LaborManagementPage() {
                               disabled={!canMutateSeason || updateSeasonEmployeeMutation.isPending}
                             >
                               <BookOpen className="w-4 h-4 mr-2" />
-                              {t("laborWorkspace.actions.updateTraining", "Cập nhật đào tạo")}
+                              <span className="sr-only md:not-sr-only md:inline-block">{t("laborWorkspace.actions.updateTraining", "Cập nhật đào tạo")}</span>
                             </Button>
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
+                              className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                               onClick={() => handleRemoveSeasonEmployee(employee.employeeUserId as number)}
                               disabled={!canMutateSeason || removeSeasonEmployeeMutation.isPending}
                             >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              {t("common.delete")}
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -722,25 +757,29 @@ export function LaborManagementPage() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </TabsContent>
 
-        <TabsContent value="assignment" className="space-y-4">
-          <Card className="rounded-xl border border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">{t("laborWorkspace.sections.assignment.title")}</CardTitle>
-            </CardHeader>
-            <CardContent>
+        <TabsContent value="assignment" className="space-y-6 mt-6">
+          <section className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight">{t("laborWorkspace.sections.assignment.title")}</h3>
+              <p className="text-sm text-muted-foreground mt-1">Phân công các công việc trong mùa vụ cho nhân công.</p>
+            </div>
+            
+            <div className="rounded-2xl border border-border/50 bg-card shadow-sm overflow-hidden">
               {isTasksLoading ? (
                 <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.assignment.loading")}</p>
               ) : tasks.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.assignment.empty")}</p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
+                <div className="overflow-x-auto">
+                  <Table>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow className="hover:bg-transparent">
                       <TableHead>{t("laborWorkspace.assignmentTable.task")}</TableHead>
                       <TableHead>{t("laborWorkspace.assignmentTable.status")}</TableHead>
                       <TableHead>{t("laborWorkspace.assignmentTable.currentAssignee")}</TableHead>
@@ -758,16 +797,16 @@ export function LaborManagementPage() {
                           : "");
                       return (
                         <TableRow key={task.taskId}>
-                          <TableCell>{task.title}</TableCell>
+                          <TableCell className="font-medium text-foreground">{task.title}</TableCell>
                           <TableCell>
-                            <Badge className={getTaskStatusClassName(task.status)}>
+                            <Badge className={`${getTaskStatusClassName(task.status)} font-medium`}>
                               {(() => {
                                 const taskStatusLabelKey = getTaskStatusLabelKey(task.status);
                                 return taskStatusLabelKey ? t(taskStatusLabelKey) : task.status ?? "-";
                               })()}
                             </Badge>
                           </TableCell>
-                          <TableCell>{fallbackCurrentAssignee}</TableCell>
+                          <TableCell className="text-muted-foreground">{fallbackCurrentAssignee}</TableCell>
                           <TableCell>
                             <Select
                               value={currentSelection}
@@ -779,21 +818,22 @@ export function LaborManagementPage() {
                               }
                               disabled={!canMutateSeason}
                             >
-                              <SelectTrigger className="w-[260px]">
+                              <SelectTrigger className="w-full sm:w-[260px] h-9 rounded-xl border-border/60 bg-background hover:border-primary/50">
                                 <SelectValue placeholder={t("laborWorkspace.fields.selectEmployeePlaceholder")} />
                               </SelectTrigger>
                               <SelectContent>
                                 {activeSeasonEmployees.map((employee) => (
-                                  <SelectItem key={employee.userId} value={String(employee.userId)}>
+                                  <SelectItem key={employee.userId} value={String(employee.userId)} className="rounded-lg cursor-pointer">
                                     {employee.label}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right py-3 pr-4">
                             <Button
                               size="sm"
+                              className="h-9 rounded-xl px-4"
                               onClick={() => handleAssignTask(task.taskId)}
                               disabled={!canMutateSeason || assignTaskMutation.isPending || !currentSelection}
                             >
@@ -805,114 +845,150 @@ export function LaborManagementPage() {
                     })}
                   </TableBody>
                 </Table>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </TabsContent>
 
-        <TabsContent value="progress" className="space-y-4">
-          <Card className="rounded-xl border border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">{t("laborWorkspace.sections.progress.title")}</CardTitle>
-            </CardHeader>
-            <CardContent>
+        <TabsContent value="progress" className="space-y-6 mt-6">
+          <section className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight">{t("laborWorkspace.sections.progress.title")}</h3>
+              <p className="text-sm text-muted-foreground mt-1">Theo dõi tiến độ hoàn thành các công việc được giao.</p>
+            </div>
+            
+            <div className="rounded-2xl border border-border/50 bg-card shadow-sm overflow-hidden">
               {isProgressLoading ? (
-                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.progress.loading")}</p>
+                <div className="p-12 text-center flex flex-col items-center justify-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.progress.loading")}</p>
+                </div>
               ) : progressLogs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.progress.empty")}</p>
+                <div className="p-12 text-center flex flex-col items-center justify-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.progress.empty")}</p>
+                </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t("laborWorkspace.progressTable.employee")}</TableHead>
-                      <TableHead>{t("laborWorkspace.progressTable.task")}</TableHead>
-                      <TableHead>{t("laborWorkspace.progressTable.progress")}</TableHead>
-                      <TableHead>{t("laborWorkspace.progressTable.note")}</TableHead>
-                      <TableHead>{t("laborWorkspace.progressTable.evidence")}</TableHead>
-                      <TableHead>{t("laborWorkspace.progressTable.time")}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {progressLogs.map((log) => (
-                      <TableRow key={log.id}>
-                        <TableCell>{log.employeeName || t("seasonWorkspace.employeeFallback", { id: log.employeeUserId })}</TableCell>
-                        <TableCell>{log.taskTitle || t("laborWorkspace.taskFallback", { id: log.taskId })}</TableCell>
-                        <TableCell>{log.progressPercent}%</TableCell>
-                        <TableCell className="max-w-[320px] truncate">{log.note || "-"}</TableCell>
-                        <TableCell>
-                          {log.evidenceUrl ? (
-                            <a
-                              href={log.evidenceUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                            >
-                              {t("laborWorkspace.progressTable.openEvidence")}
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </TableCell>
-                        <TableCell>{formatDate(log.loggedAt, locale)}</TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/30">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead>{t("laborWorkspace.progressTable.employee")}</TableHead>
+                        <TableHead>{t("laborWorkspace.progressTable.task")}</TableHead>
+                        <TableHead>{t("laborWorkspace.progressTable.progress")}</TableHead>
+                        <TableHead>{t("laborWorkspace.progressTable.note")}</TableHead>
+                        <TableHead>{t("laborWorkspace.progressTable.evidence")}</TableHead>
+                        <TableHead>{t("laborWorkspace.progressTable.time")}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {progressLogs.map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="font-medium">{log.employeeName || t("seasonWorkspace.employeeFallback", { id: log.employeeUserId })}</TableCell>
+                          <TableCell>{log.taskTitle || t("laborWorkspace.taskFallback", { id: log.taskId })}</TableCell>
+                          <TableCell>
+                            <Badge className="bg-primary/10 text-primary border-transparent">{log.progressPercent}%</Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[320px] truncate text-muted-foreground">{log.note || "-"}</TableCell>
+                          <TableCell>
+                            {log.evidenceUrl ? (
+                              <a
+                                href={log.evidenceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                              >
+                                {t("laborWorkspace.progressTable.openEvidence")}
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{formatDate(log.loggedAt, locale)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </TabsContent>
 
-        <TabsContent value="payroll" className="space-y-4">
-          <Card className="rounded-xl border border-border shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">{t("laborWorkspace.sections.payroll.title")}</CardTitle>
+        <TabsContent value="payroll" className="space-y-6 mt-6">
+          <section className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold tracking-tight">{t("laborWorkspace.sections.payroll.title")}</h3>
+                <p className="text-sm text-muted-foreground mt-1">Quản lý và tính toán bảng lương cho nhân công.</p>
+              </div>
               <Button
                 onClick={() => recalculatePayrollMutation.mutate(undefined)}
                 disabled={!canMutateSeason || recalculatePayrollMutation.isPending}
+                className="rounded-xl"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 {t("laborWorkspace.actions.recalculatePayroll")}
               </Button>
-            </CardHeader>
-            <CardContent>
+            </div>
+            
+            <div className="rounded-2xl border border-border/50 bg-card shadow-sm overflow-hidden">
               {isPayrollLoading ? (
-                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.payroll.loading")}</p>
+                <div className="p-12 text-center flex flex-col items-center justify-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.payroll.loading")}</p>
+                </div>
               ) : payrollRecords.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.payroll.empty")}</p>
+                <div className="p-12 text-center flex flex-col items-center justify-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t("laborWorkspace.sections.payroll.empty")}</p>
+                </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t("laborWorkspace.payrollTable.employee")}</TableHead>
-                      <TableHead>{t("laborWorkspace.payrollTable.period")}</TableHead>
-                      <TableHead>{t("laborWorkspace.payrollTable.completedTasks")}</TableHead>
-                      <TableHead>{t("laborWorkspace.payrollTable.wagePerTask")}</TableHead>
-                      <TableHead>{t("laborWorkspace.payrollTable.totalAmount")}</TableHead>
-                      <TableHead>{t("laborWorkspace.payrollTable.updatedAt")}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {payrollRecords.map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell>{record.employeeName || t("seasonWorkspace.employeeFallback", { id: record.employeeUserId })}</TableCell>
-                        <TableCell>
-                          {record.periodStart ?? "-"} - {record.periodEnd ?? "-"}
-                        </TableCell>
-                        <TableCell>
-                          {record.totalCompletedTasks} / {record.totalAssignedTasks}
-                        </TableCell>
-                        <TableCell>{formatMoney(record.wagePerTask, locale)}</TableCell>
-                        <TableCell>{formatMoney(record.totalAmount, locale)}</TableCell>
-                        <TableCell>{formatDate(record.generatedAt, locale)}</TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/30">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead>{t("laborWorkspace.payrollTable.employee")}</TableHead>
+                        <TableHead>{t("laborWorkspace.payrollTable.period")}</TableHead>
+                        <TableHead>{t("laborWorkspace.payrollTable.completedTasks")}</TableHead>
+                        <TableHead>{t("laborWorkspace.payrollTable.wagePerTask")}</TableHead>
+                        <TableHead>{t("laborWorkspace.payrollTable.totalAmount")}</TableHead>
+                        <TableHead>{t("laborWorkspace.payrollTable.updatedAt")}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {payrollRecords.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell className="font-medium">{record.employeeName || t("seasonWorkspace.employeeFallback", { id: record.employeeUserId })}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {record.periodStart ?? "-"} - {record.periodEnd ?? "-"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className="bg-muted text-muted-foreground border-transparent font-normal">
+                              {record.totalCompletedTasks} / {record.totalAssignedTasks}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{formatMoney(record.wagePerTask, locale)}</TableCell>
+                          <TableCell className="font-semibold text-primary">{formatMoney(record.totalAmount, locale)}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{formatDate(record.generatedAt, locale)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </TabsContent>
       </Tabs>
 

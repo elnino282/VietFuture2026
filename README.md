@@ -499,6 +499,7 @@ Mỗi service có Swagger UI riêng:
 | `/api/v1/marketplace/admin/**` | Marketplace Admin | ADMIN |
 
 > 📖 Chi tiết API contract cho Marketplace xem tại [`docs/API_CONTRACT_MARKETPLACE.md`](docs/API_CONTRACT_MARKETPLACE.md)
+> ⚠️ **Lưu ý:** Các tài liệu OpenAPI (`acm-monolith-v1.*`) cũ từ kiến trúc nguyên khối (monolith) đã được lưu trữ vào thư mục [`docs/audit-history/legacy-monolith-spec/`](docs/audit-history/legacy-monolith-spec/) để phục vụ mục đích tham khảo lịch sử. Chúng không phản ánh kiến trúc microservices hiện tại.
 
 ---
 

@@ -41,7 +41,7 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
             size="sm"
             onClick={onExport}
             disabled={isExporting}
-            className="h-8 w-full rounded-[14px] px-3 font-medium sm:w-auto"
+            className="min-h-[44px] w-full rounded-[14px] px-3 font-medium sm:w-auto"
           >
             <Download
               className={`w-4 h-4 mr-2 ${isExporting ? "animate-pulse" : ""}`}
@@ -56,7 +56,7 @@ export const ReportsHeader: React.FC<ReportsHeaderProps> = ({
             onClick={onRefresh}
             disabled={isLoading}
             aria-label={t('common.refresh')}
-            className="h-9 w-full rounded-[14px] hover:bg-muted sm:w-9"
+            className="min-h-[44px] min-w-[44px] w-full rounded-[14px] hover:bg-muted sm:w-[44px]"
           >
             <RefreshCw
               className={`w-4 h-4 text-muted-foreground ${isLoading ? "animate-spin" : ""}`}

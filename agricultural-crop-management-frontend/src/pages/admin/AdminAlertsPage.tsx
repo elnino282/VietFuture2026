@@ -244,7 +244,7 @@ export function AdminAlertsPage() {
                 value={String(windowDays)}
                 onValueChange={(value) => setWindowDays(Number(value))}
               >
-                <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[120px]">
+                <SelectTrigger className="h-9 w-full sm:w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -260,21 +260,21 @@ export function AdminAlertsPage() {
                 size="sm"
                 onClick={() => refreshMutation.mutate()}
                 disabled={refreshMutation.isPending}
-                className="rounded-[14px]"
+                className="min-h-[44px] gap-2"
               >
                 {refreshMutation.isPending ? (
                   <RefreshCw className="h-4 w-4 animate-spin" />
                 ) : (
                   <RefreshCw className="h-4 w-4" />
                 )}
-                <span className="ml-2">{t('admin.alerts.refreshRisks')}</span>
+                <span>{t('admin.alerts.refreshRisks')}</span>
               </Button>
             </div>
           </div>
 
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <Select value={type} onValueChange={setType}>
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[200px]">
+              <SelectTrigger className="h-9 w-full sm:w-[200px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -287,7 +287,7 @@ export function AdminAlertsPage() {
             </Select>
 
             <Select value={severity} onValueChange={setSeverity}>
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[160px]">
+              <SelectTrigger className="h-9 w-full sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -300,7 +300,7 @@ export function AdminAlertsPage() {
             </Select>
 
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[160px]">
+              <SelectTrigger className="h-9 w-full sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -318,7 +318,7 @@ export function AdminAlertsPage() {
                 setFarmId(value === "all" ? null : Number(value))
               }
             >
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[220px]">
+              <SelectTrigger className="h-9 w-full sm:w-[220px]">
                 <SelectValue placeholder={t('admin.alerts.farms.all')} />
               </SelectTrigger>
               <SelectContent>
@@ -390,6 +390,7 @@ export function AdminAlertsPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="min-h-[44px]"
                                 onClick={() => openDetail(alertItem)}
                               >
                                 {t('admin.alerts.actions.view')}
@@ -398,6 +399,7 @@ export function AdminAlertsPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  className="min-h-[44px]"
                                   onClick={() => {
                                     setSelectedAlert(alertItem);
                                     setDetailOpen(true);
@@ -410,6 +412,7 @@ export function AdminAlertsPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  className="min-h-[44px]"
                                   onClick={() =>
                                     dismissMutation.mutate(alertItem.id)
                                   }
@@ -433,6 +436,7 @@ export function AdminAlertsPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="min-h-[44px]"
                         disabled={page === 0}
                         onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
                       >
@@ -441,6 +445,7 @@ export function AdminAlertsPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="min-h-[44px]"
                         disabled={
                           page >= (alertsQuery.data.totalPages ?? 1) - 1
                         }
@@ -463,11 +468,11 @@ export function AdminAlertsPage() {
 
       {detailOpen && selectedAlert && (
         <div
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm cursor-pointer"
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm cursor-pointer animate-in fade-in duration-200"
           onClick={() => setDetailOpen(false)}
         >
           <div
-            className="fixed right-0 top-0 h-full w-full max-w-xl bg-card border-l border-border shadow-lg overflow-auto cursor-default"
+            className="fixed right-0 top-0 h-full w-full max-w-xl bg-card border-l border-border shadow-2xl overflow-auto cursor-default animate-in slide-in-from-right duration-300"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="p-6 space-y-6">
@@ -481,6 +486,7 @@ export function AdminAlertsPage() {
                 <Button
                   variant="ghost"
                   size="icon"
+                  className="min-h-[44px] min-w-[44px]"
                   onClick={() => setDetailOpen(false)}
                 >
                   X
@@ -523,7 +529,7 @@ export function AdminAlertsPage() {
                   onClick={() =>
                     navigate(selectedAlert.suggestedActionUrl || "")
                   }
-                  className="w-full"
+                  className="min-h-[44px] w-full"
                 >
                   <ShieldAlert className="h-4 w-4 mr-2" />
                   {t('admin.alerts.detail.viewSuggestedAction')}
@@ -564,7 +570,7 @@ export function AdminAlertsPage() {
                   disabled={
                     sendMutation.isPending || selectedAlert.status === "SENT"
                   }
-                  className="w-full"
+                  className="min-h-[44px] w-full"
                 >
                   <Send className="h-4 w-4 mr-2" />
                   {sendMutation.isPending ? t('admin.alerts.sendWarning.sending') : t('admin.alerts.sendWarning.sendAlert')}

@@ -235,39 +235,48 @@ export function SeasonNutrientInputsWorkspace() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="border border-border rounded-2xl shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Beaker className="w-5 h-5 text-primary" />
-            {t("seasonNutrientWorkspace.title")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isSeasonLoading ? (
-            <div className="text-sm text-muted-foreground flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              {t("seasonNutrientWorkspace.loadingSeason")}
+    <div className="space-y-8 pb-10 max-w-5xl mx-auto">
+      {/* Header & Meta Section */}
+      <div className="space-y-4 border-b border-border/40 pb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-primary/10 text-primary">
+            <Beaker className="w-6 h-6" />
+          </div>
+          <h2 className="text-xl font-semibold tracking-tight">{t("seasonNutrientWorkspace.title")}</h2>
+        </div>
+        
+        {isSeasonLoading ? (
+          <div className="text-sm text-muted-foreground flex items-center gap-2 py-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            {t("seasonNutrientWorkspace.loadingSeason")}
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-4 bg-muted/30 p-3 rounded-2xl border border-border/40">
+            <div className="flex items-center gap-2 px-2">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{t("seasonNutrientWorkspace.meta.season")}</span>
+              <span className="text-sm font-medium">{seasonDetail?.seasonName ?? "-"}</span>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="rounded-xl border border-border p-3 bg-card">
-                <p className="text-xs text-muted-foreground mb-1">{t("seasonNutrientWorkspace.meta.season")}</p>
-                <p className="text-sm text-foreground">{seasonDetail?.seasonName ?? "-"}</p>
-              </div>
-              <div className="rounded-xl border border-border p-3 bg-card">
-                <p className="text-xs text-muted-foreground mb-1">{t("seasonNutrientWorkspace.meta.plot")}</p>
-                <p className="text-sm text-foreground">{seasonDetail?.plotName ?? "-"}</p>
-              </div>
-              <div className="rounded-xl border border-border p-3 bg-card">
-                <p className="text-xs text-muted-foreground mb-1">{t("seasonNutrientWorkspace.meta.crop")}</p>
-                <p className="text-sm text-foreground">{seasonDetail?.cropName ?? "-"}</p>
-              </div>
+            <div className="w-px h-4 bg-border/60 hidden sm:block"></div>
+            <div className="flex items-center gap-2 px-2">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{t("seasonNutrientWorkspace.meta.plot")}</span>
+              <span className="text-sm font-medium">{seasonDetail?.plotName ?? "-"}</span>
             </div>
-          )}
+            <div className="w-px h-4 bg-border/60 hidden sm:block"></div>
+            <div className="flex items-center gap-2 px-2">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{t("seasonNutrientWorkspace.meta.crop")}</span>
+              <Badge variant="outline" className="text-xs font-normal shadow-none border-border/60 bg-card">
+                {seasonDetail?.cropName ?? "-"}
+              </Badge>
+            </div>
+          </div>
+        )}
+      </div>
 
+      {/* Main Form Section */}
+      <section className="space-y-6">
+        <div className="space-y-4">
           {!plotId && !isSeasonLoading && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="border-destructive/20 bg-destructive/5 rounded-2xl">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>{t("seasonNutrientWorkspace.alerts.missingPlotTitle")}</AlertTitle>
               <AlertDescription>{t("seasonNutrientWorkspace.alerts.missingPlotDescription")}</AlertDescription>
@@ -275,248 +284,275 @@ export function SeasonNutrientInputsWorkspace() {
           )}
 
           {isSeasonWriteLocked && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>{t("seasonNutrientWorkspace.alerts.writeLockedTitle")}</AlertTitle>
-              <AlertDescription>{seasonWriteLockReason}</AlertDescription>
+            <Alert className="rounded-2xl border-amber-300 bg-amber-50">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-amber-800">{t("seasonNutrientWorkspace.alerts.writeLockedTitle")}</AlertTitle>
+              <AlertDescription className="text-amber-700">{seasonWriteLockReason}</AlertDescription>
             </Alert>
           )}
 
           <Form {...form}>
-            <form onSubmit={onSubmit} className="space-y-4" data-testid="nutrient-input-form">
-              <fieldset disabled={isSeasonWriteLocked}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="inputSource"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("seasonNutrientWorkspace.form.inputSource")} *</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
+            <form onSubmit={onSubmit} className="space-y-8" data-testid="nutrient-input-form">
+              <fieldset disabled={isSeasonWriteLocked} className="space-y-8">
+                
+                {/* Input Details Block */}
+                <div className="p-6 rounded-3xl bg-card border border-border/50 shadow-sm space-y-6">
+                  <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-2">
+                    {t("seasonNutrientWorkspace.sections.inputDetails", "Chi tiết dinh dưỡng")}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="inputSource"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>{t("seasonNutrientWorkspace.form.inputSource")} *</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className={FORM_SELECT_TRIGGER_CLASS_NAME}>
+                                <SelectValue placeholder={t("seasonNutrientWorkspace.form.inputSourcePlaceholder")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {INPUT_SOURCE_OPTIONS.map((item) => (
+                                <SelectItem key={item.value} value={item.value} className="rounded-lg cursor-pointer">
+                                  {t(item.labelKey, item.fallbackLabel)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="value"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("seasonNutrientWorkspace.form.value")} *</FormLabel>
                           <FormControl>
-                            <SelectTrigger className={FORM_SELECT_TRIGGER_CLASS_NAME}>
-                              <SelectValue placeholder={t("seasonNutrientWorkspace.form.inputSourcePlaceholder")} />
-                            </SelectTrigger>
+                            <Input
+                              type="number"
+                              step="0.0001"
+                              min="0"
+                              data-testid="nutrient-value-input"
+                              value={Number.isFinite(field.value) ? field.value : ""}
+                              onChange={(event) => {
+                                const nextValue = Number.parseFloat(event.target.value);
+                                field.onChange(Number.isNaN(nextValue) ? undefined : nextValue);
+                              }}
+                              placeholder={t("seasonNutrientWorkspace.form.valuePlaceholder")}
+                              className={FORM_INPUT_CLASS_NAME}
+                            />
                           </FormControl>
-                          <SelectContent>
-                            {INPUT_SOURCE_OPTIONS.map((item) => (
-                              <SelectItem key={item.value} value={item.value}>
-                                {t(item.labelKey, item.fallbackLabel)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="sourceType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("seasonNutrientWorkspace.form.sourceType")} *</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className={FORM_SELECT_TRIGGER_CLASS_NAME}>
-                              <SelectValue placeholder={t("seasonNutrientWorkspace.form.sourceTypePlaceholder")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {SOURCE_OPTIONS.map((item) => (
-                              <SelectItem key={item.value} value={item.value}>
-                                {t(item.labelKey, item.fallbackLabel)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="value"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("seasonNutrientWorkspace.form.value")} *</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.0001"
-                            min="0"
-                            data-testid="nutrient-value-input"
-                            value={Number.isFinite(field.value) ? field.value : ""}
-                            onChange={(event) => {
-                              const nextValue = Number.parseFloat(event.target.value);
-                              field.onChange(Number.isNaN(nextValue) ? undefined : nextValue);
-                            }}
-                            placeholder={t("seasonNutrientWorkspace.form.valuePlaceholder")}
-                            className={FORM_INPUT_CLASS_NAME}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="unit"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("seasonNutrientWorkspace.form.unit")} *</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className={FORM_SELECT_TRIGGER_CLASS_NAME}>
-                              <SelectValue placeholder={t("seasonNutrientWorkspace.form.unitPlaceholder")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {UNIT_OPTIONS.map((item) => (
-                              <SelectItem key={item.value} value={item.value}>
-                                {t(item.labelKey, item.fallbackLabel)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="recordedAt"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("seasonNutrientWorkspace.form.recordedAt")} *</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            data-testid="nutrient-recorded-at-input"
-                            value={field.value}
-                            onChange={field.onChange}
-                            className={FORM_INPUT_CLASS_NAME}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="sourceDocument"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("seasonNutrientWorkspace.form.sourceDocument")}</FormLabel>
-                        <FormControl>
-                          <Input
-                            value={field.value ?? ""}
-                            onChange={field.onChange}
-                            placeholder={t("seasonNutrientWorkspace.form.sourceDocumentPlaceholder")}
-                            className={FORM_INPUT_CLASS_NAME}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="unit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("seasonNutrientWorkspace.form.unit")} *</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className={FORM_SELECT_TRIGGER_CLASS_NAME}>
+                                <SelectValue placeholder={t("seasonNutrientWorkspace.form.unitPlaceholder")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {UNIT_OPTIONS.map((item) => (
+                                <SelectItem key={item.value} value={item.value} className="rounded-lg cursor-pointer">
+                                  {t(item.labelKey, item.fallbackLabel)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="note"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("seasonNutrientWorkspace.form.note")}</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          rows={3}
-                          value={field.value ?? ""}
-                          onChange={field.onChange}
-                          placeholder={t("seasonNutrientWorkspace.form.notePlaceholder")}
-                          className={FORM_TEXTAREA_CLASS_NAME}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Record Info Block */}
+                <div className="p-6 rounded-3xl bg-card border border-border/50 shadow-sm space-y-6">
+                  <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-2">
+                    {t("seasonNutrientWorkspace.sections.recordInfo", "Thông tin ghi nhận")}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="recordedAt"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("seasonNutrientWorkspace.form.recordedAt")} *</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              data-testid="nutrient-recorded-at-input"
+                              value={field.value}
+                              onChange={field.onChange}
+                              className={FORM_INPUT_CLASS_NAME}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <div className="flex flex-wrap gap-2">
+                    <FormField
+                      control={form.control}
+                      name="sourceType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("seasonNutrientWorkspace.form.sourceType")} *</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className={FORM_SELECT_TRIGGER_CLASS_NAME}>
+                                <SelectValue placeholder={t("seasonNutrientWorkspace.form.sourceTypePlaceholder")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {SOURCE_OPTIONS.map((item) => (
+                                <SelectItem key={item.value} value={item.value} className="rounded-lg cursor-pointer">
+                                  {t(item.labelKey, item.fallbackLabel)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="sourceDocument"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>{t("seasonNutrientWorkspace.form.sourceDocument")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              value={field.value ?? ""}
+                              onChange={field.onChange}
+                              placeholder={t("seasonNutrientWorkspace.form.sourceDocumentPlaceholder")}
+                              className={FORM_INPUT_CLASS_NAME}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="note"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>{t("seasonNutrientWorkspace.form.note")}</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              rows={3}
+                              value={field.value ?? ""}
+                              onChange={field.onChange}
+                              placeholder={t("seasonNutrientWorkspace.form.notePlaceholder")}
+                              className={FORM_TEXTAREA_CLASS_NAME}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
                   <Button
                     type="submit"
-                    data-testid="submit-nutrient-input"
-                    disabled={createMutation.isPending || !plotId || isSeasonWriteLocked}
-                    onClick={() => setSubmitMode("stay")}
-                  >
-                    {createMutation.isPending && submitMode === "stay" ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : null}
-                    {t("seasonNutrientWorkspace.actions.save")}
-                  </Button>
-                  <Button
-                    type="submit"
-                    data-testid="submit-nutrient-input-dashboard"
                     variant="outline"
+                    data-testid="submit-nutrient-input-dashboard"
                     disabled={createMutation.isPending || !plotId || isSeasonWriteLocked}
                     onClick={() => setSubmitMode("dashboard")}
+                    className="h-12 rounded-xl px-6"
                   >
                     {createMutation.isPending && submitMode === "dashboard" ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     ) : null}
                     {t("seasonNutrientWorkspace.actions.saveAndOpenDashboard")}
                   </Button>
+                  <Button
+                    type="submit"
+                    data-testid="submit-nutrient-input"
+                    disabled={createMutation.isPending || !plotId || isSeasonWriteLocked}
+                    onClick={() => setSubmitMode("stay")}
+                    className="h-12 rounded-xl px-8"
+                  >
+                    {createMutation.isPending && submitMode === "stay" ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : null}
+                    {t("seasonNutrientWorkspace.actions.save")}
+                  </Button>
                 </div>
               </fieldset>
             </form>
           </Form>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Card className="border border-border rounded-2xl shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">{t("seasonNutrientWorkspace.list.title")}</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* List Section */}
+      <section className="space-y-4 pt-6">
+        <div>
+          <h3 className="text-lg font-semibold tracking-tight">{t("seasonNutrientWorkspace.list.title")}</h3>
+          <p className="text-sm text-muted-foreground mt-1">Lịch sử ghi nhận dinh dưỡng cho mùa vụ này.</p>
+        </div>
+        
+        <div className="rounded-2xl border border-border/50 bg-card shadow-sm overflow-hidden">
           {isInputsLoading ? (
-            <div className="text-sm text-muted-foreground flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              {t("seasonNutrientWorkspace.list.loading")}
+            <div className="p-12 text-center flex flex-col items-center justify-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground/50" />
+              </div>
+              <p className="text-sm text-muted-foreground">{t("seasonNutrientWorkspace.list.loading")}</p>
             </div>
           ) : createdRecords.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("seasonNutrientWorkspace.list.empty")}</p>
+            <div className="p-12 text-center flex flex-col items-center justify-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                <Beaker className="w-6 h-6 text-muted-foreground/50" />
+              </div>
+              <p className="text-sm text-muted-foreground">{t("seasonNutrientWorkspace.list.empty")}</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-muted-foreground">
-                    <th className="text-left font-medium py-2 pr-3">{t("seasonNutrientWorkspace.list.headers.date")}</th>
-                    <th className="text-left font-medium py-2 pr-3">{t("seasonNutrientWorkspace.list.headers.inputType")}</th>
-                    <th className="text-left font-medium py-2 pr-3">{t("seasonNutrientWorkspace.list.headers.value")}</th>
-                    <th className="text-left font-medium py-2 pr-3">{t("seasonNutrientWorkspace.list.headers.source")}</th>
-                    <th className="text-left font-medium py-2 pr-3">{t("seasonNutrientWorkspace.list.headers.status")}</th>
+                <thead className="bg-muted/30">
+                  <tr className="border-b border-border/50 text-muted-foreground">
+                    <th className="text-left font-medium py-3 px-4">{t("seasonNutrientWorkspace.list.headers.date")}</th>
+                    <th className="text-left font-medium py-3 px-4">{t("seasonNutrientWorkspace.list.headers.inputType")}</th>
+                    <th className="text-left font-medium py-3 px-4">{t("seasonNutrientWorkspace.list.headers.value")}</th>
+                    <th className="text-left font-medium py-3 px-4">{t("seasonNutrientWorkspace.list.headers.source")}</th>
+                    <th className="text-left font-medium py-3 px-4">{t("seasonNutrientWorkspace.list.headers.status")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {createdRecords.map((item) => (
-                    <tr key={item.id} className="border-b border-border/60">
-                      <td className="py-2 pr-3">{formatDate(item.recordedAt, locale)}</td>
-                      <td className="py-2 pr-3">
+                    <tr key={item.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
+                      <td className="py-3 px-4 text-muted-foreground">{formatDate(item.recordedAt, locale)}</td>
+                      <td className="py-3 px-4 font-medium text-foreground">
                         {getInputSourceLabel(item.inputSource)}
                       </td>
-                      <td className="py-2 pr-3">
-                        {item.value} {item.unit}
+                      <td className="py-3 px-4 font-semibold text-primary">
+                        {item.value} <span className="text-muted-foreground font-normal text-xs ml-1">{item.unit}</span>
                       </td>
-                      <td className="py-2 pr-3">
+                      <td className="py-3 px-4 text-muted-foreground">
                         {getSourceTypeLabel(item.sourceType)}
                       </td>
-                      <td className="py-2 pr-3">
-                        <Badge className={metricStatusClassName(item.status)}>{item.status ?? "unavailable"}</Badge>
+                      <td className="py-3 px-4">
+                        <Badge className={`${metricStatusClassName(item.status)} font-medium shadow-none`}>{item.status ?? "unavailable"}</Badge>
                       </td>
                     </tr>
                   ))}
@@ -524,8 +560,8 @@ export function SeasonNutrientInputsWorkspace() {
               </table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   );
 }

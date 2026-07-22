@@ -404,7 +404,11 @@ export function IncidentsPage() {
             title={t("incidents.title")}
             subtitle={t("incidents.subtitle")}
             actions={
-              <Button onClick={handleOpenCreate} disabled={!selectedSeasonId}>
+              <Button 
+                onClick={handleOpenCreate} 
+                disabled={!selectedSeasonId}
+                className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 {t("incidents.reportButton")}
               </Button>
@@ -436,7 +440,7 @@ export function IncidentsPage() {
                 }}
                 disabled={isSeasonsLoading}
               >
-                <SelectTrigger className={`${filterSelectBaseClass} w-[180px]`}>
+                <SelectTrigger className={`${filterSelectBaseClass} w-[180px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background`}>
                   <SelectValue placeholder={t("incidents.selectSeason")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -456,7 +460,7 @@ export function IncidentsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t("incidents.searchPlaceholder")}
-                  className="pl-10 border-border acm-rounded-sm h-9 text-sm"
+                  className="pl-10 border-border acm-rounded-sm h-9 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   disabled={!selectedSeasonId}
@@ -465,7 +469,7 @@ export function IncidentsPage() {
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger
-                  className={`${filterSelectBaseClass} w-[180px]`}
+                  className={`${filterSelectBaseClass} w-[180px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background`}
                   disabled={!selectedSeasonId}
                 >
                   <SelectValue placeholder={t("incidents.filters.status")} />
@@ -484,7 +488,7 @@ export function IncidentsPage() {
 
               <Select value={severityFilter} onValueChange={setSeverityFilter}>
                 <SelectTrigger
-                  className={`${filterSelectBaseClass} w-[180px]`}
+                  className={`${filterSelectBaseClass} w-[180px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background`}
                   disabled={!selectedSeasonId}
                 >
                   <SelectValue placeholder={t("incidents.filters.severity")} />
@@ -506,7 +510,7 @@ export function IncidentsPage() {
                 size="icon"
                 onClick={() => refetch()}
                 disabled={!selectedSeasonId}
-                className="acm-rounded-sm border-border h-9 w-9"
+                className="min-h-[44px] min-w-[44px] acm-rounded-sm border-border shadow-sm transition-all duration-200 hover:scale-[1.05] hover:shadow-md active:scale-95 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               >
                 <RefreshCw className="w-4 h-4" />
               </Button>
@@ -518,9 +522,9 @@ export function IncidentsPage() {
       {/* Summary Cards */}
       {selectedSeasonId && summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-l-4 border-l-red-500">
+          <Card className="border-l-4 border-l-[var(--destructive)]">
             <CardContent className="px-6 py-4 flex items-center gap-3">
-              <AlertCircle className="w-8 h-8 text-red-500" />
+              <AlertCircle className="w-8 h-8 text-[var(--destructive)]" />
               <div>
                 <p className="text-2xl font-bold">{summary.openCount}</p>
                 <p className="text-sm text-muted-foreground">
@@ -529,9 +533,9 @@ export function IncidentsPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-l-4 border-l-blue-500">
+          <Card className="border-l-4 border-l-[var(--info)]">
             <CardContent className="px-6 py-4 flex items-center gap-3">
-              <Clock className="w-8 h-8 text-blue-500" />
+              <Clock className="w-8 h-8 text-[var(--info)]" />
               <div>
                 <p className="text-2xl font-bold">{summary.inProgressCount}</p>
                 <p className="text-sm text-muted-foreground">
@@ -540,9 +544,9 @@ export function IncidentsPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-l-4 border-l-green-500">
+          <Card className="border-l-4 border-l-[var(--success)]">
             <CardContent className="px-6 py-4 flex items-center gap-3">
-              <CheckCircle2 className="w-8 h-8 text-green-500" />
+              <CheckCircle2 className="w-8 h-8 text-[var(--success)]" />
               <div>
                 <p className="text-2xl font-bold">{summary.resolvedCount}</p>
                 <p className="text-sm text-muted-foreground">
@@ -551,7 +555,7 @@ export function IncidentsPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-l-4 border-l-gray-400">
+          <Card className="border-l-4 border-l-[var(--muted-foreground)]">
             <CardContent className="px-6 py-4 flex items-center gap-3">
               <XCircle className="w-8 h-8 text-muted-foreground" />
               <div>
@@ -664,6 +668,7 @@ export function IncidentsPage() {
                                 incident.status === "RESOLVED" ||
                                 incident.status === "CANCELLED"
                               }
+                              className="min-h-[44px] min-w-[44px] transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -672,6 +677,7 @@ export function IncidentsPage() {
                               size="icon"
                               onClick={() => handleOpenDelete(incident)}
                               disabled={incident.status === "RESOLVED"}
+                              className="min-h-[44px] min-w-[44px] text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive rounded-md"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -696,6 +702,7 @@ export function IncidentsPage() {
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
+                    className="min-h-[44px]"
                     size="sm"
                     disabled={currentPage === 0}
                     onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
@@ -704,6 +711,7 @@ export function IncidentsPage() {
                   </Button>
                   <Button
                     variant="outline"
+                    className="min-h-[44px]"
                     size="sm"
                     disabled={currentPage >= incidentsData.totalPages - 1}
                     onClick={() => setCurrentPage((p) => p + 1)}
@@ -763,7 +771,7 @@ export function IncidentsPage() {
                   setFormState((s) => ({ ...s, incidentType: val }))
                 }
               >
-                <SelectTrigger className={selectTriggerClass}>
+                <SelectTrigger className={`${selectTriggerClass} focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background`}>
                   <SelectValue placeholder={t("incidents.form.selectType")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -783,7 +791,7 @@ export function IncidentsPage() {
                   setFormState((s) => ({ ...s, severity: val }))
                 }
               >
-                <SelectTrigger className={selectTriggerClass}>
+                <SelectTrigger className={`${selectTriggerClass} focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background`}>
                   <SelectValue placeholder={t("incidents.form.selectSeverity")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -804,6 +812,7 @@ export function IncidentsPage() {
                   setFormState((s) => ({ ...s, description: e.target.value }))
                 }
                 rows={4}
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
             <div className="space-y-2">
@@ -818,6 +827,7 @@ export function IncidentsPage() {
                     deadline: e.target.value || undefined,
                   }))
                 }
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
           </div>
@@ -835,6 +845,7 @@ export function IncidentsPage() {
             <Button
               onClick={isEditDialogOpen ? handleUpdate : handleCreate}
               disabled={createMutation.isPending || updateMutation.isPending}
+              className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background"
             >
               {(createMutation.isPending || updateMutation.isPending) && (
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -862,6 +873,7 @@ export function IncidentsPage() {
                 value={resolutionNote}
                 onChange={(e) => setResolutionNote(e.target.value)}
                 rows={4}
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
           </div>
@@ -878,6 +890,7 @@ export function IncidentsPage() {
                 updateStatusMutation.isPending || !resolutionNote.trim()
               }
               variant="success"
+              className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2 ring-offset-background"
             >
               {updateStatusMutation.isPending && (
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -906,6 +919,7 @@ export function IncidentsPage() {
             </Button>
             <Button
               variant="destructive"
+              className="min-h-[44px]"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >

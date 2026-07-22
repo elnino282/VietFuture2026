@@ -13,7 +13,7 @@ import {
 import { useOptionalSeason } from "@/shared/contexts";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useQuery } from "@tanstack/react-query";
-import { seasonsApi } from "@/api/seasonsApi";
+import { seasonsApi } from "@/entities/season/api/seasonsApi";
 import type {
   CropResidueHandling,
   HarvestBatch,

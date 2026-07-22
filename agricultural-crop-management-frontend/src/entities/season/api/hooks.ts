@@ -32,7 +32,7 @@ import {
     useArchiveSeason as useOrvalArchiveSeason,
     useGetMySeasons,
     useSearchSeasonsByKeyword as useOrvalSearchSeasonsByKeyword,
-} from '@/api/generated/season-service';
+} from '@/entities/season/api/generated/season-service';
 
 // ═══════════════════════════════════════════════════════════════
 // ADAPTER HOOKS

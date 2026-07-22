@@ -133,7 +133,7 @@ const EmptyState: React.FC<{ onReset?: () => void; text: string; resetText: stri
   <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground">
     <p className="mb-2 text-sm">{text}</p>
     {onReset && (
-      <Button variant="link" onClick={onReset} className="text-primary text-sm">
+      <Button variant="link" onClick={onReset} className="min-h-[44px] text-primary text-sm">
         {resetText}
       </Button>
     )}
@@ -301,7 +301,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
                 onCostGranularityChange(value as "DAY" | "WEEK" | "MONTH")
               }
             >
-              <SelectTrigger className="h-8 w-full rounded-[14px] border-input bg-card text-sm text-foreground sm:w-[140px]">
+              <SelectTrigger className="min-h-[44px] w-full rounded-[14px] border-input bg-card text-sm text-foreground sm:w-[140px]">
                 <SelectValue placeholder={t('admin.reportsAnalytics.chart.granularity')} />
               </SelectTrigger>
               <SelectContent className="rounded-[14px]">
@@ -317,7 +317,7 @@ export const ReportsChartTabs: React.FC<ReportsChartTabsProps> = ({
             variant="outline"
             size="sm"
             onClick={() => setShowTable(!showTable)}
-            className="h-8 w-full sm:w-auto px-3 rounded-[14px] border-border bg-muted hover:bg-muted/80 text-foreground font-medium text-sm"
+            className="min-h-[44px] w-full sm:w-auto px-3 rounded-[14px] border-border bg-muted hover:bg-muted/80 text-foreground font-medium text-sm"
           >
             {showTable
               ? t('admin.reportsAnalytics.chart.hideTable')

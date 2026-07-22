@@ -982,6 +982,7 @@ export function DiseaseTrackingPage() {
             subtitle={t("diseaseTracking.subtitle")}
             actions={(
               <Button
+                className="min-h-[44px]"
                 onClick={openCreateRecordDialog}
                 disabled={isSeasonWriteLocked}
                 title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
@@ -1034,7 +1035,7 @@ export function DiseaseTrackingPage() {
               <Input
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
-                className="pl-10"
+                className="pl-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 placeholder={t("diseaseTracking.filters.searchPlaceholder")}
               />
             </div>
@@ -1067,7 +1068,7 @@ export function DiseaseTrackingPage() {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" onClick={() => refetchRecords()}>
+            <Button variant="outline" className="min-h-[44px]" onClick={() => refetchRecords()}>
               {t("diseaseTracking.actions.refresh")}
             </Button>
           </div>
@@ -1087,6 +1088,7 @@ export function DiseaseTrackingPage() {
             emptyDescription={t("diseaseTracking.list.emptyDescription")}
             emptyAction={(
               <Button
+                className="min-h-[44px]"
                 onClick={openCreateRecordDialog}
                 disabled={isSeasonWriteLocked}
               >
@@ -1156,12 +1158,14 @@ export function DiseaseTrackingPage() {
                           onClick={() => openCreateTreatmentDialog(record.id)}
                           disabled={isSeasonWriteLocked}
                           title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
+                          className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                         >
                           <FlaskConical className="w-4 h-4 mr-2" />
                           {t("diseaseTracking.actions.addTreatment")}
                         </Button>
                         <Button
                           variant="outline"
+                          className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                           onClick={() => openEditRecordDialog(record)}
                           disabled={isSeasonWriteLocked || record.canEdit === false}
                           title={isSeasonWriteLocked
@@ -1175,7 +1179,7 @@ export function DiseaseTrackingPage() {
                         </Button>
                         <Button
                           variant="outline"
-                          className="text-destructive"
+                          className="min-h-[44px] text-destructive shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 ring-offset-background hover:bg-destructive/10"
                           onClick={() => setDeleteRecordId(record.id)}
                           disabled={isSeasonWriteLocked || record.canDelete === false}
                           title={isSeasonWriteLocked
@@ -1190,6 +1194,7 @@ export function DiseaseTrackingPage() {
                         <Button
                           variant="ghost"
                           onClick={() => toggleRecordDetail(record.id)}
+                          className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                         >
                           {isExpanded ? (
                             <>
@@ -1274,6 +1279,7 @@ export function DiseaseTrackingPage() {
                                   size="sm"
                                   onClick={() => handleGenerateAiSuggestion(record.id)}
                                   disabled={aiSuggestionMutation.isPending}
+                                  className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                                 >
                                   {aiSuggestionMutation.isPending ? (
                                     <Loader2 className="w-4 h-4 mr-1 animate-spin" />
@@ -1350,6 +1356,7 @@ export function DiseaseTrackingPage() {
                                   onClick={() => openCreateTreatmentDialog(record.id)}
                                   disabled={isSeasonWriteLocked}
                                   title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
+                                  className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                                 >
                                   <Plus className="w-4 h-4 mr-1" />
                                   {t("diseaseTracking.actions.addTimelineItem")}
@@ -1413,6 +1420,7 @@ export function DiseaseTrackingPage() {
                                           <Button
                                             variant="ghost"
                                             size="icon"
+                                            className="min-h-[44px] min-w-[44px] transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
                                             onClick={() => openEditTreatmentDialog(record.id, treatment)}
                                             disabled={isSeasonWriteLocked || treatment.canEdit === false}
                                             title={isSeasonWriteLocked
@@ -1426,7 +1434,7 @@ export function DiseaseTrackingPage() {
                                           <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="text-destructive"
+                                            className="min-h-[44px] min-w-[44px] text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive rounded-md"
                                             onClick={() => setDeleteTreatmentTarget({
                                               diseaseRecordId: record.id,
                                               treatmentId: treatment.id,
@@ -1627,12 +1635,13 @@ export function DiseaseTrackingPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={closeRecordDialog}>
+            <Button variant="outline" className="min-h-[44px]" onClick={closeRecordDialog}>
               {t("diseaseTracking.actions.cancel")}
             </Button>
             <Button
               onClick={handleSubmitRecord}
               disabled={isMutating || !isRecordFormSubmittable}
+              className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background"
             >
               {isMutating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {editingRecord ? t("diseaseTracking.actions.update") : t("diseaseTracking.actions.create")}
@@ -1833,12 +1842,13 @@ export function DiseaseTrackingPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={closeTreatmentDialog}>
+            <Button variant="outline" className="min-h-[44px]" onClick={closeTreatmentDialog}>
               {t("diseaseTracking.actions.cancel")}
             </Button>
             <Button
               onClick={handleSubmitTreatment}
               disabled={isMutating || !isTreatmentFormSubmittable}
+              className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background"
             >
               {isMutating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {editingTreatment ? t("diseaseTracking.actions.update") : t("diseaseTracking.actions.addTreatment")}
@@ -1856,9 +1866,9 @@ export function DiseaseTrackingPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("diseaseTracking.actions.cancel")}</AlertDialogCancel>
+            <AlertDialogCancel className="min-h-[44px]">{t("diseaseTracking.actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="min-h-[44px] bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDeleteRecord}
             >
               {deleteRecordMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -1880,9 +1890,9 @@ export function DiseaseTrackingPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("diseaseTracking.actions.cancel")}</AlertDialogCancel>
+            <AlertDialogCancel className="min-h-[44px]">{t("diseaseTracking.actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="min-h-[44px] bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDeleteTreatment}
             >
               {deleteTreatmentMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

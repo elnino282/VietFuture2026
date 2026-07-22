@@ -26,82 +26,81 @@ export function FarmInfoCard({
     const { t } = useTranslation();
 
     return (
-        <Card>
-            <CardHeader>
+        <div className="py-2 space-y-8 mb-4">
+            <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <CardTitle>{farm.name}</CardTitle>
-                    <CardDescription>{t('farmDetail.farmId', { id: farm.id })}</CardDescription>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{farm.name}</h1>
+                    <div className="mt-3 flex items-center gap-3">
+                        <span className="text-muted-foreground text-sm">{t('farmDetail.farmId', { id: farm.id })}</span>
+                        <div className="h-4 w-px bg-border"></div>
+                        <Badge variant={farm.active ? 'default' : 'secondary'} className="font-medium px-2.5 py-0.5 rounded-md">
+                            {farm.active ? t('farmDetail.overview.active') : t('farmDetail.overview.inactive')}
+                        </Badge>
+                    </div>
                 </div>
-                <CardAction className="flex flex-wrap gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={onCreatePlot}
-                        disabled={!farm.active}
-                    >
-                        <Plus className="h-4 w-4 mr-2" />
-                        {t('farms.dialog.createPlotTitle')}
-                    </Button>
+                <div className="flex flex-wrap items-center gap-2">
                     {canEdit && (
-                        <Button variant="outline" size="sm" onClick={onEdit}>
+                        <Button variant="ghost" onClick={onEdit} className="text-muted-foreground hover:text-foreground">
                             <Pencil className="h-4 w-4 mr-2" />
                             {t('common.edit')}
                         </Button>
                     )}
                     {canDelete && (
-                        <Button variant="outline" size="sm" onClick={onDelete}>
+                        <Button variant="ghost" onClick={onDelete} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
                             <Trash2 className="h-4 w-4 mr-2" />
                             {t('common.delete')}
                         </Button>
                     )}
-                </CardAction>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <p className="text-sm font-medium text-muted-foreground">{t('farmDetail.overview.owner')}</p>
-                        <p className="mt-1 text-sm">@{farm.ownerUsername}</p>
+                    <Button
+                        variant="default"
+                        onClick={onCreatePlot}
+                        disabled={!farm.active}
+                        className="shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white ml-2"
+                    >
+                        <Plus className="h-4 w-4 mr-2" />
+                        {t('farms.dialog.createPlotTitle')}
+                    </Button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-6 border-t border-border/40">
+                <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1.5">{t('farmDetail.overview.owner')}</p>
+                    <p className="text-base font-medium">@{farm.ownerUsername}</p>
+                </div>
+                <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1.5">{t('farms.form.area')}</p>
+                    <p className="text-base font-mono">
+                        {farm.area ? `${farm.area} ha` : t('farmDetail.overview.notSpecified')}
+                    </p>
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-1.5">{t('farmDetail.stock.table.location')}</p>
+                    <div className="text-base">
+                        <AddressDisplay
+                            wardCode={farm.wardId}
+                            variant="full"
+                            showIcon={true}
+                            fallback={t('farmDetail.overview.notSpecified')}
+                        />
                     </div>
-                    <div>
-                        <p className="text-sm font-medium text-muted-foreground">{t('farmDetail.overview.status')}</p>
-                        <div className="mt-1">
-                            <Badge variant={farm.active ? 'default' : 'secondary'}>
-                                {farm.active ? t('farmDetail.overview.active') : t('farmDetail.overview.inactive')}
-                            </Badge>
-                        </div>
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-muted-foreground">{t('farms.form.area')}</p>
-                        <p className="mt-1 text-sm font-mono">
-                            {farm.area ? `${farm.area} ha` : t('farmDetail.overview.notSpecified')}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-muted-foreground">{t('farmDetail.stock.table.location')}</p>
-                        <p className="mt-1 text-sm">
-                            <AddressDisplay
-                                wardCode={farm.wardId}
-                                variant="full"
-                                showIcon={true}
-                                fallback={t('farmDetail.overview.notSpecified')}
-                            />
-                        </p>
-                    </div>
+                </div>
+                <div className="flex gap-10">
                     {farm.totalPlots !== undefined && (
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">{t('farmDetail.overview.totalPlots')}</p>
-                            <p className="mt-1 text-sm font-mono">{farm.totalPlots}</p>
+                            <p className="text-sm font-medium text-muted-foreground mb-1.5">{t('farmDetail.overview.totalPlots')}</p>
+                            <p className="text-base font-mono">{farm.totalPlots}</p>
                         </div>
                     )}
                     {farm.activePlots !== undefined && (
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">{t('farmDetail.overview.activePlots')}</p>
-                            <p className="mt-1 text-sm font-mono">{farm.activePlots}</p>
+                            <p className="text-sm font-medium text-muted-foreground mb-1.5">{t('farmDetail.overview.activePlots')}</p>
+                            <p className="text-base font-mono">{farm.activePlots}</p>
                         </div>
                     )}
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
 

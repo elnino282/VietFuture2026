@@ -23,8 +23,8 @@ function PublicNavLink({ to, label }: { to: string; label: string }) {
       to={to}
       className={({ isActive }) =>
         isActive
-          ? "text-emerald-700 font-semibold"
-          : "text-slate-600 hover:text-emerald-700 transition-colors"
+          ? "text-primary font-semibold"
+          : "text-muted-foreground hover:text-primary transition-colors"
       }
       end={to === "/marketplace"}
     >
@@ -47,13 +47,13 @@ function PublicSearchBar() {
 
   return (
     <form onSubmit={handleSubmit} className="relative hidden lg:block">
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <input
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search products, farms..."
-        className="w-64 rounded-full border border-slate-200 bg-slate-50 py-2 pl-9 pr-4 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 xl:w-80"
+        className="w-64 rounded-full border border-border bg-muted py-2 pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-ring/20 xl:w-80"
       />
     </form>
   );
@@ -89,14 +89,14 @@ export function PublicHeader() {
   const showChannelSwitch = role === "farmer" || role === "admin";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link to="/marketplace" className="flex shrink-0 items-center gap-2">
-          <div className="rounded-md bg-emerald-600 p-1.5 text-white">
+          <div className="rounded-md bg-primary p-1.5 text-primary-foreground">
             <Wheat size={20} />
           </div>
-          <span className="font-semibold tracking-tight text-slate-900">
+          <span className="font-semibold tracking-tight text-foreground">
             ACM Marketplace
           </span>
         </Link>
@@ -141,7 +141,7 @@ export function PublicHeader() {
             </>
           ) : (
             <>
-              <span className="hidden rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 sm:inline-flex">
+              <span className="hidden rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground sm:inline-flex">
                 Guest mode
               </span>
               <Link to="/sign-up">

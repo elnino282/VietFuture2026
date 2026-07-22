@@ -1,4 +1,4 @@
-﻿import { useEmployeeProgressLogs } from "@/entities/labor";
+import { useEmployeeProgressLogs } from "@/entities/labor";
 import {
   BackButton,
   Card,
@@ -72,7 +72,7 @@ export function EmployeeProgressPage() {
                     </TableHeader>
                     <TableBody>
                       {group.logs.map((log) => (
-                        <TableRow key={log.id}>
+                        <TableRow key={log.id} className="hover:bg-muted/50 transition-colors">
                           <TableCell>
                             {log.taskTitle || t("employee.common.taskFallback", { id: log.taskId })}
                           </TableCell>

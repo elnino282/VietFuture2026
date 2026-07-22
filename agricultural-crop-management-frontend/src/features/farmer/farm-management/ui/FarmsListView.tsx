@@ -216,7 +216,14 @@ export function FarmsListView({
                                 return (
                                     <tr
                                         key={farm.id}
+                                        tabIndex={0}
                                         onClick={() => onView(farm.id)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                onView(farm.id);
+                                            }
+                                        }}
                                         className={`
                                             group cursor-pointer transition-all duration-150
                                             ${isSelected
@@ -269,14 +276,19 @@ export function FarmsListView({
 
                                         {/* Actions */}
                                         <td className="px-4 py-3.5">
-                                            <div onClick={(e) => e.stopPropagation()} className="flex justify-center">
+                                            <button 
+                                                type="button" 
+                                                onClick={(e) => e.stopPropagation()} 
+                                                onKeyDown={(e) => e.stopPropagation()}
+                                                className="flex justify-center w-full bg-transparent border-none p-0 cursor-default focus:outline-none"
+                                            >
                                                 <FarmActionsMenu
                                                     farm={farm}
                                                     onView={onView}
                                                     onEdit={onEdit}
                                                     onDelete={onDelete}
                                                 />
-                                            </div>
+                                            </button>
                                         </td>
                                     </tr>
                                 );

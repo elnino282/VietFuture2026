@@ -173,7 +173,7 @@ export function SellerProductDetailPage() {
               size="sm"
               onClick={handleStatusTransition}
               disabled={statusMutation.isPending}
-              className="gap-2"
+              className="gap-2 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:bg-accent active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
             >
               {product.status === "ACTIVE" || product.status === "PUBLISHED" ? <EyeOff size={14} /> : <Eye size={14} />}
               {statusMutation.isPending
@@ -182,7 +182,7 @@ export function SellerProductDetailPage() {
             </Button>
           ) : null}
           <Link to={`/farmer/marketplace-products/${product.id}/edit`}>
-            <Button size="sm" className="gap-2">
+            <Button size="sm" className="gap-2 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
               <Pencil size={14} /> {t("marketplaceSeller.productDetail.actions.editListing", "Edit listing")}
             </Button>
           </Link>
@@ -222,7 +222,8 @@ export function SellerProductDetailPage() {
                   <img
                     src={gallery[0]}
                     alt={product.name}
-                    className="h-[360px] w-full object-cover"
+                    loading="lazy"
+                    className="h-[360px] w-full object-cover transition-transform duration-500 hover:scale-[1.02]"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
@@ -239,7 +240,8 @@ export function SellerProductDetailPage() {
                       <img
                         src={imageUrl}
                         alt={`${product.name} ${index + 1}`}
-                        className="h-24 w-full object-cover"
+                        loading="lazy"
+                        className="h-24 w-full object-cover transition-transform duration-300 hover:scale-110"
                         referrerPolicy="no-referrer"
                       />
                     </div>

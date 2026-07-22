@@ -237,7 +237,7 @@ export function GlobalSearchBar({
       {/* Clickable Header Button */}
       <div 
         onClick={() => setOpen(true)}
-        className="relative cursor-pointer hidden md:flex items-center w-64 lg:w-96 h-10 border border-white/30 hover:border-white/60 bg-white/10 hover:bg-white/15 px-3 rounded-full text-white/70 select-none transition-all duration-200"
+        className="relative cursor-pointer hidden md:flex items-center w-64 lg:w-96 h-10 border border-white/30 hover:border-white/60 bg-white/10 hover:bg-white/15 px-3 rounded-full text-white/70 select-none transition-colors duration-200"
       >
         <Search className="w-4 h-4 mr-2.5 text-white/80" />
         <span className="text-sm truncate">
@@ -311,7 +311,7 @@ export function GlobalSearchBar({
                         <div
                           key={link.route}
                           onClick={() => navigateTo(link.route)}
-                          className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
+                          className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-colors duration-200 ${
                             isActive
                               ? "bg-primary/5 text-foreground font-medium"
                               : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -355,7 +355,7 @@ export function GlobalSearchBar({
                                 <div
                                   key={`${type}-${item.id}-${index}`}
                                   onClick={() => navigateTo(item.route || "")}
-                                  className={`flex items-center justify-between p-2 rounded-xl cursor-pointer border border-transparent transition-all duration-150 ${
+                                  className={`flex items-center justify-between p-2 rounded-xl cursor-pointer border border-transparent transition-colors duration-150 ${
                                     isActive
                                       ? "bg-primary/5 border-primary/25 shadow-sm"
                                       : "hover:bg-muted/40"

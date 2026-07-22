@@ -44,10 +44,10 @@ export function SellerMarketplaceTabs() {
 
   return (
     <nav
-      className="rounded-lg border border-border bg-card p-2 shadow-sm"
+      className="mb-6 border-b border-border/60"
       aria-label={t("marketplaceSeller.tabs.ariaLabel", "Marketplace seller tabs")}
     >
-      <div className="grid gap-2 md:grid-cols-4">
+      <div className="-mb-px flex flex-nowrap overflow-x-auto gap-6">
         {sellerTabs.map((tab) => {
           const Icon = tab.icon;
 
@@ -58,22 +58,15 @@ export function SellerMarketplaceTabs() {
               end={tab.to.endsWith("dashboard")}
               className={({ isActive }) =>
                 cn(
-                  "flex min-w-0 items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                  "flex min-w-0 shrink-0 items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
                 )
               }
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-background text-current ring-1 ring-border/70">
-                <Icon size={17} />
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate font-semibold">{t(tab.labelKey, tab.labelFallback)}</span>
-                <span className="block truncate text-xs text-muted-foreground">
-                  {t(tab.descriptionKey, tab.descriptionFallback)}
-                </span>
-              </span>
+              <Icon size={18} />
+              <span>{t(tab.labelKey, tab.labelFallback)}</span>
             </NavLink>
           );
         })}

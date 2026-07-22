@@ -125,7 +125,7 @@ export function AdminAuditLogsPage() {
         <CardContent className="space-y-4 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Select value={module} onValueChange={setModule}>
-              <SelectTrigger className="h-9 w-full rounded-[14px] sm:w-[180px]">
+              <SelectTrigger className="h-9 w-full sm:w-[180px]">
                 <SelectValue placeholder={t("admin.auditLogs.filters.module")} />
               </SelectTrigger>
               <SelectContent>
@@ -138,31 +138,31 @@ export function AdminAuditLogsPage() {
             </Select>
 
             <Input
-              className="h-9 w-full rounded-[14px] sm:w-[190px]"
+              className="h-9 w-full sm:w-[190px]"
               placeholder={t("admin.auditLogs.filters.entityType")}
               value={entityType}
               onChange={(event) => setEntityType(event.target.value)}
             />
             <Input
-              className="h-9 w-full rounded-[14px] sm:w-[190px]"
+              className="h-9 w-full sm:w-[190px]"
               placeholder={t("admin.auditLogs.filters.action")}
               value={action}
               onChange={(event) => setAction(event.target.value)}
             />
             <Input
-              className="h-9 w-full rounded-[14px] sm:w-[190px]"
+              className="h-9 w-full sm:w-[190px]"
               placeholder={t("admin.auditLogs.filters.user")}
               value={user}
               onChange={(event) => setUser(event.target.value)}
             />
             <Input
-              className="h-9 w-full rounded-[14px] sm:w-[210px]"
+              className="h-9 w-full sm:w-[210px]"
               type="datetime-local"
               value={from}
               onChange={(event) => setFrom(event.target.value)}
             />
             <Input
-              className="h-9 w-full rounded-[14px] sm:w-[210px]"
+              className="h-9 w-full sm:w-[210px]"
               type="datetime-local"
               value={to}
               onChange={(event) => setTo(event.target.value)}
@@ -207,7 +207,7 @@ export function AdminAuditLogsPage() {
                       {auditLogsQuery.data.items.map((log) => (
                         <TableRow
                           key={log.id}
-                          className="cursor-pointer hover:bg-muted/40"
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
                           onClick={() => setSelectedLog(log)}
                         >
                           <TableCell>
@@ -239,6 +239,7 @@ export function AdminAuditLogsPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="min-h-[44px]"
                         disabled={page === 0}
                         onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
                       >
@@ -247,6 +248,7 @@ export function AdminAuditLogsPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="min-h-[44px]"
                         disabled={page >= totalPages - 1 || totalPages === 0}
                         onClick={() => setPage((prev) => prev + 1)}
                       >

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Warehouse, MapPin, ArrowUpDown, RefreshCw, AlertCircle } from 'lucide-react';
-import { adminWarehouseApi } from '@/services/api.admin';
+import { adminWarehouseApi } from '@/entities/user/api/api.admin';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { BackButton } from '@/shared/ui/back-button';
 

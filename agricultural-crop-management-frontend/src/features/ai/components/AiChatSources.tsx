@@ -1,4 +1,4 @@
-import type { AiChatSource } from '@/services/aiChatService';
+import type { AiChatSource } from '@/entities/ai/api/aiChatService';
 
 type AiChatSourcesProps = {
     sources?: AiChatSource[];

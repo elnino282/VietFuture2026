@@ -77,19 +77,19 @@ export function PublicTracePage() {
 
   // Global safety color badge configuration
   let safetyBadgeColor = "bg-emerald-50 text-emerald-800 border-emerald-100";
-  let safetyGradient = "from-emerald-500 to-teal-600";
+  let safetyBgClass = "bg-emerald-600";
   let safetyStatusLabel = "An toàn - Đã hết thời gian cách ly";
   let safetyIcon = <CheckCircle2 className="w-6 h-6 text-emerald-500" />;
 
   if (!isPHISafe) {
     if (blockedPesticides > 0) {
       safetyBadgeColor = "bg-rose-50 text-rose-800 border-rose-100";
-      safetyGradient = "from-rose-500 to-red-600";
+      safetyBgClass = "bg-red-600";
       safetyStatusLabel = "CẢNH BÁO: ĐANG TRONG THỜI GIAN CÁCH LY";
       safetyIcon = <Lock className="w-6 h-6 text-rose-500" />;
     } else {
       safetyBadgeColor = "bg-amber-50 text-amber-800 border-amber-100";
-      safetyGradient = "from-amber-500 to-orange-600";
+      safetyBgClass = "bg-amber-600";
       safetyStatusLabel = "CẢNH GIÁC: Thời gian cách ly còn dưới 3 ngày";
       safetyIcon = <AlertTriangle className="w-6 h-6 text-amber-500" />;
     }
@@ -144,7 +144,7 @@ export function PublicTracePage() {
       <main className="max-w-3xl mx-auto px-4 mt-6 space-y-6">
         {/* PRODUCT & PHI SAFETY HIGHLIGHT */}
         <section className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/50 overflow-hidden">
-          <div className={`bg-gradient-to-r ${safetyGradient} p-6 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4`}>
+          <div className={`${safetyBgClass} p-6 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4`}>
             <div>
               <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase">
                 <ShieldCheck className="w-3.5 h-3.5" /> Khóa bảo vệ an toàn thực phẩm
@@ -200,7 +200,7 @@ export function PublicTracePage() {
 
             {/* VietGAP certification badge */}
             <div className="bg-white p-5 rounded-2xl border border-slate-100 flex flex-col justify-between relative overflow-hidden group">
-              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:scale-110 transition-transform" />
+              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:opacity-80 transition-opacity" />
               <div className="relative">
                 <div className="flex items-center gap-2">
                   <Award className="w-6 h-6 text-emerald-600 shrink-0" />
@@ -465,7 +465,7 @@ export function PublicTracePage() {
                 timeline.map((milestone, idx) => (
                   <div key={idx} className="relative group">
                     {/* Circle bullet */}
-                    <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-emerald-500 bg-white group-hover:scale-125 transition-transform" />
+                    <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-emerald-500 bg-white group-hover:opacity-80 transition-opacity" />
                     <div>
                       <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
                         {milestone.date ? new Date(milestone.date).toLocaleDateString("vi-VN") : ""}
@@ -479,7 +479,7 @@ export function PublicTracePage() {
                 <>
                   {/* Planting Milestone */}
                   <div className="relative group">
-                    <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-emerald-500 bg-white group-hover:scale-125 transition-transform" />
+                    <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-emerald-500 bg-white group-hover:opacity-80 transition-opacity" />
                     <div>
                       <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
                         {season?.plantingDate ? new Date(season.plantingDate).toLocaleDateString("vi-VN") : "01/03/2026"}
@@ -494,7 +494,7 @@ export function PublicTracePage() {
                   {/* Spraying pesticide milestones if any */}
                   {pesticideUsage.length > 0 && (
                     <div className="relative group">
-                      <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-emerald-500 bg-white group-hover:scale-125 transition-transform" />
+                      <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-emerald-500 bg-white group-hover:opacity-80 transition-opacity" />
                       <div>
                         <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
                           {new Date(pesticideUsage[0].applicationDate).toLocaleDateString("vi-VN")}
@@ -509,7 +509,7 @@ export function PublicTracePage() {
 
                   {/* Harvest Milestone */}
                   <div className="relative group">
-                    <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-emerald-500 bg-white group-hover:scale-125 transition-transform" />
+                    <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-emerald-500 bg-white group-hover:opacity-80 transition-opacity" />
                     <div>
                       <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
                         {productLot?.harvestedAt ? new Date(productLot.harvestedAt).toLocaleDateString("vi-VN") : "20/05/2026"}
@@ -523,7 +523,7 @@ export function PublicTracePage() {
 
                   {/* Packaging / Receiving */}
                   <div className="relative group">
-                    <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-emerald-500 bg-white group-hover:scale-125 transition-transform" />
+                    <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-emerald-500 bg-white group-hover:opacity-80 transition-opacity" />
                     <div>
                       <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
                         {productLot?.receivedAt ? new Date(productLot.receivedAt).toLocaleDateString("vi-VN") : new Date().toLocaleDateString("vi-VN")}

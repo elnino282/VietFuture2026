@@ -668,12 +668,12 @@ export function SellerProductFormPage() {
                   onValueChange={handleImageInputModeChange}
                   className="gap-3"
                 >
-                  <TabsList className="grid h-10 w-full grid-cols-2 rounded-xl">
-                    <TabsTrigger type="button" value="upload" className="gap-2">
+                  <TabsList className="w-full overflow-x-auto">
+                    <TabsTrigger type="button" value="upload" className="gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                       <Upload className="h-4 w-4" aria-hidden="true" />
                       {t("marketplaceSeller.productForm.imageInput.uploadTab", "Upload image")}
                     </TabsTrigger>
-                    <TabsTrigger type="button" value="url" className="gap-2">
+                    <TabsTrigger type="button" value="url" className="gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
                       <LinkIcon className="h-4 w-4" aria-hidden="true" />
                       {t("marketplaceSeller.productForm.imageInput.urlTab", "Use URL")}
                     </TabsTrigger>
@@ -707,7 +707,7 @@ export function SellerProductFormPage() {
                         variant="outline"
                         size="sm"
                         onClick={clearSelectedImageFile}
-                        className="gap-2"
+                        className="gap-2 transition-all duration-200 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 ring-offset-background"
                       >
                         <X className="h-4 w-4" aria-hidden="true" />
                         {t("marketplaceSeller.productForm.imageInput.removeSelected", "Remove selected image")}
@@ -938,7 +938,7 @@ export function SellerProductFormPage() {
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="flex h-48 items-center justify-center text-sm text-muted-foreground/60">
+                  <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
                     {t("marketplaceSeller.productForm.preview.imageFallback", "Product image preview")}
                   </div>
                 )}
@@ -994,7 +994,7 @@ export function SellerProductFormPage() {
                 <Button
                   type="submit"
                   disabled={!canSubmit || isSavingProduct}
-                  className="w-full"
+                  className="w-full shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 >
                   {isSavingProduct
                     ? t("marketplaceSeller.productForm.actions.saving", "Saving...")
@@ -1011,7 +1011,7 @@ export function SellerProductFormPage() {
                     variant="outline"
                     onClick={handleStatusTransition}
                     disabled={statusMutation.isPending}
-                    className="w-full"
+                    className="w-full shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                   >
                     {statusMutation.isPending
                       ? t("marketplaceSeller.productForm.actions.updating", "Updating...")

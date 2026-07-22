@@ -202,12 +202,12 @@ export function RoleFormModal({
                 onChange={(e) =>
                   setFormData({ ...formData, code: e.target.value })
                 }
-                className={`rounded-[14px] pl-10 uppercase ${errors.code ? "border-destructive" : ""}`}
+                className={`min-h-[44px] rounded-[14px] pl-10 uppercase ${errors.code ? "border-destructive" : ""}`}
                 disabled={isEditMode}
               />
             </div>
             {errors.code && (
-              <p className="text-xs text-destructive">{errors.code}</p>
+              <p className="text-xs text-destructive break-words">{errors.code}</p>
             )}
             {isEditMode && (
               <p className="text-xs text-muted-foreground">
@@ -228,10 +228,10 @@ export function RoleFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className={`rounded-[14px] ${errors.name ? "border-destructive" : ""}`}
+              className={`min-h-[44px] rounded-[14px] ${errors.name ? "border-destructive" : ""}`}
             />
             {errors.name && (
-              <p className="text-xs text-destructive">{errors.name}</p>
+              <p className="text-xs text-destructive break-words">{errors.name}</p>
             )}
           </div>
 
@@ -248,7 +248,7 @@ export function RoleFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="rounded-[14px]"
+              className="min-h-[44px] rounded-[14px]"
               rows={3}
             />
           </div>
@@ -259,14 +259,14 @@ export function RoleFormModal({
             variant="outline"
             onClick={handleClose}
             disabled={loading}
-            className="rounded-[14px]"
+            className="min-h-[44px] rounded-[14px]"
           >
             {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={loading}
-            className="rounded-[14px] bg-primary hover:bg-primary/90"
+            className="min-h-[44px] rounded-[14px] bg-primary hover:bg-primary/90"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

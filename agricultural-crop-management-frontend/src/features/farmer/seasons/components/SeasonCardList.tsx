@@ -90,13 +90,6 @@ export function SeasonCardList({
                 {/* Header Row */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-3 flex-1">
-                    {/* Checkbox */}
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={(e) => onSelectSeason(season.id, e.target.checked)}
-                      className="mt-1 w-4 h-4 text-primary border-border rounded focus:ring-primary"
-                    />
 
                     {/* Season Info */}
                     <div className="flex-1">
@@ -138,9 +131,6 @@ export function SeasonCardList({
                     >
                       Vào workspace
                     </Button>
-                    <button className="p-2 hover:bg-muted rounded-lg">
-                      <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                    </button>
                   </div>
                 </div>
 

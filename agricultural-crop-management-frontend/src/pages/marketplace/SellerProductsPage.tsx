@@ -141,9 +141,9 @@ function ProductEmptyState() {
           )}
         </p>
       </div>
-      <Button asChild size="sm">
+      <Button asChild size="sm" className="shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
         <Link to="/farmer/marketplace-products/new">
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4 mr-1.5" />
           {t("marketplaceSeller.products.addProduct")}
         </Link>
       </Button>
@@ -164,20 +164,23 @@ function ProductMobileCard({
   const reason = moderationReason(product);
 
   return (
-    <article className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex gap-3">
-        <img
-          src={product.imageUrl}
-          alt={product.name}
-          className="h-16 w-16 rounded-md bg-muted object-cover"
-          referrerPolicy="no-referrer"
-        />
+    <article className="rounded-lg border border-border bg-card p-4 sm:p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+      <div className="flex gap-3 sm:gap-4">
+        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-muted/60">
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+            referrerPolicy="no-referrer"
+          />
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <Link
                 to={`/farmer/marketplace-products/${product.id}`}
-                className="line-clamp-2 font-semibold text-foreground hover:text-primary"
+                className="line-clamp-2 font-semibold text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:underline rounded-sm"
               >
                 {product.name}
               </Link>
@@ -251,28 +254,24 @@ export function SellerProductsPage() {
       <div className="space-y-4 md:space-y-5">
         <SellerMarketplaceTabs />
 
-        <Card variant="page-header" className="rounded-lg">
-          <CardContent className="px-4 py-4 sm:px-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <h1 className="flex items-center gap-2 text-xl font-bold leading-tight text-foreground md:text-2xl">
-                  <Package className="h-5 w-5 text-primary md:h-6 md:w-6" />
-                  {t("marketplaceSeller.products.title")}
-                </h1>
-                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  {t("marketplaceSeller.products.subtitle")}
-                </p>
-              </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between py-2">
+          <div className="min-w-0">
+            <h1 className="flex items-center gap-2 text-xl font-bold leading-tight text-foreground md:text-2xl">
+              <Package className="h-5 w-5 text-primary md:h-6 md:w-6" />
+              {t("marketplaceSeller.products.title")}
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              {t("marketplaceSeller.products.subtitle")}
+            </p>
+          </div>
 
-              <Button asChild className="w-full sm:w-auto">
-                <Link to="/farmer/marketplace-products/new">
-                  <Plus className="h-4 w-4" />
-                  {t("marketplaceSeller.products.addProduct")}
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          <Button asChild className="w-full sm:w-auto shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
+            <Link to="/farmer/marketplace-products/new">
+              <Plus className="h-4 w-4 mr-1.5" />
+              {t("marketplaceSeller.products.addProduct")}
+            </Link>
+          </Button>
+        </div>
 
         <Card variant="filter" className="rounded-lg">
           <CardContent className="p-4">
@@ -321,19 +320,17 @@ export function SellerProductsPage() {
         </Card>
 
         {!productsQuery.isLoading && !productsQuery.isError && !hasProducts ? (
-          <Card variant="content" className="rounded-lg">
-            <CardContent className="p-0">
-              <ProductEmptyState />
-            </CardContent>
-          </Card>
+          <div className="py-8">
+            <ProductEmptyState />
+          </div>
         ) : null}
 
         {productsQuery.isLoading || productsQuery.isError || hasProducts ? (
-        <Card variant="content" className="hidden overflow-hidden rounded-lg md:block">
+        <div className="hidden overflow-hidden md:block">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40">
-                <TableHead className="pl-4">{t("marketplaceSeller.table.product")}</TableHead>
+                <TableHead className="pl-4"><span className="sr-only">{t("marketplaceSeller.table.product")}</span></TableHead>
                 <TableHead>{t("marketplaceSeller.table.category")}</TableHead>
                 <TableHead>{t("marketplaceSeller.table.price")}</TableHead>
                 <TableHead>{t("marketplaceSeller.table.stock")}</TableHead>
@@ -346,17 +343,20 @@ export function SellerProductsPage() {
               {products.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="pl-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="h-12 w-12 rounded-md bg-muted object-cover"
-                        referrerPolicy="no-referrer"
-                      />
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted/60">
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
                       <div className="min-w-0">
                         <Link
                           to={`/farmer/marketplace-products/${product.id}`}
-                          className="block truncate font-medium text-foreground hover:text-primary"
+                          className="block truncate font-medium text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:underline rounded-sm"
                         >
                           {product.name}
                         </Link>
@@ -430,7 +430,7 @@ export function SellerProductsPage() {
               ) : null}
             </TableBody>
           </Table>
-        </Card>
+        </div>
         ) : null}
 
         {productsQuery.isLoading || productsQuery.isError || hasProducts ? (

@@ -214,10 +214,10 @@ export function FarmsPlotsPage() {
   }, [parsedPlotId, activeTab, plots, selectedPlot?.id, showPlotDetail, handleViewPlot, plotDetailQuery.data]);
 
   const STATUS_COLORS: Record<string, string> = {
-    PLANNED: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-    ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    COMPLETED: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-    CANCELLED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    PLANNED: 'bg-status-neutral text-status-neutral-foreground',
+    ACTIVE: 'bg-status-success text-status-success-foreground',
+    COMPLETED: 'bg-status-success text-status-success-foreground',
+    CANCELLED: 'bg-status-error text-status-error-foreground',
   };
 
   const renderFarms = () => (
@@ -234,12 +234,12 @@ export function FarmsPlotsPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full rounded-[14px] border border-input bg-card py-2 pl-10 pr-4 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-64"
+                  className="w-full rounded-md border border-input bg-card py-2 pl-10 pr-4 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-64"
                 />
               </div>
               <button
                 onClick={() => handleSearch()}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+                className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50"
               >
                 <Search className="h-4 w-4" />
                 {t('common.search')}
@@ -247,7 +247,7 @@ export function FarmsPlotsPage() {
             </div>
             <button
               onClick={handleRefresh}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+              className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50"
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               {t('common.refresh')}
@@ -281,15 +281,16 @@ export function FarmsPlotsPage() {
             </thead>
             <tbody>
               {farms.map((farm) => (
-                <tr key={farm.id} className="border-b border-border hover:bg-muted/30">
+                <tr key={farm.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                   <td className="px-4 py-3 text-sm font-medium">{farm.name}</td>
                   <td className="px-4 py-3 text-sm">{farm.ownerUsername || '-'}</td>
                   <td className="px-4 py-3 text-sm">{farm.area?.toFixed(2) || '-'}</td>
                   <td className="px-4 py-3 text-sm">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${farm.active
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                      }`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      farm.active
+                      ? 'bg-status-success text-status-success-foreground'
+                      : 'bg-status-neutral text-status-neutral-foreground'
+                    }`}>
                       {farm.active ? t('common.active') : t('common.inactive')}
                     </span>
                   </td>
@@ -301,7 +302,7 @@ export function FarmsPlotsPage() {
                       <DropdownMenuTrigger asChild>
                         <button
                           type="button"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-[14px] border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="min-h-[44px] min-w-[44px] inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           aria-label={t('admin.farmsPlots.actionsFor', { name: farm.name })}
                         >
                           <MoreVertical className="h-4 w-4" />
@@ -327,7 +328,7 @@ export function FarmsPlotsPage() {
           <button
             onClick={() => setPage(Math.max(0, page - 1))}
             disabled={page === 0}
-            className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
+            className="min-h-[44px] px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
           >
             {t('pagination.previousPage')}
           </button>
@@ -337,7 +338,7 @@ export function FarmsPlotsPage() {
           <button
             onClick={() => setPage(page + 1)}
             disabled={page >= totalPages - 1}
-            className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
+            className="min-h-[44px] px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
           >
             {t('pagination.nextPage')}
           </button>
@@ -360,13 +361,13 @@ export function FarmsPlotsPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full rounded-[14px] border border-input bg-card py-2 pl-10 pr-4 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-64"
+                  className="w-full rounded-md border border-input bg-card py-2 pl-10 pr-4 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-64"
                 />
               </div>
               <select
                 value={farmFilter || ''}
                 onChange={(e) => { setFarmFilter(e.target.value ? Number(e.target.value) : null); setPage(0); }}
-                className="w-full rounded-[14px] border border-input bg-card px-3 py-2 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-auto"
+                className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm transition-[border-color,color,box-shadow] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 sm:w-auto"
               >
                 <option value="">{t('admin.farmsPlots.farms.all')}</option>
                 {(filterFarms ?? []).map(f => (
@@ -376,7 +377,7 @@ export function FarmsPlotsPage() {
             </div>
             <button
               onClick={handleRefresh}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-[14px] text-sm hover:bg-muted/50"
+              className="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50"
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               {t('common.refresh')}
@@ -409,7 +410,7 @@ export function FarmsPlotsPage() {
             </thead>
             <tbody>
               {plots.map((plot) => (
-                <tr key={plot.id} className="border-b border-border hover:bg-muted/30">
+                <tr key={plot.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                   <td className="px-4 py-3 text-sm font-medium">{plot.plotName || '-'}</td>
                   <td className="px-4 py-3 text-sm">{plot.farmName || '-'}</td>
                   <td className="px-4 py-3 text-sm">{plot.area?.toFixed(2) || '-'}</td>
@@ -419,7 +420,7 @@ export function FarmsPlotsPage() {
                       <DropdownMenuTrigger asChild>
                         <button
                           type="button"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-[14px] border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="min-h-[44px] min-w-[44px] inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           aria-label={t('admin.farmsPlots.actionsFor', { name: plot.plotName || t('admin.farmsPlots.plotFallback') })}
                         >
                           <MoreVertical className="h-4 w-4" />
@@ -445,7 +446,7 @@ export function FarmsPlotsPage() {
           <button
             onClick={() => setPage(Math.max(0, page - 1))}
             disabled={page === 0}
-            className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
+            className="min-h-[44px] px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
           >
             {t('pagination.previousPage')}
           </button>
@@ -455,7 +456,7 @@ export function FarmsPlotsPage() {
           <button
             onClick={() => setPage(page + 1)}
             disabled={page >= totalPages - 1}
-            className="px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
+            className="min-h-[44px] px-3 py-1 border border-border rounded text-sm disabled:opacity-50"
           >
             {t('pagination.nextPage')}
           </button>
@@ -477,7 +478,7 @@ export function FarmsPlotsPage() {
         <button
           onClick={() => { setActiveTab('farms'); setPage(0); setSearchTerm(''); }}
           className={cn(
-            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
+            "inline-flex h-[44px] items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
             activeTab === 'farms'
               ? 'bg-card text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground',
@@ -489,7 +490,7 @@ export function FarmsPlotsPage() {
         <button
           onClick={() => { setActiveTab('plots'); setPage(0); setSearchTerm(''); }}
           className={cn(
-            "inline-flex h-8 items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
+            "inline-flex h-[44px] items-center justify-center rounded-[18px] px-4 text-sm font-medium whitespace-nowrap transition-all",
             activeTab === 'plots'
               ? 'bg-card text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground',
@@ -531,8 +532,8 @@ export function FarmsPlotsPage() {
                   <label className="text-sm font-medium text-muted-foreground">{t('common.status')}</label>
                   <div className="mt-1">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${selectedFarm.active
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-gray-100 text-gray-800'
+                      ? 'bg-status-success text-status-success-foreground'
+                      : 'bg-status-neutral text-status-neutral-foreground'
                       }`}>
                       {selectedFarm.active ? t('common.active') : t('common.inactive')}
                     </span>
@@ -564,7 +565,7 @@ export function FarmsPlotsPage() {
                             closeFarmDetail();
                             handleViewPlot(plot);
                           }}
-                          className="text-xs text-primary font-medium hover:underline p-2 -mr-2 min-h-[44px] sm:min-h-0"
+                          className="text-xs text-primary font-medium hover:underline p-2 -mr-2 min-h-[44px]"
                         >
                           {t('admin.farmsPlots.actions.viewSeasons')}
                         </button>
@@ -625,7 +626,7 @@ export function FarmsPlotsPage() {
                             {season.cropName} • {new Date(season.startDate).toLocaleDateString()}
                           </p>
                         </div>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[season.status] || 'bg-gray-100 text-gray-800'
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[season.status] || 'bg-muted text-muted-foreground'
                           }`}>
                           {t(`admin.farmsPlots.seasonStatus.${season.status}`, season.status)}
                         </span>

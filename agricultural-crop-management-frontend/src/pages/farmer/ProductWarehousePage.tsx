@@ -42,11 +42,17 @@ import {
   SelectValue,
   Textarea,
 } from "@/shared/ui";
-import { Boxes, History, MapPin, PackageCheck, AlertCircle } from "lucide-react";
+import { Boxes, History, MapPin, PackageCheck, AlertCircle, MoreHorizontal } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/ui/dropdown-menu/DropdownMenu";
 import { SubStandardDisposalModal } from "./components/SubStandardDisposalModal";
 import "./ProductWarehousePage.css";
 
@@ -123,6 +129,7 @@ export function ProductWarehousePage() {
   const [warehouseFormError, setWarehouseFormError] = useState("");
   const [showDeleteWarehouseDialog, setShowDeleteWarehouseDialog] =
     useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const debouncedSearch = useDebounce(searchInput, 300);
 
@@ -461,47 +468,60 @@ export function ProductWarehousePage() {
               icon={<PackageCheck className="w-8 h-8" />}
               title={t("productWarehouse.title")}
               subtitle={t("productWarehouse.subtitle")}
+              actions={
+                <Button
+                  size="sm"
+                  variant="default"
+                  type="button"
+                  onClick={openCreateWarehouseDialog}
+                  className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background"
+                >
+                  {t("productWarehouse.actions.addWarehouse")}
+                </Button>
+              }
             />
           </CardContent>
         </Card>
 
-        <div className="product-warehouse-summary-grid">
-          <Card variant="metric">
-            <CardContent className="summary-card">
-              <Boxes className="summary-icon" />
+        <Card variant="content" className="mb-6 bg-card/50 border-muted/60">
+          <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between divide-y sm:divide-y-0 sm:divide-x divide-border gap-4 sm:gap-0">
+            <div className="flex items-center gap-4 px-4 flex-1 w-full">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <Boxes className="w-6 h-6 text-primary" />
+              </div>
               <div>
-                <p className="summary-label">
+                <p className="text-sm font-medium text-muted-foreground mb-0.5">
                   {t("productWarehouse.summary.totalLots")}
                 </p>
-                <p className="summary-value">{overviewData?.totalLots ?? 0}</p>
+                <p className="text-2xl font-semibold text-foreground leading-none">{overviewData?.totalLots ?? 0}</p>
               </div>
-            </CardContent>
-          </Card>
-          <Card variant="metric">
-            <CardContent className="summary-card">
-              <PackageCheck className="summary-icon" />
+            </div>
+            <div className="flex items-center gap-4 px-4 flex-1 w-full">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <PackageCheck className="w-6 h-6 text-primary" />
+              </div>
               <div>
-                <p className="summary-label">
+                <p className="text-sm font-medium text-muted-foreground mb-0.5">
                   {t("productWarehouse.summary.inStockLots")}
                 </p>
-                <p className="summary-value">{overviewData?.inStockLots ?? 0}</p>
+                <p className="text-2xl font-semibold text-foreground leading-none">{overviewData?.inStockLots ?? 0}</p>
               </div>
-            </CardContent>
-          </Card>
-          <Card variant="metric">
-            <CardContent className="summary-card">
-              <History className="summary-icon" />
+            </div>
+            <div className="flex items-center gap-4 px-4 flex-1 w-full">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <History className="w-6 h-6 text-primary" />
+              </div>
               <div>
-                <p className="summary-label">
+                <p className="text-sm font-medium text-muted-foreground mb-0.5">
                   {t("productWarehouse.summary.totalOnHand")}
                 </p>
-                <p className="summary-value">
+                <p className="text-2xl font-semibold text-foreground leading-none">
                   {formatNumber(overviewData?.totalOnHandQuantity)}
                 </p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card variant="content" className="mb-6">
           <CardContent className="px-6 py-4">
@@ -547,226 +567,238 @@ export function ProductWarehousePage() {
         <Card variant="filter" className="mb-6">
           <CardContent className="px-6 py-4">
             <div className="product-warehouse-filters">
-              <div className="control-group">
+              <div className="control-group flex-1">
                 <label htmlFor="pw-warehouse-filter">
                   {t("productWarehouse.filters.warehouse")}
                 </label>
-                <select
-                  id="pw-warehouse-filter"
-                  value={selectedWarehouseId ?? ""}
-                  disabled={loadingWarehouses}
-                  onChange={(event) => {
-                    setSelectedWarehouseId(
-                      event.target.value ? Number(event.target.value) : undefined,
-                    );
-                    setSelectedLocationId(undefined);
-                    handleFilterChange();
-                  }}
-                >
-                  <option value="">
-                    {t("productWarehouse.filters.allWarehouses")}
-                  </option>
-                  {outputWarehouses.map((warehouse: WarehouseEntity) => (
-                    <option key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name}
+                <div className="flex gap-2 items-center">
+                  <select
+                    id="pw-warehouse-filter"
+                    value={selectedWarehouseId ?? ""}
+                    disabled={loadingWarehouses}
+                    onChange={(event) => {
+                      setSelectedWarehouseId(
+                        event.target.value ? Number(event.target.value) : undefined,
+                      );
+                      setSelectedLocationId(undefined);
+                      handleFilterChange();
+                    }}
+                    className="flex-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                  >
+                    <option value="">
+                      {t("productWarehouse.filters.allWarehouses")}
                     </option>
-                  ))}
-                </select>
+                    {outputWarehouses.map((warehouse: WarehouseEntity) => (
+                      <option key={warehouse.id} value={warehouse.id}>
+                        {warehouse.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    type="button"
+                    onClick={openEditWarehouseDialog}
+                    disabled={!selectedWarehouse}
+                    className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                  >
+                    {t("productWarehouse.actions.editWarehouse")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    type="button"
+                    onClick={() => setShowDeleteWarehouseDialog(true)}
+                    disabled={!selectedWarehouse}
+                    className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 ring-offset-background"
+                  >
+                    {t("productWarehouse.actions.deleteWarehouse")}
+                  </Button>
+                </div>
               </div>
 
-              <div className="product-warehouse-toolbar">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  type="button"
-                  onClick={openCreateWarehouseDialog}
-                >
-                  {t("productWarehouse.actions.addWarehouse")}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  type="button"
-                  onClick={openEditWarehouseDialog}
-                  disabled={!selectedWarehouse}
-                >
-                  {t("productWarehouse.actions.editWarehouse")}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  type="button"
-                  onClick={() => setShowDeleteWarehouseDialog(true)}
-                  disabled={!selectedWarehouse}
-                >
-                  {t("productWarehouse.actions.deleteWarehouse")}
-                </Button>
-              </div>
+              {showAdvancedFilters && (
+                <>
+                  <div className="control-group">
+                    <label htmlFor="pw-location-filter">
+                      {t("productWarehouse.filters.location")}
+                    </label>
+                    <select
+                      id="pw-location-filter"
+                      value={selectedLocationId ?? ""}
+                      onChange={(event) => {
+                        setSelectedLocationId(
+                          event.target.value ? Number(event.target.value) : undefined,
+                        );
+                        handleFilterChange();
+                      }}
+                      className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                    >
+                      <option value="">
+                        {t("productWarehouse.filters.allLocations")}
+                      </option>
+                      {(locations ?? []).map((location) => (
+                        <option key={location.id} value={location.id}>
+                          {location.label || t("productWarehouse.filters.locationFallback", { id: location.id })}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div className="control-group">
-                <label htmlFor="pw-location-filter">
-                  {t("productWarehouse.filters.location")}
-                </label>
-                <select
-                  id="pw-location-filter"
-                  value={selectedLocationId ?? ""}
-                  onChange={(event) => {
-                    setSelectedLocationId(
-                      event.target.value ? Number(event.target.value) : undefined,
-                    );
-                    handleFilterChange();
-                  }}
-                >
-                  <option value="">
-                    {t("productWarehouse.filters.allLocations")}
-                  </option>
-                  {(locations ?? []).map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.label || t("productWarehouse.filters.locationFallback", { id: location.id })}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <div className="control-group">
+                    <label htmlFor="pw-farm-filter">
+                      {t("productWarehouse.filters.farm")}
+                    </label>
+                    <select
+                      id="pw-farm-filter"
+                      value={selectedFarmId ?? ""}
+                      onChange={(event) => {
+                        setSelectedFarmId(
+                          event.target.value ? Number(event.target.value) : undefined,
+                        );
+                        setSelectedPlotId(undefined);
+                        handleFilterChange();
+                      }}
+                    >
+                      <option value="">{t("productWarehouse.filters.allFarms")}</option>
+                      {farmOptions.map((farm) => (
+                        <option key={farm.id} value={farm.id}>
+                          {farm.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div className="control-group">
-                <label htmlFor="pw-farm-filter">
-                  {t("productWarehouse.filters.farm")}
-                </label>
-                <select
-                  id="pw-farm-filter"
-                  value={selectedFarmId ?? ""}
-                  onChange={(event) => {
-                    setSelectedFarmId(
-                      event.target.value ? Number(event.target.value) : undefined,
-                    );
-                    setSelectedPlotId(undefined);
-                    handleFilterChange();
-                  }}
-                >
-                  <option value="">{t("productWarehouse.filters.allFarms")}</option>
-                  {farmOptions.map((farm) => (
-                    <option key={farm.id} value={farm.id}>
-                      {farm.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <div className="control-group">
+                    <label htmlFor="pw-plot-filter">
+                      {t("productWarehouse.filters.plot")}
+                    </label>
+                    <select
+                      id="pw-plot-filter"
+                      value={selectedPlotId ?? ""}
+                      onChange={(event) => {
+                        setSelectedPlotId(
+                          event.target.value ? Number(event.target.value) : undefined,
+                        );
+                        handleFilterChange();
+                      }}
+                    >
+                      <option value="">{t("productWarehouse.filters.allPlots")}</option>
+                      {(plotsData?.items ?? []).map((plot) => (
+                        <option key={plot.id} value={plot.id}>
+                          {plot.plotName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div className="control-group">
-                <label htmlFor="pw-plot-filter">
-                  {t("productWarehouse.filters.plot")}
-                </label>
-                <select
-                  id="pw-plot-filter"
-                  value={selectedPlotId ?? ""}
-                  onChange={(event) => {
-                    setSelectedPlotId(
-                      event.target.value ? Number(event.target.value) : undefined,
-                    );
-                    handleFilterChange();
-                  }}
-                >
-                  <option value="">{t("productWarehouse.filters.allPlots")}</option>
-                  {(plotsData?.items ?? []).map((plot) => (
-                    <option key={plot.id} value={plot.id}>
-                      {plot.plotName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <div className="control-group">
+                    <label htmlFor="pw-season-filter">
+                      {t("productWarehouse.filters.season")}
+                    </label>
+                    <select
+                      id="pw-season-filter"
+                      value={selectedSeasonId ?? ""}
+                      onChange={(event) => {
+                        setSelectedSeasonId(
+                          event.target.value ? Number(event.target.value) : undefined,
+                        );
+                        handleFilterChange();
+                      }}
+                    >
+                      <option value="">
+                        {t("productWarehouse.filters.allSeasons")}
+                      </option>
+                      {(seasonsData?.items ?? []).map((season) => (
+                        <option key={season.id} value={season.id}>
+                          {season.seasonName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div className="control-group">
-                <label htmlFor="pw-season-filter">
-                  {t("productWarehouse.filters.season")}
-                </label>
-                <select
-                  id="pw-season-filter"
-                  value={selectedSeasonId ?? ""}
-                  onChange={(event) => {
-                    setSelectedSeasonId(
-                      event.target.value ? Number(event.target.value) : undefined,
-                    );
-                    handleFilterChange();
-                  }}
-                >
-                  <option value="">
-                    {t("productWarehouse.filters.allSeasons")}
-                  </option>
-                  {(seasonsData?.items ?? []).map((season) => (
-                    <option key={season.id} value={season.id}>
-                      {season.seasonName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <div className="control-group">
+                    <label htmlFor="pw-status-filter">
+                      {t("productWarehouse.filters.status")}
+                    </label>
+                    <select
+                      id="pw-status-filter"
+                      value={statusFilter}
+                      onChange={(event) => {
+                        setStatusFilter(event.target.value);
+                        handleFilterChange();
+                      }}
+                      className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                    >
+                      <option value="">
+                        {t("productWarehouse.filters.allStatuses")}
+                      </option>
+                      {STATUS_OPTIONS.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div className="control-group">
-                <label htmlFor="pw-status-filter">
-                  {t("productWarehouse.filters.status")}
-                </label>
-                <select
-                  id="pw-status-filter"
-                  value={statusFilter}
-                  onChange={(event) => {
-                    setStatusFilter(event.target.value);
-                    handleFilterChange();
-                  }}
-                >
-                  <option value="">
-                    {t("productWarehouse.filters.allStatuses")}
-                  </option>
-                  {STATUS_OPTIONS.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <div className="control-group">
+                    <label htmlFor="pw-from">
+                      {t("productWarehouse.filters.harvestDateFrom")}
+                    </label>
+                    <input
+                      id="pw-from"
+                      type="date"
+                      value={harvestedFrom}
+                      onChange={(event) => {
+                        setHarvestedFrom(event.target.value);
+                        handleFilterChange();
+                      }}
+                      className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                    />
+                  </div>
 
-              <div className="control-group">
-                <label htmlFor="pw-from">
-                  {t("productWarehouse.filters.harvestDateFrom")}
-                </label>
-                <input
-                  id="pw-from"
-                  type="date"
-                  value={harvestedFrom}
-                  onChange={(event) => {
-                    setHarvestedFrom(event.target.value);
-                    handleFilterChange();
-                  }}
-                />
-              </div>
-
-              <div className="control-group">
-                <label htmlFor="pw-to">
-                  {t("productWarehouse.filters.harvestDateTo")}
-                </label>
-                <input
-                  id="pw-to"
-                  type="date"
-                  value={harvestedTo}
-                  onChange={(event) => {
-                    setHarvestedTo(event.target.value);
-                    handleFilterChange();
-                  }}
-                />
-              </div>
+                  <div className="control-group">
+                    <label htmlFor="pw-to">
+                      {t("productWarehouse.filters.harvestDateTo")}
+                    </label>
+                    <input
+                      id="pw-to"
+                      type="date"
+                      value={harvestedTo}
+                      onChange={(event) => {
+                        setHarvestedTo(event.target.value);
+                        handleFilterChange();
+                      }}
+                      className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="control-group control-group--search">
                 <label htmlFor="pw-search">
                   {t("productWarehouse.filters.search")}
                 </label>
-                <input
-                  id="pw-search"
-                  type="text"
-                  value={searchInput}
-                  placeholder={t("productWarehouse.filters.searchPlaceholder")}
-                  onChange={(event) => {
-                    setSearchInput(event.target.value);
-                    handleFilterChange();
-                  }}
-                />
+                <div className="flex gap-2">
+                  <input
+                    id="pw-search"
+                    type="text"
+                    value={searchInput}
+                    placeholder={t("productWarehouse.filters.searchPlaceholder")}
+                    onChange={(event) => {
+                      setSearchInput(event.target.value);
+                      handleFilterChange();
+                    }}
+                    className="flex-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                  />
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                    className="min-h-[44px] whitespace-nowrap shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                  >
+                    {showAdvancedFilters ? t("common.hideAdvancedFilters", "Ẩn bộ lọc") : t("common.showAdvancedFilters", "Lọc nâng cao")}
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -879,46 +911,39 @@ export function ProductWarehousePage() {
                             </Badge>
                           </td>
                           <td className="actions">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleOpenTraceability(lot.id)}
-                            >
-                              {t("productWarehouse.actions.viewTraceability")}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setAdjustingLot(lot);
-                                setAdjustQuantityInput("");
-                                setAdjustNoteInput("");
-                                setAdjustDialogError("");
-                              }}
-                            >
-                              {t("productWarehouse.actions.adjust")}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => {
-                                setStockingOutLot(lot);
-                                setStockOutQuantityInput("");
-                                setStockOutNoteInput("");
-                                setStockOutDialogError("");
-                              }}
-                            >
-                              {t("productWarehouse.actions.stockOut")}
-                            </Button>
-                            {lot.qualityStatus === "SUBSTANDARD" && (
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => setSubStandardLot(lot)}
-                              >
-                                Xuất kho Không đạt chuẩn
-                              </Button>
-                            )}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 p-0 transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleOpenTraceability(lot.id)}>
+                                  {t("productWarehouse.actions.viewTraceability")}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  setAdjustingLot(lot);
+                                  setAdjustQuantityInput("");
+                                  setAdjustNoteInput("");
+                                  setAdjustDialogError("");
+                                }}>
+                                  {t("productWarehouse.actions.adjust")}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  setStockingOutLot(lot);
+                                  setStockOutQuantityInput("");
+                                  setStockOutNoteInput("");
+                                  setStockOutDialogError("");
+                                }}>
+                                  {t("productWarehouse.actions.stockOut")}
+                                </DropdownMenuItem>
+                                {lot.qualityStatus === "SUBSTANDARD" && (
+                                  <DropdownMenuItem onClick={() => setSubStandardLot(lot)} className="text-destructive">
+                                    Xuất kho Không đạt chuẩn
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </td>
                         </tr>
                       );
@@ -964,8 +989,17 @@ export function ProductWarehousePage() {
               {!loadingTransactions &&
                 !transactionsError &&
                 (transactionsData?.items?.length ?? 0) === 0 && (
-                  <div className="empty-state">
-                    {t("productWarehouse.emptyTransactions")}
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="h-20 w-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                      <History className="h-10 w-10 text-muted-foreground/50" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Chưa có giao dịch nào</h3>
+                    <p className="text-sm text-muted-foreground max-w-sm mb-6">
+                      Kho của bạn hiện tại chưa có bất kỳ giao dịch xuất/nhập nào. Bắt đầu quản lý bằng cách thêm một lô hàng mới.
+                    </p>
+                    <Button variant="outline" onClick={() => setActiveTab("on-hand")}>
+                      Quay lại Danh sách Lô hàng
+                    </Button>
                   </div>
                 )}
               {!loadingTransactions &&
@@ -1190,6 +1224,7 @@ export function ProductWarehousePage() {
                 aria-invalid={!!warehouseFormError}
                 aria-describedby={warehouseFormError ? "product-warehouse-form-error" : undefined}
                 disabled={isWarehouseSubmitting}
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
 
@@ -1206,6 +1241,7 @@ export function ProductWarehousePage() {
                   id="warehouse-farm"
                   aria-invalid={!!warehouseFormError}
                   aria-describedby={warehouseFormError ? "product-warehouse-form-error" : undefined}
+                  className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
                 >
                   <SelectValue placeholder={t("productWarehouse.form.selectFarm")} />
                 </SelectTrigger>
@@ -1223,12 +1259,13 @@ export function ProductWarehousePage() {
               <Button
                 type="button"
                 variant="outline"
+                className="min-h-[44px]"
                 onClick={closeWarehouseDialogWithConfirm}
                 disabled={isWarehouseSubmitting}
               >
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={isWarehouseSubmitting}>
+              <Button type="submit" disabled={isWarehouseSubmitting} className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
                 {isWarehouseSubmitting ? t("common.processing") : t("common.save")}
               </Button>
             </DialogFooter>
@@ -1257,6 +1294,7 @@ export function ProductWarehousePage() {
           <DialogFooter>
             <Button
               variant="outline"
+              className="min-h-[44px]"
               onClick={() => setShowDeleteWarehouseDialog(false)}
               disabled={deleteWarehouseMutation.isPending}
             >
@@ -1266,6 +1304,7 @@ export function ProductWarehousePage() {
               variant="destructive"
               onClick={confirmDeleteWarehouse}
               disabled={deleteWarehouseMutation.isPending}
+              className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 ring-offset-background"
             >
               {deleteWarehouseMutation.isPending ? t("common.processing") : t("productWarehouse.actions.deleteWarehouse")}
             </Button>
@@ -1312,6 +1351,7 @@ export function ProductWarehousePage() {
                 aria-invalid={!!adjustDialogError}
                 aria-describedby={adjustDialogError ? "product-warehouse-adjust-error" : undefined}
                 disabled={adjustMutation.isPending}
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
             <div className="space-y-2">
@@ -1326,18 +1366,20 @@ export function ProductWarehousePage() {
                 aria-invalid={!!adjustDialogError}
                 aria-describedby={adjustDialogError ? "product-warehouse-adjust-error" : undefined}
                 disabled={adjustMutation.isPending}
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
+                className="min-h-[44px]"
                 onClick={closeAdjustDialog}
                 disabled={adjustMutation.isPending}
               >
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={adjustMutation.isPending}>
+              <Button type="submit" disabled={adjustMutation.isPending} className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
                 {adjustMutation.isPending
                   ? t("common.processing")
                   : t("productWarehouse.dialog.adjustConfirm")}
@@ -1387,6 +1429,7 @@ export function ProductWarehousePage() {
                 aria-invalid={!!stockOutDialogError}
                 aria-describedby={stockOutDialogError ? "product-warehouse-stockout-error" : undefined}
                 disabled={stockOutMutation.isPending}
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
             <div className="space-y-2">
@@ -1399,12 +1442,14 @@ export function ProductWarehousePage() {
                 onChange={(event) => setStockOutNoteInput(event.target.value)}
                 placeholder={t("productWarehouse.dialog.stockOutNotePlaceholder")}
                 disabled={stockOutMutation.isPending}
+                className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
               />
             </div>
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
+                className="min-h-[44px]"
                 onClick={closeStockOutDialog}
                 disabled={stockOutMutation.isPending}
               >
@@ -1412,8 +1457,9 @@ export function ProductWarehousePage() {
               </Button>
               <Button
                 type="submit"
-                variant="destructive"
+                variant="default"
                 disabled={stockOutMutation.isPending}
+                className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background"
               >
                 {stockOutMutation.isPending
                   ? t("common.processing")
