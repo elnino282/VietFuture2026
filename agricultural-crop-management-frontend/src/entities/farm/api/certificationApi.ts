@@ -55,4 +55,23 @@ export const certificationApi = {
     const response = await httpClient.post<ApiResponse<string>>(`/api/v1/farms/${farmId}/certification/apply`);
     return response.data.result;
   },
+
+  async exportDossier(farmId: number, seasonIds?: number[]): Promise<any> {
+    const response = await httpClient.post(`/api/v1/farms/${farmId}/certification/export-dossier`, {
+      seasonIds: seasonIds || []
+    }, {
+      responseType: 'blob' // Assuming the endpoint returns a PDF or ZIP file
+    });
+    return response.data;
+  },
+
+  async getAllAudits(): Promise<any[]> {
+    const response = await httpClient.get(`/api/v1/certification-audits`);
+    return response.data.result || response.data.data || [];
+  },
+
+  async approveAudit(auditId: number): Promise<any> {
+    const response = await httpClient.post(`/api/v1/certification-audits/${auditId}/approve`);
+    return response.data.result;
+  }
 };

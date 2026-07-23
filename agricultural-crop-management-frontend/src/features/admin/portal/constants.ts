@@ -24,8 +24,10 @@ export const ADMIN_VIEW_CONFIG: Record<AdminView, AdminViewConfig> = {
   },
   reports: { titleKey: "admin.portal.views.reports.title", breadcrumbLabelKey: "admin.portal.views.reports.breadcrumb" },
   documents: { titleKey: "admin.portal.views.documents.title", breadcrumbLabelKey: "admin.portal.views.documents.breadcrumb" },
+  "farm-documents": { titleKey: "admin.portal.views.farmDocuments.title", breadcrumbLabelKey: "admin.portal.views.farmDocuments.breadcrumb" },
   profile: { titleKey: "admin.portal.views.profile.title", breadcrumbLabelKey: "admin.portal.views.profile.breadcrumb" },
   settings: { titleKey: "admin.portal.views.settings.title", breadcrumbLabelKey: "admin.portal.views.settings.breadcrumb" },
+  "cert-audits": { titleKey: "admin.portal.views.certAudits.title", breadcrumbLabelKey: "admin.portal.views.certAudits.breadcrumb" },
 };
 
 export const getAdminViewTitleKey = (view: AdminView): string =>

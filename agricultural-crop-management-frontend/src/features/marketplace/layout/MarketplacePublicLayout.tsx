@@ -17,6 +17,7 @@ import {
   Twitter,
   User,
   X,
+  MapPin,
 } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { Button } from "@/shared/ui";
@@ -454,6 +455,14 @@ function MobileMenu({
               >
                 <Package size={16} /> Đơn hàng của tôi
               </Link>
+              
+              <Link
+                to="/marketplace/traceability"
+                onClick={onClose}
+                className="flex items-center gap-2 rounded-md px-2 py-1 text-sm text-white hover:bg-white/10 hover:text-emerald-100"
+              >
+                <MapPin size={16} /> Truy xuất nguồn gốc
+              </Link>
 
               {showPortalLink ? (
                 <Link
@@ -676,6 +685,15 @@ export function MarketplacePublicLayout() {
                             >
                               <Package size={16} className="mr-2" />
                               Đơn hàng của tôi
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to="/marketplace/traceability"
+                              className="flex items-center cursor-pointer"
+                            >
+                              <MapPin size={16} className="mr-2" />
+                              Truy xuất nguồn gốc
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />

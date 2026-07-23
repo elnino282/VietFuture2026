@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Activity, Clock, ExternalLink, RefreshCw, UserRound } from "lucide-react";
+import { Activity, Clock, ExternalLink, RefreshCw, UserRound, CheckCircle } from "lucide-react";
 import { useSeasonProgressLogs } from "@/entities/labor";
 import {
   Badge,
@@ -16,8 +16,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/shared/ui";
 import { useI18n } from "@/hooks/useI18n";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface TaskProgressReportsPanelProps {
   seasonId: number;
@@ -52,6 +59,14 @@ export function TaskProgressReportsPanel({ seasonId }: TaskProgressReportsPanelP
     { page: 0, size: 100 },
     { enabled: seasonId > 0 }
   );
+
+  const [verifyLog, setVerifyLog] = useState<any>(null);
+
+  const handleVerify = (status: "APPROVED" | "REJECTED") => {
+    if (!verifyLog) return;
+    toast.success(status === "APPROVED" ? `Đã duyệt công việc ${verifyLog.taskTitle} và cộng tiền vào bảng lương!` : `Đã từ chối công việc ${verifyLog.taskTitle}`);
+    setVerifyLog(null);
+  };
 
   const progressLogs = useMemo(() => sortNewestFirst(data?.items ?? []), [data?.items]);
   const latestLogs = progressLogs.slice(0, 6);
@@ -179,6 +194,7 @@ export function TaskProgressReportsPanel({ seasonId }: TaskProgressReportsPanelP
                   <TableHead>{t("laborWorkspace.progressTable.note")}</TableHead>
                   <TableHead>{t("laborWorkspace.progressTable.evidence")}</TableHead>
                   <TableHead>{t("laborWorkspace.progressTable.time")}</TableHead>
+                  <TableHead className="text-right">Hành động</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -218,6 +234,14 @@ export function TaskProgressReportsPanel({ seasonId }: TaskProgressReportsPanelP
                         {formatDateTime(log.loggedAt, locale)}
                       </span>
                     </TableCell>
+                    <TableCell className="text-right">
+                      {log.progressPercent === 100 && (
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => setVerifyLog(log)}>
+                          <CheckCircle className="w-4 h-4 mr-1 text-emerald-500" />
+                          Duyệt
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -225,6 +249,31 @@ export function TaskProgressReportsPanel({ seasonId }: TaskProgressReportsPanelP
           </div>
         )}
       </CardContent>
+
+      <Dialog open={!!verifyLog} onOpenChange={(open) => !open && setVerifyLog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Duyệt công việc: {verifyLog?.taskTitle}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Nhân công: {verifyLog?.employeeName}</p>
+              <p className="text-sm text-muted-foreground">Ghi chú: {verifyLog?.note || "-"}</p>
+            </div>
+            {verifyLog?.evidenceUrl ? (
+              <div className="rounded-md overflow-hidden border">
+                <img src={verifyLog.evidenceUrl} alt="Evidence" className="w-full h-auto" />
+              </div>
+            ) : (
+              <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">Không có hình ảnh báo cáo.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => handleVerify("REJECTED")}>Từ chối</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => handleVerify("APPROVED")}>Duyệt & Tính lương</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

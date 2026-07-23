@@ -1,6 +1,7 @@
 package org.example.farm.dto.response;
 
 import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,6 +25,7 @@ public class PlotResponse {
     String soilType;
     String boundaryGeoJson;
     Integer parentPlotId;
+    @JsonIgnore
     Geometry polygon;
     PlotStatus status;
 }

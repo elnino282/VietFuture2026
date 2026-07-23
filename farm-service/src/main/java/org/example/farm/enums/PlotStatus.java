@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum PlotStatus {
     AVAILABLE("AVAILABLE", "Available"),
+    ACTIVE("ACTIVE", "Active"),
     IN_USE("IN_USE", "In use"),
     IDLE("IDLE", "Idle"),
     FALLOW("FALLOW", "Fallow / Resting"),

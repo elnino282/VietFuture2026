@@ -90,6 +90,10 @@ const MarketplaceOrderDetailPage = lazy(() =>
   import('@/pages/marketplace').then((m) => ({ default: m.OrderDetailPage }))
 );
 
+const BuyerTraceabilityPage = lazy(() =>
+  import('@/pages/buyer/BuyerTraceabilityPage').then((m) => ({ default: m.BuyerTraceabilityPage }))
+);
+
 // Buyer profile components
 import { BuyerProfileLayout, PersonalInfoPage, AddressBookPage, SecurityPage } from '@/features/buyer/profile';
 
@@ -176,6 +180,12 @@ const FarmerSearchPage = lazy(() =>
 const CertificationPage = lazy(() =>
   import('@/pages/farmer/CertificationPage').then((m) => ({ default: m.default }))
 );
+const SelfAssessmentPage = lazy(() =>
+  import('@/pages/farmer/SelfAssessmentPage').then((m) => ({ default: m.SelfAssessmentPage }))
+);
+const NonconformityManagementPage = lazy(() =>
+  import('@/pages/farmer/NonconformityManagementPage').then((m) => ({ default: m.NonconformityManagementPage }))
+);
 
 // Farmer season workspace
 const SeasonWorkspaceLayout = lazy(() =>
@@ -206,6 +216,11 @@ const SeasonSoilTestsWorkspace = lazy(() =>
 const SeasonReportsWorkspace = lazy(() =>
   import('@/features/farmer/season-workspace').then((m) => ({
     default: m.SeasonReportsWorkspace,
+  }))
+);
+const ProductionDiaryWorkspace = lazy(() =>
+  import('@/features/farmer/season-workspace').then((m) => ({
+    default: m.ProductionDiaryWorkspace,
   }))
 );
 
@@ -413,6 +428,14 @@ export function AppRoutes() {
             <Route path="farms" element={<MarketplaceFarmsDiscoveryPage />} />
             <Route path="farms/:farmId" element={<MarketplaceFarmStorePage />} />
             <Route
+              path="traceability"
+              element={(
+                <ProtectedRoute requiredRole="buyer">
+                  <BuyerTraceabilityPage />
+                </ProtectedRoute>
+              )}
+            />
+            <Route
               path="cart"
               element={(
                 <ProtectedRoute requiredRole="buyer">
@@ -492,6 +515,8 @@ export function AppRoutes() {
             <Route index element={<FarmsListPage />} />
             <Route path=":id" element={<FarmDetailPage />} />
             <Route path=":farmId/certification" element={<CertificationPage />} />
+            <Route path=":farmId/self-assessment" element={<SelfAssessmentPage />} />
+            <Route path=":farmId/nonconformities" element={<NonconformityManagementPage />} />
           </Route>
 
           {/* Season Workspace */}
@@ -510,6 +535,7 @@ export function AppRoutes() {
               <Route path="irrigation-water-analyses" element={<SeasonIrrigationWaterAnalysesWorkspace />} />
               <Route path="soil-tests" element={<SeasonSoilTestsWorkspace />} />
               <Route path="reports" element={<SeasonReportsWorkspace />} />
+              <Route path="production-diary" element={<ProductionDiaryWorkspace />} />
             </Route>
           </Route>
 

@@ -18,6 +18,8 @@ export interface TaskResponse {
   notes?: string;
   seasonId?: number;
   seasonName?: string;
+  evidenceImageUrl?: string;
+  verificationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
   userId?: number;
   userName?: string;
   plotId?: number;

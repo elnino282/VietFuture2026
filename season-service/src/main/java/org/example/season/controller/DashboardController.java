@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.example.season.dto.response.FarmingLogDto;
+import org.example.season.dto.response.SeasonReportDto;
+import org.example.season.service.DashboardService;
+import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 @RestController
@@ -25,6 +29,7 @@ public class DashboardController {
 
     PHIAlertService phiAlertService;
     SeasonWorkspaceAccessService workspaceAccessService;
+    DashboardService dashboardService;
 
     @Operation(summary = "Get PHI Alerts", description = "List all active PHI alerts for the current farmer's active seasons")
     @ApiResponses({
@@ -36,6 +41,22 @@ public class DashboardController {
     public org.example.season.dto.common.ApiResponse<List<PHIAlertDto>> getPHIAlerts() {
         Long userId = workspaceAccessService.getCurrentUserId();
         return org.example.season.dto.common.ApiResponse.success(phiAlertService.getActivePHIAlerts(userId));
+    }
+
+    @Operation(summary = "Get Farming Logs", description = "List farming logs for the dashboard")
+    @GetMapping("/farming-logs")
+    public org.example.season.dto.common.ApiResponse<List<FarmingLogDto>> getFarmingLogs(@RequestParam("seasonId") Integer seasonId) {
+        Long userId = workspaceAccessService.getCurrentUserId();
+        // optionally validate workspace access here
+        return org.example.season.dto.common.ApiResponse.success(dashboardService.getFarmingLogs(seasonId, userId));
+    }
+
+    @Operation(summary = "Get Season Stats", description = "Get stats for the dashboard")
+    @GetMapping("/season-stats")
+    public org.example.season.dto.common.ApiResponse<SeasonReportDto> getSeasonStats(@RequestParam("seasonId") Integer seasonId) {
+        Long userId = workspaceAccessService.getCurrentUserId();
+        // optionally validate workspace access here
+        return org.example.season.dto.common.ApiResponse.success(dashboardService.getSeasonStats(seasonId, userId));
     }
 }
 

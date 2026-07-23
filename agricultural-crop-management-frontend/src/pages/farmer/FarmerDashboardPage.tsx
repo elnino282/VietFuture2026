@@ -1,26 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  AlertCircle,
   TrendingUp,
   DollarSign,
-  ShoppingCart,
-  Shield,
-  Edit,
   Package,
-  ShoppingBag,
-  FileText,
-  Calendar,
-  Loader2,
-  AlertCircle,
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
+  Sprout,
+  Tractor,
+  ThermometerSun,
+  ClipboardList,
 } from 'lucide-react';
 import {
   BarChart,
   Bar,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -29,12 +25,11 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
+  Cell,
 } from 'recharts';
 
 import { PageContainer } from '@/shared/ui';
-import { Button } from '@/shared/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card';
 import {
   Select,
   SelectContent,
@@ -42,630 +37,166 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select';
+import { Badge } from '@/shared/ui/badge';
+import { formatMoney } from '@/shared/lib';
+import { DataErrorBoundary } from '@/shared/ui/error-boundary/DataErrorBoundary';
 
-import { useSeason, usePreferences } from '@/shared/contexts';
-import { useBudgetTracker, useExpenseAnalyticsByCategory } from '@/entities/expense';
-import { useMarketplaceFarmerDashboard } from '@/features/marketplace/hooks';
-import { certificationApi } from '@/entities/farm/api/certificationApi';
-import { formatMoney, convertToDisplayCurrency } from '@/shared/lib';
-import type { Season } from '@/types/Season';
-
-import { WeatherWidget } from '@/features/farmer/weather-widget';
-import { FdnAssistantPanel } from '@/features/farmer/dashboard/components/FdnAssistantPanel';
-import { FdnHistoryChart } from '@/features/farmer/dashboard/components/FdnHistoryChart';
-import { FdnKpiCards } from '@/features/farmer/dashboard/components/FdnKpiCards';
-import { FieldSustainabilityMap } from '@/features/farmer/dashboard/components/FieldSustainabilityMap';
-import { IncidentAlerts } from '@/features/farmer/dashboard/components/IncidentAlerts';
-import { InventoryAlertsPanel } from '@/features/farmer/dashboard/components/InventoryAlertsPanel';
-import { NitrogenInputBreakdown } from '@/features/farmer/dashboard/components/NitrogenInputBreakdown';
-import { RecentActivityTimeline } from '@/features/farmer/dashboard/components/RecentActivityTimeline';
-import { SeasonTaskPanels } from '@/features/farmer/dashboard/components/SeasonTaskPanels';
-import { useFarmerDashboard } from '@/features/farmer/dashboard/hooks/useFarmerDashboard';
-
-// ═══════════════════════════════════════════════════════════════
-// LOCAL SUB-COMPONENTS
-// ═══════════════════════════════════════════════════════════════
-
-interface KPICardProps {
-  label: string;
-  value: React.ReactNode;
-  trend?: string;
-  trendType?: 'up' | 'down';
-  icon: React.ReactNode;
-  highlight?: boolean;
-  tone?: 'success' | 'warning' | 'info' | 'default';
-  onClick?: () => void;
-}
-
-function KPICard({ label, value, trend, trendType = 'up', icon, highlight, tone = 'default', onClick }: KPICardProps) {
-  const toneClasses = {
-    success: 'bg-[var(--portal-status-measured-bg)] border-[var(--portal-status-measured-border)] text-[var(--portal-status-measured-fg)]',
-    warning: 'bg-[var(--portal-status-estimated-bg)] border-[var(--portal-status-estimated-border)] text-[var(--portal-status-estimated-fg)]',
-    info: 'bg-[var(--portal-badge-secondary-bg)] border-[var(--portal-badge-secondary-border)] text-[var(--portal-badge-secondary-fg)]',
-    default: 'bg-[var(--portal-surface)] border-[var(--portal-border-subtle)] text-[var(--foreground)]',
-  };
-
-  return (
-    <Card 
-      onClick={onClick}
-      className={`border transition-all duration-200 ${onClick ? 'cursor-pointer hover:shadow-md hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background' : ''} ${highlight ? 'ring-2 ring-primary/20' : ''}`}
-    >
-      <CardContent className="p-5 flex items-center justify-between">
-        <div className="space-y-1 overflow-hidden">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">{label}</p>
-          <p className="text-2xl font-bold tracking-tight truncate">{value}</p>
-          {trend && (
-            <div className="flex items-center gap-1 text-xs">
-              <span className={trendType === 'up' ? 'text-emerald-600 font-semibold' : 'text-rose-600 font-semibold'}>
-                {trend}
-              </span>
-              <span className="text-muted-foreground">so với kỳ trước</span>
-            </div>
-          )}
-        </div>
-        <div className={`p-3 rounded-xl shrink-0 ${toneClasses[tone]}`}>
-          {icon}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-interface QuickAction {
-  label: string;
-  icon: React.ReactNode;
-  href: string;
-}
-
-interface QuickActionsPanelProps {
-  actions: QuickAction[];
-}
-
-function QuickActionsPanel({ actions }: QuickActionsPanelProps) {
-  const navigate = useNavigate();
-  return (
-    <Card className="border border-border">
-      <CardHeader className="pb-3 pt-4 px-5">
-        <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Thao tác nhanh
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="px-5 pb-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {actions.map((action, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              onClick={() => navigate(action.href)}
-              className="h-16 min-h-[44px] flex flex-col items-center justify-center gap-1.5 border-[var(--portal-border-subtle)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 hover:text-[var(--primary)] transition-all duration-200 group rounded-[var(--radius-xl)] hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 ring-offset-[var(--background)]"
-            >
-              <div className="text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all duration-300">
-                {action.icon}
-              </div>
-              <span className="text-xs font-medium">{action.label}</span>
-            </Button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-interface SeasonYieldChartProps {
-  seasons: Season[];
-  selectedSeasonId: number | null;
-}
-
-function SeasonYieldChart({ seasons, selectedSeasonId }: SeasonYieldChartProps) {
-  const chartData = useMemo(() => {
-    return seasons
-      .slice(0, 5) // Show top 5 seasons
-      .reverse() // Oldest first
-      .map(s => ({
-        name: s.seasonName,
-        expected: s.expectedYieldKg ?? 0,
-        actual: s.actualYieldKg ?? 0,
-        isSelected: s.id === selectedSeasonId,
-      }));
-  }, [seasons, selectedSeasonId]);
-
-  if (chartData.length === 0) {
-    return (
-      <Card className="border border-border h-full flex flex-col justify-between">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Hiệu suất Sản lượng Mùa vụ</CardTitle>
-        </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center text-muted-foreground text-sm">
-          Chưa có dữ liệu sản lượng.
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="border border-border">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold flex items-center justify-between">
-          <span>Hiệu suất Sản lượng Mùa vụ</span>
-          <span className="text-xs font-normal text-muted-foreground">(đơn vị: kg)</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis 
-                dataKey="name" 
-                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis 
-                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <RechartsTooltip 
-                cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
-                contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }}
-              />
-              <Legend verticalAlign="top" height={36} iconType="circle" />
-              <Bar dataKey="expected" name="Sản lượng Dự kiến" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="actual" name="Sản lượng Thực tế" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-interface ExpenseBreakdownChartProps {
-  seasonId: number | null;
-}
-
-function ExpenseBreakdownChart({ seasonId }: ExpenseBreakdownChartProps) {
-  const { preferences } = usePreferences();
-  const { data: categoryAnalytics, isLoading } = useExpenseAnalyticsByCategory(
-    seasonId ? { seasonId } : undefined,
-    { enabled: !!seasonId }
-  );
-
-  const chartData = useMemo(() => {
-    if (!categoryAnalytics) return [];
-    return categoryAnalytics.map(c => ({
-      name: c.category,
-      value: c.totalAmount,
-    }));
-  }, [categoryAnalytics]);
-
-  const COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
-
-  const formatValue = (value: number) =>
-    formatMoney(
-      convertToDisplayCurrency(value, preferences.currency),
-      preferences.currency,
-      preferences.locale
-    );
-
-  if (isLoading) {
-    return (
-      <Card className="border border-border h-full flex flex-col justify-between">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Phân tích Chi phí Mùa vụ</CardTitle>
-        </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center text-muted-foreground text-sm">
-          Đang tải dữ liệu...
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (chartData.length === 0) {
-    return (
-      <Card className="border border-border h-full flex flex-col justify-between">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Phân tích Chi phí Mùa vụ</CardTitle>
-        </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center text-muted-foreground text-sm">
-          Không có dữ liệu chi phí cho mùa vụ này.
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="border border-border">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold flex items-center justify-between">
-          <span>Phân tích Chi phí Mùa vụ</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={3}
-                  dataKey="value"
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip formatter={(value: number) => formatValue(value)} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
-            {chartData.map((item, index) => (
-              <div key={item.name} className="flex items-center justify-between text-xs border-b border-border/50 pb-1.5">
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-2.5 h-2.5 rounded-full shrink-0" 
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  <span className="text-muted-foreground font-medium truncate max-w-[120px]">{item.name}</span>
-                </div>
-                <span className="font-semibold text-foreground shrink-0">{formatValue(item.value)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// MAIN DASHBOARD PAGE Component
-// ═══════════════════════════════════════════════════════════════
+// Import Types & Mock Data
+import { Season, FarmingLog, ReportData } from '@/features/farmer/dashboard/types/dashboard-types';
+import { mockSeasons, mockFarmingLogs, mockReportData } from '@/features/farmer/dashboard/mock-data';
+import { FarmingLogsWidget } from '@/features/farmer/dashboard/components/FarmingLogsWidget';
+import { SeasonAnalyticsWidget } from '@/features/farmer/dashboard/components/SeasonAnalyticsWidget';
 
 export function FarmerDashboardPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { preferences } = usePreferences();
-  const [fdnExpanded, setFdnExpanded] = useState(false);
 
-  // Load state from primary hook
-  const {
-    selectedSeason,
-    setSelectedSeason,
-    seasonOptions,
-    overview,
-    fieldMap,
-    mapLoading,
-    todayTasks,
-    upcomingTasks,
-    dataCompletenessWarnings,
-    incidentAlerts,
-    recentActivities,
-    inventoryAlerts,
-    inventoryAlertsSummary,
-    isCriticalLoading,
-    isDataLoading,
-    overviewLoading,
-    hasNoSeasons,
-    seasonsError,
-    overviewError,
-    mapError,
-    todayTasksError,
-    upcomingTasksError,
-    dataCompletenessWarningsError,
-    incidentAlertsError,
-    recentActivitiesError,
-    inventoryAlertsError,
-  } = useFarmerDashboard();
-
-  // Load Season Detail / List from Context
-  const { selectedSeason: activeSeason, seasons: allSeasons, selectedSeasonId } = useSeason();
-
-  // Load Budget / Expenses for Selected Season
-  const { data: budgetTracker } = useBudgetTracker(selectedSeasonId || 0, {
-    enabled: !!selectedSeasonId,
-  });
-
-  // Load Marketplace stats
-  const { data: marketplaceDashboard } = useMarketplaceFarmerDashboard();
-
-  // Load VietGAP Score
-  const [complianceScore, setComplianceScore] = useState<number | null>(null);
-  const farmId = activeSeason?.farmId;
+  // 1. HEADER / TOP (Active Seasons)
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string>('');
 
   useEffect(() => {
-    if (farmId) {
-      certificationApi.getCertificationDetails(farmId)
-        .then(res => setComplianceScore(res.complianceScore))
-        .catch(err => console.error("Error fetching compliance score", err));
-    } else {
-      setComplianceScore(null);
+    if (mockSeasons.length > 0 && !selectedSeasonId) {
+      setSelectedSeasonId(mockSeasons[0].id);
     }
-  }, [farmId]);
+  }, [mockSeasons, selectedSeasonId]);
 
-  const weatherSeasonId = selectedSeason
-    ? Number.parseInt(selectedSeason, 10)
-    : undefined;
+  const activeSeason = mockSeasons.find(s => s.id === selectedSeasonId);
+  const activeSeasons = mockSeasons;
+  
+  // Lọc dữ liệu theo mùa vụ được chọn
+  const logsForSeason = useMemo(() => 
+    mockFarmingLogs.filter(log => log.seasonId === selectedSeasonId),
+  [selectedSeasonId]);
 
-  // Format monetary value helper
-  const formatValue = (value: number) =>
-    formatMoney(
-      convertToDisplayCurrency(value, preferences.currency),
-      preferences.currency,
-      preferences.locale
-    );
+  const reportData = useMemo(() => 
+    mockReportData[selectedSeasonId],
+  [selectedSeasonId]);
 
-  if (isCriticalLoading) {
-    return (
-      <div className="min-h-screen acm-main-content flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-secondary" />
-          <p className="text-muted-foreground">
-            {t('dashboard.loading', { defaultValue: 'Loading dashboard...' })}
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // Utility for status icon & color
+  const getStatusConfig = (status: FarmingLog['status']) => {
+    switch (status) {
+      case 'COMPLETED':
+        return { icon: <CheckCircle2 className="w-4 h-4 mr-1" />, color: 'bg-green-100 text-green-800 border-green-200' };
+      case 'PENDING':
+        return { icon: <Clock className="w-4 h-4 mr-1" />, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' };
+      case 'CANCELLED':
+        return { icon: <XCircle className="w-4 h-4 mr-1" />, color: 'bg-red-100 text-red-800 border-red-200' };
+      default:
+        return { icon: <AlertCircle className="w-4 h-4 mr-1" />, color: 'bg-gray-100 text-gray-800 border-gray-200' };
+    }
+  };
 
-  if (seasonsError) {
-    return (
-      <div className="min-h-screen acm-main-content flex items-center justify-center p-6">
-        <Alert variant="destructive" className="max-w-md">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>
-            {t('dashboard.error.title', {
-              defaultValue: 'Failed to Load Dashboard',
-            })}
-          </AlertTitle>
-          <AlertDescription>
-            {t('dashboard.error.description', {
-              defaultValue:
-                'Unable to load seasons data. Please check your connection and try again.',
-            })}
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
+  const getActivityLabel = (type: FarmingLog['activityType']) => {
+    switch (type) {
+      case 'FERTILIZER': return 'Bón phân';
+      case 'PESTICIDE': return 'Xịt thuốc';
+      case 'WATERING': return 'Tưới nước';
+      case 'HARVEST': return 'Thu hoạch';
+      case 'OTHER': return 'Khác';
+      default: return 'Khác';
+    }
+  };
 
-  if (hasNoSeasons) {
-    return (
-      <PageContainer variant="dashboard">
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-          <Calendar className="w-20 h-20 text-primary opacity-40" />
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-semibold text-foreground">
-              {t('dashboard.empty.title', {
-                defaultValue: 'No Seasons Available',
-              })}
-            </h2>
-            <p className="text-muted-foreground max-w-md">
-              {t('dashboard.empty.description', {
-                defaultValue:
-                  'Start by creating a new season to track your crops.',
-              })}
-            </p>
-          </div>
-        </div>
-      </PageContainer>
-    );
-  }
-
-  const partialErrors = [
-    overviewError,
-    mapError,
-    todayTasksError,
-    upcomingTasksError,
-    dataCompletenessWarningsError,
-    incidentAlertsError,
-    recentActivitiesError,
-    inventoryAlertsError,
-  ].filter((error): error is Error => Boolean(error));
-
-  // Determine yield value (actual if completed, fallback to estimated)
-  const currentSeasonYield = activeSeason?.actualYieldKg ?? overview?.estimatedYieldMetric?.value ?? 0;
-  const totalExpense = budgetTracker?.total ?? 0;
-  const pendingOrders = marketplaceDashboard?.pendingOrders ?? 0;
-  const vietgapScore = complianceScore ?? 0;
+  const COLORS = ['#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'];
 
   return (
-    <PageContainer variant="dashboard" className="pb-10">
-      <div className="space-y-6">
-        {partialErrors.length > 0 && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>
-              {t('dashboard.dataLoadError', {
-                defaultValue: 'Some data failed to load',
-              })}
-            </AlertTitle>
-            <AlertDescription>
-              {partialErrors.map((error, index) => (
-                <div key={`${error.message}-${index}`}>{error.message}</div>
-              ))}
-            </AlertDescription>
-          </Alert>
+    <PageContainer>
+      <div className="flex flex-col gap-6 w-full max-w-[1400px] mx-auto min-h-screen">
+        
+        {/* ================= HEADER ================= */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              <Sprout className="w-6 h-6 text-primary" />
+              Tổng quan Nông trại
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Theo dõi và quản lý các hoạt động canh tác hàng ngày.
+            </p>
+          </div>
+
+          <div className="w-full md:w-72">
+            <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
+              <SelectTrigger className="w-full bg-card">
+                <SelectValue placeholder="Chọn mùa vụ..." />
+              </SelectTrigger>
+              <SelectContent>
+                {mockSeasons.map((season) => (
+                  <SelectItem key={season.id} value={season.id}>
+                    {season.name} ({season.cropName})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {activeSeason && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+            <Card className="bg-card shadow-sm border-border/50">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2.5 bg-primary/10 rounded-lg text-primary">
+                  <Tractor className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Nông trại</p>
+                  <p className="font-semibold text-foreground line-clamp-1">{activeSeason.farmName}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card shadow-sm border-border/50">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2.5 bg-blue-500/10 rounded-lg text-blue-600">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Bắt đầu</p>
+                  <p className="font-semibold text-foreground">{new Date(activeSeason.startDate).toLocaleDateString('vi-VN')}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card shadow-sm border-border/50">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-500/10 rounded-lg text-emerald-600">
+                  <ThermometerSun className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Dự kiến thu hoạch</p>
+                  <p className="font-semibold text-foreground">{new Date(activeSeason.expectedEndDate).toLocaleDateString('vi-VN')}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
-        {/* Header Section: Season Selector & Weather */}
-        <Card variant="elevated">
-          <CardContent className="pt-6">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-3 w-full md:w-auto">
-                <Calendar className="w-5 h-5 text-primary" />
-                <Select value={selectedSeason} onValueChange={setSelectedSeason}>
-                  <SelectTrigger className="w-full sm:w-72 border-border rounded-lg">
-                    <SelectValue
-                      placeholder={t('dashboard.fdn.selectSeason', {
-                        defaultValue: 'Select season',
-                      })}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {seasonOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="acm-body-text text-muted-foreground">
-                  {t('dashboard.fdn.weatherSummary', {
-                    defaultValue: 'Weather summary',
-                  })}
-                </span>
-                <WeatherWidget
-                  variant="compact"
-                  seasonId={Number.isNaN(weatherSeasonId) ? undefined : weatherSeasonId}
-                />
-              </div>
-            </div>
+        {/* ================= BODY (HOT DATA) ================= */}
+        <Card className="flex-1 flex flex-col min-h-[400px] border-border shadow-sm bg-card overflow-hidden">
+          <CardHeader className="border-b border-border/50 bg-muted/20 shrink-0">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-primary" />
+              Nhật ký canh tác thực tế
+            </CardTitle>
+            <CardDescription>
+              Các hoạt động canh tác gần nhất trong mùa vụ hiện tại
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 flex-1 overflow-y-auto bg-slate-50/50">
+            {selectedSeasonId && (
+              <DataErrorBoundary fallbackMessage="Không thể tải nhật ký canh tác lúc này.">
+                <FarmingLogsWidget seasonId={selectedSeasonId} />
+              </DataErrorBoundary>
+            )}
           </CardContent>
         </Card>
 
-        {/* Row 1: Primary Operational KPIs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard
-            label="Sản lượng mùa vụ"
-            value={`${currentSeasonYield.toLocaleString()} kg`}
-            icon={<TrendingUp className="w-5 h-5" />}
-            tone="info"
-          />
-          <KPICard
-            label="Chi phí mùa vụ"
-            value={formatValue(totalExpense)}
-            icon={<DollarSign className="w-5 h-5" />}
-            tone="default"
-          />
-          <KPICard
-            label="Đơn hàng chờ"
-            value={pendingOrders}
-            icon={<ShoppingCart className="w-5 h-5" />}
-            highlight={pendingOrders > 0}
-            tone={pendingOrders > 0 ? 'warning' : 'default'}
-            onClick={() => navigate('/farmer/marketplace-orders')}
-          />
-          <KPICard
-            label="Điểm VietGAP"
-            value={complianceScore !== null ? `${complianceScore}%` : 'Chưa có'}
-            icon={<Shield className="w-5 h-5" />}
-            tone={vietgapScore >= 80 ? 'success' : 'warning'}
-            onClick={farmId ? () => navigate(`/farmer/farms/${farmId}/certification`) : undefined}
-          />
-        </div>
-
-        {/* Row 2: Quick Actions */}
-        <QuickActionsPanel
-          actions={[
-            { label: 'Ghi nhật ký', icon: <Edit className="w-5 h-5" />, href: `/farmer/seasons/${selectedSeasonId}/workspace/field-logs` },
-            { label: 'Tạo thu hoạch', icon: <Package className="w-5 h-5" />, href: `/farmer/seasons/${selectedSeasonId}/workspace/harvest` },
-            { label: 'Xem đơn hàng', icon: <ShoppingBag className="w-5 h-5" />, href: '/farmer/marketplace-orders' },
-            { label: 'Tài liệu nông trại', icon: <FileText className="w-5 h-5" />, href: '/farmer/farm-documents' },
-          ]}
-        />
-
-        {/* Row 3: Analytical Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SeasonYieldChart seasons={allSeasons} selectedSeasonId={selectedSeasonId} />
-          <ExpenseBreakdownChart seasonId={selectedSeasonId} />
-        </div>
-
-        {/* Row 4: Expandable FDN & Nitrogen Sustainability Dashboard Section */}
-        <Card className="border border-border overflow-hidden">
-          <CardHeader 
-            className="pb-4 pt-4 px-5 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/10 transition-colors"
-            onClick={() => setFdnExpanded(!fdnExpanded)}
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary animate-pulse" />
-              <CardTitle className="text-base font-semibold">
-                Báo cáo FDN & Chỉ số Bền vững
-              </CardTitle>
-            </div>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              {fdnExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-          </CardHeader>
-          {fdnExpanded && (
-            <CardContent className="px-5 pb-6 border-t border-border pt-6 space-y-6">
-              <FdnKpiCards
-                overview={overview}
-                isLoading={overviewLoading}
-                errorMessage={overviewError?.message ?? null}
-              />
-
-              <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
-                <NitrogenInputBreakdown
-                  overview={overview}
-                  isLoading={overviewLoading}
-                  errorMessage={overviewError?.message ?? null}
-                />
-                <FdnAssistantPanel
-                  overview={overview}
-                  isLoading={overviewLoading}
-                  errorMessage={overviewError?.message ?? null}
-                />
-              </div>
-
-              <FieldSustainabilityMap
-                mapData={fieldMap}
-                isLoading={mapLoading}
-                apiErrorMessage={mapError?.message ?? null}
-              />
-
-              <div className="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-6">
-                <FdnHistoryChart
-                  overview={overview}
-                  isLoading={overviewLoading}
-                  errorMessage={overviewError?.message ?? null}
-                />
-                <SeasonTaskPanels
-                  todayTasks={todayTasks}
-                  upcomingTasks={upcomingTasks}
-                  dataCompletenessWarnings={dataCompletenessWarnings}
-                  isLoading={isDataLoading}
-                  errorMessage={
-                    partialErrors.length > 0
-                      ? t('dashboard.dataLoadError', {
-                        defaultValue: 'Some data failed to load',
-                      })
-                      : null
-                  }
-                />
-              </div>
-
-              <IncidentAlerts
-                alerts={incidentAlerts}
-                isLoading={isDataLoading}
-                errorMessage={incidentAlertsError?.message ?? null}
-              />
-
-              <div id="recent-activity">
-                <RecentActivityTimeline
-                  activities={recentActivities}
-                  isLoading={isDataLoading}
-                  errorMessage={recentActivitiesError?.message ?? null}
-                />
-              </div>
-
-              <InventoryAlertsPanel
-                alerts={inventoryAlerts}
-                summary={inventoryAlertsSummary}
-                isLoading={isDataLoading}
-                errorMessage={inventoryAlertsError?.message ?? null}
-              />
-            </CardContent>
-          )}
-        </Card>
+        {/* ================= FOOTER (COLD DATA) ================= */}
+        {selectedSeasonId && (
+          <div className="shrink-0">
+            <DataErrorBoundary fallbackMessage="Không thể tải báo cáo thống kê lúc này.">
+              <SeasonAnalyticsWidget seasonId={selectedSeasonId} />
+            </DataErrorBoundary>
+          </div>
+        )}
+        
       </div>
     </PageContainer>
   );

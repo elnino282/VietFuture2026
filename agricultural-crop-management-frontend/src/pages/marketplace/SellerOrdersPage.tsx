@@ -221,6 +221,7 @@ export function SellerOrdersPage() {
                 <TableHead className="pl-4">{t("marketplaceSeller.orders.table.orderCode", "Order code")}</TableHead>
                 <TableHead>{t("marketplaceSeller.orders.table.orderDate", "Order date")}</TableHead>
                 <TableHead>{t("marketplaceSeller.orders.table.customer", "Customer")}</TableHead>
+                <TableHead>Loại giao hàng</TableHead>
                 <TableHead>{t("marketplaceSeller.orders.table.total", "Total")}</TableHead>
                 <TableHead>{t("marketplaceSeller.orders.table.status", "Status")}</TableHead>
                 <TableHead className="pr-4 text-right">
@@ -234,6 +235,9 @@ export function SellerOrdersPage() {
                     <TableRow key={`skeleton-${index}`}>
                       <TableCell className="pl-4">
                         <div className="h-4 w-28 animate-pulse rounded bg-muted" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="h-4 w-24 animate-pulse rounded bg-muted" />
                       </TableCell>
                       <TableCell>
                         <div className="h-4 w-24 animate-pulse rounded bg-muted" />
@@ -260,6 +264,11 @@ export function SellerOrdersPage() {
                       <TableCell className="pl-4 font-medium text-foreground">{order.orderCode}</TableCell>
                       <TableCell className="text-muted-foreground">{formatDate(order.createdAt, locale)}</TableCell>
                       <TableCell className="text-muted-foreground">{buyerName(order, t)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-slate-50">
+                          Giao 1 lần
+                        </Badge>
+                      </TableCell>
                       <TableCell className="font-medium text-primary">
                         {formatVnd(order.totalAmount, locale)}
                       </TableCell>

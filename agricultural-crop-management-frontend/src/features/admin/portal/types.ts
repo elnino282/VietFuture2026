@@ -15,8 +15,10 @@ export type AdminView =
   | "crops-varieties"
   | "reports"
   | "documents"
+  | "farm-documents"
   | "profile"
-  | "settings";
+  | "settings"
+  | "cert-audits";
 
 export type AdminViewConfig = {
   titleKey: string;

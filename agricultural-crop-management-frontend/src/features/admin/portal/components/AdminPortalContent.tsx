@@ -25,6 +25,8 @@ import { UsersRolesPage } from "@/pages/admin/UsersRolesPage";
 import { AdminSearchPage } from "@/pages/admin/AdminSearchPage";
 
 import { AdminDocumentsPage } from "@/pages/admin/AdminDocumentsPage";
+import { AdminFarmDocumentsPage } from "@/pages/admin/AdminFarmDocumentsPage";
+import { AdminCertAuditsPage } from "@/pages/admin/AdminCertAuditsPage";
 
 type AdminPortalContentProps = {
   currentView: AdminView;
@@ -60,9 +62,13 @@ export function AdminPortalContent({ currentView }: AdminPortalContentProps) {
       return <CropsVarietiesPage />;
     case "reports":
       return <ReportsAnalytics />;
+    case "cert-audits":
+      return <AdminCertAuditsPage />;
 
     case "documents":
       return <AdminDocumentsPage />;
+    case "farm-documents":
+      return <AdminFarmDocumentsPage />;
     case "profile":
       return <AdminProfile />;
     case "settings":

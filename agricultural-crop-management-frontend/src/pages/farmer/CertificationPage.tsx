@@ -14,6 +14,8 @@ import {
   Save,
   Check,
   Building,
+  Download,
+  ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -65,6 +67,7 @@ export default function CertificationPage() {
   const [editEvidenceUrl, setEditEvidenceUrl] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const fetchCertificationDetails = async (showToast = false) => {
     if (!farmId) return;
@@ -122,6 +125,26 @@ export default function CertificationPage() {
       toast.error("Cập nhật thất bại.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleExportDossier = async () => {
+    if (!farmId) return;
+    try {
+      setExporting(true);
+      const blob = await certificationApi.exportDossier(parseInt(farmId));
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `HoSoVietGAP_${farmId}.zip`); // Assuming zip, could be pdf
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Xuất hồ sơ thành công.");
+    } catch (error) {
+      toast.error("Không thể xuất hồ sơ.");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -199,14 +222,41 @@ export default function CertificationPage() {
         <Button variant="ghost" onClick={() => navigate(-1)} className="min-h-[44px] flex items-center gap-2 transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
           <ArrowLeft className="w-4 h-4" /> Quay lại danh sách nông trại
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fetchCertificationDetails(true)}
-          className="min-h-[44px] flex items-center gap-2 shadow-sm transition hover:opacity-90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
-        >
-          <RefreshCw className="w-4 h-4" /> Đồng bộ & Đánh giá lại
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/farmer/farms/${farmId}/self-assessment`)}
+            className="min-h-[44px] flex items-center gap-2 shadow-sm transition hover:opacity-90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+          >
+            <ClipboardList className="w-4 h-4 text-blue-500" /> Tự đánh giá
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/farmer/farms/${farmId}/nonconformities`)}
+            className="min-h-[44px] flex items-center gap-2 shadow-sm transition hover:opacity-90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+          >
+            <AlertCircle className="w-4 h-4 text-amber-500" /> Quản lý lỗi
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportDossier}
+            disabled={exporting}
+            className="min-h-[44px] flex items-center gap-2 shadow-sm transition hover:opacity-90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+          >
+            <Download className="w-4 h-4" /> {exporting ? "Đang xuất..." : "Xuất hồ sơ"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchCertificationDetails(true)}
+            className="min-h-[44px] flex items-center gap-2 shadow-sm transition hover:opacity-90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+          >
+            <RefreshCw className="w-4 h-4" /> Đồng bộ & Đánh giá lại
+          </Button>
+        </div>
       </div>
 
       {/* Main Header / Status Widget */}

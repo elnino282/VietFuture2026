@@ -280,8 +280,7 @@ export function PlotListView({
 
                                         {/* Actions */}
                                         <td className="px-4 py-3.5">
-                                            <button 
-                                                type="button" 
+                                            <div 
                                                 onClick={(e) => e.stopPropagation()} 
                                                 onKeyDown={(e) => e.stopPropagation()}
                                                 className="flex justify-center w-full bg-transparent border-none p-0 cursor-default focus:outline-none"
@@ -291,7 +290,7 @@ export function PlotListView({
                                                     onViewDetails={onViewDetails}
                                                     onDelete={onDelete}
                                                 />
-                                            </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
