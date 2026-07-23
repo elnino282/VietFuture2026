@@ -419,43 +419,77 @@ export function MarketplacePublicLayout() {
     <BuyerAiAssistantContext.Provider value={{ openAssistant: openBuyerAiAssistant }}>
       <div className="portal-buyer marketplace-buyer-portal flex min-h-screen flex-col bg-background text-foreground">
       <header
-        className="marketplace-header fb-marketplace sticky top-0 z-50 w-full border-b shadow-sm"
+        className="marketplace-header fb-marketplace sticky top-0 z-50 w-full border-b shadow-sm transition-shadow bg-white"
         style={{
-          background: "linear-gradient(90deg, #065F46 0%, #047857 100%)",
-          borderBottomColor: "rgba(255, 255, 255, 0.12)",
+          borderBottomColor: "#E2E8F0",
           boxShadow: scrolled
-            ? "0 8px 22px rgba(4, 120, 87, 0.18)"
-            : "0 1px 3px rgba(15, 23, 42, 0.08)",
+            ? "0 4px 20px -2px rgba(0, 0, 0, 0.05)"
+            : "none",
         }}
       >
         <div className="marketplace-header__inner container mx-auto px-4 relative">
           <div className="marketplace-header__left">
-            <Link to="/marketplace" className="flex items-center gap-2">
-              <div className="rounded-md bg-white/10 p-1.5 text-white ring-1 ring-white/20">
-                <Package size={24} />
+            <Link to="/marketplace" className="flex items-center gap-2 group">
+              <div className="rounded-xl bg-emerald-50 p-2 text-emerald-600 ring-1 ring-emerald-100 group-hover:bg-emerald-100 transition-colors">
+                <Package size={22} strokeWidth={2.5} />
               </div>
-              <span className="marketplace-header__brand-text text-xl font-bold text-white">
+              <span className="marketplace-header__brand-text text-xl font-bold text-emerald-950 tracking-tight">
                 FarmACM
               </span>
             </Link>
 
-            <nav className="marketplace-header__nav">
-              <MarketplaceNavLink to="/marketplace/products" label="Sản phẩm" />
-              <MarketplaceNavLink to="/marketplace/farms" label="Nông trại" />
+            <nav className="marketplace-header__nav ml-8">
+              <NavLink
+                to="/marketplace/products"
+                className={({ isActive }) =>
+                  cn(
+                    "px-4 py-2 rounded-full text-sm font-medium transition-all",
+                    isActive
+                      ? "bg-emerald-50 text-emerald-700 font-semibold"
+                      : "text-slate-600 hover:text-emerald-600 hover:bg-slate-50"
+                  )
+                }
+              >
+                Sản phẩm
+              </NavLink>
+              <NavLink
+                to="/marketplace/farms"
+                className={({ isActive }) =>
+                  cn(
+                    "px-4 py-2 rounded-full text-sm font-medium transition-all",
+                    isActive
+                      ? "bg-emerald-50 text-emerald-700 font-semibold"
+                      : "text-slate-600 hover:text-emerald-600 hover:bg-slate-50"
+                  )
+                }
+              >
+                Nông trại
+              </NavLink>
             </nav>
           </div>
 
           <div className="marketplace-header__desktop-search">
-            <MarketplaceSearchBar onSearchClick={() => setSearchOpen(true)} />
+            <div onClick={() => setSearchOpen(true)} className="relative cursor-pointer group">
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+              <input
+                type="text"
+                readOnly
+                placeholder="Tìm kiếm nông sản, nông trại..."
+                className="w-full cursor-pointer rounded-full border border-slate-200 bg-slate-50 py-2 pl-10 pr-12 text-sm text-slate-700 outline-none transition-all group-hover:border-emerald-200 group-hover:bg-white focus:ring-2 focus:ring-emerald-500/20"
+              />
+              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 select-none items-center rounded border border-slate-200 bg-white px-1.5 font-mono text-[10px] font-medium text-slate-400">
+                Ctrl+K
+              </kbd>
+            </div>
           </div>
 
           <div className="marketplace-header__right">
-            <ThemeToggle className="text-white hover:bg-white/10 hover:text-emerald-100" />
+            <ThemeToggle className="text-slate-600 hover:bg-slate-100 hover:text-emerald-600" />
 
             <Link
               to="/marketplace/cart"
               aria-label="Giỏ hàng"
-              className="relative rounded-md p-2 text-white transition-colors hover:bg-white/10 hover:text-emerald-100"
+              className="relative rounded-md p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-emerald-600"
             >
               <span className="marketplace-cart-icon">
                 <ShoppingCart size={24} />
@@ -482,19 +516,19 @@ export function MarketplacePublicLayout() {
                   {showPortalAction ? (
                     <>
                       <div className="marketplace-header__user">
-                        <span className="text-sm font-medium text-white">
+                        <span className="text-sm font-medium text-slate-800">
                           {user?.name ?? "Người dùng"}
                         </span>
-                        <span className="text-xs text-emerald-100">
+                        <span className="text-xs text-emerald-600">
                           {formatRoleLabel(user?.role)}
                         </span>
                       </div>
 
-                      <Button asChild variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/15 hover:text-white">
+                      <Button asChild variant="outline" size="sm" className="border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800">
                         <Link to="/marketplace/orders">Đơn hàng</Link>
                       </Button>
 
-                      <Button asChild variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/15 hover:text-white">
+                      <Button asChild variant="outline" size="sm" className="border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800">
                         <Link to={resolvePortalRoute(user?.role)}>
                           <Store size={14} />{" "}
                           {resolvePortalButtonLabel(user?.role)}
@@ -507,7 +541,7 @@ export function MarketplacePublicLayout() {
                         onClick={() => {
                           void handleLogout();
                         }}
-                        className="text-white hover:bg-white/10 hover:text-emerald-100"
+                        className="text-slate-600 hover:bg-red-50 hover:text-red-600"
                         title="Đăng xuất"
                       >
                         <LogOut size={18} />
@@ -519,7 +553,7 @@ export function MarketplacePublicLayout() {
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
-                            className="flex items-center gap-2 text-white hover:bg-white/10 hover:text-emerald-100"
+                            className="flex items-center gap-2 text-slate-600 hover:bg-slate-100 hover:text-emerald-600"
                           >
                             <User size={16} />
                             <span className="text-sm font-medium">
@@ -582,12 +616,12 @@ export function MarketplacePublicLayout() {
                 </>
               ) : (
                 <>
-                  <Button asChild variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-emerald-100">
+                  <Button asChild variant="ghost" size="sm" className="text-slate-600 hover:bg-slate-100 hover:text-emerald-600">
                     <Link to="/sign-in">
                       <User size={14} /> Đăng nhập
                     </Link>
                   </Button>
-                  <Button asChild size="sm" className="bg-white text-emerald-800 hover:bg-emerald-50">
+                  <Button asChild size="sm" className="bg-emerald-600 text-white hover:bg-emerald-700">
                     <Link to="/sign-up">Đăng ký</Link>
                   </Button>
                 </>
@@ -596,7 +630,7 @@ export function MarketplacePublicLayout() {
 
             <button
               type="button"
-              className="marketplace-header__mobile-toggle rounded-md p-2 text-white transition-colors hover:bg-white/10 hover:text-emerald-100"
+              className="marketplace-header__mobile-toggle rounded-md p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-emerald-600"
               onClick={() => setMobileMenuOpen((current) => !current)}
               aria-controls="marketplace-mobile-menu"
               aria-expanded={mobileMenuOpen}

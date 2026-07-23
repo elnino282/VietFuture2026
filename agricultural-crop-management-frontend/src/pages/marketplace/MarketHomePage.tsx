@@ -58,14 +58,10 @@ export function MarketHomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-emerald-950 px-6 py-24 sm:py-32 lg:px-8">
+      <section className="relative overflow-hidden bg-[#F8FAF5] px-6 py-20 sm:py-28 lg:px-8">
         <div className="absolute inset-0 -z-10 h-full w-full">
-          <img
-            src="/background.png"
-            alt=""
-            className="h-full w-full object-cover opacity-[0.15]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950 via-emerald-950/90 to-emerald-900/40" />
+          <div className="absolute inset-0 bg-[url('/demo-evidence/products/rice%20field.jpg')] bg-cover bg-center opacity-[0.15]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#F8FAF5] via-[#F8FAF5]/95 to-[#F8FAF5]/40" />
         </div>
 
         <div className="mx-auto max-w-[1800px]">
@@ -76,42 +72,42 @@ export function MarketHomePage() {
                 mounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
               )}
             >
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-300">
-                <Leaf size={16} aria-hidden="true" />
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-700 shadow-sm">
+                <Leaf size={16} aria-hidden="true" className="text-emerald-500" />
                 Nông sản minh bạch
               </div>
 
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+              <h1 className="text-4xl font-black tracking-tight text-emerald-950 sm:text-6xl">
                 Nông Sản Sạch,
                 <br />
                 Rõ Nguồn Gốc
               </h1>
 
-              <p className="mt-6 text-lg leading-8 text-emerald-100/90">
+              <p className="mt-6 text-lg leading-8 text-neutral-600">
                 Khám phá nông sản tươi ngon được kết nối trực tiếp với nông trại, mùa vụ và lô thu hoạch thật trong hệ thống hiện tại.
               </p>
 
               <div className="mt-10 flex items-center gap-x-6">
                 <Link
                   to="/marketplace/products"
-                  className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
+                  className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-6 py-3.5 text-base font-bold text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 hover:-translate-y-0.5"
                 >
                   Mua sắm ngay
-                  <ArrowRight size={18} className="ml-2" aria-hidden="true" />
+                  <ArrowRight size={20} className="ml-2" aria-hidden="true" />
                 </Link>
               </div>
 
-              <ul className="mt-10 flex flex-wrap gap-6 text-sm font-medium text-emerald-200/80">
+              <ul className="mt-10 flex flex-wrap gap-6 text-sm font-medium text-emerald-800/80">
                 <li className="flex items-center gap-2">
-                  <ShieldCheck size={16} className="text-emerald-400" aria-hidden="true" />
+                  <ShieldCheck size={16} className="text-emerald-600" aria-hidden="true" />
                   500+ nông trại
                 </li>
                 <li className="flex items-center gap-2">
-                  <ShieldCheck size={16} className="text-emerald-400" aria-hidden="true" />
+                  <ShieldCheck size={16} className="text-emerald-600" aria-hidden="true" />
                   Truy xuất minh bạch
                 </li>
                 <li className="flex items-center gap-2">
-                  <ShieldCheck size={16} className="text-emerald-400" aria-hidden="true" />
+                  <ShieldCheck size={16} className="text-emerald-600" aria-hidden="true" />
                   Giao toàn quốc
                 </li>
               </ul>
@@ -142,7 +138,7 @@ export function MarketHomePage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-emerald-900/50 p-8 text-center text-sm font-medium text-emerald-200/60 ring-1 ring-white/10">
+                <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-emerald-100/50 p-8 text-center text-sm font-medium text-emerald-800/60 ring-1 ring-emerald-900/5">
                   Dữ liệu hình ảnh sẽ hiển thị khi có sản phẩm hoặc nông trại công khai.
                 </div>
               )}
