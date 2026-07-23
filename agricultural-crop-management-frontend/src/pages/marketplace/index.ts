@@ -19,4 +19,4 @@ export { SellerDeliveriesPage } from "./SellerDeliveriesPage";
 export { AdminMarketplaceDashboardPage } from "./AdminMarketplaceDashboardPage";
 export { AdminMarketplaceProductsPage } from "./AdminMarketplaceProductsPage";
 export { AdminMarketplaceOrdersPage } from "./AdminMarketplaceOrdersPage";
-
+export { ProductTraceabilityPage } from "./ProductTraceabilityPage";

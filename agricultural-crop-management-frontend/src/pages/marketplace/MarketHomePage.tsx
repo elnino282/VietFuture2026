@@ -5,6 +5,7 @@ import { cn } from "@/shared/lib";
 import { Card, CardContent } from "@/shared/ui";
 import { useInView, useMarketplaceFarms, useMarketplaceProducts } from "@/features/marketplace/hooks";
 import { formatVnd } from "@/features/marketplace/lib/format";
+import { MarketplaceProductCard } from "@/features/marketplace/components/MarketplaceProductCard";
 
 function ProductCardSkeleton() {
   return (
@@ -238,43 +239,11 @@ export function MarketHomePage() {
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {featuredProducts.map((product) => (
-                <Link key={product.id} to={`/marketplace/products/${product.slug}`}>
-                  <Card className="group h-full overflow-hidden border-border/50 shadow-sm transition-all hover:border-emerald-500/30 hover:shadow-md">
-                    <div className="relative aspect-square overflow-hidden bg-muted">
-                      <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="h-full w-full object-cover transition-opacity duration-500 group-hover:opacity-90"
-                        referrerPolicy="no-referrer"
-                      />
-                      {product.traceable ? (
-                        <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-emerald-500/95 px-2.5 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-sm">
-                          Có truy xuất
-                        </span>
-                      ) : null}
-                    </div>
-                    <CardContent className="p-5">
-                      <div className="mb-2 text-xs font-medium text-muted-foreground">
-                        {product.category}
-                      </div>
-                      <h3 className="mb-3 line-clamp-2 h-11 font-semibold leading-snug text-foreground transition-colors group-hover:text-emerald-600">
-                        {product.name}
-                      </h3>
-                      <div className="mt-auto flex items-end justify-between">
-                        <div>
-                          <span className="text-lg font-bold text-emerald-600">
-                            {formatVnd(product.price)}
-                          </span>
-                          <span className="ml-1 text-sm text-muted-foreground">/{product.unit}</span>
-                        </div>
-                        <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-                          <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                          {product.ratingAverage ? product.ratingAverage.toFixed(1) : "Mới"}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <MarketplaceProductCard
+                  key={product.id}
+                  product={product}
+                  hideAddToCart={true}
+                />
               ))}
             </div>
           )}
@@ -320,13 +289,26 @@ export function MarketHomePage() {
                     )}
                   </div>
                   <CardContent className="flex flex-1 flex-col justify-center p-6 sm:p-8">
-                    <h3 className="mb-2 text-xl font-bold tracking-tight text-foreground">{farm.name}</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-bold tracking-tight text-foreground">{farm.name}</h3>
+                      {farm.hasTraceableProducts && (
+                        <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-xs font-semibold border border-emerald-100">
+                          <ShieldCheck className="w-3 h-3" />
+                          Cam kết minh bạch
+                        </span>
+                      )}
+                    </div>
                     <p className="mb-6 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                       Nông trại tham gia hệ thống với {farm.productCount} sản phẩm đang được công khai trên sàn.
                     </p>
-                    <div className="mt-auto flex items-center text-sm text-muted-foreground">
-                      <span className="mr-2 font-medium text-foreground">Khu vực:</span> 
-                      {farm.region ?? "Đang cập nhật"}
+                    <div className="mt-auto flex items-center justify-between text-sm text-muted-foreground">
+                      <div>
+                        <span className="mr-2 font-medium text-foreground">Khu vực:</span> 
+                        {farm.region ?? "Đang cập nhật"}
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs font-medium">
+                        Cập nhật liên tục
+                      </span>
                     </div>
                   </CardContent>
                 </Card>

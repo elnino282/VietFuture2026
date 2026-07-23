@@ -31,7 +31,7 @@ export function FarmingLogsWidget({ seasonId }: FarmingLogsWidgetProps) {
   }
 
   // Sắp xếp log theo thời gian mới nhất
-  const sortedLogs = [...logs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedLogs = Array.isArray(logs) ? [...logs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
 
   if (sortedLogs.length === 0) {
     return (

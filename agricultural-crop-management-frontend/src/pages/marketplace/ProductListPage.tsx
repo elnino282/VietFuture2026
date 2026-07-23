@@ -450,118 +450,7 @@ function RadioFilterOption({
   );
 }
 
-function ProductImage({ src, alt }: { src?: string | null; alt: string }) {
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    setHasError(false);
-  }, [src]);
-
-  if (!src || hasError) {
-    return (
-      <div className="marketplace-product-card__image-fallback">
-        <div>
-          <ImageOff className="mx-auto mb-2 h-7 w-7 opacity-70" aria-hidden="true" />
-          <span>Ảnh sản phẩm đang cập nhật</span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className="marketplace-product-card__image"
-      loading="lazy"
-      referrerPolicy="no-referrer"
-      onError={() => setHasError(true)}
-    />
-  );
-}
-
-type MarketplaceProductId = Parameters<
-  ReturnType<typeof useMarketplaceAddToCart>["addToCart"]
->[0];
-
-type ProductCardProps = {
-  product: {
-    id: MarketplaceProductId;
-    slug: string;
-    name: string;
-    imageUrl?: string | null;
-    traceable?: boolean;
-    category: string;
-    farmName?: string | null;
-    region?: string | null;
-    price: number;
-    unit: string;
-    availableQuantity: number;
-  };
-  isAuthenticated: boolean;
-  isAdding: boolean;
-  onAddToCart: (productId: MarketplaceProductId) => Promise<void>;
-};
-
-function ProductCard({ product, isAuthenticated, isAdding, onAddToCart }: ProductCardProps) {
-  return (
-    <article className="marketplace-product-card group">
-      <div className="marketplace-product-card__media">
-        <ProductImage src={product.imageUrl} alt={product.name} />
-        {product.traceable ? (
-          <Badge className="absolute left-2 top-2 bg-emerald-500 text-white">Có truy xuất</Badge>
-        ) : null}
-      </div>
-
-      <div className="marketplace-product-card__body">
-        <div className="mb-1 text-xs font-medium text-muted-foreground">
-          {getCategoryLabel(product.category)}
-        </div>
-        <Link
-          to={`/marketplace/products/${product.slug}`}
-          className="marketplace-product-card__name mb-2 line-clamp-2 block font-semibold leading-5 text-foreground transition-colors hover:text-primary"
-        >
-          {product.name}
-        </Link>
-        <p className="marketplace-product-card__farm mb-4 line-clamp-2 text-sm leading-5 text-muted-foreground">
-          {product.farmName ?? "Nông trại đang cập nhật"}
-          {product.region ? ` · ${product.region}` : ""}
-        </p>
-
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <span className="text-lg font-bold text-primary">
-            {formatVnd(product.price)}
-            <span className="ml-1 text-sm font-normal text-muted-foreground">/{product.unit}</span>
-          </span>
-          <span className="text-sm text-muted-foreground">Tồn: {product.availableQuantity}</span>
-        </div>
-
-        <div className="marketplace-product-card__actions flex gap-2">
-          <Link
-            to={`/marketplace/products/${product.slug}`}
-            className="inline-flex min-w-0 flex-1 items-center justify-center rounded-xl border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-          >
-            Xem chi tiết
-          </Link>
-          {isAuthenticated ? (
-            <Button
-              size="sm"
-              className="min-w-0 flex-1 bg-emerald-600 hover:bg-emerald-700"
-              disabled={isAdding || product.availableQuantity <= 0}
-              onClick={() => onAddToCart(product.id)}
-            >
-              Thêm giỏ
-            </Button>
-          ) : (
-            <Button asChild size="sm" variant="outline" className="min-w-0 flex-1">
-              <Link to="/sign-up">Tạo tài khoản</Link>
-            </Button>
-          )}
-        </div>
-      </div>
-    </article>
-  );
-}
+import { MarketplaceProductCard } from "@/features/marketplace/components/MarketplaceProductCard";
 
 export function ProductListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -698,7 +587,7 @@ export function ProductListPage() {
     setMobileFilterOpen(true);
   }
 
-  async function handleAddToCart(productId: MarketplaceProductId) {
+  async function handleAddToCart(productId: number) {
     await addToCart(productId, 1);
   }
 
@@ -827,7 +716,7 @@ export function ProductListPage() {
             <>
               <div className="marketplace-products-grid">
                 {products.map((product) => (
-                  <ProductCard
+                  <MarketplaceProductCard
                     key={product.id}
                     product={product}
                     isAuthenticated={isAuthenticated}

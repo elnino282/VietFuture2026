@@ -57,10 +57,12 @@ export function SeasonAnalyticsWidget({ seasonId }: SeasonAnalyticsWidgetProps) 
   const yieldChartData = [
     { 
       name: 'Mùa vụ hiện tại', 
-      expected: reportData.expectedYieldKg, 
-      actual: reportData.totalYieldKg 
+      expected: reportData.expectedYieldKg ?? 0, 
+      actual: reportData.totalYieldKg ?? 0
     }
   ];
+
+  const expenseByCategory = reportData.expenseByCategory ?? [];
 
   // Dummy pending orders
   const pendingOrdersCount = 12;
@@ -155,7 +157,7 @@ export function SeasonAnalyticsWidget({ seasonId }: SeasonAnalyticsWidgetProps) 
             </CardTitle>
           </CardHeader>
           <CardContent className="flex-1 min-h-[300px] h-[300px]">
-            {reportData.expenseByCategory.length === 0 ? (
+            {expenseByCategory.length === 0 ? (
               <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
                 Không có dữ liệu chi phí cho mùa vụ này.
               </div>
@@ -165,7 +167,7 @@ export function SeasonAnalyticsWidget({ seasonId }: SeasonAnalyticsWidgetProps) 
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={reportData.expenseByCategory}
+                        data={expenseByCategory}
                         cx="50%"
                         cy="50%"
                         innerRadius={70}
@@ -174,7 +176,7 @@ export function SeasonAnalyticsWidget({ seasonId }: SeasonAnalyticsWidgetProps) 
                         dataKey="amountVnd"
                         nameKey="category"
                       >
-                        {reportData.expenseByCategory.map((entry, index) => (
+                        {expenseByCategory.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -183,7 +185,7 @@ export function SeasonAnalyticsWidget({ seasonId }: SeasonAnalyticsWidgetProps) 
                   </ResponsiveContainer>
                 </div>
                 <div className="w-[40%] space-y-3 pr-4 overflow-y-auto max-h-[250px]">
-                  {reportData.expenseByCategory.map((item, index) => (
+                  {expenseByCategory.map((item, index) => (
                     <div key={item.category} className="flex flex-col gap-1 text-xs border-b border-border/50 pb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />

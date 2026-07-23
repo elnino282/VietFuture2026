@@ -12,6 +12,12 @@ import {
   ShoppingCart,
   Star,
   Tractor,
+  Leaf,
+  Droplets,
+  Sun,
+  Shield,
+  Calendar,
+  ThumbsUp,
 } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import {
@@ -23,12 +29,69 @@ import {
 import { getCategoryLabel } from "@/features/marketplace/lib/categoryLabels";
 import { formatVnd } from "@/features/marketplace/lib/format";
 import { Button } from "@/shared/ui";
-import type {
+import {
   MarketplaceFarmDetail,
   MarketplaceProductSummary,
   MarketplaceReview,
 } from "@/shared/api";
 import "./FarmStorePage.css";
+
+// ── MOCK DATA & INTERFACES FOR PHASE 2 ─────────────────────────
+export interface FarmActivityLog {
+  id: string;
+  date: string;
+  action: string;
+  description: string;
+  images: string[];
+  likes: number;
+}
+
+export interface SelfDeclaredStandard {
+  id: string;
+  title: string;
+  iconName: "leaf" | "droplets" | "sun" | "shield";
+  description: string;
+}
+
+const MOCK_ACTIVITY_LOGS: FarmActivityLog[] = [
+  {
+    id: "log-1",
+    date: "Vừa xong",
+    action: "Ghi chép: Thu hoạch đợt 1",
+    description: "Sáng nay bà con đã bắt đầu thu hoạch những hecta lúa đầu tiên. Thời tiết rất ủng hộ, lúa chín vàng ươm.",
+    images: ["https://images.unsplash.com/photo-1595856403254-20b8f05e36f4?auto=format&fit=crop&q=80&w=800"],
+    likes: 24
+  },
+  {
+    id: "log-2",
+    date: "2 ngày trước",
+    action: "Nhật ký: Bón phân vi sinh",
+    description: "Tiến hành bón phân hữu cơ vi sinh đợt 2 cho toàn bộ cánh đồng mẫu lớn. Đảm bảo dinh dưỡng tự nhiên cho đất.",
+    images: ["https://images.unsplash.com/photo-1627920769213-9111b15170d1?auto=format&fit=crop&q=80&w=800"],
+    likes: 15
+  },
+  {
+    id: "log-3",
+    date: "5 ngày trước",
+    action: "Kiểm tra chất lượng nước",
+    description: "Hệ thống lọc sinh học hoạt động tốt, các chỉ số phèn và kim loại nặng đều ở mức an toàn.",
+    images: [],
+    likes: 42
+  }
+];
+
+const MOCK_STANDARDS: SelfDeclaredStandard[] = [
+  { id: "std-1", title: "100% Hữu cơ", iconName: "leaf", description: "Không dùng hóa chất" },
+  { id: "std-2", title: "Nước sạch tinh khiết", iconName: "droplets", description: "Qua hệ thống lọc" },
+  { id: "std-3", title: "Thuận tự nhiên", iconName: "sun", description: "Trồng ngoài trời" },
+];
+
+const IconMap = { leaf: Leaf, droplets: Droplets, sun: Sun, shield: Shield };
+function StandardIcon({ name }: { name: string }) {
+  const Icon = IconMap[name as keyof typeof IconMap] || Shield;
+  return <Icon className="w-8 h-8 text-emerald-600 mb-3" />;
+}
+// ──────────────────────────────────────────────────────────────
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Mới nhất" },
@@ -214,78 +277,7 @@ function FarmHero({ farm, isAuthenticated, currentUserId }: FarmHeroProps) {
   );
 }
 
-function FarmProductCard({
-  product,
-  isAuthenticated,
-  isAdding,
-  onAddToCart,
-}: {
-  product: MarketplaceProductSummary;
-  isAuthenticated: boolean;
-  isAdding: boolean;
-  onAddToCart: (productId: number) => Promise<void>;
-}) {
-  const isSoldOut = product.availableQuantity <= 0;
-
-  return (
-    <article className="fs-product-card">
-      <Link to={`/marketplace/products/${product.slug}`} className="fs-product-card__media">
-        <ProductImage src={product.imageUrl} alt={product.name} />
-        {product.traceable ? (
-          <span className="fs-product-card__trace-badge">
-            <ShieldCheck aria-hidden="true" />
-            Có truy xuất
-          </span>
-        ) : null}
-      </Link>
-
-      <div className="fs-product-card__body">
-        <div className="fs-product-card__category">{getCategoryLabel(product.category)}</div>
-        <Link to={`/marketplace/products/${product.slug}`} className="fs-product-card__name">
-          {product.name}
-        </Link>
-        <p className="fs-product-card__description">
-          {product.shortDescription || fallbackText(product.region, "Nông sản từ trang trại")}
-        </p>
-
-        <div className="fs-product-card__meta">
-          <span>{isSoldOut ? "Hết hàng" : `Còn ${product.availableQuantity} ${product.unit}`}</span>
-          {product.ratingCount > 0 ? (
-            <span className="fs-product-card__rating">
-              <Star aria-hidden="true" />
-              {(product.ratingAverage ?? 0).toFixed(1)}
-            </span>
-          ) : null}
-        </div>
-
-        <div className="fs-product-card__footer">
-          <div className="fs-product-card__price">
-            {formatVnd(product.price)}
-            <span>/{product.unit}</span>
-          </div>
-
-          {isAuthenticated ? (
-            <button
-              type="button"
-              className="fs-product-card__add-btn"
-              disabled={isAdding || isSoldOut}
-              onClick={() => {
-                onAddToCart(product.id);
-              }}
-            >
-              <ShoppingCart aria-hidden="true" />
-              Thêm vào giỏ
-            </button>
-          ) : (
-            <Link to="/sign-up" className="fs-product-card__add-btn fs-product-card__add-btn--link">
-              Tạo tài khoản để mua
-            </Link>
-          )}
-        </div>
-      </div>
-    </article>
-  );
-}
+import { MarketplaceProductCard } from "@/features/marketplace/components/MarketplaceProductCard";
 
 function ProductCardSkeleton() {
   return (
@@ -409,6 +401,7 @@ export function FarmStorePage() {
   const [sortValue, setSortValue] = useState<SortValue>("newest");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [traceableOnly, setTraceableOnly] = useState(false);
+  const [activeFarmTab, setActiveFarmTab] = useState<"store" | "logs">("store");
 
   const farmQuery = useMarketplaceFarmDetail(isValidFarmId ? farmId : undefined);
   const categoryQuery = useMarketplaceProducts(
@@ -471,114 +464,193 @@ export function FarmStorePage() {
           currentUserId={user?.id ?? null}
         />
 
-        <section className="farm-store-products" aria-labelledby="farm-store-products-title">
-          <div className="farm-store-category-tabs" role="tablist" aria-label="Danh mục sản phẩm">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={selectedCategory === ""}
-              className={selectedCategory === "" ? "is-active" : ""}
-              onClick={() => setSelectedCategory("")}
-            >
-              Tất cả sản phẩm
-            </button>
-            {categoryOptions.map((category) => (
-              <button
-                key={category}
-                type="button"
-                role="tab"
-                aria-selected={selectedCategory === category}
-                className={selectedCategory === category ? "is-active" : ""}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {getCategoryLabel(category)}
-              </button>
+        {/* ── MOCK WIDGET: Bộ Tiêu Chuẩn Tự Thân ───────────────── */}
+        <section className="bg-emerald-50 rounded-2xl p-6 mt-8 mb-8 border border-emerald-100 shadow-sm">
+          <div className="flex items-center gap-2 mb-6">
+            <ShieldCheck className="w-6 h-6 text-emerald-700" />
+            <h2 className="text-xl font-bold text-emerald-900">Bộ Tiêu Chuẩn Tự Thân</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {MOCK_STANDARDS.map(std => (
+              <div key={std.id} className="bg-white rounded-xl p-5 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+                <StandardIcon name={std.iconName} />
+                <h3 className="font-bold text-neutral-800 mb-1">{std.title}</h3>
+                <p className="text-sm text-neutral-500">{std.description}</p>
+              </div>
             ))}
           </div>
-
-          <div className="farm-store-products-header">
-            <div className="farm-store-section-heading">
-              <h2 id="farm-store-products-title">Sản phẩm ({totalProducts})</h2>
-              <span>{farm.name}</span>
-            </div>
-
-            <div className="farm-store-products-toolbar">
-              <label className="farm-store-products-search">
-                <Search aria-hidden="true" />
-                <input
-                  type="search"
-                  placeholder="Tìm trong cửa hàng"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                />
-              </label>
-
-              <label className="farm-store-products-sort">
-                <span>Sắp xếp</span>
-                <select
-                  value={sortValue}
-                  onChange={(event) => setSortValue(event.target.value as SortValue)}
-                >
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <button
-                type="button"
-                className={`farm-store-filter-btn${traceableOnly ? " is-active" : ""}`}
-                aria-pressed={traceableOnly}
-                onClick={() => setTraceableOnly((value) => !value)}
-              >
-                <ShieldCheck aria-hidden="true" />
-                Có truy xuất
-              </button>
-            </div>
-          </div>
-
-          {productsQuery.isLoading ? (
-            <div className="farm-store-products-grid">
-              {Array.from({ length: 4 }, (_, index) => (
-                <ProductCardSkeleton key={index} />
-              ))}
-            </div>
-          ) : productsQuery.isError ? (
-            <div className="farm-store-empty">
-              <PackageOpen aria-hidden="true" />
-              <h3>Không thể tải sản phẩm</h3>
-              <p>Vui lòng thử lại sau ít phút.</p>
-            </div>
-          ) : products.length > 0 ? (
-            <div className="farm-store-products-grid">
-              {products.map((product) => (
-                <FarmProductCard
-                  key={product.id}
-                  product={product}
-                  isAuthenticated={isAuthenticated}
-                  isAdding={isAdding}
-                  onAddToCart={handleAddToCart}
-                />
-              ))}
-            </div>
-          ) : hasActiveFilters ? (
-            <div className="farm-store-empty">
-              <Search aria-hidden="true" />
-              <h3>Không tìm thấy sản phẩm</h3>
-              <p>Thử thay đổi từ khóa hoặc bộ lọc.</p>
-            </div>
-          ) : (
-            <div className="farm-store-empty">
-              <PackageOpen aria-hidden="true" />
-              <h3>Chưa có sản phẩm</h3>
-              <p>Nông trại chưa đăng bán sản phẩm nào trên marketplace.</p>
-            </div>
-          )}
         </section>
 
-        <ReviewsPanel reviews={reviews} isLoading={reviewsQuery.isLoading} />
+        {/* ── HIGH LEVEL TABS: Store vs Activity Log ───────────── */}
+        <div className="flex border-b border-neutral-200 mb-8 overflow-x-auto hide-scrollbar">
+          <button
+            type="button"
+            className={`px-6 py-4 font-semibold text-lg border-b-2 whitespace-nowrap transition-colors ${
+              activeFarmTab === "store" 
+                ? "border-emerald-600 text-emerald-700" 
+                : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
+            }`}
+            onClick={() => setActiveFarmTab("store")}
+          >
+            Cửa hàng nông sản
+          </button>
+          <button
+            type="button"
+            className={`px-6 py-4 font-semibold text-lg border-b-2 whitespace-nowrap transition-colors ${
+              activeFarmTab === "logs" 
+                ? "border-emerald-600 text-emerald-700" 
+                : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
+            }`}
+            onClick={() => setActiveFarmTab("logs")}
+          >
+            Nhật ký nông trại
+          </button>
+        </div>
+
+        {activeFarmTab === "store" ? (
+          <>
+            <section className="farm-store-products" aria-labelledby="farm-store-products-title">
+              <div className="farm-store-category-tabs" role="tablist" aria-label="Danh mục sản phẩm">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={selectedCategory === ""}
+                  className={selectedCategory === "" ? "is-active" : ""}
+                  onClick={() => setSelectedCategory("")}
+                >
+                  Tất cả sản phẩm
+                </button>
+                {categoryOptions.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    role="tab"
+                    aria-selected={selectedCategory === category}
+                    className={selectedCategory === category ? "is-active" : ""}
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    {getCategoryLabel(category)}
+                  </button>
+                ))}
+              </div>
+
+              <div className="farm-store-products-header">
+                <div className="farm-store-section-heading">
+                  <h2 id="farm-store-products-title">Sản phẩm ({totalProducts})</h2>
+                  <span>{farm.name}</span>
+                </div>
+
+                <div className="farm-store-products-toolbar">
+                  <label className="farm-store-products-search">
+                    <Search aria-hidden="true" />
+                    <input
+                      type="search"
+                      placeholder="Tìm trong cửa hàng"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                    />
+                  </label>
+
+                  <label className="farm-store-products-sort">
+                    <span>Sắp xếp</span>
+                    <select
+                      value={sortValue}
+                      onChange={(event) => setSortValue(event.target.value as SortValue)}
+                    >
+                      {SORT_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <button
+                    type="button"
+                    className={`farm-store-filter-btn${traceableOnly ? " is-active" : ""}`}
+                    aria-pressed={traceableOnly}
+                    onClick={() => setTraceableOnly((value) => !value)}
+                  >
+                    <ShieldCheck aria-hidden="true" />
+                    Có truy xuất
+                  </button>
+                </div>
+              </div>
+
+              {productsQuery.isLoading ? (
+                <div className="farm-store-products-grid">
+                  {Array.from({ length: 4 }, (_, index) => (
+                    <ProductCardSkeleton key={index} />
+                  ))}
+                </div>
+              ) : productsQuery.isError ? (
+                <div className="farm-store-empty">
+                  <PackageOpen aria-hidden="true" />
+                  <h3>Không thể tải sản phẩm</h3>
+                  <p>Vui lòng thử lại sau ít phút.</p>
+                </div>
+              ) : products.length > 0 ? (
+                <div className="farm-store-products-grid">
+                  {products.map((product) => (
+                    <MarketplaceProductCard
+                      key={product.id}
+                      product={product}
+                      isAuthenticated={isAuthenticated}
+                      isAdding={isAdding}
+                      onAddToCart={handleAddToCart}
+                    />
+                  ))}
+                </div>
+              ) : hasActiveFilters ? (
+                <div className="farm-store-empty">
+                  <Search aria-hidden="true" />
+                  <h3>Không tìm thấy sản phẩm</h3>
+                  <p>Thử thay đổi từ khóa hoặc bộ lọc.</p>
+                </div>
+              ) : (
+                <div className="farm-store-empty">
+                  <PackageOpen aria-hidden="true" />
+                  <h3>Chưa có sản phẩm</h3>
+                  <p>Nông trại chưa đăng bán sản phẩm nào trên marketplace.</p>
+                </div>
+              )}
+            </section>
+
+            <ReviewsPanel reviews={reviews} isLoading={reviewsQuery.isLoading} />
+          </>
+        ) : (
+          <section className="max-w-3xl mx-auto py-8">
+            <div className="mb-8 text-center">
+              <h2 className="text-2xl font-bold text-neutral-800 mb-2">Nhật Ký Nông Trại</h2>
+              <p className="text-neutral-500">Theo dõi các hoạt động canh tác hàng ngày từ {farm.name}</p>
+            </div>
+            <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-neutral-200 before:to-transparent">
+              {MOCK_ACTIVITY_LOGS.map((log) => (
+                <div key={log.id} className="relative flex items-start justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-emerald-100 text-emerald-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-white p-5 rounded-2xl shadow-sm border border-neutral-100 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-neutral-800 text-lg">{log.action}</h4>
+                      <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">{log.date}</span>
+                    </div>
+                    <p className="text-neutral-600 text-sm mb-4 leading-relaxed">{log.description}</p>
+                    {log.images.length > 0 && (
+                      <div className="rounded-xl overflow-hidden mb-4 border border-neutral-100">
+                        <img src={log.images[0]} alt="Activity" className="w-full h-48 object-cover" />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 cursor-pointer hover:text-emerald-600 transition-colors">
+                      <ThumbsUp className="w-4 h-4" />
+                      {log.likes}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

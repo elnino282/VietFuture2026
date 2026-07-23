@@ -11,6 +11,7 @@ import {
   useMarketplaceTraceability,
 } from "@/features/marketplace/hooks";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
+import { TraceabilityButton } from "@/features/marketplace/components/TraceabilityButton";
 import "./ProductDetailPage.css";
 
 function StarRating({ rating }: { rating?: number }) {
@@ -312,6 +313,9 @@ export function ProductDetailPage() {
                       <Bot /> Hỏi AI về sản phẩm này
                     </button>
                   )}
+                  {product.traceable && (
+                    <TraceabilityButton productId={product.slug} variant="outline" className="flex-1" />
+                  )}
                 </>
               ) : (
                 <>
@@ -469,6 +473,9 @@ export function ProductDetailPage() {
                         </tr>
                       </tbody>
                     </table>
+                    <div className="mt-4">
+                      <TraceabilityButton productId={product.slug} variant="primary" fullWidth />
+                    </div>
                   </div>
                 )}
               </>

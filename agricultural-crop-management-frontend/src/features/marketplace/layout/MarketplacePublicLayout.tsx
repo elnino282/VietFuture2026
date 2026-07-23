@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Form
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { cn } from "@/shared/lib";
-import { ProductFilterDropdown } from "./ProductFilterDropdown";
 import {
   Bot,
   ChevronDown,
@@ -84,137 +83,7 @@ const PRODUCTS_NAV_ACTIVE_STYLE = {
 const MARKETPLACE_DOCUMENT_SCROLL_CLASS = "marketplace-document-scroll";
 const BUYER_PORTAL_ACTIVE_CLASS = "portal-buyer-active";
 
-function ProductsNavItem() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [dropdownStyle, setDropdownStyle] = useState<CSSProperties>();
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-  const triggerRef = useRef<HTMLDivElement | null>(null);
 
-  const updateDropdownPosition = useCallback(() => {
-    const trigger = triggerRef.current;
-    if (!trigger) return;
-
-    const rect = trigger.getBoundingClientRect();
-    const viewportPadding = 16;
-    const gap = 10;
-    const preferredWidth = Math.min(
-      680,
-      window.innerWidth * 0.92,
-      window.innerWidth - viewportPadding * 2,
-    );
-    const left = Math.min(
-      Math.max(rect.left, viewportPadding),
-      window.innerWidth - preferredWidth - viewportPadding,
-    );
-
-    setDropdownStyle({
-      position: "fixed",
-      top: rect.bottom + gap,
-      left,
-      width: preferredWidth,
-      maxWidth: `calc(100vw - ${viewportPadding * 2}px)`,
-      zIndex: 2147483647,
-    });
-  }, []);
-
-  const handleEnter = () => {
-    clearTimeout(closeTimerRef.current);
-    updateDropdownPosition();
-    setIsOpen(true);
-  };
-
-  const handleLeave = () => {
-    closeTimerRef.current = setTimeout(() => setIsOpen(false), 220);
-  };
-
-  const handleClose = () => {
-    clearTimeout(closeTimerRef.current);
-    setIsOpen(false);
-  };
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    updateDropdownPosition();
-    window.addEventListener("resize", updateDropdownPosition);
-    window.addEventListener("scroll", updateDropdownPosition, true);
-
-    return () => {
-      window.removeEventListener("resize", updateDropdownPosition);
-      window.removeEventListener("scroll", updateDropdownPosition, true);
-    };
-  }, [isOpen, updateDropdownPosition]);
-
-  useEffect(() => {
-    return () => clearTimeout(closeTimerRef.current);
-  }, []);
-
-  return (
-    <div
-      className="relative"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") handleClose();
-      }}
-    >
-      <div ref={triggerRef} onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
-        <NavLink
-          to="/marketplace/products"
-          onFocus={handleEnter}
-          onBlur={handleLeave}
-          className={({ isActive }) =>
-            cn(
-              "fb-nav-link flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium transition-colors",
-              isActive || isOpen
-                ? "fb-active font-semibold ring-1 ring-white/25"
-                : "text-white hover:bg-white/10 hover:text-emerald-100",
-            )
-          }
-          style={({ isActive }) =>
-            isActive || isOpen ? PRODUCTS_NAV_ACTIVE_STYLE : undefined
-          }
-        >
-          {({ isActive }) => (
-            <>
-              <span
-                style={isActive || isOpen ? { color: "#ffffff" } : undefined}
-              >
-                Sản phẩm
-              </span>
-              <ChevronDown
-                className={cn(
-                  "h-3 w-3 transition-transform",
-                  isOpen && "rotate-180",
-                )}
-                style={isActive || isOpen ? { color: "#ffffff" } : undefined}
-              />
-            </>
-          )}
-        </NavLink>
-      </div>
-
-      {isOpen && dropdownStyle
-        ? createPortal(
-            <div
-              className="marketplace-product-filter-portal"
-              style={dropdownStyle}
-              onMouseEnter={handleEnter}
-              onMouseLeave={handleLeave}
-            >
-              <div className="absolute -top-3 left-0 h-3 w-full" aria-hidden="true" />
-              <ProductFilterDropdown
-                onMouseEnter={handleEnter}
-                onMouseLeave={handleLeave}
-                onClose={handleClose}
-              />
-            </div>,
-            document.body,
-          )
-        : null}
-    </div>
-  );
-}
 
 function MarketplaceNavLink({
   to,
@@ -571,7 +440,7 @@ export function MarketplacePublicLayout() {
             </Link>
 
             <nav className="marketplace-header__nav">
-              <ProductsNavItem />
+              <MarketplaceNavLink to="/marketplace/products" label="Sản phẩm" />
               <MarketplaceNavLink to="/marketplace/farms" label="Nông trại" />
             </nav>
           </div>

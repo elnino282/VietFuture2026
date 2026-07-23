@@ -168,12 +168,21 @@ function FarmCard({ farm, onMessage }: FarmCardProps) {
           ) : null}
         </div>
 
-        <div className="farms-discovery-card__badges">
-          {farm.hasTraceableProducts ? <span>Truy xuất nguồn gốc</span> : null}
-          {metadata.badges.map((badge) => (
-            <span key={badge}>{badge}</span>
-          ))}
-          {metadata.openForSale && farm.active ? <span>Đang mở bán</span> : null}
+        <div className="farms-discovery-card__badges flex flex-wrap gap-2">
+          {farm.hasTraceableProducts ? (
+            <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md text-xs font-semibold border border-emerald-100">
+              <ShieldCheck className="w-3 h-3" />
+              Cam kết minh bạch
+            </span>
+          ) : null}
+          <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-semibold border border-blue-100">
+            Cập nhật liên tục
+          </span>
+          {metadata.openForSale && farm.active ? (
+            <span className="inline-flex items-center gap-1 bg-neutral-100 text-neutral-700 px-2 py-1 rounded-md text-xs font-semibold">
+              Đang mở bán
+            </span>
+          ) : null}
         </div>
 
         <div className="farms-discovery-card__actions">
