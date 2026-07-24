@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ImageOff, Star, ShieldCheck, ShoppingCart, UserCircle2 } from "lucide-react";
+import { Star, ShieldCheck, ShoppingCart, UserCircle2 } from "lucide-react";
 import { getCategoryLabel } from "@/features/marketplace/lib/categoryLabels";
 import { formatVnd } from "@/features/marketplace/lib/format";
-import { Badge, Button, Card, CardContent } from "@/shared/ui";
+import { Badge, Button, Card, CardContent, ImagePlaceholder } from "@/shared/ui";
 import { cn } from "@/shared/lib";
 
 export type MarketplaceProductCardProps = {
@@ -34,12 +34,14 @@ export type MarketplaceProductCardProps = {
 
 function ProductImage({ src, alt }: { src?: string | null; alt: string }) {
   const [hasError, setHasError] = useState(false);
-  const fallbackSrc = "https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&q=80&w=600";
-  const imageSrc = hasError ? fallbackSrc : (src || fallbackSrc);
+
+  if (hasError || !src) {
+    return <ImagePlaceholder />;
+  }
 
   return (
     <img
-      src={imageSrc}
+      src={src}
       alt={alt}
       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
       loading="lazy"
@@ -59,7 +61,6 @@ export function MarketplaceProductCard({
   const isSoldOut = product.availableQuantity <= 0;
   
   // Fake some data if missing to demonstrate the new design
-  const updatesCount = product.updatesCount ?? Math.floor(Math.random() * 20) + 5;
   const farmerName = product.farmerName ?? product.farmName ?? "Nông dân vô danh";
   const avatarLetter = farmerName.charAt(0).toUpperCase();
 
@@ -68,17 +69,15 @@ export function MarketplaceProductCard({
       <Link to={`/marketplace/products/${product.slug}`} className="relative aspect-[4/3] overflow-hidden bg-muted sm:aspect-square block">
         <ProductImage src={product.imageUrl} alt={product.name} />
         
-        {/* NEW: Trust Score / Progress Bar instead of simple badge */}
         {product.traceable && (
           <div className="absolute left-2 top-2 right-2 flex flex-col gap-1 rounded-lg bg-primary/90 p-2 backdrop-blur-md">
              <div className="flex items-center gap-1.5 text-white">
                 <ShieldCheck className="h-4 w-4 text-white" />
-                <span className="text-xs font-bold leading-none">Minh Bạch 100%</span>
+                <span className="text-xs font-bold leading-none">Có truy xuất nguồn gốc</span>
              </div>
-             <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
-                <div className="h-full bg-accent" style={{ width: '80%' }}></div>
-             </div>
-             <span className="text-[10px] font-medium text-white/90">Đã cập nhật {updatesCount} nhật ký</span>
+             {product.updatesCount !== undefined && product.updatesCount > 0 && (
+               <span className="text-[10px] font-medium text-white/90">Đã cập nhật {product.updatesCount} nhật ký</span>
+             )}
           </div>
         )}
       </Link>
@@ -117,14 +116,14 @@ export function MarketplaceProductCard({
         <div className="mt-auto flex flex-col gap-3">
           <div className="flex items-end justify-between">
             <div>
-              <span className="font-heading text-lg font-bold text-[#F59E0B]">
+              <span className="font-heading text-lg font-bold text-price-highlight">
                 {formatVnd(product.price)}
               </span>
               <span className="ml-1 text-xs font-normal text-muted-foreground">/{product.unit}</span>
             </div>
             {(product.ratingAverage && product.ratingAverage > 0) ? (
               <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                <Star className="h-3 w-3 fill-[#EAB308] text-[#EAB308]" />
+                <Star className="h-3 w-3 fill-rating-star text-rating-star" />
                 {product.ratingAverage.toFixed(1)}
               </span>
             ) : (

@@ -31,8 +31,8 @@ export function MarketHomePage() {
     undefined;
 
   return (
-    <div className="flex min-h-screen flex-col bg-white font-sans">
-      <MarketHomeHero heroImageUrl={heroImage} />
+    <div className="flex min-h-screen flex-col bg-background font-sans">
+      <MarketHomeHero heroImageUrl={heroImage} totalFarms={farmsQuery.data?.totalElements} />
       
       <MarketHomeFeatures />
       

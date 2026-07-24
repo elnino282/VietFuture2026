@@ -92,6 +92,9 @@ const config: Config = {
           4: "var(--chart-4)",
           5: "var(--chart-5)",
         },
+        "price-highlight": "var(--price-highlight)",
+        "rating-star": "var(--rating-star)",
+        "surface-inverse": "var(--surface-inverse)",
         sidebar: {
           DEFAULT: "var(--sidebar)",
           foreground: "var(--sidebar-foreground)",

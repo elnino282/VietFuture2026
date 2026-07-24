@@ -2,6 +2,7 @@ import { ArrowRight, Box, Store } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMarketplaceProducts } from "@/features/marketplace/hooks";
 import { MarketplaceProductCard } from "@/features/marketplace/components/MarketplaceProductCard";
+import { getGridColsClass } from "@/pages/marketplace/lib/gridLayout";
 
 function ProductCardSkeleton() {
   return (
@@ -32,7 +33,9 @@ export function MarketHomeProducts() {
   }
 
   return (
-    <section className="bg-[#FFF8F1] py-16 lg:py-24">
+    <section className="bg-terracotta-50 py-16 lg:py-24 relative z-0 -mt-8 sm:-mt-12 pt-24 sm:pt-28 lg:pt-36">
+      <div className="absolute inset-0 -z-10 opacity-[0.04]" 
+           style={{ backgroundImage: 'radial-gradient(#574b3f 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
       <div className="mx-auto max-w-enterprise px-6">
         <div className="mb-12 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
@@ -50,7 +53,7 @@ export function MarketHomeProducts() {
         </div>
 
         {productsQuery.isLoading ? (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={`${getGridColsClass(4, 4)} gap-8`}>
             {Array.from({ length: 4 }, (_, index) => (
               <ProductCardSkeleton key={index} />
             ))}
@@ -82,7 +85,7 @@ export function MarketHomeProducts() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={`${getGridColsClass(featuredProducts.length, 4)} gap-8`}>
             {featuredProducts.map((product) => (
               <MarketplaceProductCard
                 key={product.id}

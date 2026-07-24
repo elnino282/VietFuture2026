@@ -1,5 +1,6 @@
 import { ShieldCheck } from "lucide-react";
-import { Card, CardContent } from "@/shared/ui";
+import { Card, CardContent, ImagePlaceholder } from "@/shared/ui";
+import { getGridColsClass } from "@/pages/marketplace/lib/gridLayout";
 import { useMarketplaceFarms } from "@/features/marketplace/hooks";
 
 function FarmCardSkeleton() {
@@ -26,7 +27,9 @@ export function MarketHomeFarms() {
   }
 
   return (
-    <section className="bg-white py-16 lg:py-24">
+    <section className="bg-background py-16 lg:py-24 relative z-0">
+      <div className="absolute inset-0 -z-10 opacity-[0.03]" 
+           style={{ backgroundImage: 'radial-gradient(#574b3f 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       <div className="mx-auto max-w-enterprise px-6">
         <div className="mb-16 text-center">
           <h2 className="font-heading text-3xl font-bold tracking-tight text-earth-900 sm:text-4xl">Nông trại đối tác</h2>
@@ -34,7 +37,7 @@ export function MarketHomeFarms() {
         </div>
 
         {farmsQuery.isLoading ? (
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className={`${getGridColsClass(2, 2)} gap-8`}>
             {Array.from({ length: 2 }, (_, index) => (
               <FarmCardSkeleton key={index} />
             ))}
@@ -44,7 +47,7 @@ export function MarketHomeFarms() {
             <p className="text-sm text-earth-600">Chưa có nông trại công khai trên marketplace.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className={`${getGridColsClass(featuredFarms.length, 2)} gap-8`}>
             {featuredFarms.map((farm) => (
               <Card key={farm.id} className="overflow-hidden border-primary/10 bg-primary/5 shadow-sm transition-all hover:shadow-md sm:flex hover:border-primary/30">
                 <div className="aspect-video w-full shrink-0 sm:w-2/5 sm:aspect-auto relative">
@@ -56,9 +59,7 @@ export function MarketHomeFarms() {
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center bg-earth-100">
-                      <span className="text-sm text-earth-500">Chưa có ảnh</span>
-                    </div>
+                    <ImagePlaceholder />
                   )}
                 </div>
                 <CardContent className="flex flex-1 flex-col justify-center p-8">

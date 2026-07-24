@@ -5,10 +5,12 @@ import { cn } from "@/shared/lib";
 
 interface MarketHomeHeroProps {
   heroImageUrl?: string;
+  totalFarms?: number;
 }
 
-export function MarketHomeHero({ heroImageUrl }: MarketHomeHeroProps) {
+export function MarketHomeHero({ heroImageUrl, totalFarms }: MarketHomeHeroProps) {
   const [mounted, setMounted] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -18,7 +20,7 @@ export function MarketHomeHero({ heroImageUrl }: MarketHomeHeroProps) {
     <section className="relative overflow-hidden bg-background px-6 py-20 sm:py-28 lg:px-8">
       <div className="absolute inset-0 -z-10 h-full w-full">
         <div className="absolute inset-0 bg-[url('/hero-farm.png')] bg-cover bg-center opacity-[0.1]" />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FFF8F1]/95 via-background/95 to-background/80" />
+        <div className="absolute inset-0 bg-gradient-to-br from-terracotta-50/95 via-background/95 to-background/80" />
       </div>
 
       <div className="mx-auto max-w-enterprise">
@@ -61,10 +63,12 @@ export function MarketHomeHero({ heroImageUrl }: MarketHomeHeroProps) {
             </div>
 
             <ul className="mt-10 flex flex-wrap gap-6 text-sm font-medium text-earth-800/80">
-              <li className="flex items-center gap-2">
-                <ShieldCheck size={16} className="text-primary" aria-hidden="true" />
-                500+ nông trại
-              </li>
+              {totalFarms !== undefined && totalFarms > 0 && (
+                <li className="flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-primary" aria-hidden="true" />
+                  {totalFarms} nông trại đối tác
+                </li>
+              )}
               <li className="flex items-center gap-2">
                 <ShieldCheck size={16} className="text-primary" aria-hidden="true" />
                 Truy xuất minh bạch
@@ -77,13 +81,14 @@ export function MarketHomeHero({ heroImageUrl }: MarketHomeHeroProps) {
           </div>
 
           <div className="relative lg:ml-auto lg:w-full lg:max-w-xl">
-            {heroImageUrl ? (
+            {heroImageUrl && !imageError ? (
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-2xl ring-1 ring-earth-900/10">
                 <img
                   src={heroImageUrl}
                   alt="Nông trại xanh tươi"
                   className="h-full w-full object-cover"
                   referrerPolicy="no-referrer"
+                  onError={() => setImageError(true)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-earth-950/80 via-earth-900/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">

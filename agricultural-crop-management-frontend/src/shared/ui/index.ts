@@ -399,3 +399,5 @@ export {
 } from "./typography";
 export type { TypographyProps } from "./typography";
 
+// Image Placeholder
+export * from "./image-placeholder";

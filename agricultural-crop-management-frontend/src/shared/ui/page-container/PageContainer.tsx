@@ -50,10 +50,15 @@ export function PageContainer({
                 : "default");
 
     return (
-        <div className={cn("min-h-screen acm-main-content pb-20", className)}>
+        <div className={cn("min-h-screen acm-main-content pb-20 relative", className)}>
+            {/* Ambient Top Banner for Dashboard */}
+            <div className="absolute top-0 inset-x-0 h-64 pointer-events-none z-0 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent" />
+            <div className="absolute top-0 inset-x-0 h-64 pointer-events-none z-0 opacity-20 [mask-image:linear-gradient(to_bottom,white,transparent)]" 
+                 style={{ backgroundImage: 'radial-gradient(var(--primary) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                 
             <div
                 className={cn(
-                    "mx-auto p-4 md:p-6",
+                    "mx-auto p-4 md:p-6 relative z-10",
                     {
                         "max-w-[1920px]": resolvedVariant === "default",
                         "max-w-[1800px]": resolvedVariant === "wide",
