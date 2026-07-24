@@ -86,7 +86,7 @@ export function AuthPageShell({ children, mode }: AuthPageShellProps) {
         </section>
 
         <section className="flex min-h-[calc(100dvh-24px)] min-w-0 items-center justify-center py-5 sm:min-h-[calc(100dvh-32px)] sm:py-8 lg:min-h-[calc(100dvh-48px)]">
-          <div className={cn("w-full min-w-0 max-w-full", isSignUp ? "sm:max-w-[610px]" : "sm:max-w-[500px]")}>
+          <div className="w-full min-w-0 max-w-full sm:max-w-[500px]">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="min-w-0 truncate inline-flex items-center gap-2 rounded-full border border-white bg-white px-3 py-2 text-sm font-bold text-[#143222] shadow-sm lg:hidden">
                 <Leaf className="size-4 text-[#3BA55D]" aria-hidden="true" />

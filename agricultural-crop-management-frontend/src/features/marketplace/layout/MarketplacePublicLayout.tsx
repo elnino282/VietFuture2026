@@ -142,7 +142,7 @@ function MarketplaceSearchBar({ className = "", onSearchClick }: { className?: s
 
 function MarketplaceFooter() {
   return (
-    <footer className="marketplace-footer py-12">
+    <footer className="marketplace-footer py-12 bg-primary text-[#FDFBF7]">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           <div>
@@ -156,24 +156,24 @@ function MarketplaceFooter() {
               Nền tảng giao dịch nông sản minh bạch, kết nối trực tiếp từ nông
               trại đến bàn ăn của bạn.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-4 mt-4">
               <a
                 href="#"
-                className="marketplace-footer__social-link transition-colors"
+                className="marketplace-footer__social-link flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[#1877F2] transition-colors hover:bg-white/20"
                 aria-label="Facebook"
               >
-                <Facebook size={20} />
+                <Facebook size={20} fill="currentColor" />
               </a>
               <a
                 href="#"
-                className="marketplace-footer__social-link transition-colors"
+                className="marketplace-footer__social-link flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[#1DA1F2] transition-colors hover:bg-white/20"
                 aria-label="Twitter"
               >
-                <Twitter size={20} />
+                <Twitter size={20} fill="currentColor" />
               </a>
               <a
                 href="#"
-                className="marketplace-footer__social-link transition-colors"
+                className="marketplace-footer__social-link flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[#E1306C] transition-colors hover:bg-white/20"
                 aria-label="Instagram"
               >
                 <Instagram size={20} />
@@ -221,7 +221,7 @@ function MarketplaceFooter() {
           </div>
         </div>
 
-        <div className="marketplace-footer__bottom mt-8 border-t pt-8 text-center text-sm">
+        <div className="marketplace-footer__bottom mt-8 border-t border-white/20 pt-8 text-center text-sm opacity-80">
           <p>&copy; {new Date().getFullYear()} FarmACM.</p>
         </div>
       </div>
@@ -430,10 +430,10 @@ export function MarketplacePublicLayout() {
         <div className="marketplace-header__inner container mx-auto px-4 relative">
           <div className="marketplace-header__left">
             <Link to="/marketplace" className="flex items-center gap-2 group">
-              <div className="rounded-xl bg-emerald-50 p-2 text-emerald-600 ring-1 ring-emerald-100 group-hover:bg-emerald-100 transition-colors">
+              <div className="rounded-xl bg-primary/10 p-2 text-primary ring-1 ring-primary/20 group-hover:bg-primary/20 transition-colors">
                 <Package size={22} strokeWidth={2.5} />
               </div>
-              <span className="marketplace-header__brand-text text-xl font-bold text-emerald-950 tracking-tight">
+              <span className="marketplace-header__brand-text text-xl font-bold text-primary tracking-tight">
                 FarmACM
               </span>
             </Link>
@@ -445,8 +445,8 @@ export function MarketplacePublicLayout() {
                   cn(
                     "px-4 py-2 rounded-full text-sm font-medium transition-all",
                     isActive
-                      ? "bg-emerald-50 text-emerald-700 font-semibold"
-                      : "text-slate-600 hover:text-emerald-600 hover:bg-slate-50"
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "text-slate-600 hover:text-primary hover:bg-slate-50"
                   )
                 }
               >
@@ -458,8 +458,8 @@ export function MarketplacePublicLayout() {
                   cn(
                     "px-4 py-2 rounded-full text-sm font-medium transition-all",
                     isActive
-                      ? "bg-emerald-50 text-emerald-700 font-semibold"
-                      : "text-slate-600 hover:text-emerald-600 hover:bg-slate-50"
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "text-slate-600 hover:text-primary hover:bg-slate-50"
                   )
                 }
               >
@@ -468,14 +468,14 @@ export function MarketplacePublicLayout() {
             </nav>
           </div>
 
-          <div className="marketplace-header__desktop-search">
+          <div className="marketplace-header__desktop-search flex-1 max-w-md mx-8">
             <div onClick={() => setSearchOpen(true)} className="relative cursor-pointer group">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-hover:text-primary transition-colors" />
               <input
                 type="text"
                 readOnly
                 placeholder="Tìm kiếm nông sản, nông trại..."
-                className="w-full cursor-pointer rounded-full border border-slate-200 bg-slate-50 py-2 pl-10 pr-12 text-sm text-slate-700 outline-none transition-all group-hover:border-emerald-200 group-hover:bg-white focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full cursor-pointer rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-12 text-sm text-slate-700 outline-none transition-all group-hover:border-primary/30 group-hover:bg-white focus:ring-2 focus:ring-primary/20"
               />
               <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 select-none items-center rounded border border-slate-200 bg-white px-1.5 font-mono text-[10px] font-medium text-slate-400">
                 Ctrl+K
@@ -541,7 +541,7 @@ export function MarketplacePublicLayout() {
                         onClick={() => {
                           void handleLogout();
                         }}
-                        className="text-slate-600 hover:bg-red-50 hover:text-red-600"
+                        className="text-slate-600 hover:bg-terracotta-50 hover:text-terracotta-600"
                         title="Đăng xuất"
                       >
                         <LogOut size={18} />

@@ -28,6 +28,7 @@
 .farms-discovery-hero h1 {
   margin: 0;
   color: #064e3b;
+  font-family: "Fraunces", serif;
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 900;
   line-height: 1.1;
